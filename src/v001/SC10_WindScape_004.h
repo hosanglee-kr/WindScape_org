@@ -19,8 +19,10 @@
 // 전역 상수 (파일 경로 등)
 // ====================================================================================
 // G_SC10_으로 시작하는 전역 상수명
-const char* G_SC10_CONFIG_FILE_PATH     = "/config_001.json";
-const char* G_SC10_CONFIG_PAGE_PATH     = "/config_page.html"; 
+const char* G_SC10_CONFIG_FILE_PATH     = "/json/config_002.json";
+const char* G_SC10_CONFIG_HTML_PATH     = "/html/SC10_main_002.html"; 
+const char* G_SC10_CONFIG_JS_PATH       = "/html/SC10_main_002.js"; 
+
 
 // ====================================================================================
 // 타입 정의 (typedef) 및 열거형 (enum) - SC10_ 접두사 적용
@@ -132,7 +134,7 @@ private:
         }
         return false;
     }
-
+    /*
     String SC10_readHtmlConfigPage(const char* p_path) { // p_로 시작하는 함수 파라미터
         if (!LittleFS.begin()) {
             Serial.println("LittleFS not mounted to read HTML.");
@@ -147,6 +149,7 @@ private:
         v_file.close();
         return v_content;
     }
+    */
 
 public:
     // --- 1. 상태 변수 (클래스 멤버) ---
@@ -336,98 +339,158 @@ public:
         SC10_applyCurrentPreset(true); 
     }
 
-    void SC10_setupWebServer(void) {
-        String v_ap_ip = WiFi.softAPIP().toString(); // v_로 시작하는 지역 변수
+
+/**
+ * @brief 웹 서버 초기화 (SPA API 방식)
+ * * 정적 파일(/, /script.js) 서빙 및 2개의 API 엔드포인트(/api/state, /api/config) 설정.
+ */
+void SC10_setupWebServer(void) {
+    // LittleFS 마운트 확인 (정적 파일 제공을 위해 필수)
+    if (!LittleFS.begin()) {
+        Serial.println("LittleFS Mount Failed! Web server starting without FS.");
+    }
+
+    // 1. 루트 페이지 및 정적 파일 제공 (index.html 및 script.js)
+    // LittleFS에서 정적 파일을 서빙합니다.
+    g_SC10_asyncWeb.on("/", HTTP_GET, [](AsyncWebServerRequest *p_request){
+        // /index.html 파일이 LittleFS에 있다고 가정합니다.
+        p_request->send(LittleFS, G_SC10_CONFIG_HTML_PATH, "text/html");
+    });
+    
+    g_SC10_asyncWeb.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *p_request){
+        // /script.js 파일이 LittleFS에 있다고 가정합니다.
+        p_request->send(LittleFS, G_SC10_CONFIG_JS_PATH, "application/javascript");
+    });
+    
+    // 추가적인 정적 파일(CSS 등)이 있다면 여기에 추가합니다.
+    g_SC10_asyncWeb.onNotFound([](AsyncWebServerRequest *p_request){
+        p_request->send(404, "text/plain", "Not found");
+    });
+
+
+    // 2. 현재 상태 및 설정 API (GET: /api/state)
+    // 시뮬레이터의 현재 동적 상태와 모든 설정값을 JSON으로 반환합니다.
+    g_SC10_asyncWeb.on("/api/state", HTTP_GET, [this](AsyncWebServerRequest *p_request){
+        // DynamicJsonDocument는 스택 대신 힙에 메모리를 할당합니다.
+        // 상태 정보와 모든 설정, 프리셋 목록을 담기 위해 넉넉하게 1024~1536 바이트 할당 (V7.x 기준)
+        DynamicJsonDocument v_doc(1536); 
         
-        // 루트 페이지 (설정 UI)
-        g_SC10_asyncWeb.on("/", HTTP_GET, [this, v_ap_ip](AsyncWebServerRequest *p_request){ // p_로 시작하는 함수 파라미터
-            
-            String v_html_template = SC10_readHtmlConfigPage(G_SC10_CONFIG_PAGE_PATH);
-            if (v_html_template.length() == 0) {
-                 p_request->send(500, "text/plain", "Error loading config_page.html");
-                 return;
-            }
-            
-            // 현재 프리셋 문자열 이름 가져오기
-            const char* v_current_preset_name = G_SC10_PRESET_MODE_NAMES[g_SC10_config.preset_mode_index];
+        // A. 현재 동적 상태
+        JsonObject v_status = v_doc["status"].to<JsonObject>();
+        v_status["sim_active"] = wind_simulation_active;
+        // float 소수점 정리: roundf()를 사용하여 소수점 두 자리로 표시
+        v_status["wind_speed"] = roundf(current_wind_speed * 100) / 100.0f;
+        v_status["fan_pwm"] = ledcRead(g_SC10_config.pwm_channel);
+        v_status["phase_name"] = G_SC10_WEATHER_PHASE_NAMES[current_weather_phase];
+        v_status["ip_addr"] = WiFi.softAPIP().toString();
 
-            String v_state = wind_simulation_active ? "ON" : "OFF (Steady)"; // v_로 시작하는 지역 변수
+        // B. 현재 설정값
+        JsonObject v_config = v_doc["config"].to<JsonObject>();
+        v_config["intensity"] = g_SC10_config.wind_intensity;
+        v_config["gust_freq"] = g_SC10_config.gust_frequency;
+        v_config["variability"] = g_SC10_config.wind_variability;
+        v_config["fan_limit"] = g_SC10_config.fan_speed_limit;
+        v_config["min_fan"] = g_SC10_config.minimum_fan_speed;
+        v_config["turb_len"] = g_SC10_config.turbulence_length_scale;
+        v_config["turb_sig"] = g_SC10_config.turbulence_intensity_sigma;
+        v_config["therm_str"] = g_SC10_config.thermal_bubble_strength;
+        v_config["therm_rad"] = g_SC10_config.thermal_bubble_radius;
+        v_config["preset"] = G_SC10_PRESET_MODE_NAMES[g_SC10_config.preset_mode_index];
+        
+        // C. 프리셋 목록
+        JsonArray v_presets = v_doc["presets"].to<JsonArray>();
+        for(int v_i = 0; v_i < SC10_PRESET_COUNT; ++v_i) {
+            v_presets.add(G_SC10_PRESET_MODE_NAMES[v_i]);
+        }
+        
+        // JSON 응답 전송
+        String v_response;
+        serializeJson(v_doc, v_response);
+        p_request->send(200, "application/json", v_response);
+    });
+
+    // 3. 설정 업데이트 API (POST: /api/config)
+    // 클라이언트로부터 받은 JSON 설정을 적용하고 저장합니다. (AsyncJsonWebHandler 사용)
+    // AsyncJsonWebHandler를 사용하려면 ESPAsyncWebServer.h 외에 AsyncJson.h를 include 해야 합니다.
+    g_SC10_asyncWeb.onRequestBody(
+        // URL: /api/config
+        "/api/config",
+        // 메소드: POST
+        HTTP_POST, 
+        // 핸들러: 요청 본문(JSON)을 파싱하여 처리
+        [this](AsyncWebServerRequest *p_request, JsonDocument &p_doc){
+            bool v_changesMade = false;
             
-            char v_buffer[4096]; // v_로 시작하는 지역 변수
-            // HTML 템플릿에 현재 상태 및 설정값 대입
-            snprintf(v_buffer, sizeof(v_buffer), v_html_template.c_str(), 
-                     v_state.c_str(), 
-                     G_SC10_WEATHER_PHASE_NAMES[current_weather_phase], // enum 문자열 이름 사용
-                     current_wind_speed, ledcRead(g_SC10_config.pwm_channel),
-                     v_ap_ip.c_str(),
-                     g_SC10_config.wind_intensity, g_SC10_config.gust_frequency, g_SC10_config.wind_variability, 
-                     g_SC10_config.fan_speed_limit, g_SC10_config.minimum_fan_speed,
-                     g_SC10_config.thermal_bubble_strength, g_SC10_config.thermal_bubble_radius, g_SC10_config.turbulence_length_scale, g_SC10_config.turbulence_intensity_sigma, 
-                     // 프리셋 드롭다운 옵션 처리
-                     (strcmp(v_current_preset_name, G_SC10_PRESET_MODE_NAMES[SC10_PRESET_OCEAN]) == 0) ? "selected" : "",
-                     (strcmp(v_current_preset_name, G_SC10_PRESET_MODE_NAMES[SC10_PRESET_PLAINS]) == 0) ? "selected" : "",
-                     (strcmp(v_current_preset_name, G_SC10_PRESET_MODE_NAMES[SC10_PRESET_MOUNTAIN]) == 0) ? "selected" : "",
-                     (strcmp(v_current_preset_name, G_SC10_PRESET_MODE_NAMES[SC10_PRESET_COUNTRY]) == 0) ? "selected" : "",
-                     (strcmp(v_current_preset_name, G_SC10_PRESET_MODE_NAMES[SC10_PRESET_MEDITERRANEAN]) == 0) ? "selected" : "",
-                     (strcmp(v_current_preset_name, G_SC10_PRESET_MODE_NAMES[SC10_PRESET_OFF]) == 0) ? "selected" : ""
-                     );
-
-            p_request->send(200, "text/html", v_buffer);
-        });
-
-        // 설정 저장 API (POST)
-        g_SC10_asyncWeb.on("/set_config", HTTP_POST, [this](AsyncWebServerRequest *p_request){
-            bool v_changesMade = false; // v_로 시작하는 지역 변수
+            JsonObject v_sim_config = p_doc.as<JsonObject>();
             
-            for(int v_i=0; v_i<p_request->args(); v_i++){ // v_로 시작하는 지역 변수
-                String v_name = p_request->argName(v_i);
-                String v_value = p_request->arg(v_i);
-
-                if (v_name == "intensity") {
-                    g_SC10_config.wind_intensity = v_value.toFloat(); v_changesMade = true;
-                } else if (v_name == "preset") {
-                    int v_index; // v_로 시작하는 지역 변수
-                    if (SC10_getPresetIndexByName(v_value.c_str(), v_index)) {
-                         g_SC10_config.preset_mode_index = v_index;
-                         v_changesMade = true;
-                    }
+            // -------------------- 프리셋 및 설정 값 업데이트 --------------------
+            
+            // 프리셋 업데이트 (문자열 이름으로 인덱스 찾기)
+            if (v_sim_config.containsKey("preset")) {
+                const char* v_preset_name = v_sim_config["preset"];
+                int v_index;
+                if (SC10_getPresetIndexByName(v_preset_name, v_index)) {
+                    g_SC10_config.preset_mode_index = v_index;
+                    v_changesMade = true;
                 }
-                // ... (나머지 설정 항목 처리)
-                else if (v_name == "gust_freq") { g_SC10_config.gust_frequency = v_value.toFloat(); v_changesMade = true; } 
-                else if (v_name == "variability") { g_SC10_config.wind_variability = v_value.toFloat(); v_changesMade = true; } 
-                else if (v_name == "fan_limit") { g_SC10_config.fan_speed_limit = v_value.toFloat(); v_changesMade = true; } 
-                else if (v_name == "min_fan") { g_SC10_config.minimum_fan_speed = v_value.toFloat(); v_changesMade = true; } 
-                else if (v_name == "turb_len") { g_SC10_config.turbulence_length_scale = v_value.toFloat(); v_changesMade = true; } 
-                else if (v_name == "turb_sig") { g_SC10_config.turbulence_intensity_sigma = v_value.toFloat(); v_changesMade = true; } 
-                else if (v_name == "therm_str") { g_SC10_config.thermal_bubble_strength = v_value.toFloat(); v_changesMade = true; } 
-                else if (v_name == "therm_rad") { g_SC10_config.thermal_bubble_radius = v_value.toFloat(); v_changesMade = true; } 
             }
+            
+            // 일반 설정 항목 업데이트
+            if (v_sim_config.containsKey("intensity")) { 
+                // | 연산자를 사용하여 디폴트 값(기존 값) 설정
+                g_SC10_config.wind_intensity = v_sim_config["intensity"] | g_SC10_config.wind_intensity; 
+                v_changesMade = true; 
+            }
+            if (v_sim_config.containsKey("gust_freq")) { 
+                g_SC10_config.gust_frequency = v_sim_config["gust_freq"] | g_SC10_config.gust_frequency; 
+                v_changesMade = true; 
+            }
+            if (v_sim_config.containsKey("variability")) { 
+                g_SC10_config.wind_variability = v_sim_config["variability"] | g_SC10_config.wind_variability; 
+                v_changesMade = true; 
+            }
+            if (v_sim_config.containsKey("fan_limit")) { 
+                g_SC10_config.fan_speed_limit = v_sim_config["fan_limit"] | g_SC10_config.fan_speed_limit; 
+                v_changesMade = true; 
+            }
+            if (v_sim_config.containsKey("min_fan")) { 
+                g_SC10_config.minimum_fan_speed = v_sim_config["min_fan"] | g_SC10_config.minimum_fan_speed; 
+                v_changesMade = true; 
+            }
+            if (v_sim_config.containsKey("turb_len")) { 
+                g_SC10_config.turbulence_length_scale = v_sim_config["turb_len"] | g_SC10_config.turbulence_length_scale; 
+                v_changesMade = true; 
+            }
+            if (v_sim_config.containsKey("turb_sig")) { 
+                g_SC10_config.turbulence_intensity_sigma = v_sim_config["turb_sig"] | g_SC10_config.turbulence_intensity_sigma; 
+                v_changesMade = true; 
+            }
+            if (v_sim_config.containsKey("therm_str")) { 
+                g_SC10_config.thermal_bubble_strength = v_sim_config["therm_str"] | g_SC10_config.thermal_bubble_strength; 
+                v_changesMade = true; 
+            }
+            if (v_sim_config.containsKey("therm_rad")) { 
+                g_SC10_config.thermal_bubble_radius = v_sim_config["therm_rad"] | g_SC10_config.thermal_bubble_radius; 
+                v_changesMade = true; 
+            }
+            
+            // ------------------------------------------------------------------
 
             if (v_changesMade) {
-                SC10_saveConfig();
-                SC10_applyCurrentPreset(true);
+                SC10_saveConfig(); // 변경된 설정 저장
+                SC10_applyCurrentPreset(true); // 프리셋 설정 적용 및 시뮬레이션 재시작 (필요하다면)
             }
             
-            p_request->redirect("/");
-        });
+            p_request->send(200, "application/json", "{\"message\":\"Config updated successfully\"}");
+        },
+        // AsyncJson 라이브러리의 헬퍼 함수를 사용하여 JSON 요청 본문을 처리하도록 등록
+        AsyncJsonWebHandler::isJson 
+    );
 
-        // JSON API (현재 상태 및 설정)
-        g_SC10_asyncWeb.on("/api/state", HTTP_GET, [this](AsyncWebServerRequest *p_request){
-            JsonDocument v_doc;
-            v_doc["wind_speed"] = current_wind_speed;
-            v_doc["phase"] = G_SC10_WEATHER_PHASE_NAMES[current_weather_phase]; // 문자열 이름 사용
-            v_doc["sim_active"] = wind_simulation_active;
-            v_doc["fan_pwm"] = ledcRead(g_SC10_config.pwm_channel);
-            v_doc["intensity"] = g_SC10_config.wind_intensity;
-            v_doc["preset"] = G_SC10_PRESET_MODE_NAMES[g_SC10_config.preset_mode_index];
+    Serial.println("Starting Async Web Server...");
+    g_SC10_asyncWeb.begin();
+}
 
-            String v_response;
-            serializeJson(v_doc, v_response);
-            p_request->send(200, "application/json", v_response);
-        });
-
-        g_SC10_asyncWeb.begin();
-    }
     
     // --- 4. 시뮬레이션 엔진 로직 ---
 
