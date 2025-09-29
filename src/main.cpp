@@ -1,15 +1,19 @@
 
 #include <Arduino.h>
 
-#include "SC10_WindScape_001.h"
+
+#include "v001/SC10_WindScape_001.h"
 
 
-WindScapeSimulator simulator;
+WindScapeSimulator g_SC10_simulator;
 
 void setup() {
-    simulator.setup();
+
+    Serial.begin(115200);
+
+    g_SC10_simulator.init();
 }
 
 void loop() {
-    simulator.loop();
+    g_SC10_simulator.run();
 }

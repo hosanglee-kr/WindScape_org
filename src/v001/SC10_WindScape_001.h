@@ -22,7 +22,7 @@
 // Wi-Fi 설정 (AP 모드로 독립 실행)
 #define WIFI_SSID         "WindScape_AP"
 #define WIFI_PASSWORD     "wind1234"
-#define CONFIG_FILE_PATH  "/config.json"
+#define CONFIG_FILE_PATH  "/config_001.json"
 
 // Von Kármán 및 Thermal Convection 기본값 (파일 없을 시 초기값)
 #define DEFAULT_WIND_INTENSITY_PCT 100.0f
@@ -219,8 +219,8 @@ public:
 
     // --- 3. 초기화 및 설정 ---
 
-    void setup() {
-        Serial.begin(115200);
+    void init() {
+
         Serial.println("\nWindScape Simulator Starting...");
 
         // 1. 파일 시스템 및 설정 로드
@@ -722,7 +722,7 @@ public:
 
     // --- 5. 메인 루프 실행 ---
 
-    void loop() {
+    void run() {
         if (!fan_power_enabled) return;
         if (enable_wind_simulation) {
             calculateWindSimulation();
@@ -732,18 +732,4 @@ public:
     }
 };
 
-
-// ====================================================================================
-// Arduino Setup & Loop
-// ====================================================================================
-
-WindScapeSimulator simulator;
-
-void setup() {
-    simulator.setup();
-}
-
-void loop() {
-    simulator.loop();
-}
 
