@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>WindScape Config</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+
+        input[type=submit] {
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>WindScape Config (V7)</h2>
+    <p>Status: Wind Sim: %s | Phase: %d | Wind: %.1f m/s | Fan: %d PWM</p>
+    <p><strong>AP IP: %s</strong></p>
+    <form method='POST' action='/set_config'>
+        <h3>User Control</h3>
+        <label>Intensity (%%): <input type='number' name='intensity' value='%.1f' step='1' min='0' max='100'></label><br>
+        <label>Gust Freq (%%): <input type='number' name='gust_freq' value='%.1f' step='1' min='0' max='100'></label><br>
+        <label>Variability (%%): <input type='number' name='variability' value='%.1f' step='1' min='0' max='100'></label><br>
+        <h3>Fan Limits</h3>
+        <label>Fan Limit (%%): <input type='number' name='fan_limit' value='%.1f' step='1' min='0' max='100'></label><br>
+        <label>Min Fan (%%): <input type='number' name='min_fan' value='%.1f' step='1' min='0' max='100'></label><br>
+        <h3>Physics Control</h3>
+        <label>Thermal Str (x): <input type='number' name='therm_str' value='%.1f' step='0.1' min='1.0' max='5.0'></label><br>
+        <label>Thermal Radius (m): <input type='number' name='therm_rad' value='%.1f' step='1.0' min='1.0' max='100.0'></label><br>
+        <label>Turb Length (m): <input type='number' name='turb_len' value='%.1f' step='1.0' min='1.0' max='100.0'></label><br>
+        <label>Turb Sigma (x): <input type='number' name='turb_sig' value='%.2f' step='0.01' min='0.01' max='1.0'></label><br>
+        <h3>Preset</h3>
+        <label>Preset: <select name='preset'>
+                <option value='Ocean' %s>Ocean</option>
+                <option value='Plains' %s>Plains</option>
+                <option value='Mountain' %s>Mountain</option>
+                <option value='Countryside' %s>Countryside</option>
+                <option value='Mediterranean' %s>Mediterranean</option>
+                <option value='Off' %s>Off (Steady)</option>
+            </select></label><br><br>
+        <input type='submit' value='Save & Apply'>
+    </form>
+</body>
+
+</html>

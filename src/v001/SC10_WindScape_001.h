@@ -13,64 +13,64 @@
 #include <map>
 
 // 사용자 정의 상수 및 설정
-#define FAN_PWM_PIN       14  // 팬 PWM 출력 핀 (GPIO14)
-#define FAN_TACH_PIN      27  // 팬 RPM 입력 핀 (GPIO27) - 현재 코드에서는 사용되지 않음 (향후 PID 제어용)
-#define PWM_FREQUENCY     25000 // 25kHz
-#define PWM_CHANNEL       0
-#define PWM_RESOLUTION    10  // 0-1023 (10비트)
+#define         FAN_PWM_PIN                         14  // 팬 PWM 출력 핀 (GPIO14)
+#define         FAN_TACH_PIN                        27  // 팬 RPM 입력 핀 (GPIO27) - 현재 코드에서는 사용되지 않음 (향후 PID 제어용)
+#define         PWM_FREQUENCY                       25000 // 25kHz
+#define         PWM_CHANNEL                         0
+#define         PWM_RESOLUTION                      10  // 0-1023 (10비트)
 
-// Wi-Fi 설정 (AP 모드로 독립 실행)
-#define WIFI_SSID         "WindScape_AP"
-#define WIFI_PASSWORD     "wind1234"
-#define CONFIG_FILE_PATH  "/config_001.json"
+// Wi-Fi 설정 (AP 모드로 독립 실행)         
+#define         WIFI_SSID                           "WindScape_AP"
+#define         WIFI_PASSWORD                       "wind1234"
+#define         CONFIG_FILE_PATH                    "/config_001.json"
 
 // Von Kármán 및 Thermal Convection 기본값 (파일 없을 시 초기값)
-#define DEFAULT_WIND_INTENSITY_PCT 100.0f
-#define DEFAULT_GUST_FREQUENCY_PCT 30.0f
-#define DEFAULT_WIND_VARIABILITY_PCT 40.0f
-#define DEFAULT_MAXIMUM_FAN_SPEED_PCT 80.0f
-#define DEFAULT_MINIMUM_FAN_SPEED_PCT 0.0f
+#define         DEFAULT_WIND_INTENSITY_PCT          100.0f
+#define         DEFAULT_GUST_FREQUENCY_PCT          30.0f
+#define         DEFAULT_WIND_VARIABILITY_PCT        40.0f
+#define         DEFAULT_MAXIMUM_FAN_SPEED_PCT       80.0f
+#define         DEFAULT_MINIMUM_FAN_SPEED_PCT       0.0f
 
-#define DEFAULT_TURBULENCE_LENGTH_SCALE 30.0f
-#define DEFAULT_TURBULENCE_INTENSITY 0.3f
-#define DEFAULT_THERMAL_BUBBLE_STRENGTH 1.8f
-#define DEFAULT_THERMAL_BUBBLE_RADIUS 15.0f // <--- 보완 사항: Radius 기본값 추가
+#define         DEFAULT_TURBULENCE_LENGTH_SCALE     30.0f
+#define         DEFAULT_TURBULENCE_INTENSITY        0.3f
+#define         DEFAULT_THERMAL_BUBBLE_STRENGTH     1.8f
+#define         DEFAULT_THERMAL_BUBBLE_RADIUS       15.0f 
 
 // 시뮬레이션 업데이트 간격 (ms)
-#define WIND_SIM_INTERVAL_MS 250
-#define GUST_CHECK_INTERVAL_MS 500
-#define THERMAL_CHECK_INTERVAL_MS 2000
+#define         WIND_SIM_INTERVAL_MS                250
+#define         GUST_CHECK_INTERVAL_MS              500
+#define         THERMAL_CHECK_INTERVAL_MS           2000
 
 
 // 난수 생성 함수 (0.0f ~ 1.0f)
-float getRandomFloat() {
+float SC10_getRandomFloat() {
     return (float)esp_random() / 4294967295.0f; // UINT32_MAX
 }
 
-float getRandomFloat(float min, float max) {
-    return min + (getRandomFloat() * (max - min));
+float SC10_getRandomFloat(float min, float max) {
+    return min + (SC10_getRandomFloat() * (max - min));
 }
 
 // Web Server 인스턴스
-AsyncWebServer server(80);
+AsyncWebServer g_SC10_asyncWeb(80);
 
 // ====================================================================================
 // WindScape Configuration Structure
 // ====================================================================================
 struct WindConfig {
-    float wind_intensity = DEFAULT_WIND_INTENSITY_PCT;
-    float gust_frequency = DEFAULT_GUST_FREQUENCY_PCT;
-    float wind_variability = DEFAULT_WIND_VARIABILITY_PCT;
-    float fan_speed_limit = DEFAULT_MAXIMUM_FAN_SPEED_PCT;
-    float minimum_fan_speed = DEFAULT_MINIMUM_FAN_SPEED_PCT;
-    float turbulence_length_scale = DEFAULT_TURBULENCE_LENGTH_SCALE;
-    float turbulence_intensity_sigma = DEFAULT_TURBULENCE_INTENSITY;
-    float thermal_bubble_strength = DEFAULT_THERMAL_BUBBLE_STRENGTH;
-    float thermal_bubble_radius = DEFAULT_THERMAL_BUBBLE_RADIUS; // <--- 보완 사항: Radius 추가
-    char preset_mode[20] = "Ocean";
+    float wind_intensity                = DEFAULT_WIND_INTENSITY_PCT;
+    float gust_frequency                = DEFAULT_GUST_FREQUENCY_PCT;
+    float wind_variability              = DEFAULT_WIND_VARIABILITY_PCT;
+    float fan_speed_limit               = DEFAULT_MAXIMUM_FAN_SPEED_PCT;
+    float minimum_fan_speed             = DEFAULT_MINIMUM_FAN_SPEED_PCT;
+    float turbulence_length_scale       = DEFAULT_TURBULENCE_LENGTH_SCALE;
+    float turbulence_intensity_sigma    = DEFAULT_TURBULENCE_INTENSITY;
+    float thermal_bubble_strength       = DEFAULT_THERMAL_BUBBLE_STRENGTH;
+    float thermal_bubble_radius         = DEFAULT_THERMAL_BUBBLE_RADIUS; 
+    char preset_mode[20]                = "Ocean";
 };
 
-WindConfig config;
+WindConfig g_SC10_config;
 
 
 // ====================================================================================
@@ -80,55 +80,55 @@ WindConfig config;
 class WindScapeSimulator {
 public:
     // --- 1. 상태 변수 ---
-    bool fan_power_enabled = true;
-    bool enable_wind_simulation = true;
-    bool wind_simulation_active = false;
+    bool fan_power_enabled              = true;
+    bool enable_wind_simulation         = true;
+    bool wind_simulation_active         = false;
 
     // Wind Dynamics
-    float current_wind_speed = 3.6f; // m/s
-    float target_wind_speed = 3.6f; // m/s
-    float wind_change_rate = 0.1f;
-    float wind_momentum = 0.0f;
-    
-    // Gust System
-    bool gust_active = false;
-    float gust_start_time = 0.0f;
-    float gust_duration = 3.0f;
-    float gust_intensity = 1.0f;
-    unsigned long last_gust_check = 0;
+    float current_wind_speed            = 3.6f; // m/s
+    float target_wind_speed             = 3.6f; // m/s
+    float wind_change_rate              = 0.1f;
+    float wind_momentum                 = 0.0f;
+
+    // Gust System      
+    bool gust_active                    = false;
+    float gust_start_time               = 0.0f;
+    float gust_duration                 = 3.0f;
+    float gust_intensity                = 1.0f;
+    unsigned long last_gust_check       = 0;
     
     // Thermal Convection
-    bool thermal_bubble_active = false;
-    float thermal_bubble_start_time = 0.0f;
-    float thermal_bubble_duration = 8.0f;
-    unsigned long last_thermal_check = 0;
-    float current_thermal_contribution = 0.0f;
+    bool thermal_bubble_active          = false;
+    float thermal_bubble_start_time     = 0.0f;
+    float thermal_bubble_duration       = 8.0f;
+    unsigned long last_thermal_check    = 0;
+    float current_thermal_contribution  = 0.0f;
     
     // Turbulence Modeling
-    float spectral_energy_buffer = 0.0f;
-    float spectral_phase_accumulator = 0.0f;
-    float turbulence_time_scale = 5.0f;
+    float spectral_energy_buffer        = 0.0f;
+    float spectral_phase_accumulator    = 0.0f;
+    float turbulence_time_scale         = 5.0f;
     
     // Dynamic Weather Phases
-    int current_weather_phase = 1;
-    float phase_start_time = 0.0f;
-    float phase_duration = 120.0f;
-    float phase_wind_min = 5.0f;
-    float phase_wind_max = 15.0f;
+    int current_weather_phase           = 1;
+    float phase_start_time              = 0.0f;
+    float phase_duration                = 120.0f;
+    float phase_wind_min                = 5.0f;
+    float phase_wind_max                = 15.0f;
 
     // Preset Configuration (내부 시뮬레이션 로직용)
-    float base_wind_min = 2.2f;
-    float base_wind_max = 6.7f;
-    float gust_probability_base = 0.02f;
-    float location_gust_strength = 1.8f;
-    float thermal_bubble_frequency = 0.025f;
+    float base_wind_min                 = 2.2f;
+    float base_wind_max                 = 6.7f;
+    float gust_probability_base         = 0.02f;
+    float location_gust_strength        = 1.8f;
+    float thermal_bubble_frequency      = 0.025f;
 
     // 타이머 변수
-    unsigned long last_wind_sim_update = 0;
+    unsigned long last_wind_sim_update  = 0;
     
     // --- 2. 설정 파일 관리 ---
 
-    bool loadConfig() {
+    bool SC10_loadConfig() {
         // [LittleFS 변경]: SPIFFS.begin(true) 대신 LittleFS.begin(true) 사용
         if (!LittleFS.begin(true)) {
             Serial.println("LittleFS Mount Failed! Using default config.");
@@ -149,7 +149,9 @@ public:
             return false;
         }
 
-        StaticJsonDocument<512> doc; // JSON 크기 확장
+        JsonDocument doc;
+        //StaticJsonDocument<512> doc; // JSON 크기 확장
+
         DeserializationError error = deserializeJson(doc, configFile);
         configFile.close();
 
@@ -159,45 +161,48 @@ public:
         }
 
         // 설정 로드
-        config.wind_intensity = doc["intensity"] | DEFAULT_WIND_INTENSITY_PCT;
-        config.gust_frequency = doc["gust_freq"] | DEFAULT_GUST_FREQUENCY_PCT;
-        config.wind_variability = doc["variability"] | DEFAULT_WIND_VARIABILITY_PCT;
-        config.fan_speed_limit = doc["fan_limit"] | DEFAULT_MAXIMUM_FAN_SPEED_PCT;
-        config.minimum_fan_speed = doc["min_fan"] | DEFAULT_MINIMUM_FAN_SPEED_PCT;
+        g_SC10_config.wind_intensity = doc["intensity"] | DEFAULT_WIND_INTENSITY_PCT;
+        g_SC10_config.gust_frequency = doc["gust_freq"] | DEFAULT_GUST_FREQUENCY_PCT;
+        g_SC10_config.wind_variability = doc["variability"] | DEFAULT_WIND_VARIABILITY_PCT;
+        g_SC10_config.fan_speed_limit = doc["fan_limit"] | DEFAULT_MAXIMUM_FAN_SPEED_PCT;
+        g_SC10_config.minimum_fan_speed = doc["min_fan"] | DEFAULT_MINIMUM_FAN_SPEED_PCT;
         
         // turb_len은 float으로 로드
-        if (doc.containsKey("turb_len")) {
-            config.turbulence_length_scale = doc["turb_len"].as<float>();
+        if (doc["turb_len"]) {
+        //if (doc.containsKey("turb_len")) {
+
+            g_SC10_config.turbulence_length_scale = doc["turb_len"].as<float>();
         } else {
-            config.turbulence_length_scale = DEFAULT_TURBULENCE_LENGTH_SCALE;
+            g_SC10_config.turbulence_length_scale = DEFAULT_TURBULENCE_LENGTH_SCALE;
         }
 
-        config.turbulence_intensity_sigma = doc["turb_sig"] | DEFAULT_TURBULENCE_INTENSITY;
-        config.thermal_bubble_strength = doc["therm_str"] | DEFAULT_THERMAL_BUBBLE_STRENGTH;
-        config.thermal_bubble_radius = doc["therm_rad"] | DEFAULT_THERMAL_BUBBLE_RADIUS; // <--- 보완: Radius 로드
+        g_SC10_config.turbulence_intensity_sigma = doc["turb_sig"] | DEFAULT_TURBULENCE_INTENSITY;
+        g_SC10_config.thermal_bubble_strength = doc["therm_str"] | DEFAULT_THERMAL_BUBBLE_STRENGTH;
+        g_SC10_config.thermal_bubble_radius = doc["therm_rad"] | DEFAULT_THERMAL_BUBBLE_RADIUS; // <--- 보완: Radius 로드
         
         const char* preset = doc["preset"] | "Ocean";
-        strncpy(config.preset_mode, preset, sizeof(config.preset_mode) - 1);
-        config.preset_mode[sizeof(config.preset_mode) - 1] = '\0';
+        strncpy(g_SC10_config.preset_mode, preset, sizeof(g_SC10_config.preset_mode) - 1);
+        g_SC10_config.preset_mode[sizeof(g_SC10_config.preset_mode) - 1] = '\0';
         
         Serial.println("Config loaded successfully.");
         return true;
     }
 
-    bool saveConfig() {
-        StaticJsonDocument<512> doc;
+    bool SC10_saveConfig() {
+        JsonDocument doc;
+        //StaticJsonDocument<512> doc;
 
         // 설정 저장
-        doc["intensity"] = config.wind_intensity;
-        doc["gust_freq"] = config.gust_frequency;
-        doc["variability"] = config.wind_variability;
-        doc["fan_limit"] = config.fan_speed_limit;
-        doc["min_fan"] = config.minimum_fan_speed;
-        doc["turb_len"] = config.turbulence_length_scale;
-        doc["turb_sig"] = config.turbulence_intensity_sigma;
-        doc["therm_str"] = config.thermal_bubble_strength;
-        doc["therm_rad"] = config.thermal_bubble_radius; // <--- 보완: Radius 저장
-        doc["preset"] = config.preset_mode;
+        doc["intensity"]    = g_SC10_config.wind_intensity;
+        doc["gust_freq"]    = g_SC10_config.gust_frequency;
+        doc["variability"]  = g_SC10_config.wind_variability;
+        doc["fan_limit"]    = g_SC10_config.fan_speed_limit;
+        doc["min_fan"]      = g_SC10_config.minimum_fan_speed;
+        doc["turb_len"]     = g_SC10_config.turbulence_length_scale;
+        doc["turb_sig"]     = g_SC10_config.turbulence_intensity_sigma;
+        doc["therm_str"]    = g_SC10_config.thermal_bubble_strength;
+        doc["therm_rad"]    = g_SC10_config.thermal_bubble_radius; // <--- 보완: Radius 저장
+        doc["preset"]       = g_SC10_config.preset_mode;
 
         // [LittleFS 변경]: SPIFFS.open 대신 LittleFS.open 사용
         File configFile = LittleFS.open(CONFIG_FILE_PATH, "w");
@@ -219,12 +224,12 @@ public:
 
     // --- 3. 초기화 및 설정 ---
 
-    void init() {
+    void SC10_init() {
 
         Serial.println("\nWindScape Simulator Starting...");
 
         // 1. 파일 시스템 및 설정 로드
-        loadConfig();
+        SC10_loadConfig();
         
         // 2. 팬 PWM 설정
         ledcSetup(PWM_CHANNEL, PWM_FREQUENCY, PWM_RESOLUTION);
@@ -232,7 +237,7 @@ public:
         pinMode(FAN_TACH_PIN, INPUT_PULLUP);
         
         if (fan_power_enabled) {
-            applyFanSpeed(config.minimum_fan_speed + 12.0f); // 초기 팬 속도 (최소 + 12%)
+            SC10_applyFanSpeed(g_SC10_config.minimum_fan_speed + 12.0f); // 초기 팬 속도 (최소 + 12%)
         } else {
             ledcWrite(PWM_CHANNEL, 0);
         }
@@ -243,18 +248,18 @@ public:
         Serial.printf("AP IP address: %s\n", WiFi.softAPIP().toString().c_str());
 
         // 4. Web Server 초기화
-        setupWebServer();
+        SC10_setupWebServer();
 
         // 5. 시뮬레이션 시작
         srand(esp_random()); 
-        applyCurrentPreset(true); 
+        SC10_applyCurrentPreset(true); 
     }
 
-    void setupWebServer() {
+    void SC10_setupWebServer() {
         String ap_ip = WiFi.softAPIP().toString(); // AP IP 주소 가져오기
         
         // 루트 페이지 (설정 UI) - 단순화된 HTML
-        server.on("/", HTTP_GET, [this, ap_ip](AsyncWebServerRequest *request){
+        g_SC10_asyncWeb.on("/", HTTP_GET, [this, ap_ip](AsyncWebServerRequest *request){
             String html = R"raw(
                 <!DOCTYPE html><html><head><title>WindScape Config</title>
                 <meta name='viewport' content='width=device-width, initial-scale=1'>
@@ -295,22 +300,22 @@ public:
             snprintf(buffer, sizeof(buffer), html.c_str(), 
                      state.c_str(), current_weather_phase, current_wind_speed, ledcRead(PWM_CHANNEL),
                      ap_ip.c_str(),
-                     config.wind_intensity, config.gust_frequency, config.wind_variability, 
-                     config.fan_speed_limit, config.minimum_fan_speed,
-                     config.thermal_bubble_strength, config.thermal_bubble_radius, config.turbulence_length_scale, config.turbulence_intensity_sigma, // <--- Physics Params
-                     strcmp(config.preset_mode, "Ocean") == 0 ? "selected" : "",
-                     strcmp(config.preset_mode, "Plains") == 0 ? "selected" : "",
-                     strcmp(config.preset_mode, "Mountain") == 0 ? "selected" : "",
-                     strcmp(config.preset_mode, "Countryside") == 0 ? "selected" : "",
-                     strcmp(config.preset_mode, "Mediterranean") == 0 ? "selected" : "",
-                     strcmp(config.preset_mode, "Off") == 0 ? "selected" : ""
+                     g_SC10_config.wind_intensity, g_SC10_config.gust_frequency, g_SC10_config.wind_variability, 
+                     g_SC10_config.fan_speed_limit, g_SC10_config.minimum_fan_speed,
+                     g_SC10_config.thermal_bubble_strength, g_SC10_config.thermal_bubble_radius, g_SC10_config.turbulence_length_scale, g_SC10_config.turbulence_intensity_sigma, // <--- Physics Params
+                     strcmp(g_SC10_config.preset_mode, "Ocean") == 0 ? "selected" : "",
+                     strcmp(g_SC10_config.preset_mode, "Plains") == 0 ? "selected" : "",
+                     strcmp(g_SC10_config.preset_mode, "Mountain") == 0 ? "selected" : "",
+                     strcmp(g_SC10_config.preset_mode, "Countryside") == 0 ? "selected" : "",
+                     strcmp(g_SC10_config.preset_mode, "Mediterranean") == 0 ? "selected" : "",
+                     strcmp(g_SC10_config.preset_mode, "Off") == 0 ? "selected" : ""
                      );
 
             request->send(200, "text/html", buffer);
         });
 
         // 설정 저장 API (POST)
-        server.on("/set_config", HTTP_POST, [this](AsyncWebServerRequest *request){
+        g_SC10_asyncWeb.on("/set_config", HTTP_POST, [this](AsyncWebServerRequest *request){
             bool changesMade = false;
             
             // 모든 파라미터를 순회하며 설정 업데이트
@@ -319,34 +324,34 @@ public:
                 String value = request->arg(i);
 
                 if (name == "intensity") {
-                    config.wind_intensity = value.toFloat(); changesMade = true;
+                    g_SC10_config.wind_intensity = value.toFloat(); changesMade = true;
                 } else if (name == "gust_freq") {
-                    config.gust_frequency = value.toFloat(); changesMade = true;
+                    g_SC10_config.gust_frequency = value.toFloat(); changesMade = true;
                 } else if (name == "variability") {
-                    config.wind_variability = value.toFloat(); changesMade = true;
+                    g_SC10_config.wind_variability = value.toFloat(); changesMade = true;
                 } else if (name == "fan_limit") {
-                    config.fan_speed_limit = value.toFloat(); changesMade = true;
+                    g_SC10_config.fan_speed_limit = value.toFloat(); changesMade = true;
                 } else if (name == "min_fan") {
-                    config.minimum_fan_speed = value.toFloat(); changesMade = true;
+                    g_SC10_config.minimum_fan_speed = value.toFloat(); changesMade = true;
                 } else if (name == "turb_len") {
-                    config.turbulence_length_scale = value.toFloat(); changesMade = true;
+                    g_SC10_config.turbulence_length_scale = value.toFloat(); changesMade = true;
                 } else if (name == "turb_sig") {
-                    config.turbulence_intensity_sigma = value.toFloat(); changesMade = true;
+                    g_SC10_config.turbulence_intensity_sigma = value.toFloat(); changesMade = true;
                 } else if (name == "therm_str") {
-                    config.thermal_bubble_strength = value.toFloat(); changesMade = true;
+                    g_SC10_config.thermal_bubble_strength = value.toFloat(); changesMade = true;
                 } else if (name == "therm_rad") { // <--- 보완: Radius 파싱 추가
-                    config.thermal_bubble_radius = value.toFloat(); changesMade = true;
+                    g_SC10_config.thermal_bubble_radius = value.toFloat(); changesMade = true;
                 } else if (name == "preset") {
-                    strncpy(config.preset_mode, value.c_str(), sizeof(config.preset_mode) - 1);
-                    config.preset_mode[sizeof(config.preset_mode) - 1] = '\0';
+                    strncpy(g_SC10_config.preset_mode, value.c_str(), sizeof(g_SC10_config.preset_mode) - 1);
+                    g_SC10_config.preset_mode[sizeof(g_SC10_config.preset_mode) - 1] = '\0';
                     changesMade = true;
                 }
             }
 
             if (changesMade) {
                 // 변경된 설정 저장 및 적용
-                saveConfig();
-                applyCurrentPreset(true);
+                SC10_saveConfig();
+                SC10_applyCurrentPreset(true);
             }
             
             // 사용자에게 다시 루트 페이지로 리다이렉트 (설정 적용 확인)
@@ -354,35 +359,38 @@ public:
         });
 
         // JSON API (현재 상태 및 설정)
-        server.on("/api/state", HTTP_GET, [this](AsyncWebServerRequest *request){
-            StaticJsonDocument<512> doc;
+        g_SC10_asyncWeb.on("/api/state", HTTP_GET, [this](AsyncWebServerRequest *request){
+
+            JsonDocument doc;
+            // StaticJsonDocument<512> doc;
+            
             doc["wind_speed"] = current_wind_speed;
             doc["phase"] = current_weather_phase;
             doc["sim_active"] = wind_simulation_active;
             doc["fan_pwm"] = ledcRead(PWM_CHANNEL);
-            doc["intensity"] = config.wind_intensity;
-            doc["preset"] = config.preset_mode;
+            doc["intensity"] = g_SC10_config.wind_intensity;
+            doc["preset"] = g_SC10_config.preset_mode;
 
             String response;
             serializeJson(doc, response);
             request->send(200, "application/json", response);
         });
 
-        server.begin();
+        g_SC10_asyncWeb.begin();
     }
     
     // --- 4. 시뮬레이션 엔진 로직 (보완 사항 적용) ---
 
-    void applyFanSpeed(float speed_percent) {
+    void SC10_applyFanSpeed(float speed_percent) {
         if (!fan_power_enabled) {
             ledcWrite(PWM_CHANNEL, 0);
             return;
         }
 
         float requested_speed = speed_percent / 100.0f;
-        float speed_limit = config.fan_speed_limit / 100.0f;
-        float min_speed = config.minimum_fan_speed / 100.0f;
-        float intensity_multiplier = config.wind_intensity / 100.0f;
+        float speed_limit = g_SC10_config.fan_speed_limit / 100.0f;
+        float min_speed = g_SC10_config.minimum_fan_speed / 100.0f;
+        float intensity_multiplier = g_SC10_config.wind_intensity / 100.0f;
 
         // [보완] Intensity가 0%일 경우 강제 종료 (팬 정지)
         if (intensity_multiplier <= 0.01f) {
@@ -405,18 +413,18 @@ public:
         }
     }
 
-    void applyCurrentPreset(bool force_apply) {
+    void SC10_applyCurrentPreset(bool force_apply) {
         wind_simulation_active = false;
         gust_active = false;
         thermal_bubble_active = false;
         gust_intensity = 1.0f;
         
-        String current_preset_mode = config.preset_mode;
+        String current_preset_mode = g_SC10_config.preset_mode;
         
         if (current_preset_mode == "Off") {
             enable_wind_simulation = false;
-            float steady_fan_pct = (config.minimum_fan_speed > 0.0f) ? config.minimum_fan_speed : 12.0f;
-            applyFanSpeed(steady_fan_pct);
+            float steady_fan_pct = (g_SC10_config.minimum_fan_speed > 0.0f) ? g_SC10_config.minimum_fan_speed : 12.0f;
+            SC10_applyFanSpeed(steady_fan_pct);
             current_wind_speed = 0.5f;
             target_wind_speed = 0.5f;
 
@@ -440,11 +448,11 @@ public:
               gust_probability_base = 0.070f; location_gust_strength = 2.4f; thermal_bubble_frequency = 0.018f;
             }
             
-            startWindSimulation();
+            SC10_startWindSimulation();
         }
     }
     
-    void startWindSimulation() {
+    void SC10_startWindSimulation() {
         // ... (로직 동일) ...
         float mid_range = (base_wind_min + base_wind_max) * 0.5f;
         current_wind_speed = mid_range;
@@ -463,15 +471,15 @@ public:
         phase_wind_max = base_wind_min + (range_span * 0.85f);
         
         wind_simulation_active = true;
-        generateWindTarget();
+        SC10_generateWindTarget();
     }
 
-    void calculateVonKarmanTurbulence(float dt) {
+    void SC10_calculateVonKarmanTurbulence(float dt) {
         if (!wind_simulation_active) return;
         
         // [config 값 사용]
-        float L = config.turbulence_length_scale;
-        float sigma = config.turbulence_intensity_sigma;
+        float L = g_SC10_config.turbulence_length_scale;
+        float sigma = g_SC10_config.turbulence_intensity_sigma;
         float U = current_wind_speed;
         
         if (U < 0.1f) U = 0.1f;
@@ -490,7 +498,7 @@ public:
             
             float phase_rate = 2.0f * M_PI * f;
             float phase_increment = phase_rate * dt;
-            float phase_noise = getRandomFloat(-0.1f, 0.1f);
+            float phase_noise = SC10_getRandomFloat(-0.1f, 0.1f);
             float current_phase = spectral_phase_accumulator * i + phase_increment + phase_noise;
             
             float amplitude = sqrt(2.0f * spectral_density * 0.083f);
@@ -509,7 +517,7 @@ public:
                                        turbulence_sum * (1.0f - correlation_factor);
     }
     
-    void calculateThermalBubble() {
+    void SC10_calculateThermalBubble() {
         if (!wind_simulation_active) return;
         current_thermal_contribution = 0.0f;
         
@@ -530,14 +538,14 @@ public:
               float variation = sin(bubble_age * osc_freq * 2.0f * M_PI) * 0.15f; envelope += variation;
             } else { float decay_progress = (progress - 0.6f) / 0.4f; envelope = 1.0f - pow(decay_progress, 1.3f); }
             
-            float thermal_strength = config.thermal_bubble_strength * envelope; // [config 값 사용]
+            float thermal_strength = g_SC10_config.thermal_bubble_strength * envelope; // [config 값 사용]
             current_thermal_contribution = thermal_strength - 1.0f;
             
-            // NOTE: config.thermal_bubble_radius는 현재 로직에 반영되지 않았습니다.
+            // NOTE: g_SC10_config.thermal_bubble_radius는 현재 로직에 반영되지 않았습니다.
         }
     }
 
-    void updateGustState() {
+    void SC10_updateGustState() {
         if (!wind_simulation_active) return;
         float current_time = millis() / 1000.0f;
         if (gust_active) {
@@ -558,22 +566,22 @@ public:
         if (current_time - last_gust_check * 0.001f >= 1.5f) {
             last_gust_check = millis();
             float base_prob = gust_probability_base;
-            float user_freq = config.gust_frequency / 100.0f; // [config 값 사용]
+            float user_freq = g_SC10_config.gust_frequency / 100.0f; // [config 값 사용]
             float wind_speed_factor = 1.0f + (current_wind_speed / 8.9f) * 0.5f;
             float phase_multiplier;
             if (current_weather_phase == 0) phase_multiplier = 0.3f * wind_speed_factor;
             else if (current_weather_phase == 2) phase_multiplier = 2.2f * wind_speed_factor;
             else phase_multiplier = 0.9f * wind_speed_factor;
             float final_prob = base_prob * user_freq * phase_multiplier;
-            if (getRandomFloat() < final_prob) {
+            if (SC10_getRandomFloat() < final_prob) {
                 gust_active = true; gust_start_time = current_time;
                 float duration_base, intensity_base; float speed_factor = current_wind_speed / 6.7f;
-                if (current_weather_phase == 0) { duration_base = getRandomFloat(3.0f, 8.0f);
-                  intensity_base = getRandomFloat(1.08f, 1.33f);
-                } else if (current_weather_phase == 2) { duration_base = getRandomFloat(0.8f, 3.3f);
-                  intensity_base = getRandomFloat(1.3f, 1.3f + 0.9f * (1.0f + speed_factor * 0.3f));
-                } else { duration_base = getRandomFloat(1.8f, 5.8f);
-                  intensity_base = getRandomFloat(1.15f, 1.15f + 0.5f * (1.0f + speed_factor * 0.2f));
+                if (current_weather_phase == 0) { duration_base = SC10_getRandomFloat(3.0f, 8.0f);
+                  intensity_base = SC10_getRandomFloat(1.08f, 1.33f);
+                } else if (current_weather_phase == 2) { duration_base = SC10_getRandomFloat(0.8f, 3.3f);
+                  intensity_base = SC10_getRandomFloat(1.3f, 1.3f + 0.9f * (1.0f + speed_factor * 0.3f));
+                } else { duration_base = SC10_getRandomFloat(1.8f, 5.8f);
+                  intensity_base = SC10_getRandomFloat(1.15f, 1.15f + 0.5f * (1.0f + speed_factor * 0.2f));
                 }
                 gust_duration = duration_base;
                 gust_intensity = fmin(intensity_base, location_gust_strength);
@@ -581,7 +589,7 @@ public:
         }
     }
 
-    void updateThermalBubbleCheck() {
+    void SC10_updateThermalBubbleCheck() {
         if (!wind_simulation_active) return;
         if (thermal_bubble_active) return;
         float current_time = millis() / 1000.0f;
@@ -594,25 +602,25 @@ public:
         else if (current_weather_phase == 2) phase_multiplier = 0.7f;
         else phase_multiplier = 1.0f;
         float final_prob = base_prob * wind_speed_factor * phase_multiplier;
-        if (getRandomFloat() < final_prob) {
+        if (SC10_getRandomFloat() < final_prob) {
             thermal_bubble_active = true; thermal_bubble_start_time = current_time;
-            float duration_base = getRandomFloat(8.0f, 14.0f);
+            float duration_base = SC10_getRandomFloat(8.0f, 14.0f);
             if (current_weather_phase == 0) duration_base *= 1.3f;
             else if (current_weather_phase == 2) duration_base *= 0.8f;
             thermal_bubble_duration = duration_base;
         }
     }
 
-    void generateWindTarget() {
+    void SC10_generateWindTarget() {
         if (!wind_simulation_active) return;
         float range = phase_wind_max - phase_wind_min;
-        float new_target = phase_wind_min + (getRandomFloat() * range);
+        float new_target = phase_wind_min + (SC10_getRandomFloat() * range);
         float mid_point = (phase_wind_min + phase_wind_max) * 0.5f;
-        float bias_factor = getRandomFloat(0.0f, 1.0f);
+        float bias_factor = SC10_getRandomFloat(0.0f, 1.0f);
         new_target = (new_target + mid_point * bias_factor) / (1.0f + bias_factor);
         target_wind_speed = new_target;
         
-        float variability = config.wind_variability / 100.0f; // [config 값 사용]
+        float variability = g_SC10_config.wind_variability / 100.0f; // [config 값 사용]
         float base_rate;
         if (current_weather_phase == 0) base_rate = 0.08f + (variability * 0.12f);
         else if (current_weather_phase == 2) base_rate = 0.25f + (variability * 0.35f);
@@ -620,25 +628,25 @@ public:
         
         float U = current_wind_speed;
         if (U < 0.1f) U = 0.1f;
-        float time_scale_factor = config.turbulence_length_scale / U; // [config 값 사용]
+        float time_scale_factor = g_SC10_config.turbulence_length_scale / U; // [config 값 사용]
         base_rate *= (1.0f + time_scale_factor * 0.1f);
-        wind_change_rate = base_rate * getRandomFloat(0.7f, 1.7f); 
+        wind_change_rate = base_rate * SC10_getRandomFloat(0.7f, 1.7f); 
     }
     
-    void updateWeatherPhase() {
+    void SC10_updateWeatherPhase() {
         if (!wind_simulation_active) return;
         float current_time = millis() / 1000.0f;
         if (current_time - phase_start_time >= phase_duration) {
             int old_phase = current_weather_phase;
-            float random_val = getRandomFloat();
+            float random_val = SC10_getRandomFloat();
             if (old_phase == 0) { if (random_val < 0.6f) current_weather_phase = 1; else current_weather_phase = 2;
             } else if (old_phase == 1) { if (random_val < 0.3f) current_weather_phase = 0;
             else if (random_val < 0.7f) current_weather_phase = 1; else current_weather_phase = 2;
             } else { if (random_val < 0.4f) current_weather_phase = 1; else if (random_val < 0.7f) current_weather_phase = 0;
             else current_weather_phase = 2; }
-            if (current_weather_phase == 0) phase_duration = getRandomFloat(90.0f, 210.0f);
-            else if (current_weather_phase == 1) phase_duration = getRandomFloat(120.0f, 300.0f);
-            else phase_duration = getRandomFloat(60.0f, 150.0f);
+            if (current_weather_phase == 0) phase_duration = SC10_getRandomFloat(90.0f, 210.0f);
+            else if (current_weather_phase == 1) phase_duration = SC10_getRandomFloat(120.0f, 300.0f);
+            else phase_duration = SC10_getRandomFloat(60.0f, 150.0f);
             phase_start_time = current_time;
             float range_span = base_wind_max - base_wind_min;
             if (current_weather_phase == 0) { phase_wind_min = base_wind_min; phase_wind_max = base_wind_min + (range_span * 0.6f);
@@ -647,18 +655,18 @@ public:
             } else { phase_wind_min = base_wind_min + (range_span * 0.4f); phase_wind_max = base_wind_max; }
             phase_wind_min = fmax(0.2f, phase_wind_min);
             phase_wind_max = fmin(11.0f, phase_wind_max);
-            generateWindTarget();
+            SC10_generateWindTarget();
         }
     }
 
-    void calculateWindSimulation() {
+    void SC10_calculateWindSimulation() {
         if (!wind_simulation_active) return;
         unsigned long now = millis();
         if (now - last_wind_sim_update < WIND_SIM_INTERVAL_MS + (esp_random() % 300)) return;
         float dt = (float)(now - last_wind_sim_update) / 1000.0f;
         last_wind_sim_update = now;
         
-        updateWeatherPhase();
+        SC10_updateWeatherPhase();
         
         float target = target_wind_speed;
         float current = current_wind_speed;
@@ -671,8 +679,8 @@ public:
         wind_momentum = fmax(-0.5f, fmin(0.5f, wind_momentum));
         change = wind_momentum;
         
-        calculateVonKarmanTurbulence(dt);
-        calculateThermalBubble();
+        SC10_calculateVonKarmanTurbulence(dt);
+        SC10_calculateThermalBubble();
         
         float von_karman_turb = spectral_energy_buffer;
         float thermal_contribution = current_thermal_contribution;
@@ -685,17 +693,17 @@ public:
         float close_change_chance = 30.0f; 
         float far_change_chance = 6.0f; 
         
-        if (config.wind_variability > 70.0f) { // [config 값 사용]
+        if (g_SC10_config.wind_variability > 70.0f) { // [config 값 사용]
              close_change_chance *= 1.5f; far_change_chance *= 1.5f;
         }
 
         if (abs(difference) < change_threshold) {
-            if (getRandomFloat() * 100.0f < close_change_chance) {
-                generateWindTarget();
+            if (SC10_getRandomFloat() * 100.0f < close_change_chance) {
+                SC10_generateWindTarget();
             }
         } else {
-            if (getRandomFloat() * 100.0f < far_change_chance) {
-                generateWindTarget();
+            if (SC10_getRandomFloat() * 100.0f < far_change_chance) {
+                SC10_generateWindTarget();
             }
         }
         
@@ -717,17 +725,17 @@ public:
         float fan_percent = 12.0f + (curved_ratio * 78.0f);
         fan_percent = fmax(12.0f, fmin(90.0f, fan_percent));
 
-        applyFanSpeed(fan_percent);
+        SC10_applyFanSpeed(fan_percent);
     }
 
     // --- 5. 메인 루프 실행 ---
 
-    void run() {
+    void SC10_run() {
         if (!fan_power_enabled) return;
         if (enable_wind_simulation) {
-            calculateWindSimulation();
-            updateGustState();
-            updateThermalBubbleCheck();
+            SC10_calculateWindSimulation();
+            SC10_updateGustState();
+            SC10_updateThermalBubbleCheck();
         }
     }
 };
