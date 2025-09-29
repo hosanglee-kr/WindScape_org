@@ -1,11 +1,15 @@
 
 #include <Arduino.h>
 
-void setup(){
-  
+#include "SC10_WindScape_001.h"
+
+
+WindScapeSimulator simulator;
+
+void setup() {
+    simulator.setup();
 }
 
-
-void loop(){
-  
+void loop() {
+    simulator.loop();
 }
