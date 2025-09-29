@@ -1,12 +1,14 @@
 // SC10_WindScape_001.h
 
+#pragma once 
+
 #include <Arduino.h>
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h> // V7.4.x 사용
 #include <FS.h>
-#include <LittleFS.h>    // <--- LittleFS 헤더로 변경
+#include <LittleFS.h>    
 #include <cmath>
 #include <cstdlib>
 #include <string>
