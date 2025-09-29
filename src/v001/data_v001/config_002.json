@@ -1,0 +1,27 @@
+
+{
+  "hw": {
+    "pwm_pin": 14,
+    "pwm_freq": 25000,
+    "pwm_res": 10,
+    "ssid": "WindScape_AP",
+    "pass": "wind1234"
+  },
+  "timing": {
+    "sim_int": 250,
+    "gust_int": 500,
+    "thermal_int": 2000
+  },
+  "sim": {
+    "intensity": 75.0,
+    "gust_freq": 50.0,
+    "variability": 60.0,
+    "fan_limit": 90.0,
+    "min_fan": 10.0,
+    "turb_len": 45.0,
+    "turb_sig": 0.45,
+    "therm_str": 2.2,
+    "therm_rad": 20.0,
+    "preset": "Mountain"
+  }
+}
