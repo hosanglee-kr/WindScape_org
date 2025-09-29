@@ -17,8 +17,8 @@
 // ====================================================================================
 // 전역 상수 (파일 경로 등)
 // ====================================================================================
-const char* G_SC10_CONFIG_FILE_PATH     = "/config_002.json";
-const char* G_SC10_CONFIG_PAGE_PATH     = "/SC10_main_001.html"; // 웹 설정 페이지 HTML 파일 경로
+const char* G_SC10_CONFIG_FILE_PATH     = "/json/config_002.json";
+const char* G_SC10_CONFIG_PAGE_PATH     = "/html/SC10_main_001.html"; // 웹 설정 페이지 HTML 파일 경로
 
 // 난수 생성 함수 (0.0f ~ 1.0f)
 float SC10_getRandomFloat(void) {
