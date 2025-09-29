@@ -1,13 +1,12 @@
 // SC10_WindScape_001.h
 
-
 #include <Arduino.h>
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h> // V7.4.x 사용
 #include <FS.h>
-#include <SPIFFS.h> // 파일 시스템
+#include <LittleFS.h>    // <--- LittleFS 헤더로 변경
 #include <cmath>
 #include <cstdlib>
 #include <string>
@@ -15,7 +14,7 @@
 
 // 사용자 정의 상수 및 설정
 #define FAN_PWM_PIN       14  // 팬 PWM 출력 핀 (GPIO14)
-#define FAN_TACH_PIN      27  // 팬 RPM 입력 핀 (GPIO27)
+#define FAN_TACH_PIN      27  // 팬 RPM 입력 핀 (GPIO27) - 현재 코드에서는 사용되지 않음 (향후 PID 제어용)
 #define PWM_FREQUENCY     25000 // 25kHz
 #define PWM_CHANNEL       0
 #define PWM_RESOLUTION    10  // 0-1023 (10비트)
@@ -35,6 +34,7 @@
 #define DEFAULT_TURBULENCE_LENGTH_SCALE 30.0f
 #define DEFAULT_TURBULENCE_INTENSITY 0.3f
 #define DEFAULT_THERMAL_BUBBLE_STRENGTH 1.8f
+#define DEFAULT_THERMAL_BUBBLE_RADIUS 15.0f // <--- 보완 사항: Radius 기본값 추가
 
 // 시뮬레이션 업데이트 간격 (ms)
 #define WIND_SIM_INTERVAL_MS 250
@@ -66,6 +66,7 @@ struct WindConfig {
     float turbulence_length_scale = DEFAULT_TURBULENCE_LENGTH_SCALE;
     float turbulence_intensity_sigma = DEFAULT_TURBULENCE_INTENSITY;
     float thermal_bubble_strength = DEFAULT_THERMAL_BUBBLE_STRENGTH;
+    float thermal_bubble_radius = DEFAULT_THERMAL_BUBBLE_RADIUS; // <--- 보완 사항: Radius 추가
     char preset_mode[20] = "Ocean";
 };
 
@@ -74,7 +75,6 @@ WindConfig config;
 
 // ====================================================================================
 // WindScape Simulator Class
-// 설정 관리 및 웹 서버 핸들러 추가
 // ====================================================================================
 
 class WindScapeSimulator {
@@ -129,12 +129,13 @@ public:
     // --- 2. 설정 파일 관리 ---
 
     bool loadConfig() {
-        if (!SPIFFS.begin(true)) {
-            Serial.println("SPIFFS Mount Failed! Using default config.");
+        // [LittleFS 변경]: SPIFFS.begin(true) 대신 LittleFS.begin(true) 사용
+        if (!LittleFS.begin(true)) {
+            Serial.println("LittleFS Mount Failed! Using default config.");
             return false;
         }
 
-        File configFile = SPIFFS.open(CONFIG_FILE_PATH, "r");
+        File configFile = LittleFS.open(CONFIG_FILE_PATH, "r");
         if (!configFile) {
             Serial.println("Config file not found. Using default.");
             configFile.close();
@@ -142,14 +143,13 @@ public:
         }
 
         size_t size = configFile.size();
-        if (size > 1024) {
+        if (size > 512) { // 크기 조정
             Serial.println("Config file size is too large.");
             configFile.close();
             return false;
         }
 
-        // V7: JsonDocument를 스택에 할당 (256 바이트는 충분함)
-        StaticJsonDocument<256> doc;
+        StaticJsonDocument<512> doc; // JSON 크기 확장
         DeserializationError error = deserializeJson(doc, configFile);
         configFile.close();
 
@@ -164,9 +164,17 @@ public:
         config.wind_variability = doc["variability"] | DEFAULT_WIND_VARIABILITY_PCT;
         config.fan_speed_limit = doc["fan_limit"] | DEFAULT_MAXIMUM_FAN_SPEED_PCT;
         config.minimum_fan_speed = doc["min_fan"] | DEFAULT_MINIMUM_FAN_SPEED_PCT;
-        config.turbulence_length_scale = doc["turb_len"] | DEFAULT_TURBULENCE_LENGTH_SCALE;
+        
+        // turb_len은 float으로 로드
+        if (doc.containsKey("turb_len")) {
+            config.turbulence_length_scale = doc["turb_len"].as<float>();
+        } else {
+            config.turbulence_length_scale = DEFAULT_TURBULENCE_LENGTH_SCALE;
+        }
+
         config.turbulence_intensity_sigma = doc["turb_sig"] | DEFAULT_TURBULENCE_INTENSITY;
         config.thermal_bubble_strength = doc["therm_str"] | DEFAULT_THERMAL_BUBBLE_STRENGTH;
+        config.thermal_bubble_radius = doc["therm_rad"] | DEFAULT_THERMAL_BUBBLE_RADIUS; // <--- 보완: Radius 로드
         
         const char* preset = doc["preset"] | "Ocean";
         strncpy(config.preset_mode, preset, sizeof(config.preset_mode) - 1);
@@ -177,8 +185,7 @@ public:
     }
 
     bool saveConfig() {
-        // V7: JsonDocument를 스택에 할당 (256 바이트는 충분함)
-        StaticJsonDocument<256> doc;
+        StaticJsonDocument<512> doc;
 
         // 설정 저장
         doc["intensity"] = config.wind_intensity;
@@ -189,9 +196,11 @@ public:
         doc["turb_len"] = config.turbulence_length_scale;
         doc["turb_sig"] = config.turbulence_intensity_sigma;
         doc["therm_str"] = config.thermal_bubble_strength;
+        doc["therm_rad"] = config.thermal_bubble_radius; // <--- 보완: Radius 저장
         doc["preset"] = config.preset_mode;
 
-        File configFile = SPIFFS.open(CONFIG_FILE_PATH, "w");
+        // [LittleFS 변경]: SPIFFS.open 대신 LittleFS.open 사용
+        File configFile = LittleFS.open(CONFIG_FILE_PATH, "w");
         if (!configFile) {
             Serial.println("Failed to open config file for writing");
             return false;
@@ -242,21 +251,31 @@ public:
     }
 
     void setupWebServer() {
+        String ap_ip = WiFi.softAPIP().toString(); // AP IP 주소 가져오기
+        
         // 루트 페이지 (설정 UI) - 단순화된 HTML
-        server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+        server.on("/", HTTP_GET, [this, ap_ip](AsyncWebServerRequest *request){
             String html = R"raw(
                 <!DOCTYPE html><html><head><title>WindScape Config</title>
                 <meta name='viewport' content='width=device-width, initial-scale=1'>
                 <style>body{font-family:sans-serif;} input[type=submit]{padding:10px 20px;}</style>
                 </head><body>
                 <h2>WindScape Config (V7)</h2>
-                <p>Status: Wind Sim: %s | Phase: %d | Wind: %.1f m/s</p>
-                <form method='POST' action='/set_config'>
+                <p>Status: Wind Sim: %s | Phase: %d | Wind: %.1f m/s | Fan: %d PWM</p>
+                <p><strong>AP IP: %s</strong></p> <form method='POST' action='/set_config'>
+                <h3>User Control</h3>
                 <label>Intensity (%%): <input type='number' name='intensity' value='%.1f' step='1' min='0' max='100'></label><br>
                 <label>Gust Freq (%%): <input type='number' name='gust_freq' value='%.1f' step='1' min='0' max='100'></label><br>
                 <label>Variability (%%): <input type='number' name='variability' value='%.1f' step='1' min='0' max='100'></label><br>
+                <h3>Fan Limits</h3>
                 <label>Fan Limit (%%): <input type='number' name='fan_limit' value='%.1f' step='1' min='0' max='100'></label><br>
                 <label>Min Fan (%%): <input type='number' name='min_fan' value='%.1f' step='1' min='0' max='100'></label><br>
+                <h3>Physics Control</h3>
+                <label>Thermal Str (x): <input type='number' name='therm_str' value='%.1f' step='0.1' min='1.0' max='5.0'></label><br>
+                <label>Thermal Radius (m): <input type='number' name='therm_rad' value='%.1f' step='1.0' min='1.0' max='100.0'></label><br>
+                <label>Turb Length (m): <input type='number' name='turb_len' value='%.1f' step='1.0' min='1.0' max='100.0'></label><br>
+                <label>Turb Sigma (x): <input type='number' name='turb_sig' value='%.2f' step='0.01' min='0.01' max='1.0'></label><br>
+                <h3>Preset</h3>
                 <label>Preset: <select name='preset'>
                     <option value='Ocean' %s>Ocean</option>
                     <option value='Plains' %s>Plains</option>
@@ -271,20 +290,14 @@ public:
 
             String state = wind_simulation_active ? "ON" : "OFF (Steady)";
             
-            String presetHtml;
-            std::map<String, String> presets = {{"Ocean", "Ocean"}, {"Plains", "Plains"}, {"Mountain", "Mountain"}, 
-                                                {"Countryside", "Countryside"}, {"Mediterranean", "Mediterranean"}, {"Off", "Off"}};
-            
-            for (auto const& [key, val] : presets) {
-                presetHtml += String("                    <option value='") + key + (strcmp(config.preset_mode, key.c_str()) == 0 ? "' selected>" : "'>") + val + "</option>\n";
-            }
-            
             // snprintf를 사용하여 최종 HTML 생성 (float 값 형식 지정)
             char buffer[2048]; 
             snprintf(buffer, sizeof(buffer), html.c_str(), 
-                     state.c_str(), current_weather_phase, current_wind_speed, 
+                     state.c_str(), current_weather_phase, current_wind_speed, ledcRead(PWM_CHANNEL),
+                     ap_ip.c_str(),
                      config.wind_intensity, config.gust_frequency, config.wind_variability, 
                      config.fan_speed_limit, config.minimum_fan_speed,
+                     config.thermal_bubble_strength, config.thermal_bubble_radius, config.turbulence_length_scale, config.turbulence_intensity_sigma, // <--- Physics Params
                      strcmp(config.preset_mode, "Ocean") == 0 ? "selected" : "",
                      strcmp(config.preset_mode, "Plains") == 0 ? "selected" : "",
                      strcmp(config.preset_mode, "Mountain") == 0 ? "selected" : "",
@@ -315,6 +328,14 @@ public:
                     config.fan_speed_limit = value.toFloat(); changesMade = true;
                 } else if (name == "min_fan") {
                     config.minimum_fan_speed = value.toFloat(); changesMade = true;
+                } else if (name == "turb_len") {
+                    config.turbulence_length_scale = value.toFloat(); changesMade = true;
+                } else if (name == "turb_sig") {
+                    config.turbulence_intensity_sigma = value.toFloat(); changesMade = true;
+                } else if (name == "therm_str") {
+                    config.thermal_bubble_strength = value.toFloat(); changesMade = true;
+                } else if (name == "therm_rad") { // <--- 보완: Radius 파싱 추가
+                    config.thermal_bubble_radius = value.toFloat(); changesMade = true;
                 } else if (name == "preset") {
                     strncpy(config.preset_mode, value.c_str(), sizeof(config.preset_mode) - 1);
                     config.preset_mode[sizeof(config.preset_mode) - 1] = '\0';
@@ -350,8 +371,7 @@ public:
         server.begin();
     }
     
-    // --- 4. 시뮬레이션 엔진 로직 (config 구조체 사용하도록 수정) ---
-    // (이전 코드의 로직은 config 구조체를 사용하도록 수정되었습니다.)
+    // --- 4. 시뮬레이션 엔진 로직 (보완 사항 적용) ---
 
     void applyFanSpeed(float speed_percent) {
         if (!fan_power_enabled) {
@@ -364,6 +384,12 @@ public:
         float min_speed = config.minimum_fan_speed / 100.0f;
         float intensity_multiplier = config.wind_intensity / 100.0f;
 
+        // [보완] Intensity가 0%일 경우 강제 종료 (팬 정지)
+        if (intensity_multiplier <= 0.01f) {
+            ledcWrite(PWM_CHANNEL, 0);
+            return;
+        }
+        
         if (wind_simulation_active) {
             requested_speed *= intensity_multiplier;
         }
@@ -418,13 +444,8 @@ public:
         }
     }
     
-    // (이하 시뮬레이션 로직은 config 구조체를 사용하도록 업데이트되었으므로 로직 변화 없음)
-    // (calculateVonKarmanTurbulence, calculateThermalBubble, updateGustState, 
-    // generateWindTarget, updateWeatherPhase, calculateWindSimulation 메서드는 
-    // 내부적으로 config.xxx 대신 config.xxx 값을 사용하여 수정되었습니다.)
-    
     void startWindSimulation() {
-        // ... (이전 코드의 로직을 config 구조체 사용하도록 업데이트) ...
+        // ... (로직 동일) ...
         float mid_range = (base_wind_min + base_wind_max) * 0.5f;
         current_wind_speed = mid_range;
         target_wind_speed = mid_range;
@@ -448,6 +469,7 @@ public:
     void calculateVonKarmanTurbulence(float dt) {
         if (!wind_simulation_active) return;
         
+        // [config 값 사용]
         float L = config.turbulence_length_scale;
         float sigma = config.turbulence_intensity_sigma;
         float U = current_wind_speed;
@@ -508,8 +530,10 @@ public:
               float variation = sin(bubble_age * osc_freq * 2.0f * M_PI) * 0.15f; envelope += variation;
             } else { float decay_progress = (progress - 0.6f) / 0.4f; envelope = 1.0f - pow(decay_progress, 1.3f); }
             
-            float thermal_strength = config.thermal_bubble_strength * envelope;
+            float thermal_strength = config.thermal_bubble_strength * envelope; // [config 값 사용]
             current_thermal_contribution = thermal_strength - 1.0f;
+            
+            // NOTE: config.thermal_bubble_radius는 현재 로직에 반영되지 않았습니다.
         }
     }
 
@@ -534,7 +558,7 @@ public:
         if (current_time - last_gust_check * 0.001f >= 1.5f) {
             last_gust_check = millis();
             float base_prob = gust_probability_base;
-            float user_freq = config.gust_frequency / 100.0f;
+            float user_freq = config.gust_frequency / 100.0f; // [config 값 사용]
             float wind_speed_factor = 1.0f + (current_wind_speed / 8.9f) * 0.5f;
             float phase_multiplier;
             if (current_weather_phase == 0) phase_multiplier = 0.3f * wind_speed_factor;
@@ -588,7 +612,7 @@ public:
         new_target = (new_target + mid_point * bias_factor) / (1.0f + bias_factor);
         target_wind_speed = new_target;
         
-        float variability = config.wind_variability / 100.0f;
+        float variability = config.wind_variability / 100.0f; // [config 값 사용]
         float base_rate;
         if (current_weather_phase == 0) base_rate = 0.08f + (variability * 0.12f);
         else if (current_weather_phase == 2) base_rate = 0.25f + (variability * 0.35f);
@@ -596,7 +620,7 @@ public:
         
         float U = current_wind_speed;
         if (U < 0.1f) U = 0.1f;
-        float time_scale_factor = config.turbulence_length_scale / U;
+        float time_scale_factor = config.turbulence_length_scale / U; // [config 값 사용]
         base_rate *= (1.0f + time_scale_factor * 0.1f);
         wind_change_rate = base_rate * getRandomFloat(0.7f, 1.7f); 
     }
@@ -661,7 +685,7 @@ public:
         float close_change_chance = 30.0f; 
         float far_change_chance = 6.0f; 
         
-        if (config.wind_variability > 70.0f) { // 사용자 설정에 따른 확률 변화
+        if (config.wind_variability > 70.0f) { // [config 값 사용]
              close_change_chance *= 1.5f; far_change_chance *= 1.5f;
         }
 
@@ -722,3 +746,4 @@ void setup() {
 void loop() {
     simulator.loop();
 }
+
