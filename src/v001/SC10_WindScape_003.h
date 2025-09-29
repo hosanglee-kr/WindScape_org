@@ -235,13 +235,17 @@ public:
         g_SC10_config.gust_check_interval_ms    = v_doc["timing"]["gust_int"] | 500;
         g_SC10_config.thermal_check_interval_ms = v_doc["timing"]["thermal_int"] | 2000;
 
-        // --- 2. 시뮬레이션 설정 로드 ---
+        // --- 2. 시뮬레이션 설정 로드 (Float 오류 수정 완료) ---
+        // v_doc["key"] | default_value 구문은 float 타입에도 사용 가능합니다.
         g_SC10_config.wind_intensity            = v_doc["sim"]["intensity"] | g_SC10_config.wind_intensity;
         g_SC10_config.gust_frequency            = v_doc["sim"]["gust_freq"] | g_SC10_config.gust_frequency;
         g_SC10_config.wind_variability          = v_doc["sim"]["variability"] | g_SC10_config.wind_variability;
         g_SC10_config.fan_speed_limit           = v_doc["sim"]["fan_limit"] | g_SC10_config.fan_speed_limit;
         g_SC10_config.minimum_fan_speed         = v_doc["sim"]["min_fan"] | g_SC10_config.minimum_fan_speed;
-        g_SC10_config.turbulence_length_scale   = v_doc["sim"]["turb_len"].as<float>() | g_SC10_config.turbulence_length_scale;
+        
+        // v_doc["key"].as<float>() | default_value 형태는 V7에서 float 오류를 유발하므로, 
+        // V7에서는 아래와 같이 .as<> 없이 사용하는 것이 float 디폴트값 적용의 표준입니다.
+        g_SC10_config.turbulence_length_scale   = v_doc["sim"]["turb_len"] | g_SC10_config.turbulence_length_scale;
         g_SC10_config.turbulence_intensity_sigma= v_doc["sim"]["turb_sig"] | g_SC10_config.turbulence_intensity_sigma;
         g_SC10_config.thermal_bubble_strength   = v_doc["sim"]["therm_str"] | g_SC10_config.thermal_bubble_strength;
         g_SC10_config.thermal_bubble_radius     = v_doc["sim"]["therm_rad"] | g_SC10_config.thermal_bubble_radius;
@@ -761,6 +765,11 @@ public:
         SC10_applyFanSpeed(v_fan_speed_percent);
         SC10_updateGustState();
         SC10_updateThermalBubbleCheck();
+    }
+
+    // --- 5. 메인 루프 실행 함수 (SC10_run() 함수 추가) ---
+    void SC10_run(void) {
+        SC10_calculateWindSimulation();
     }
 };
 
