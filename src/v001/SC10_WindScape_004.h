@@ -135,22 +135,6 @@ private:
         }
         return false;
     }
-    /*
-    String SC10_readHtmlConfigPage(const char* p_path) { // p_로 시작하는 함수 파라미터
-        if (!LittleFS.begin()) {
-            Serial.println("LittleFS not mounted to read HTML.");
-            return "";
-        }
-        File v_file = LittleFS.open(p_path, "r"); // v_로 시작하는 지역 변수
-        if (!v_file) {
-            Serial.printf("Failed to open file: %s\n", p_path);
-            return "";
-        }
-        String v_content = v_file.readString(); // v_로 시작하는 지역 변수
-        v_file.close();
-        return v_content;
-    }
-    */
 
 public:
     // --- 1. 상태 변수 (클래스 멤버) ---
