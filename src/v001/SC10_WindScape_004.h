@@ -410,97 +410,102 @@ void SC10_setupWebServer(void) {
         p_request->send(200, "application/json", v_response);
     });
 
-    // 3. 설정 업데이트 API (POST: /api/config)
-    // 클라이언트로부터 받은 JSON 설정을 적용하고 저장합니다. (AsyncJsonWebHandler 사용)
-    // AsyncJsonWebHandler를 사용하려면 ESPAsyncWebServer.h 외에 AsyncJson.h를 include 해야 합니다.
-    g_SC10_asyncWeb.onRequestBody(
-        // URL: /api/config
-        "/api/config",
-        // 메소드: POST
-        HTTP_POST, 
-        // 핸들러: 요청 본문(JSON)을 파싱하여 처리
-        [this](AsyncWebServerRequest *p_request, JsonDocument &p_doc){
-            bool v_changesMade = false;
-            
-            JsonObject v_sim_config = p_doc.as<JsonObject>();
-            
-            // -------------------- 프리셋 및 설정 값 업데이트 --------------------
-            
-            // 프리셋 업데이트 (문자열 이름으로 인덱스 찾기)
-            if (!v_sim_config["preset"].isNull()) {
-                const char* v_preset_name = v_sim_config["preset"];
-                int v_index;
-                if (SC10_getPresetIndexByName(v_preset_name, v_index)) {
-                    g_SC10_config.preset_mode_index = v_index;
-                    v_changesMade = true;
+    // 3. 설정 업데이트 API (POST: /api/config) - 대체 구현
+    g_SC10_asyncWeb.on("/api/config", HTTP_POST, [this](AsyncWebServerRequest *p_request){}, NULL, // onRequest와 onBody를 위한 자리
+        // 요청 본문이 수신된 후 실행되는 핸들러 (onBody)
+        [this](AsyncWebServerRequest *p_request, uint8_t *p_data, size_t p_len, size_t p_index, size_t p_total){
+            // p_index가 0이고 p_len이 p_total인 경우는 한 번에 모든 데이터를 수신했다는 의미입니다.
+            if (p_index == 0 && p_len == p_total) {
+                // Content-Type이 application/json인지 확인
+                if (p_request->hasHeader("Content-Type") && 
+                    p_request->header("Content-Type").indexOf("application/json") != -1) 
+                {
+                    // 수신된 데이터를 파싱
+                    JsonDocument v_doc;
+                    DeserializationError v_error = deserializeJson(v_doc, (const char*)p_data, p_len);
+                    
+                    if (v_error) {
+                        Serial.printf("JSON Deserialization failed: %s\n", v_error.c_str());
+                        p_request->send(400, "application/json", "{\"error\":\"Invalid JSON format\"}");
+                        return;
+                    }
+                    
+                    bool v_changesMade = false;
+                    JsonObject v_sim_config = v_doc.as<JsonObject>();
+                    
+                    // -------------------- 설정 값 업데이트 (이전 로직 유지) --------------------
+                    
+                    if (!v_sim_config["preset"].isNull()) {
+                        const char* v_preset_name = v_sim_config["preset"];
+                        int v_index;
+                        if (SC10_getPresetIndexByName(v_preset_name, v_index)) {
+                            g_SC10_config.preset_mode_index = v_index;
+                            v_changesMade = true;
+                        }
+                    }
+                    
+                    if (!v_sim_config["intensity"].isNull()) { 
+                        g_SC10_config.wind_intensity = v_sim_config["intensity"] | g_SC10_config.wind_intensity; 
+                        v_changesMade = true; 
+                    }
+                    if (!v_sim_config["gust_freq"].isNull()) { 
+                        g_SC10_config.gust_frequency = v_sim_config["gust_freq"] | g_SC10_config.gust_frequency; 
+                        v_changesMade = true; 
+                    }
+                    if (!v_sim_config["variability"].isNull()) { 
+                        g_SC10_config.wind_variability = v_sim_config["variability"] | g_SC10_config.wind_variability; 
+                        v_changesMade = true; 
+                    }
+                    if (!v_sim_config["fan_limit"].isNull()) { 
+                        g_SC10_config.fan_speed_limit = v_sim_config["fan_limit"] | g_SC10_config.fan_speed_limit; 
+                        v_changesMade = true; 
+                    }
+                    if (!v_sim_config["min_fan"].isNull()) { 
+                        g_SC10_config.minimum_fan_speed = v_sim_config["min_fan"] | g_SC10_config.minimum_fan_speed; 
+                        v_changesMade = true; 
+                    }
+                    if (!v_sim_config["turb_len"].isNull()) { 
+                        g_SC10_config.turbulence_length_scale = v_sim_config["turb_len"] | g_SC10_config.turbulence_length_scale; 
+                        v_changesMade = true; 
+                    }
+                    if (!v_sim_config["turb_sig"].isNull()) { 
+                        g_SC10_config.turbulence_intensity_sigma = v_sim_config["turb_sig"] | g_SC10_config.turbulence_intensity_sigma; 
+                        v_changesMade = true; 
+                    }
+                    if (!v_sim_config["therm_str"].isNull()) { 
+                        g_SC10_config.thermal_bubble_strength = v_sim_config["therm_str"] | g_SC10_config.thermal_bubble_strength; 
+                        v_changesMade = true; 
+                    }
+                    if (!v_sim_config["therm_rad"].isNull()) { 
+                        g_SC10_config.thermal_bubble_radius = v_sim_config["therm_rad"] | g_SC10_config.thermal_bubble_radius; 
+                        v_changesMade = true; 
+                    }
+                    
+                    // -------------------------------------------------------------------------
+
+                    if (v_changesMade) {
+                        SC10_saveConfig(); 
+                        SC10_applyCurrentPreset(true); 
+                    }
+                    
+                    // 성공 응답
+                    p_request->send(200, "application/json", "{\"message\":\"Config updated successfully\"}");
+                    return;
+
+                } else {
+                    // JSON이 아닌 Content-Type으로 요청이 온 경우
+                    p_request->send(400, "text/plain", "Bad Request: Expected application/json");
+                    return;
                 }
             }
-            
-            // 일반 설정 항목 업데이트
-            if (!v_sim_config["intensity"].isNull()) {
-            // if (v_sim_config.containsKey("intensity")) { 
-                // | 연산자를 사용하여 디폴트 값(기존 값) 설정
-                g_SC10_config.wind_intensity = v_sim_config["intensity"] | g_SC10_config.wind_intensity; 
-                v_changesMade = true; 
-            }
-            if (!v_sim_config["gust_freq"].isNull()){
-            // if (v_sim_config.containsKey("gust_freq")) { 
-                g_SC10_config.gust_frequency = v_sim_config["gust_freq"] | g_SC10_config.gust_frequency; 
-                v_changesMade = true; 
-            }
-            if (!v_sim_config["variability"].isNull()) {
-            // if (v_sim_config.containsKey("variability")) { 
-                g_SC10_config.wind_variability = v_sim_config["variability"] | g_SC10_config.wind_variability; 
-                v_changesMade = true; 
-            }
-            if (!v_sim_config["fan_limit"].isNull()) {
-            // if (v_sim_config.containsKey("fan_limit")) { 
-                g_SC10_config.fan_speed_limit = v_sim_config["fan_limit"] | g_SC10_config.fan_speed_limit; 
-                v_changesMade = true; 
-            }
-            if (!v_sim_config["min_fan"].isNull()) {
-            // if (v_sim_config.containsKey("min_fan")) { 
-                g_SC10_config.minimum_fan_speed = v_sim_config["min_fan"] | g_SC10_config.minimum_fan_speed; 
-                v_changesMade = true; 
-            }
-            if (!v_sim_config["turb_len"].isNull()) {
-            // if (v_sim_config.containsKey("turb_len")) { 
-                g_SC10_config.turbulence_length_scale = v_sim_config["turb_len"] | g_SC10_config.turbulence_length_scale; 
-                v_changesMade = true; 
-            }
-            if (!v_sim_config["turb_sig"].isNull()) {
-            // if (v_sim_config.containsKey("turb_sig")) { 
-                g_SC10_config.turbulence_intensity_sigma = v_sim_config["turb_sig"] | g_SC10_config.turbulence_intensity_sigma; 
-                v_changesMade = true; 
-            }
-            if (!v_sim_config["therm_str"].isNull()) {
-            // if (v_sim_config.containsKey("therm_str")) { 
-                g_SC10_config.thermal_bubble_strength = v_sim_config["therm_str"] | g_SC10_config.thermal_bubble_strength; 
-                v_changesMade = true; 
-            }
-            if (!v_sim_config["therm_rad"].isNull()) {
-            // if (v_sim_config.containsKey("therm_rad")) { 
-                g_SC10_config.thermal_bubble_radius = v_sim_config["therm_rad"] | g_SC10_config.thermal_bubble_radius; 
-                v_changesMade = true; 
-            }
-            
-            // ------------------------------------------------------------------
-
-            if (v_changesMade) {
-                SC10_saveConfig(); // 변경된 설정 저장
-                SC10_applyCurrentPreset(true); // 프리셋 설정 적용 및 시뮬레이션 재시작 (필요하다면)
-            }
-            
-            p_request->send(200, "application/json", "{\"message\":\"Config updated successfully\"}");
-        },
-        // AsyncJson 라이브러리의 헬퍼 함수를 사용하여 JSON 요청 본문을 처리하도록 등록
-        AsyncJsonWebHandler::isJson 
+            // 요청 본문이 청크로 들어오거나(p_index != 0) 다른 조건이면 여기서 바로 종료됩니다.
+            // 이 로직은 요청 본문 전체를 한 번에 처리하는 (p_len == p_total) 경우에 최적화되어 있습니다.
+        }
     );
 
     Serial.println("Starting Async Web Server...");
     g_SC10_asyncWeb.begin();
 }
-
     
     // --- 4. 시뮬레이션 엔진 로직 ---
 
