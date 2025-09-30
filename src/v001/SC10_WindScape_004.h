@@ -437,48 +437,48 @@ void SC10_setupWebServer(void) {
             }
             
             // 일반 설정 항목 업데이트
-            if (!v_sim_config["intensity"].isNull() {
+            if (!v_sim_config["intensity"].isNull()) {
             // if (v_sim_config.containsKey("intensity")) { 
                 // | 연산자를 사용하여 디폴트 값(기존 값) 설정
                 g_SC10_config.wind_intensity = v_sim_config["intensity"] | g_SC10_config.wind_intensity; 
                 v_changesMade = true; 
             }
-            if (!v_sim_config["gust_freq"].isNull() {
+            if (!v_sim_config["gust_freq"].isNull()){
             // if (v_sim_config.containsKey("gust_freq")) { 
                 g_SC10_config.gust_frequency = v_sim_config["gust_freq"] | g_SC10_config.gust_frequency; 
                 v_changesMade = true; 
             }
-            if (!v_sim_config["variability"].isNull() {
+            if (!v_sim_config["variability"].isNull()) {
             // if (v_sim_config.containsKey("variability")) { 
                 g_SC10_config.wind_variability = v_sim_config["variability"] | g_SC10_config.wind_variability; 
                 v_changesMade = true; 
             }
-            if (!v_sim_config["fan_limit"].isNull() {
+            if (!v_sim_config["fan_limit"].isNull()) {
             // if (v_sim_config.containsKey("fan_limit")) { 
                 g_SC10_config.fan_speed_limit = v_sim_config["fan_limit"] | g_SC10_config.fan_speed_limit; 
                 v_changesMade = true; 
             }
-            if (!v_sim_config["min_fan"].isNull() {
+            if (!v_sim_config["min_fan"].isNull()) {
             // if (v_sim_config.containsKey("min_fan")) { 
                 g_SC10_config.minimum_fan_speed = v_sim_config["min_fan"] | g_SC10_config.minimum_fan_speed; 
                 v_changesMade = true; 
             }
-            if (!v_sim_config["turb_len"].isNull() {
+            if (!v_sim_config["turb_len"].isNull()) {
             // if (v_sim_config.containsKey("turb_len")) { 
                 g_SC10_config.turbulence_length_scale = v_sim_config["turb_len"] | g_SC10_config.turbulence_length_scale; 
                 v_changesMade = true; 
             }
-            if (!v_sim_config["turb_sig"].isNull() {
+            if (!v_sim_config["turb_sig"].isNull()) {
             // if (v_sim_config.containsKey("turb_sig")) { 
                 g_SC10_config.turbulence_intensity_sigma = v_sim_config["turb_sig"] | g_SC10_config.turbulence_intensity_sigma; 
                 v_changesMade = true; 
             }
-            if (!v_sim_config["therm_str"].isNull() {
+            if (!v_sim_config["therm_str"].isNull()) {
             // if (v_sim_config.containsKey("therm_str")) { 
                 g_SC10_config.thermal_bubble_strength = v_sim_config["therm_str"] | g_SC10_config.thermal_bubble_strength; 
                 v_changesMade = true; 
             }
-            if (!v_sim_config["therm_rad"].isNull() {
+            if (!v_sim_config["therm_rad"].isNull()) {
             // if (v_sim_config.containsKey("therm_rad")) { 
                 g_SC10_config.thermal_bubble_radius = v_sim_config["therm_rad"] | g_SC10_config.thermal_bubble_radius; 
                 v_changesMade = true; 
