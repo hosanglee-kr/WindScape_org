@@ -582,6 +582,39 @@ void SC10_setupWebServer(void) {
                         g_SC10_config.thermal_bubble_radius = v_sim_config["therm_rad"] | g_SC10_config.thermal_bubble_radius; 
                         v_changesMade = true; 
                     }
+
+                    // 1. WIFI 모드 업데이트
+if (!v_sim_config["wifi_mode"].isNull()) {
+    g_SC10_config.wifi_mode = v_sim_config["wifi_mode"] | g_SC10_config.wifi_mode;
+    v_changesMade = true;
+}
+
+// 2. AP SSID/Password 업데이트
+if (!v_sim_config["ap_ssid"].isNull()) {
+    strncpy(g_SC10_config.ap_ssid, v_sim_config["ap_ssid"], sizeof(g_SC10_config.ap_ssid));
+    v_changesMade = true;
+}
+if (!v_sim_config["ap_password"].isNull()) {
+    strncpy(g_SC10_config.ap_password, v_sim_config["ap_password"], sizeof(g_SC10_config.ap_password));
+    v_changesMade = true;
+}
+
+// 3. STA 네트워크 목록 업데이트 (JSON 배열 처리)
+if (v_sim_config["sta_networks"].is<JsonArray>()) {
+    JsonArray v_sta_networks_json = v_sim_config["sta_networks"].as<JsonArray>();
+    g_SC10_config.sta_network_count = 0;
+    
+    for (JsonObject v_network : v_sta_networks_json) {
+        if (g_SC10_config.sta_network_count < MAX_STA_NETWORKS) {
+            strncpy(g_SC10_config.sta_networks[g_SC10_config.sta_network_count].ssid, 
+                    v_network["ssid"] | "", sizeof(g_SC10_config.sta_networks[0].ssid));
+            strncpy(g_SC10_config.sta_networks[g_SC10_config.sta_network_count].password, 
+                    v_network["pass"] | "", sizeof(g_SC10_config.sta_networks[0].password));
+            g_SC10_config.sta_network_count++;
+        }
+    }
+    v_changesMade = true;
+}
                     
                     // -------------------------------------------------------------------------
 
