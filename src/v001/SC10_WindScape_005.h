@@ -91,6 +91,23 @@ AsyncWebServer g_SC10_asyncWeb(80);
 // WindScape Configuration Structure
 // ====================================================================================
 struct WindConfig {
+    // --- WIFI 설정 추가 ---
+    int wifi_mode; // 0: SC10_WIFI_MODE_AP, 1: SC10_WIFI_MODE_STA
+    
+    // WiFiMulti를 위한 STA 네트워크 목록 (JSON 배열로 저장/로드됨)
+    // 메모리 절약을 위해 SSID/Password는 32바이트/64바이트로 제한합니다.
+    struct StaCredential {
+        char ssid[32];
+        char password[64];
+    };
+    StaCredential sta_networks[MAX_STA_NETWORKS];
+    int sta_network_count; // 실제 저장된 네트워크 수
+    
+    // AP 모드 고정 설정 (필요 시)
+    char ap_ssid[32];
+    char ap_password[64];
+
+
     // --- 1. 하드웨어/시스템 상수 (JSON 관리) ---
     int fan_pwm_pin                 = 14;     
     int fan_tach_pin                = 27;     
