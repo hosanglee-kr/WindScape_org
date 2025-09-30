@@ -8,6 +8,7 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h> // V7.4.x 사용
+#include <AsyncJson.h> 
 #include <FS.h>
 #include <LittleFS.h>
 #include <cmath>
@@ -373,7 +374,7 @@ void SC10_setupWebServer(void) {
     g_SC10_asyncWeb.on("/api/state", HTTP_GET, [this](AsyncWebServerRequest *p_request){
         // DynamicJsonDocument는 스택 대신 힙에 메모리를 할당합니다.
         // 상태 정보와 모든 설정, 프리셋 목록을 담기 위해 넉넉하게 1024~1536 바이트 할당 (V7.x 기준)
-        DynamicJsonDocument v_doc(1536); 
+        JsonDocument v_doc; 
         
         // A. 현재 동적 상태
         JsonObject v_status = v_doc["status"].to<JsonObject>();
@@ -426,7 +427,7 @@ void SC10_setupWebServer(void) {
             // -------------------- 프리셋 및 설정 값 업데이트 --------------------
             
             // 프리셋 업데이트 (문자열 이름으로 인덱스 찾기)
-            if (v_sim_config.containsKey("preset")) {
+            if (!v_sim_config["preset"].isNull() {
                 const char* v_preset_name = v_sim_config["preset"];
                 int v_index;
                 if (SC10_getPresetIndexByName(v_preset_name, v_index)) {
@@ -436,40 +437,49 @@ void SC10_setupWebServer(void) {
             }
             
             // 일반 설정 항목 업데이트
-            if (v_sim_config.containsKey("intensity")) { 
+            if (!v_sim_config["intensity"].isNull() {
+            // if (v_sim_config.containsKey("intensity")) { 
                 // | 연산자를 사용하여 디폴트 값(기존 값) 설정
                 g_SC10_config.wind_intensity = v_sim_config["intensity"] | g_SC10_config.wind_intensity; 
                 v_changesMade = true; 
             }
-            if (v_sim_config.containsKey("gust_freq")) { 
+            if (!v_sim_config["gust_freq"].isNull() {
+            // if (v_sim_config.containsKey("gust_freq")) { 
                 g_SC10_config.gust_frequency = v_sim_config["gust_freq"] | g_SC10_config.gust_frequency; 
                 v_changesMade = true; 
             }
-            if (v_sim_config.containsKey("variability")) { 
+            if (!v_sim_config["variability"].isNull() {
+            // if (v_sim_config.containsKey("variability")) { 
                 g_SC10_config.wind_variability = v_sim_config["variability"] | g_SC10_config.wind_variability; 
                 v_changesMade = true; 
             }
-            if (v_sim_config.containsKey("fan_limit")) { 
+            if (!v_sim_config["fan_limit"].isNull() {
+            // if (v_sim_config.containsKey("fan_limit")) { 
                 g_SC10_config.fan_speed_limit = v_sim_config["fan_limit"] | g_SC10_config.fan_speed_limit; 
                 v_changesMade = true; 
             }
-            if (v_sim_config.containsKey("min_fan")) { 
+            if (!v_sim_config["min_fan"].isNull() {
+            // if (v_sim_config.containsKey("min_fan")) { 
                 g_SC10_config.minimum_fan_speed = v_sim_config["min_fan"] | g_SC10_config.minimum_fan_speed; 
                 v_changesMade = true; 
             }
-            if (v_sim_config.containsKey("turb_len")) { 
+            if (!v_sim_config["turb_len"].isNull() {
+            // if (v_sim_config.containsKey("turb_len")) { 
                 g_SC10_config.turbulence_length_scale = v_sim_config["turb_len"] | g_SC10_config.turbulence_length_scale; 
                 v_changesMade = true; 
             }
-            if (v_sim_config.containsKey("turb_sig")) { 
+            if (!v_sim_config["turb_sig"].isNull() {
+            // if (v_sim_config.containsKey("turb_sig")) { 
                 g_SC10_config.turbulence_intensity_sigma = v_sim_config["turb_sig"] | g_SC10_config.turbulence_intensity_sigma; 
                 v_changesMade = true; 
             }
-            if (v_sim_config.containsKey("therm_str")) { 
+            if (!v_sim_config["therm_str"].isNull() {
+            // if (v_sim_config.containsKey("therm_str")) { 
                 g_SC10_config.thermal_bubble_strength = v_sim_config["therm_str"] | g_SC10_config.thermal_bubble_strength; 
                 v_changesMade = true; 
             }
-            if (v_sim_config.containsKey("therm_rad")) { 
+            if (!v_sim_config["therm_rad"].isNull() {
+            // if (v_sim_config.containsKey("therm_rad")) { 
                 g_SC10_config.thermal_bubble_radius = v_sim_config["therm_rad"] | g_SC10_config.thermal_bubble_radius; 
                 v_changesMade = true; 
             }
