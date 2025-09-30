@@ -22,7 +22,7 @@
 // 전역 상수 (파일 경로 등)
 // ====================================================================================
 // G_SC10_으로 시작하는 전역 상수명
-const char* G_SC10_CONFIG_FILE_PATH     = "/json/config_002.json";
+const char* G_SC10_CONFIG_FILE_PATH     = "/json/config_003.json";
 const char* G_SC10_CONFIG_HTML_PATH     = "/html/SC10_main_002.html"; 
 const char* G_SC10_CONFIG_JS_PATH       = "/html/SC10_main_002.js"; 
 
