@@ -427,7 +427,7 @@ void SC10_setupWebServer(void) {
             // -------------------- 프리셋 및 설정 값 업데이트 --------------------
             
             // 프리셋 업데이트 (문자열 이름으로 인덱스 찾기)
-            if (!v_sim_config["preset"].isNull() {
+            if (!v_sim_config["preset"].isNull()) {
                 const char* v_preset_name = v_sim_config["preset"];
                 int v_index;
                 if (SC10_getPresetIndexByName(v_preset_name, v_index)) {
