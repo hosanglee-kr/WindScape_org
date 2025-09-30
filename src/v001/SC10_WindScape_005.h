@@ -5,6 +5,8 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <WiFiMulti.h> 
+
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h> // V7.4.x 사용
@@ -85,7 +87,16 @@ float SC10_getRandomFloat(float p_min, float p_max) { // p_로 시작하는 함�
 // g_SC10_으로 시작하는 전역 변수명
 AsyncWebServer g_SC10_asyncWeb(80);
 
+
+
 #define MAX_STA_NETWORKS 5 // 최대 저장 가능한 STA 네트워크 수
+WiFiMulti g_SC10_wifiMulti;
+
+// WiFi 모드 정의
+#define SC10_WIFI_MODE_AP   0
+#define SC10_WIFI_MODE_STA  1
+
+
 
 // ====================================================================================
 // WindScape Configuration Structure
@@ -114,8 +125,8 @@ struct WindConfig {
     int pwm_frequency               = 25000;  
     int pwm_channel                 = 0;
     int pwm_resolution              = 10;     
-    char wifi_ssid[32]              = "WindScape_AP";
-    char wifi_password[32]          = "wind1234";
+    // char wifi_ssid[32]              = "WindScape_AP";
+    // char wifi_password[32]          = "wind1234";
     int wind_sim_interval_ms        = 250;
     int gust_check_interval_ms      = 500;
     int thermal_check_interval_ms   = 2000;
@@ -262,6 +273,26 @@ public:
         } else {
             g_SC10_config.preset_mode_index = SC10_PRESET_OCEAN;
         }
+
+        // WIFI 모드 로드
+g_SC10_config.wifi_mode = v_root["wifi_mode"] | SC10_WIFI_MODE_STA; // 기본값 STA
+strncpy(g_SC10_config.ap_ssid, v_root["ap_ssid"] | "SC10_ESP32", sizeof(g_SC10_config.ap_ssid));
+strncpy(g_SC10_config.ap_password, v_root["ap_password"] | "12345678", sizeof(g_SC10_config.ap_password));
+
+// STA 네트워크 목록 로드 (JSON 배열)
+JsonArray v_sta_networks_json = v_root["sta_networks"].as<JsonArray>();
+g_SC10_config.sta_network_count = 0;
+
+for (JsonObject v_network : v_sta_networks_json) {
+    if (g_SC10_config.sta_network_count < MAX_STA_NETWORKS) {
+        strncpy(g_SC10_config.sta_networks[g_SC10_config.sta_network_count].ssid, 
+                v_network["ssid"] | "", sizeof(g_SC10_config.sta_networks[0].ssid));
+        strncpy(g_SC10_config.sta_networks[g_SC10_config.sta_network_count].password, 
+                v_network["pass"] | "", sizeof(g_SC10_config.sta_networks[0].password));
+        g_SC10_config.sta_network_count++;
+    }
+}
+        
         
         Serial.println("Config loaded successfully.");
         return true;
@@ -293,6 +324,21 @@ public:
         // JSON에는 문자열 이름으로 저장
         v_doc["sim"]["preset"]      = G_SC10_PRESET_MODE_NAMES[g_SC10_config.preset_mode_index]; 
 
+
+        // WIFI 모드 저장
+v_doc["wifi_mode"] = g_SC10_config.wifi_mode;
+v_doc["ap_ssid"] = g_SC10_config.ap_ssid;
+v_doc["ap_password"] = g_SC10_config.ap_password;
+
+// STA 네트워크 목록 저장 (JSON 배열)
+JsonArray v_sta_networks_json = v_doc.createNestedArray("sta_networks");
+for (int i = 0; i < g_SC10_config.sta_network_count; i++) {
+    JsonObject v_network = v_sta_networks_json.createNestedObject();
+    v_network["ssid"] = g_SC10_config.sta_networks[i].ssid;
+    v_network["pass"] = g_SC10_config.sta_networks[i].password;
+}
+        
+
         File v_configFile = LittleFS.open(G_SC10_CONFIG_FILE_PATH, "w");
         if (!v_configFile) {
             Serial.println("Failed to open config file for writing");
@@ -310,6 +356,57 @@ public:
         return true;
     }
 
+void SC10_initWiFi() {
+    Serial.println("SC10_initWiFi: Initializing WiFi...");
+    
+    // 1. WiFiMulti에 저장된 STA 네트워크 목록 추가
+    for (int i = 0; i < g_SC10_config.sta_network_count; i++) {
+        g_SC10_wifiMulti.addAP(
+            g_SC10_config.sta_networks[i].ssid, 
+            g_SC10_config.sta_networks[i].password
+        );
+        Serial.printf("  Added STA: %s\n", g_SC10_config.sta_networks[i].ssid);
+    }
+    
+    // 2. STA 모드 접속 시도 (5회 제한)
+    if (g_SC10_config.wifi_mode == SC10_WIFI_MODE_STA) {
+        Serial.print("Trying to connect to STA network(s)...");
+        
+        int v_connect_attempts = 0;
+        int v_max_attempts = 5;
+        
+        // g_SC10_wifiMulti.run()은 연결 성공 시 WL_CONNECTED를 반환합니다.
+        while (g_SC10_wifiMulti.run() != WL_CONNECTED && v_connect_attempts < v_max_attempts) {
+            v_connect_attempts++;
+            Serial.printf(" .(%d)", v_connect_attempts);
+            delay(1000); // 1초 대기
+        }
+        
+        // 3. 접속 결과 처리
+        if (WiFi.status() == WL_CONNECTED) {
+            Serial.println("\nSTA Connected!");
+            Serial.print("IP address: ");
+            Serial.println(WiFi.localIP());
+            // SC10_WIFI_MODE_STA 상태 유지
+            return;
+        } else {
+            // 5회 접속 실패 시 AP 모드로 전환
+            Serial.println("\nSTA connection failed after 5 attempts. Switching to AP mode.");
+            g_SC10_config.wifi_mode = SC10_WIFI_MODE_AP; // 설정값 변경 (다음 부팅 시 적용될 수 있도록)
+            SC10_saveConfig(); // 변경된 모드 저장 (선택 사항이지만 영구 전환을 위해 권장)
+        }
+    }
+
+    // 4. AP 모드 설정 및 시작 (STA 모드 실패 또는 초기 설정이 AP인 경우)
+    if (g_SC10_config.wifi_mode == SC10_WIFI_MODE_AP) {
+        Serial.printf("Starting AP mode: %s\n", g_SC10_config.ap_ssid);
+        // AP 모드 설정
+        WiFi.softAP(g_SC10_config.ap_ssid, g_SC10_config.ap_password);
+        Serial.print("AP IP address: ");
+        Serial.println(WiFi.softAPIP());
+    }
+}
+
     // --- 3. 초기화 및 설정 ---
 
     void SC10_init(void) {
@@ -317,6 +414,8 @@ public:
 
         // 1. 파일 시스템 및 설정 로드
         SC10_loadConfig();
+
+        SC10_initWiFi();
         
         // 2. 팬 PWM 설정 
         ledcSetup(g_SC10_config.pwm_channel, g_SC10_config.pwm_frequency, g_SC10_config.pwm_resolution);
