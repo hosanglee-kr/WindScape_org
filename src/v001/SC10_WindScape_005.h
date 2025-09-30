@@ -73,7 +73,8 @@ const char* G_SC10_PRESET_MODE_NAMES[] = {
 
 // 난수 생성 함수 (0.0f ~ 1.0f)
 float SC10_getRandomFloat(void) {
-    return (float)esp_random() / 4294967295.0f; // UINT32_MAX
+    // 컴파일러 경고를 피하기 위해 명시적 캐스팅 적용
+    return (float)esp_random() / (float)4294967295.0f; // UINT32_MAX
 }
 
 float SC10_getRandomFloat(float p_min, float p_max) { // p_로 시작하는 함수 파라미터
@@ -89,12 +90,12 @@ AsyncWebServer g_SC10_asyncWeb(80);
 
 
 
-#define MAX_STA_NETWORKS 5 // 최대 저장 가능한 STA 네트워크 수
+#define G_SC10_MAX_STA_NETWORKS 5 // 최대 저장 가능한 STA 네트워크 수
 WiFiMulti g_SC10_wifiMulti;
 
 // WiFi 모드 정의
-#define SC10_WIFI_MODE_AP   0
-#define SC10_WIFI_MODE_STA  1
+#define G_SC10_WIFI_MODE_AP   0
+#define G_SC10_WIFI_MODE_STA  1
 
 
 
@@ -103,7 +104,7 @@ WiFiMulti g_SC10_wifiMulti;
 // ====================================================================================
 struct WindConfig {
     // --- WIFI 설정 추가 ---
-    int wifi_mode; // 0: SC10_WIFI_MODE_AP, 1: SC10_WIFI_MODE_STA
+    int wifi_mode; // 0: G_SC10_WIFI_MODE_AP, 1: G_SC10_WIFI_MODE_STA
     
     // WiFiMulti를 위한 STA 네트워크 목록 (JSON 배열로 저장/로드됨)
     // 메모리 절약을 위해 SSID/Password는 32바이트/64바이트로 제한합니다.
@@ -111,7 +112,7 @@ struct WindConfig {
         char ssid[32];
         char password[64];
     };
-    StaCredential sta_networks[MAX_STA_NETWORKS];
+    StaCredential sta_networks[G_SC10_MAX_STA_NETWORKS];
     int sta_network_count; // 실제 저장된 네트워크 수
     
     // AP 모드 고정 설정 (필요 시)
@@ -125,8 +126,8 @@ struct WindConfig {
     int pwm_frequency               = 25000;  
     int pwm_channel                 = 0;
     int pwm_resolution              = 10;     
-    // char wifi_ssid[32]              = "WindScape_AP";
-    // char wifi_password[32]          = "wind1234";
+    // char wifi_ssid[32]              = "WindScape_AP"; // 삭제됨
+    // char wifi_password[32]          = "wind1234"; // 삭제됨
     int wind_sim_interval_ms        = 250;
     int gust_check_interval_ms      = 500;
     int thermal_check_interval_ms   = 2000;
@@ -237,36 +238,33 @@ public:
             Serial.printf("Failed to deserialize JSON: %s\n", v_error.c_str());
             return false;
         }
+        
+        // JSON Root Object (편의를 위해 v_root 변수 사용)
+        JsonObject v_root = v_doc.as<JsonObject>();
 
         // --- 1. 하드웨어/시스템 상수 로드 ---
-        g_SC10_config.fan_pwm_pin       = v_doc["hw"]["pwm_pin"] | 14;
-        g_SC10_config.pwm_frequency     = v_doc["hw"]["pwm_freq"] | 25000;
-        g_SC10_config.pwm_resolution    = v_doc["hw"]["pwm_res"] | 10;
-        const char* v_ssid = v_doc["wifi"]["ssid"] | "WindScape_AP";
-        strncpy(g_SC10_config.wifi_ssid, v_ssid, sizeof(g_SC10_config.wifi_ssid) - 1);
-        const char* v_pass = v_doc["wifi"]["pass"] | "wind1234";
-        strncpy(g_SC10_config.wifi_password, v_pass, sizeof(g_SC10_config.wifi_password) - 1);
-        
-        g_SC10_config.wind_sim_interval_ms      = v_doc["timing"]["sim_int"] | 250;
-        g_SC10_config.gust_check_interval_ms    = v_doc["timing"]["gust_int"] | 500;
-        g_SC10_config.thermal_check_interval_ms = v_doc["timing"]["thermal_int"] | 2000;
+        g_SC10_config.fan_pwm_pin       = v_root["hw"]["pwm_pin"] | 14;
+        g_SC10_config.pwm_frequency     = v_root["hw"]["pwm_freq"] | 25000;
+        g_SC10_config.pwm_resolution    = v_root["hw"]["pwm_res"] | 10;
+        // 이전 wifi_ssid/pass 로직은 제거됨
 
-        // --- 2. 시뮬레이션 설정 로드 (Float 오류 수정 완료) ---
-        // v_doc["key"] | default_value 구문은 float 타입에도 사용 가능합니다.
-        g_SC10_config.wind_intensity            = v_doc["sim"]["intensity"] | g_SC10_config.wind_intensity;
-        g_SC10_config.gust_frequency            = v_doc["sim"]["gust_freq"] | g_SC10_config.gust_frequency;
-        g_SC10_config.wind_variability          = v_doc["sim"]["variability"] | g_SC10_config.wind_variability;
-        g_SC10_config.fan_speed_limit           = v_doc["sim"]["fan_limit"] | g_SC10_config.fan_speed_limit;
-        g_SC10_config.minimum_fan_speed         = v_doc["sim"]["min_fan"] | g_SC10_config.minimum_fan_speed;
+        g_SC10_config.wind_sim_interval_ms      = v_root["timing"]["sim_int"] | 250;
+        g_SC10_config.gust_check_interval_ms    = v_root["timing"]["gust_int"] | 500;
+        g_SC10_config.thermal_check_interval_ms = v_root["timing"]["thermal_int"] | 2000;
+
+        // --- 2. 시뮬레이션 설정 로드 ---
+        g_SC10_config.wind_intensity            = v_root["sim"]["intensity"] | g_SC10_config.wind_intensity;
+        g_SC10_config.gust_frequency            = v_root["sim"]["gust_freq"] | g_SC10_config.gust_frequency;
+        g_SC10_config.wind_variability          = v_root["sim"]["variability"] | g_SC10_config.wind_variability;
+        g_SC10_config.fan_speed_limit           = v_root["sim"]["fan_limit"] | g_SC10_config.fan_speed_limit;
+        g_SC10_config.minimum_fan_speed         = v_root["sim"]["min_fan"] | g_SC10_config.minimum_fan_speed;
         
-        // v_doc["key"].as<float>() | default_value 형태는 V7에서 float 오류를 유발하므로, 
-        // V7에서는 아래와 같이 .as<> 없이 사용하는 것이 float 디폴트값 적용의 표준입니다.
-        g_SC10_config.turbulence_length_scale   = v_doc["sim"]["turb_len"] | g_SC10_config.turbulence_length_scale;
-        g_SC10_config.turbulence_intensity_sigma= v_doc["sim"]["turb_sig"] | g_SC10_config.turbulence_intensity_sigma;
-        g_SC10_config.thermal_bubble_strength   = v_doc["sim"]["therm_str"] | g_SC10_config.thermal_bubble_strength;
-        g_SC10_config.thermal_bubble_radius     = v_doc["sim"]["therm_rad"] | g_SC10_config.thermal_bubble_radius;
+        g_SC10_config.turbulence_length_scale   = v_root["sim"]["turb_len"] | g_SC10_config.turbulence_length_scale;
+        g_SC10_config.turbulence_intensity_sigma= v_root["sim"]["turb_sig"] | g_SC10_config.turbulence_intensity_sigma;
+        g_SC10_config.thermal_bubble_strength   = v_root["sim"]["therm_str"] | g_SC10_config.thermal_bubble_strength;
+        g_SC10_config.thermal_bubble_radius     = v_root["sim"]["therm_rad"] | g_SC10_config.thermal_bubble_radius;
         
-        const char* v_preset_name = v_doc["sim"]["preset"] | G_SC10_PRESET_MODE_NAMES[SC10_PRESET_OCEAN];
+        const char* v_preset_name = v_root["sim"]["preset"] | G_SC10_PRESET_MODE_NAMES[SC10_PRESET_OCEAN];
         int v_index;
         if (SC10_getPresetIndexByName(v_preset_name, v_index)) {
             g_SC10_config.preset_mode_index = v_index;
@@ -274,25 +272,35 @@ public:
             g_SC10_config.preset_mode_index = SC10_PRESET_OCEAN;
         }
 
-        // WIFI 모드 로드
-g_SC10_config.wifi_mode = v_root["wifi_mode"] | SC10_WIFI_MODE_STA; // 기본값 STA
-strncpy(g_SC10_config.ap_ssid, v_root["ap_ssid"] | "SC10_ESP32", sizeof(g_SC10_config.ap_ssid));
-strncpy(g_SC10_config.ap_password, v_root["ap_password"] | "12345678", sizeof(g_SC10_config.ap_password));
+        // -------------------- WIFI 모드 및 네트워크 로드 (수정된 부분) --------------------
+        g_SC10_config.wifi_mode = v_root["wifi"]["wifi_mode"] | G_SC10_WIFI_MODE_STA; 
 
-// STA 네트워크 목록 로드 (JSON 배열)
-JsonArray v_sta_networks_json = v_root["sta_networks"].as<JsonArray>();
-g_SC10_config.sta_network_count = 0;
+        // AP 설정 로드
+        strncpy(g_SC10_config.ap_ssid, v_root["wifi"]["ap_ssid"] | "SC10_Config_AP", sizeof(g_SC10_config.ap_ssid));
+        strncpy(g_SC10_config.ap_password, v_root["wifi"]["ap_password"] | "newpassword", sizeof(g_SC10_config.ap_password));
 
-for (JsonObject v_network : v_sta_networks_json) {
-    if (g_SC10_config.sta_network_count < MAX_STA_NETWORKS) {
-        strncpy(g_SC10_config.sta_networks[g_SC10_config.sta_network_count].ssid, 
-                v_network["ssid"] | "", sizeof(g_SC10_config.sta_networks[0].ssid));
-        strncpy(g_SC10_config.sta_networks[g_SC10_config.sta_network_count].password, 
-                v_network["pass"] | "", sizeof(g_SC10_config.sta_networks[0].password));
-        g_SC10_config.sta_network_count++;
-    }
-}
-        
+        // STA 네트워크 목록 로드 (JSON 배열)
+        JsonArray v_sta_networks_json = v_root["wifi"]["sta_networks"].as<JsonArray>();
+        g_SC10_config.sta_network_count = 0;
+
+        for (JsonObject v_network : v_sta_networks_json) {
+            if (g_SC10_config.sta_network_count < G_SC10_MAX_STA_NETWORKS) {
+                // JSON에서 ssid와 pass를 읽어 StaCredential 구조체에 복사
+                strncpy(g_SC10_config.sta_networks[g_SC10_config.sta_network_count].ssid, 
+                        v_network["ssid"] | "", sizeof(g_SC10_config.sta_networks[0].ssid) - 1);
+                g_SC10_config.sta_networks[g_SC10_config.sta_network_count].ssid[sizeof(g_SC10_config.sta_networks[0].ssid) - 1] = '\0';
+                        
+                strncpy(g_SC10_config.sta_networks[g_SC10_config.sta_network_count].password, 
+                        v_network["pass"] | "", sizeof(g_SC10_config.sta_networks[0].password) - 1);
+                g_SC10_config.sta_networks[g_SC10_config.sta_network_count].password[sizeof(g_SC10_config.sta_networks[0].password) - 1] = '\0';
+                
+                // SSID가 비어있지 않은 경우에만 카운트 증가
+                if (strlen(g_SC10_config.sta_networks[g_SC10_config.sta_network_count].ssid) > 0) {
+                     g_SC10_config.sta_network_count++;
+                }
+            }
+        }
+        // ----------------------------------------------------------------------------------
         
         Serial.println("Config loaded successfully.");
         return true;
@@ -300,44 +308,44 @@ for (JsonObject v_network : v_sta_networks_json) {
 
     bool SC10_saveConfig(void) {
         JsonDocument v_doc;
+        JsonObject v_root = v_doc.to<JsonObject>();
 
         // --- 1. 하드웨어/시스템 상수 저장 ---
-        v_doc["hw"]["pwm_pin"]      = g_SC10_config.fan_pwm_pin;
-        v_doc["hw"]["pwm_freq"]     = g_SC10_config.pwm_frequency;
-        v_doc["hw"]["pwm_res"]      = g_SC10_config.pwm_resolution;
-        v_doc["wifi"]["ssid"]       = g_SC10_config.wifi_ssid;
-        v_doc["wifi"]["pass"]       = g_SC10_config.wifi_password;
-        v_doc["timing"]["sim_int"]  = g_SC10_config.wind_sim_interval_ms;
-        v_doc["timing"]["gust_int"] = g_SC10_config.gust_check_interval_ms;
-        v_doc["timing"]["thermal_int"] = g_SC10_config.thermal_check_interval_ms;
+        v_root["hw"]["pwm_pin"]      = g_SC10_config.fan_pwm_pin;
+        v_root["hw"]["pwm_freq"]     = g_SC10_config.pwm_frequency;
+        v_root["hw"]["pwm_res"]      = g_SC10_config.pwm_resolution;
+        // 이전 wifi_ssid/pass 로직 제거
+        v_root["timing"]["sim_int"]  = g_SC10_config.wind_sim_interval_ms;
+        v_root["timing"]["gust_int"] = g_SC10_config.gust_check_interval_ms;
+        v_root["timing"]["thermal_int"] = g_SC10_config.thermal_check_interval_ms;
 
         // --- 2. 시뮬레이션 설정 저장 ---
-        v_doc["sim"]["intensity"]   = g_SC10_config.wind_intensity;
-        v_doc["sim"]["gust_freq"]   = g_SC10_config.gust_frequency;
-        v_doc["sim"]["variability"] = g_SC10_config.wind_variability;
-        v_doc["sim"]["fan_limit"]   = g_SC10_config.fan_speed_limit;
-        v_doc["sim"]["min_fan"]     = g_SC10_config.minimum_fan_speed;
-        v_doc["sim"]["turb_len"]    = g_SC10_config.turbulence_length_scale;
-        v_doc["sim"]["turb_sig"]    = g_SC10_config.turbulence_intensity_sigma;
-        v_doc["sim"]["therm_str"]   = g_SC10_config.thermal_bubble_strength;
-        v_doc["sim"]["therm_rad"]   = g_SC10_config.thermal_bubble_radius;
+        v_root["sim"]["intensity"]   = g_SC10_config.wind_intensity;
+        v_root["sim"]["gust_freq"]   = g_SC10_config.gust_frequency;
+        v_root["sim"]["variability"] = g_SC10_config.wind_variability;
+        v_root["sim"]["fan_limit"]   = g_SC10_config.fan_speed_limit;
+        v_root["sim"]["min_fan"]     = g_SC10_config.minimum_fan_speed;
+        v_root["sim"]["turb_len"]    = g_SC10_config.turbulence_length_scale;
+        v_root["sim"]["turb_sig"]    = g_SC10_config.turbulence_intensity_sigma;
+        v_root["sim"]["therm_str"]   = g_SC10_config.thermal_bubble_strength;
+        v_root["sim"]["therm_rad"]   = g_SC10_config.thermal_bubble_radius;
         // JSON에는 문자열 이름으로 저장
-        v_doc["sim"]["preset"]      = G_SC10_PRESET_MODE_NAMES[g_SC10_config.preset_mode_index]; 
-
-
-        // WIFI 모드 저장
-v_doc["wifi_mode"] = g_SC10_config.wifi_mode;
-v_doc["ap_ssid"] = g_SC10_config.ap_ssid;
-v_doc["ap_password"] = g_SC10_config.ap_password;
-
-// STA 네트워크 목록 저장 (JSON 배열)
-JsonArray v_sta_networks_json = v_doc.createNestedArray("sta_networks");
-for (int i = 0; i < g_SC10_config.sta_network_count; i++) {
-    JsonObject v_network = v_sta_networks_json.createNestedObject();
-    v_network["ssid"] = g_SC10_config.sta_networks[i].ssid;
-    v_network["pass"] = g_SC10_config.sta_networks[i].password;
-}
+        v_root["sim"]["preset"]      = G_SC10_PRESET_MODE_NAMES[g_SC10_config.preset_mode_index]; 
         
+        // -------------------- WIFI 모드 및 네트워크 저장 (수정된 부분) --------------------
+        JsonObject v_wifi_config = v_root.createNestedObject("wifi");
+        v_wifi_config["wifi_mode"] = g_SC10_config.wifi_mode;
+        v_wifi_config["ap_ssid"] = g_SC10_config.ap_ssid;
+        v_wifi_config["ap_password"] = g_SC10_config.ap_password;
+
+        // STA 네트워크 목록 저장 (JSON 배열)
+        JsonArray v_sta_networks_json = v_wifi_config.createNestedArray("sta_networks");
+        for (int i = 0; i < g_SC10_config.sta_network_count; i++) {
+            JsonObject v_network = v_sta_networks_json.createNestedObject();
+            v_network["ssid"] = g_SC10_config.sta_networks[i].ssid;
+            v_network["pass"] = g_SC10_config.sta_networks[i].password;
+        }
+        // ----------------------------------------------------------------------------------
 
         File v_configFile = LittleFS.open(G_SC10_CONFIG_FILE_PATH, "w");
         if (!v_configFile) {
@@ -356,56 +364,62 @@ for (int i = 0; i < g_SC10_config.sta_network_count; i++) {
         return true;
     }
 
-void SC10_initWiFi() {
-    Serial.println("SC10_initWiFi: Initializing WiFi...");
-    
-    // 1. WiFiMulti에 저장된 STA 네트워크 목록 추가
-    for (int i = 0; i < g_SC10_config.sta_network_count; i++) {
-        g_SC10_wifiMulti.addAP(
-            g_SC10_config.sta_networks[i].ssid, 
-            g_SC10_config.sta_networks[i].password
-        );
-        Serial.printf("  Added STA: %s\n", g_SC10_config.sta_networks[i].ssid);
-    }
-    
-    // 2. STA 모드 접속 시도 (5회 제한)
-    if (g_SC10_config.wifi_mode == SC10_WIFI_MODE_STA) {
-        Serial.print("Trying to connect to STA network(s)...");
+    void SC10_initWiFi() {
+        Serial.println("SC10_initWiFi: Initializing WiFi...");
         
-        int v_connect_attempts = 0;
-        int v_max_attempts = 5;
-        
-        // g_SC10_wifiMulti.run()은 연결 성공 시 WL_CONNECTED를 반환합니다.
-        while (g_SC10_wifiMulti.run() != WL_CONNECTED && v_connect_attempts < v_max_attempts) {
-            v_connect_attempts++;
-            Serial.printf(" .(%d)", v_connect_attempts);
-            delay(1000); // 1초 대기
+        // 1. WiFiMulti에 저장된 STA 네트워크 목록 추가
+        g_SC10_wifiMulti.run(); // 혹시 모를 이전 연결 해제
+        WiFi.mode(WIFI_AP_STA); // AP/STA 동시 사용을 위해 기본 모드를 AP+STA로 설정
+    
+        for (int i = 0; i < g_SC10_config.sta_network_count; i++) {
+            if (strlen(g_SC10_config.sta_networks[i].ssid) > 0) {
+                g_SC10_wifiMulti.addAP(
+                    g_SC10_config.sta_networks[i].ssid, 
+                    g_SC10_config.sta_networks[i].password
+                );
+                Serial.printf("  Added STA: %s\n", g_SC10_config.sta_networks[i].ssid);
+            }
         }
         
-        // 3. 접속 결과 처리
-        if (WiFi.status() == WL_CONNECTED) {
-            Serial.println("\nSTA Connected!");
-            Serial.print("IP address: ");
-            Serial.println(WiFi.localIP());
-            // SC10_WIFI_MODE_STA 상태 유지
-            return;
-        } else {
-            // 5회 접속 실패 시 AP 모드로 전환
-            Serial.println("\nSTA connection failed after 5 attempts. Switching to AP mode.");
-            g_SC10_config.wifi_mode = SC10_WIFI_MODE_AP; // 설정값 변경 (다음 부팅 시 적용될 수 있도록)
-            SC10_saveConfig(); // 변경된 모드 저장 (선택 사항이지만 영구 전환을 위해 권장)
+        // 2. STA 모드 접속 시도
+        if (g_SC10_config.wifi_mode == G_SC10_WIFI_MODE_STA && g_SC10_config.sta_network_count > 0) {
+            Serial.print("Trying to connect to STA network(s)...");
+            
+            int v_connect_attempts = 0;
+            int v_max_attempts = 15; // 최대 시도 횟수를 늘려 연결 안정성 확보
+            
+            while (g_SC10_wifiMulti.run() != WL_CONNECTED && v_connect_attempts < v_max_attempts) {
+                v_connect_attempts++;
+                Serial.print(".");
+                delay(1000); 
+            }
+            
+            // 3. 접속 결과 처리
+            if (WiFi.status() == WL_CONNECTED) {
+                Serial.println("\nSTA Connected!");
+                Serial.print("IP address: ");
+                Serial.println(WiFi.localIP());
+                // AP 모드는 비활성화
+                WiFi.softAPdisconnect(true);
+                return;
+            } else {
+                // 접속 실패 시 AP 모드로 전환 (실제 설정값 변경은 하지 않음, 임시 전환)
+                Serial.println("\nSTA connection failed. Activating AP mode for configuration.");
+                g_SC10_config.wifi_mode = G_SC10_WIFI_MODE_AP;
+                // AP 모드 시작 로직으로 넘어감
+            }
+        }
+    
+        // 4. AP 모드 설정 및 시작 (초기 설정이 AP이거나, STA 모드 접속 실패 시)
+        if (g_SC10_config.wifi_mode == G_SC10_WIFI_MODE_AP) {
+            // 기존 STA 연결을 끊고 AP만 활성화
+            WiFi.disconnect(true); 
+            WiFi.softAP(g_SC10_config.ap_ssid, g_SC10_config.ap_password);
+            Serial.printf("Starting AP mode: %s\n", g_SC10_config.ap_ssid);
+            Serial.print("AP IP address: ");
+            Serial.println(WiFi.softAPIP());
         }
     }
-
-    // 4. AP 모드 설정 및 시작 (STA 모드 실패 또는 초기 설정이 AP인 경우)
-    if (g_SC10_config.wifi_mode == SC10_WIFI_MODE_AP) {
-        Serial.printf("Starting AP mode: %s\n", g_SC10_config.ap_ssid);
-        // AP 모드 설정
-        WiFi.softAP(g_SC10_config.ap_ssid, g_SC10_config.ap_password);
-        Serial.print("AP IP address: ");
-        Serial.println(WiFi.softAPIP());
-    }
-}
 
     // --- 3. 초기화 및 설정 ---
 
@@ -415,9 +429,10 @@ void SC10_initWiFi() {
         // 1. 파일 시스템 및 설정 로드
         SC10_loadConfig();
 
+        // 2. Wi-Fi 초기화 (AP/STA/Multi 로직 포함)
         SC10_initWiFi();
         
-        // 2. 팬 PWM 설정 
+        // 3. 팬 PWM 설정 
         ledcSetup(g_SC10_config.pwm_channel, g_SC10_config.pwm_frequency, g_SC10_config.pwm_resolution);
         ledcAttachPin(g_SC10_config.fan_pwm_pin, g_SC10_config.pwm_channel);
         pinMode(g_SC10_config.fan_tach_pin, INPUT_PULLUP);
@@ -429,11 +444,6 @@ void SC10_initWiFi() {
             ledcWrite(g_SC10_config.pwm_channel, 0);
         }
 
-        // 3. Wi-Fi AP 모드 설정 
-        Serial.printf("Setting up Access Point: %s\n", g_SC10_config.wifi_ssid);
-        WiFi.softAP(g_SC10_config.wifi_ssid, g_SC10_config.wifi_password);
-        Serial.printf("AP IP address: %s\n", WiFi.softAPIP().toString().c_str());
-
         // 4. Web Server 초기화
         SC10_setupWebServer();
 
@@ -443,204 +453,235 @@ void SC10_initWiFi() {
     }
 
 
-/**
- * @brief 웹 서버 초기화 (SPA API 방식)
- * * 정적 파일(/, /script.js) 서빙 및 2개의 API 엔드포인트(/api/state, /api/config) 설정.
- */
-void SC10_setupWebServer(void) {
-    // LittleFS 마운트 확인 (정적 파일 제공을 위해 필수)
-    if (!LittleFS.begin()) {
-        Serial.println("LittleFS Mount Failed! Web server starting without FS.");
-    }
-
-    // 1. 루트 페이지 및 정적 파일 제공 (index.html 및 script.js)
-    // LittleFS에서 정적 파일을 서빙합니다.
-    g_SC10_asyncWeb.on("/", HTTP_GET, [](AsyncWebServerRequest *p_request){
-        // /index.html 파일이 LittleFS에 있다고 가정합니다.
-        p_request->send(LittleFS, G_SC10_CONFIG_HTML_PATH, "text/html");
-    });
-    
-    g_SC10_asyncWeb.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *p_request){
-        // /script.js 파일이 LittleFS에 있다고 가정합니다.
-        p_request->send(LittleFS, G_SC10_CONFIG_JS_PATH, "application/javascript");
-    });
-    
-    // 추가적인 정적 파일(CSS 등)이 있다면 여기에 추가합니다.
-    g_SC10_asyncWeb.onNotFound([](AsyncWebServerRequest *p_request){
-        p_request->send(404, "text/plain", "Not found");
-    });
-
-
-    // 2. 현재 상태 및 설정 API (GET: /api/state)
-    // 시뮬레이터의 현재 동적 상태와 모든 설정값을 JSON으로 반환합니다.
-    g_SC10_asyncWeb.on("/api/state", HTTP_GET, [this](AsyncWebServerRequest *p_request){
-        // DynamicJsonDocument는 스택 대신 힙에 메모리를 할당합니다.
-        // 상태 정보와 모든 설정, 프리셋 목록을 담기 위해 넉넉하게 1024~1536 바이트 할당 (V7.x 기준)
-        JsonDocument v_doc; 
-        
-        // A. 현재 동적 상태
-        JsonObject v_status = v_doc["status"].to<JsonObject>();
-        v_status["sim_active"] = wind_simulation_active;
-        // float 소수점 정리: roundf()를 사용하여 소수점 두 자리로 표시
-        v_status["wind_speed"] = roundf(current_wind_speed * 100) / 100.0f;
-        v_status["fan_pwm"] = ledcRead(g_SC10_config.pwm_channel);
-        v_status["phase_name"] = G_SC10_WEATHER_PHASE_NAMES[current_weather_phase];
-        v_status["ip_addr"] = WiFi.softAPIP().toString();
-
-        // B. 현재 설정값
-        JsonObject v_config = v_doc["config"].to<JsonObject>();
-        v_config["intensity"] = g_SC10_config.wind_intensity;
-        v_config["gust_freq"] = g_SC10_config.gust_frequency;
-        v_config["variability"] = g_SC10_config.wind_variability;
-        v_config["fan_limit"] = g_SC10_config.fan_speed_limit;
-        v_config["min_fan"] = g_SC10_config.minimum_fan_speed;
-        v_config["turb_len"] = g_SC10_config.turbulence_length_scale;
-        v_config["turb_sig"] = g_SC10_config.turbulence_intensity_sigma;
-        v_config["therm_str"] = g_SC10_config.thermal_bubble_strength;
-        v_config["therm_rad"] = g_SC10_config.thermal_bubble_radius;
-        v_config["preset"] = G_SC10_PRESET_MODE_NAMES[g_SC10_config.preset_mode_index];
-        
-        // C. 프리셋 목록
-        JsonArray v_presets = v_doc["presets"].to<JsonArray>();
-        for(int v_i = 0; v_i < SC10_PRESET_COUNT; ++v_i) {
-            v_presets.add(G_SC10_PRESET_MODE_NAMES[v_i]);
+    /**
+     * @brief 웹 서버 초기화 (SPA API 방식)
+     * * 정적 파일(/, /script.js) 서빙 및 2개의 API 엔드포인트(/api/state, /api/config) 설정.
+     */
+    void SC10_setupWebServer(void) {
+        // LittleFS 마운트 확인 (정적 파일 제공을 위해 필수)
+        if (!LittleFS.begin()) {
+            Serial.println("LittleFS Mount Failed! Web server starting without FS.");
         }
+    
+        // 1. 루트 페이지 및 정적 파일 제공 (index.html 및 script.js)
+        g_SC10_asyncWeb.on("/", HTTP_GET, [](AsyncWebServerRequest *p_request){
+            p_request->send(LittleFS, G_SC10_CONFIG_HTML_PATH, "text/html");
+        });
         
-        // JSON 응답 전송
-        String v_response;
-        serializeJson(v_doc, v_response);
-        p_request->send(200, "application/json", v_response);
-    });
-
-    // 3. 설정 업데이트 API (POST: /api/config) - 대체 구현
-    g_SC10_asyncWeb.on("/api/config", HTTP_POST, [this](AsyncWebServerRequest *p_request){}, NULL, // onRequest와 onBody를 위한 자리
-        // 요청 본문이 수신된 후 실행되는 핸들러 (onBody)
-        [this](AsyncWebServerRequest *p_request, uint8_t *p_data, size_t p_len, size_t p_index, size_t p_total){
-            // p_index가 0이고 p_len이 p_total인 경우는 한 번에 모든 데이터를 수신했다는 의미입니다.
-            if (p_index == 0 && p_len == p_total) {
-                // Content-Type이 application/json인지 확인
-                if (p_request->hasHeader("Content-Type") && 
-                    p_request->header("Content-Type").indexOf("application/json") != -1) 
-                {
-                    // 수신된 데이터를 파싱
-                    JsonDocument v_doc;
-                    DeserializationError v_error = deserializeJson(v_doc, (const char*)p_data, p_len);
-                    
-                    if (v_error) {
-                        Serial.printf("JSON Deserialization failed: %s\n", v_error.c_str());
-                        p_request->send(400, "application/json", "{\"error\":\"Invalid JSON format\"}");
+        g_SC10_asyncWeb.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *p_request){
+            p_request->send(LittleFS, G_SC10_CONFIG_JS_PATH, "application/javascript");
+        });
+        
+        g_SC10_asyncWeb.onNotFound([](AsyncWebServerRequest *p_request){
+            p_request->send(404, "text/plain", "Not found");
+        });
+    
+    
+        // 2. 현재 상태 및 설정 API (GET: /api/state)
+        g_SC10_asyncWeb.on("/api/state", HTTP_GET, [this](AsyncWebServerRequest *p_request){
+            // DynamicJsonDocument는 스택 대신 힙에 메모리를 할당합니다.
+            JsonDocument v_doc; 
+            
+            // A. 현재 동적 상태
+            JsonObject v_status = v_doc["status"].to<JsonObject>();
+            v_status["sim_active"] = wind_simulation_active;
+            v_status["wind_speed"] = roundf(current_wind_speed * 100) / 100.0f;
+            v_status["fan_pwm"] = ledcRead(g_SC10_config.pwm_channel);
+            v_status["phase_name"] = G_SC10_WEATHER_PHASE_NAMES[current_weather_phase];
+            
+            // 접속 IP 정보
+            if (g_SC10_config.wifi_mode == G_SC10_WIFI_MODE_STA && WiFi.status() == WL_CONNECTED) {
+                v_status["wifi_mode"] = "STA";
+                v_status["ip_addr"] = WiFi.localIP().toString();
+                v_status["ssid"] = WiFi.SSID(); // 현재 연결된 SSID
+            } else {
+                v_status["wifi_mode"] = "AP";
+                v_status["ip_addr"] = WiFi.softAPIP().toString();
+                v_status["ssid"] = g_SC10_config.ap_ssid;
+            }
+    
+            // B. 현재 설정값
+            JsonObject v_config = v_doc["config"].to<JsonObject>();
+            v_config["intensity"] = g_SC10_config.wind_intensity;
+            v_config["gust_freq"] = g_SC10_config.gust_frequency;
+            v_config["variability"] = g_SC10_config.wind_variability;
+            v_config["fan_limit"] = g_SC10_config.fan_speed_limit;
+            v_config["min_fan"] = g_SC10_config.minimum_fan_speed;
+            v_config["turb_len"] = g_SC10_config.turbulence_length_scale;
+            v_config["turb_sig"] = g_SC10_config.turbulence_intensity_sigma;
+            v_config["therm_str"] = g_SC10_config.thermal_bubble_strength;
+            v_config["therm_rad"] = g_SC10_config.thermal_bubble_radius;
+            v_config["preset"] = G_SC10_PRESET_MODE_NAMES[g_SC10_config.preset_mode_index];
+            
+            // C. Wi-Fi 설정값 (GET 시에는 구조체처럼 반환)
+            JsonObject v_wifi_config = v_config.createNestedObject("wifi");
+            v_wifi_config["wifi_mode"] = g_SC10_config.wifi_mode;
+            v_wifi_config["ap_ssid"] = g_SC10_config.ap_ssid;
+            v_wifi_config["ap_password"] = g_SC10_config.ap_password;
+            
+            JsonArray v_sta_networks_json = v_wifi_config.createNestedArray("sta_networks");
+            for (int i = 0; i < g_SC10_config.sta_network_count; i++) {
+                JsonObject v_network = v_sta_networks_json.createNestedObject();
+                v_network["ssid"] = g_SC10_config.sta_networks[i].ssid;
+                v_network["pass"] = g_SC10_config.sta_networks[i].password; // 보안상 문제 있으나, 임시 설정용
+            }
+            
+            // D. 프리셋 목록
+            JsonArray v_presets = v_doc["presets"].to<JsonArray>();
+            for(int v_i = 0; v_i < SC10_PRESET_COUNT; ++v_i) {
+                v_presets.add(G_SC10_PRESET_MODE_NAMES[v_i]);
+            }
+            
+            // JSON 응답 전송
+            String v_response;
+            serializeJson(v_doc, v_response);
+            p_request->send(200, "application/json", v_response);
+        });
+    
+        // 3. 설정 업데이트 API (POST: /api/config) - 대체 구현
+        g_SC10_asyncWeb.on("/api/config", HTTP_POST, [this](AsyncWebServerRequest *p_request){}, NULL, 
+            [this](AsyncWebServerRequest *p_request, uint8_t *p_data, size_t p_len, size_t p_index, size_t p_total){
+                if (p_index == 0 && p_len == p_total) {
+                    if (p_request->hasHeader("Content-Type") && 
+                        p_request->header("Content-Type").indexOf("application/json") != -1) 
+                    {
+                        JsonDocument v_doc;
+                        DeserializationError v_error = deserializeJson(v_doc, (const char*)p_data, p_len);
+                        
+                        if (v_error) {
+                            Serial.printf("JSON Deserialization failed: %s\n", v_error.c_str());
+                            p_request->send(400, "application/json", "{\"error\":\"Invalid JSON format\"}");
+                            return;
+                        }
+                        
+                        bool v_changesMade = false;
+                        JsonObject v_root_config = v_doc.as<JsonObject>();
+                        
+                        // -------------------- 시뮬레이션 설정 값 업데이트 (이전 로직 유지) --------------------
+                        
+                        if (!v_root_config["preset"].isNull()) {
+                            const char* v_preset_name = v_root_config["preset"];
+                            int v_index;
+                            if (SC10_getPresetIndexByName(v_preset_name, v_index)) {
+                                g_SC10_config.preset_mode_index = v_index;
+                                v_changesMade = true;
+                            }
+                        }
+                        
+                        if (!v_root_config["intensity"].isNull()) { 
+                            g_SC10_config.wind_intensity = v_root_config["intensity"] | g_SC10_config.wind_intensity; 
+                            v_changesMade = true; 
+                        }
+                        // 나머지 시뮬레이션 설정 값 업데이트 (생략하지 않고 모든 필드를 체크해야 합니다.)
+                        if (!v_root_config["gust_freq"].isNull()) { 
+                            g_SC10_config.gust_frequency = v_root_config["gust_freq"] | g_SC10_config.gust_frequency; 
+                            v_changesMade = true; 
+                        }
+                        if (!v_root_config["variability"].isNull()) { 
+                            g_SC10_config.wind_variability = v_root_config["variability"] | g_SC10_config.wind_variability; 
+                            v_changesMade = true; 
+                        }
+                        if (!v_root_config["fan_limit"].isNull()) { 
+                            g_SC10_config.fan_speed_limit = v_root_config["fan_limit"] | g_SC10_config.fan_speed_limit; 
+                            v_changesMade = true; 
+                        }
+                        if (!v_root_config["min_fan"].isNull()) { 
+                            g_SC10_config.minimum_fan_speed = v_root_config["min_fan"] | g_SC10_config.minimum_fan_speed; 
+                            v_changesMade = true; 
+                        }
+                        if (!v_root_config["turb_len"].isNull()) { 
+                            g_SC10_config.turbulence_length_scale = v_root_config["turb_len"] | g_SC10_config.turbulence_length_scale; 
+                            v_changesMade = true; 
+                        }
+                        if (!v_root_config["turb_sig"].isNull()) { 
+                            g_SC10_config.turbulence_intensity_sigma = v_root_config["turb_sig"] | g_SC10_config.turbulence_intensity_sigma; 
+                            v_changesMade = true; 
+                        }
+                        if (!v_root_config["therm_str"].isNull()) { 
+                            g_SC10_config.thermal_bubble_strength = v_root_config["therm_str"] | g_SC10_config.thermal_bubble_strength; 
+                            v_changesMade = true; 
+                        }
+                        if (!v_root_config["therm_rad"].isNull()) { 
+                            g_SC10_config.thermal_bubble_radius = v_root_config["therm_rad"] | g_SC10_config.thermal_bubble_radius; 
+                            v_changesMade = true; 
+                        }
+    
+                        // -------------------- WIFI 모드 및 네트워크 업데이트 (수정된 부분) --------------------
+                        bool v_wifi_changes_made = false;
+    
+                        if (!v_root_config["wifi_mode"].isNull()) {
+                            g_SC10_config.wifi_mode = v_root_config["wifi_mode"] | g_SC10_config.wifi_mode;
+                            v_changesMade = true;
+                            v_wifi_changes_made = true;
+                        }
+    
+                        if (!v_root_config["ap_ssid"].isNull()) {
+                            strncpy(g_SC10_config.ap_ssid, v_root_config["ap_ssid"], sizeof(g_SC10_config.ap_ssid) - 1);
+                            g_SC10_config.ap_ssid[sizeof(g_SC10_config.ap_ssid) - 1] = '\0';
+                            v_changesMade = true;
+                            v_wifi_changes_made = true;
+                        }
+                        if (!v_root_config["ap_password"].isNull()) {
+                            strncpy(g_SC10_config.ap_password, v_root_config["ap_password"], sizeof(g_SC10_config.ap_password) - 1);
+                            g_SC10_config.ap_password[sizeof(g_SC10_config.ap_password) - 1] = '\0';
+                            v_changesMade = true;
+                            v_wifi_changes_made = true;
+                        }
+    
+                        // STA 네트워크 목록 업데이트 (JSON 배열 처리)
+                        if (v_root_config["sta_networks"].is<JsonArray>()) {
+                            JsonArray v_sta_networks_json = v_root_config["sta_networks"].as<JsonArray>();
+                            g_SC10_config.sta_network_count = 0;
+                            
+                            for (JsonObject v_network : v_sta_networks_json) {
+                                if (g_SC10_config.sta_network_count < G_SC10_MAX_STA_NETWORKS) {
+                                    // ssid와 pass 필드가 있는지 확인하고 복사
+                                    if (v_network["ssid"].is<const char*>() && strlen(v_network["ssid"]) > 0) {
+                                        strncpy(g_SC10_config.sta_networks[g_SC10_config.sta_network_count].ssid, 
+                                                v_network["ssid"], sizeof(g_SC10_config.sta_networks[0].ssid) - 1);
+                                        g_SC10_config.sta_networks[g_SC10_config.sta_network_count].ssid[sizeof(g_SC10_config.sta_networks[0].ssid) - 1] = '\0';
+    
+                                        strncpy(g_SC10_config.sta_networks[g_SC10_config.sta_network_count].password, 
+                                                v_network["pass"] | "", sizeof(g_SC10_config.sta_networks[0].password) - 1);
+                                        g_SC10_config.sta_networks[g_SC10_config.sta_network_count].password[sizeof(g_SC10_config.sta_networks[0].password) - 1] = '\0';
+                                        
+                                        g_SC10_config.sta_network_count++;
+                                    }
+                                }
+                            }
+                            v_changesMade = true;
+                            v_wifi_changes_made = true;
+                        }
+                        
+                        // -------------------------------------------------------------------------
+    
+                        if (v_changesMade) {
+                            Serial.println("Saving configuration...");
+                            SC10_saveConfig(); 
+                            SC10_applyCurrentPreset(true); 
+                            
+                            // Wi-Fi 설정이 변경되었으면 재초기화
+                            if (v_wifi_changes_made) {
+                                Serial.println("WiFi configuration changed. Re-initializing WiFi...");
+                                SC10_initWiFi(); // 변경된 설정으로 즉시 Wi-Fi 재시작 시도
+                            }
+                        }
+                        
+                        // 성공 응답
+                        p_request->send(200, "application/json", "{\"message\":\"Config updated successfully\"}");
+                        return;
+    
+                    } else {
+                        p_request->send(400, "text/plain", "Bad Request: Expected application/json");
                         return;
                     }
-                    
-                    bool v_changesMade = false;
-                    JsonObject v_sim_config = v_doc.as<JsonObject>();
-                    
-                    // -------------------- 설정 값 업데이트 (이전 로직 유지) --------------------
-                    
-                    if (!v_sim_config["preset"].isNull()) {
-                        const char* v_preset_name = v_sim_config["preset"];
-                        int v_index;
-                        if (SC10_getPresetIndexByName(v_preset_name, v_index)) {
-                            g_SC10_config.preset_mode_index = v_index;
-                            v_changesMade = true;
-                        }
-                    }
-                    
-                    if (!v_sim_config["intensity"].isNull()) { 
-                        g_SC10_config.wind_intensity = v_sim_config["intensity"] | g_SC10_config.wind_intensity; 
-                        v_changesMade = true; 
-                    }
-                    if (!v_sim_config["gust_freq"].isNull()) { 
-                        g_SC10_config.gust_frequency = v_sim_config["gust_freq"] | g_SC10_config.gust_frequency; 
-                        v_changesMade = true; 
-                    }
-                    if (!v_sim_config["variability"].isNull()) { 
-                        g_SC10_config.wind_variability = v_sim_config["variability"] | g_SC10_config.wind_variability; 
-                        v_changesMade = true; 
-                    }
-                    if (!v_sim_config["fan_limit"].isNull()) { 
-                        g_SC10_config.fan_speed_limit = v_sim_config["fan_limit"] | g_SC10_config.fan_speed_limit; 
-                        v_changesMade = true; 
-                    }
-                    if (!v_sim_config["min_fan"].isNull()) { 
-                        g_SC10_config.minimum_fan_speed = v_sim_config["min_fan"] | g_SC10_config.minimum_fan_speed; 
-                        v_changesMade = true; 
-                    }
-                    if (!v_sim_config["turb_len"].isNull()) { 
-                        g_SC10_config.turbulence_length_scale = v_sim_config["turb_len"] | g_SC10_config.turbulence_length_scale; 
-                        v_changesMade = true; 
-                    }
-                    if (!v_sim_config["turb_sig"].isNull()) { 
-                        g_SC10_config.turbulence_intensity_sigma = v_sim_config["turb_sig"] | g_SC10_config.turbulence_intensity_sigma; 
-                        v_changesMade = true; 
-                    }
-                    if (!v_sim_config["therm_str"].isNull()) { 
-                        g_SC10_config.thermal_bubble_strength = v_sim_config["therm_str"] | g_SC10_config.thermal_bubble_strength; 
-                        v_changesMade = true; 
-                    }
-                    if (!v_sim_config["therm_rad"].isNull()) { 
-                        g_SC10_config.thermal_bubble_radius = v_sim_config["therm_rad"] | g_SC10_config.thermal_bubble_radius; 
-                        v_changesMade = true; 
-                    }
-
-                    // 1. WIFI 모드 업데이트
-if (!v_sim_config["wifi_mode"].isNull()) {
-    g_SC10_config.wifi_mode = v_sim_config["wifi_mode"] | g_SC10_config.wifi_mode;
-    v_changesMade = true;
-}
-
-// 2. AP SSID/Password 업데이트
-if (!v_sim_config["ap_ssid"].isNull()) {
-    strncpy(g_SC10_config.ap_ssid, v_sim_config["ap_ssid"], sizeof(g_SC10_config.ap_ssid));
-    v_changesMade = true;
-}
-if (!v_sim_config["ap_password"].isNull()) {
-    strncpy(g_SC10_config.ap_password, v_sim_config["ap_password"], sizeof(g_SC10_config.ap_password));
-    v_changesMade = true;
-}
-
-// 3. STA 네트워크 목록 업데이트 (JSON 배열 처리)
-if (v_sim_config["sta_networks"].is<JsonArray>()) {
-    JsonArray v_sta_networks_json = v_sim_config["sta_networks"].as<JsonArray>();
-    g_SC10_config.sta_network_count = 0;
-    
-    for (JsonObject v_network : v_sta_networks_json) {
-        if (g_SC10_config.sta_network_count < MAX_STA_NETWORKS) {
-            strncpy(g_SC10_config.sta_networks[g_SC10_config.sta_network_count].ssid, 
-                    v_network["ssid"] | "", sizeof(g_SC10_config.sta_networks[0].ssid));
-            strncpy(g_SC10_config.sta_networks[g_SC10_config.sta_network_count].password, 
-                    v_network["pass"] | "", sizeof(g_SC10_config.sta_networks[0].password));
-            g_SC10_config.sta_network_count++;
-        }
-    }
-    v_changesMade = true;
-}
-                    
-                    // -------------------------------------------------------------------------
-
-                    if (v_changesMade) {
-                        SC10_saveConfig(); 
-                        SC10_applyCurrentPreset(true); 
-                    }
-                    
-                    // 성공 응답
-                    p_request->send(200, "application/json", "{\"message\":\"Config updated successfully\"}");
-                    return;
-
-                } else {
-                    // JSON이 아닌 Content-Type으로 요청이 온 경우
-                    p_request->send(400, "text/plain", "Bad Request: Expected application/json");
-                    return;
                 }
             }
-            // 요청 본문이 청크로 들어오거나(p_index != 0) 다른 조건이면 여기서 바로 종료됩니다.
-            // 이 로직은 요청 본문 전체를 한 번에 처리하는 (p_len == p_total) 경우에 최적화되어 있습니다.
-        }
-    );
-
-    Serial.println("Starting Async Web Server...");
-    g_SC10_asyncWeb.begin();
-}
+        );
+    
+        Serial.println("Starting Async Web Server...");
+        g_SC10_asyncWeb.begin();
+    }
     
     // --- 4. 시뮬레이션 엔진 로직 ---
 
@@ -983,4 +1024,3 @@ if (v_sim_config["sta_networks"].is<JsonArray>()) {
         SC10_calculateWindSimulation();
     }
 };
-
