@@ -17,8 +17,7 @@ public:
 
   // 초기화: 설정 로드 → Wi-Fi → PWM → WebServer → 프리셋/시뮬 시작
   void SC10_init(void) {
-    Serial.begin(115200);
-    delay(100);
+    
     if (!LittleFS.begin(true)) {
       SC10_Logger::log(SC10_LOG_ERROR,"LittleFS mount failed");
     } else {
