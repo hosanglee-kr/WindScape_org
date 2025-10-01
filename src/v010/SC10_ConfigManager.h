@@ -121,34 +121,42 @@ public:
   }
 
   // 상태+설정 JSON 생성에 쓰일 직렬화 도우미
-  static void toJson(const WindConfig &c, JsonDocument &doc) {
-    JsonObject root = doc.to<JsonObject>();
-    root["sim"]["intensity"] = c.wind_intensity;
-    root["sim"]["gust_freq"] = c.gust_frequency;
-    root["sim"]["variability"] = c.wind_variability;
-    root["sim"]["fan_limit"] = c.fan_speed_limit;
-    root["sim"]["min_fan"]   = c.minimum_fan_speed;
-    root["sim"]["turb_len"]  = c.turbulence_length_scale;
-    root["sim"]["turb_sig"]  = c.turbulence_intensity_sigma;
-    root["sim"]["therm_str"] = c.thermal_bubble_strength;
-    root["sim"]["therm_rad"] = c.thermal_bubble_radius;
-    root["sim"]["preset"]    = G_SC10_PRESET_MODE_NAMES[c.preset_mode_index];
 
-    root["timing"]["sim_int"]    = c.wind_sim_interval_ms;
-    root["timing"]["gust_int"]   = c.gust_check_interval_ms;
-    root["timing"]["thermal_int"]= c.thermal_check_interval_ms;
+// (추가) JsonObject를 직접 받아 채우는 오버로드
+static void toJson(const WindConfig &c, JsonObject root) {
+  root["sim"]["intensity"] = c.wind_intensity;
+  root["sim"]["gust_freq"] = c.gust_frequency;
+  root["sim"]["variability"] = c.wind_variability;
+  root["sim"]["fan_limit"] = c.fan_speed_limit;
+  root["sim"]["min_fan"]   = c.minimum_fan_speed;
+  root["sim"]["turb_len"]  = c.turbulence_length_scale;
+  root["sim"]["turb_sig"]  = c.turbulence_intensity_sigma;
+  root["sim"]["therm_str"] = c.thermal_bubble_strength;
+  root["sim"]["therm_rad"] = c.thermal_bubble_radius;
+  root["sim"]["preset"]    = G_SC10_PRESET_MODE_NAMES[c.preset_mode_index];
 
-    JsonObject w = root["wifi"].to<JsonObject>();
-    w["wifi_mode"]   = c.wifi_mode;
-    w["ap_ssid"]     = c.ap_ssid;
-    // 보안상 비번은 상태 응답에서 기본 비노출 권장 -> 필요 시 w["ap_password"]=c.ap_password;
-    JsonArray arr = w["sta_networks"].to<JsonArray>();
-    for (int i=0;i<c.sta_network_count;i++) {
-      JsonObject net = arr.add<JsonObject>();
-      net["ssid"] = c.sta_networks[i].ssid;
-      // net["pass"] = c.sta_networks[i].password; // 비노출 권장
-    }
+  root["timing"]["sim_int"]     = c.wind_sim_interval_ms;
+  root["timing"]["gust_int"]    = c.gust_check_interval_ms;
+  root["timing"]["thermal_int"] = c.thermal_check_interval_ms;
+
+  JsonObject w = root["wifi"].to<JsonObject>();
+  w["wifi_mode"]   = c.wifi_mode;
+  w["ap_ssid"]     = c.ap_ssid;
+  // w["ap_password"] = c.ap_password; // 필요시만 노출
+  JsonArray arr = w["sta_networks"].to<JsonArray>();
+  for (int i=0;i<c.sta_network_count;i++) {
+    JsonObject net = arr.add<JsonObject>();
+    net["ssid"] = c.sta_networks[i].ssid;
+    // net["pass"] = c.sta_networks[i].password; // 상태 응답에서는 비노출 권장
   }
+}
+
+// (기존 시그니처는 유지하되 내부에서 위 오버로드 호출)
+static void toJson(const WindConfig &c, JsonDocument &doc) {
+  JsonObject root = doc.to<JsonObject>();
+  toJson(c, root);
+}
+
 
 private:
   static bool parseJson(WindConfig &c, JsonDocument &doc) {
