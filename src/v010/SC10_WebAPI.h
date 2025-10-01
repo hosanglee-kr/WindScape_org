@@ -54,14 +54,17 @@ public:
       }
 
       // config (모든 시뮬/타이밍/Wi-Fi)
-      ConfigManager::toJson(g_SC10_config, doc["config"].to<JsonDocument>());
+      JsonObject cfgObj = doc["config"].to<JsonObject>();
+      ConfigManager::toJson(g_SC10_config, cfgObj);
+      // ConfigManager::toJson(g_SC10_config, doc["config"].to<JsonDocument>());
 
       // presets
       JsonArray p = doc["presets"].to<JsonArray>();
       for (int i=0;i<SC10_PRESET_COUNT;i++) p.add(G_SC10_PRESET_MODE_NAMES[i]);
 
       String res; serializeJson(doc, res);
-      req->send(200, "application/json", res);
+      req->se
+        nd(200, "application/json", res);
     });
 
     // /api/config — 설정 갱신 및 저장(+Wi-Fi 재초기화)
