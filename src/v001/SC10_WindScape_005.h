@@ -1066,5 +1066,6 @@ public:
     // --- 5. 메인 루프 실행 함수 (SC10_run() 함수 추가) ---
     void SC10_run(void) {
         SC10_calculateWindSimulation();
+
     }
 };

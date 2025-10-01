@@ -5,8 +5,8 @@
         "ap_password": "newpassword",
         "sta_networks": [
             {
-                "ssid": "Home_WiFi_A",
-                "pass": "passwordA"
+                "ssid": "LSITC_WIFI_AP",
+                "pass": "1234554321"
             },
             {
                 "ssid": "Office_WiFi_B",

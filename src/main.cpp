@@ -17,4 +17,8 @@ void setup() {
 
 void loop() {
     g_SC10_simulator.SC10_run();
+
+    // WDT 리셋 방지를 위한 안전 장치
+    delay(1); 
+
 }
