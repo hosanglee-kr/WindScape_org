@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SC10 WindScape Config</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        h2 { border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 20px; color: #333; }
+        .status-box { background: #e0f7fa; padding: 15px; margin-bottom: 20px; border-radius: 5px; border-left: 5px solid #00bcd4; }
+        .status-box p { margin: 5px 0; }
+        .setting-group { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input[type="range"], select { width: 100%; padding: 8px; margin-bottom: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        button { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; width: 100%; margin-top: 10px; }
+        button:hover { background-color: #0056b3; }
+        .value-display { font-weight: bold; color: #007bff; float: right; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>SC10 WindScape 설정 및 상태</h2>
+        
+        <div class="status-box">
+            <p>시뮬레이션 상태: <span id="status-sim-active">...</span></p>
+            <p>현재 풍속: <span id="status-wind-speed">...</span> m/s</p>
+            <p>현재 기상 단계: <span id="status-phase-name">...</span></p>
+            <p>팬 PWM 출력: <span id="status-fan-pwm">...</span></p>
+        </div>
+
+        <form id="config-form">
+            <div class="setting-group">
+                <label for="preset">프리셋 모드</label>
+                <select id="preset" name="preset"></select>
+            </div>
+            
+            <div class="setting-group">
+                <label for="intensity">전체 풍속 강도 (0.0~1.0)</label>
+                <input type="range" id="intensity" name="intensity" min="0" max="1" step="0.01">
+                <span class="value-display" id="intensity-value"></span>
+            </div>
+            
+            <div class="setting-group">
+                <label for="gust_freq">돌풍 빈도 (0.0~1.0)</label>
+                <input type="range" id="gust_freq" name="gust_freq" min="0" max="1" step="0.01">
+                <span class="value-display" id="gust_freq-value"></span>
+            </div>
+
+            <div class="setting-group">
+                <label for="variability">바람 변화율 (0.0~1.0)</label>
+                <input type="range" id="variability" name="variability" min="0" max="1" step="0.01">
+                <span class="value-display" id="variability-value"></span>
+            </div>
+
+            <div class="setting-group">
+                <label for="fan_limit">최대 팬 속도 (0~255)</label>
+                <input type="range" id="fan_limit" name="fan_limit" min="0" max="255" step="1">
+                <span class="value-display" id="fan_limit-value"></span>
+            </div>
+
+            <div class="setting-group">
+                <label for="min_fan">최소 팬 속도 (0~255)</label>
+                <input type="range" id="min_fan" name="min_fan" min="0" max="255" step="1">
+                <span class="value-display" id="min_fan-value"></span>
+            </div>
+            
+            <div class="setting-group">
+                <label for="turb_len">난류 길이 스케일 (0.0~5.0)</label>
+                <input type="range" id="turb_len" name="turb_len" min="0" max="5" step="0.1">
+                <span class="value-display" id="turb_len-value"></span>
+            </div>
+
+            <div class="setting-group">
+                <label for="turb_sig">난류 강도 시그마 (0.0~1.0)</label>
+                <input type="range" id="turb_sig" name="turb_sig" min="0" max="1" step="0.01">
+                <span class="value-display" id="turb_sig-value"></span>
+            </div>
+
+            <div class="setting-group">
+                <label for="therm_str">열 상승 기류 강도 (0.0~1.0)</label>
+                <input type="range" id="therm_str" name="therm_str" min="0" max="1" step="0.01">
+                <span class="value-display" id="therm_str-value"></span>
+            </div>
+
+            <div class="setting-group">
+                <label for="therm_rad">열 상승 기류 반경 (0.0~5.0)</label>
+                <input type="range" id="therm_rad" name="therm_rad" min="0" max="5" step="0.1">
+                <span class="value-display" id="therm_rad-value"></span>
+            </div>
+            
+            <button type="submit">설정 저장 및 적용</button>
+        </form>
+    </div>
+    
+    <script src="SC10_main_003.js"></script>
+</body>
+</html>

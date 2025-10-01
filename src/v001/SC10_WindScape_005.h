@@ -90,12 +90,12 @@ AsyncWebServer g_SC10_asyncWeb(80);
 
 
 
-#define G_SC10_MAX_STA_NETWORKS 5 // 최대 저장 가능한 STA 네트워크 수
-WiFiMulti g_SC10_wifiMulti;
+#define     G_SC10_MAX_STA_NETWORKS 5 // 최대 저장 가능한 STA 네트워크 수
+WiFiMulti   g_SC10_wifiMulti;
 
 // WiFi 모드 정의
-#define G_SC10_WIFI_MODE_AP   0
-#define G_SC10_WIFI_MODE_STA  1
+#define     G_SC10_WIFI_MODE_AP   0
+#define     G_SC10_WIFI_MODE_STA  1
 
 
 
@@ -104,7 +104,7 @@ WiFiMulti g_SC10_wifiMulti;
 // ====================================================================================
 struct WindConfig {
     // --- WIFI 설정 추가 ---
-    int wifi_mode; // 0: G_SC10_WIFI_MODE_AP, 1: G_SC10_WIFI_MODE_STA
+    int     wifi_mode;                  // 0: G_SC10_WIFI_MODE_AP, 1: G_SC10_WIFI_MODE_STA
     
     // WiFiMulti를 위한 STA 네트워크 목록 (JSON 배열로 저장/로드됨)
     // 메모리 절약을 위해 SSID/Password는 32바이트/64바이트로 제한합니다.
@@ -113,37 +113,36 @@ struct WindConfig {
         char password[64];
     };
     StaCredential sta_networks[G_SC10_MAX_STA_NETWORKS];
-    int sta_network_count; // 실제 저장된 네트워크 수
+    int     sta_network_count; // 실제 저장된 네트워크 수
     
     // AP 모드 고정 설정 (필요 시)
-    char ap_ssid[32];
-    char ap_password[64];
+    char    ap_ssid[32];
+    char    ap_password[64];
 
 
     // --- 1. 하드웨어/시스템 상수 (JSON 관리) ---
-    int fan_pwm_pin                 = 14;     
-    int fan_tach_pin                = 27;     
-    int pwm_frequency               = 25000;  
-    int pwm_channel                 = 0;
-    int pwm_resolution              = 10;     
-    // char wifi_ssid[32]              = "WindScape_AP"; // 삭제됨
-    // char wifi_password[32]          = "wind1234"; // 삭제됨
-    int wind_sim_interval_ms        = 250;
-    int gust_check_interval_ms      = 500;
-    int thermal_check_interval_ms   = 2000;
+    int     fan_pwm_pin                 = 14;     
+    int     fan_tach_pin                = 27;     
+    int     pwm_frequency               = 25000;  
+    int     pwm_channel                 = 0;
+    int     pwm_resolution              = 10;     
+
+    int     wind_sim_interval_ms        = 250;
+    int     gust_check_interval_ms      = 500;
+    int     thermal_check_interval_ms   = 2000;
     
     // --- 2. 시뮬레이션 설정 (JSON 관리) ---
-    float wind_intensity            = 100.0f;
-    float gust_frequency            = 30.0f;
-    float wind_variability          = 40.0f;
-    float fan_speed_limit           = 80.0f;
-    float minimum_fan_speed         = 0.0f;
-    float turbulence_length_scale   = 30.0f;
-    float turbulence_intensity_sigma= 0.3f;
-    float thermal_bubble_strength   = 1.8f;
-    float thermal_bubble_radius     = 15.0f; 
+    float   wind_intensity              = 100.0f;
+    float   gust_frequency              = 30.0f;
+    float   wind_variability            = 40.0f;
+    float   fan_speed_limit             = 80.0f;
+    float   minimum_fan_speed           = 0.0f;
+    float   turbulence_length_scale     = 30.0f;
+    float   turbulence_intensity_sigma  = 0.3f;
+    float   thermal_bubble_strength     = 1.8f;
+    float   thermal_bubble_radius       = 15.0f; 
     // JSON 로드/저장을 위해 enum의 int 인덱스를 저장
-    int preset_mode_index           = SC10_PRESET_OCEAN; 
+    int     preset_mode_index           = SC10_PRESET_OCEAN; 
 };
 
 WindConfig g_SC10_config;
@@ -243,9 +242,9 @@ public:
         JsonObject v_root = v_doc.as<JsonObject>();
 
         // --- 1. 하드웨어/시스템 상수 로드 ---
-        g_SC10_config.fan_pwm_pin       = v_root["hw"]["pwm_pin"] | 14;
-        g_SC10_config.pwm_frequency     = v_root["hw"]["pwm_freq"] | 25000;
-        g_SC10_config.pwm_resolution    = v_root["hw"]["pwm_res"] | 10;
+        g_SC10_config.fan_pwm_pin               = v_root["hw"]["pwm_pin"] | 14;
+        g_SC10_config.pwm_frequency             = v_root["hw"]["pwm_freq"] | 25000;
+        g_SC10_config.pwm_resolution            = v_root["hw"]["pwm_res"] | 10;
         // 이전 wifi_ssid/pass 로직은 제거됨
 
         g_SC10_config.wind_sim_interval_ms      = v_root["timing"]["sim_int"] | 250;
@@ -273,14 +272,14 @@ public:
         }
 
         // -------------------- WIFI 모드 및 네트워크 로드 (수정된 부분) --------------------
-        g_SC10_config.wifi_mode = v_root["wifi"]["wifi_mode"] | G_SC10_WIFI_MODE_STA; 
+        g_SC10_config.wifi_mode         = v_root["wifi"]["wifi_mode"] | G_SC10_WIFI_MODE_STA; 
 
         // AP 설정 로드
-        strncpy(g_SC10_config.ap_ssid, v_root["wifi"]["ap_ssid"] | "SC10_Config_AP", sizeof(g_SC10_config.ap_ssid));
-        strncpy(g_SC10_config.ap_password, v_root["wifi"]["ap_password"] | "newpassword", sizeof(g_SC10_config.ap_password));
+        strncpy(g_SC10_config.ap_ssid,      v_root["wifi"]["ap_ssid"] | "SC10_Config_AP", sizeof(g_SC10_config.ap_ssid));
+        strncpy(g_SC10_config.ap_password,  v_root["wifi"]["ap_password"] | "newpassword", sizeof(g_SC10_config.ap_password));
 
         // STA 네트워크 목록 로드 (JSON 배열)
-        JsonArray v_sta_networks_json = v_root["wifi"]["sta_networks"].as<JsonArray>();
+        JsonArray v_sta_networks_json   = v_root["wifi"]["sta_networks"].as<JsonArray>();
         g_SC10_config.sta_network_count = 0;
 
         for (JsonObject v_network : v_sta_networks_json) {
@@ -329,22 +328,34 @@ public:
         v_root["sim"]["turb_sig"]    = g_SC10_config.turbulence_intensity_sigma;
         v_root["sim"]["therm_str"]   = g_SC10_config.thermal_bubble_strength;
         v_root["sim"]["therm_rad"]   = g_SC10_config.thermal_bubble_radius;
+        
         // JSON에는 문자열 이름으로 저장
         v_root["sim"]["preset"]      = G_SC10_PRESET_MODE_NAMES[g_SC10_config.preset_mode_index]; 
         
-        // -------------------- WIFI 모드 및 네트워크 저장 (수정된 부분) --------------------
-        JsonObject v_wifi_config = v_root.createNestedObject("wifi");
-        v_wifi_config["wifi_mode"] = g_SC10_config.wifi_mode;
-        v_wifi_config["ap_ssid"] = g_SC10_config.ap_ssid;
-        v_wifi_config["ap_password"] = g_SC10_config.ap_password;
 
-        // STA 네트워크 목록 저장 (JSON 배열)
-        JsonArray v_sta_networks_json = v_wifi_config.createNestedArray("sta_networks");
+        // -------------------- WIFI 모드 및 네트워크 저장 (수정된 부분) --------------------
+        
+        // 1. "wifi" 객체 생성 및 기본 값 설정
+        // v_root["wifi"] = JsonObject()를 통해 중첩 객체를 생성합니다.
+        JsonObject v_wifi_obj = v_root["wifi"].to<JsonObject>(); // JsonObject 생성
+
+        v_wifi_obj["wifi_mode"]     = g_SC10_config.wifi_mode;
+        v_wifi_obj["ap_ssid"]       = g_SC10_config.ap_ssid;
+        v_wifi_obj["ap_password"]   = g_SC10_config.ap_password; 
+
+        // 2. STA 네트워크 목록 저장 (JSON 배열)
+        JsonArray v_sta_networks_json = v_wifi_obj["sta_networks"].to<JsonArray>();
+
+        // 3. STA 네트워크 배열에 객체 추가
         for (int i = 0; i < g_SC10_config.sta_network_count; i++) {
-            JsonObject v_network = v_sta_networks_json.createNestedObject();
+            
+            // **v7.4.x 권장 방식 (add 사용):**
+            JsonObject v_network = v_sta_networks_json.add<JsonObject>(); // JsonArray에 새 객체를 추가하며 참조를 얻음
+
             v_network["ssid"] = g_SC10_config.sta_networks[i].ssid;
             v_network["pass"] = g_SC10_config.sta_networks[i].password;
         }
+
         // ----------------------------------------------------------------------------------
 
         File v_configFile = LittleFS.open(G_SC10_CONFIG_FILE_PATH, "w");
@@ -479,7 +490,7 @@ public:
     
         // 2. 현재 상태 및 설정 API (GET: /api/state)
         g_SC10_asyncWeb.on("/api/state", HTTP_GET, [this](AsyncWebServerRequest *p_request){
-            // DynamicJsonDocument는 스택 대신 힙에 메모리를 할당합니다.
+
             JsonDocument v_doc; 
             
             // A. 현재 동적 상태
@@ -491,39 +502,39 @@ public:
             
             // 접속 IP 정보
             if (g_SC10_config.wifi_mode == G_SC10_WIFI_MODE_STA && WiFi.status() == WL_CONNECTED) {
-                v_status["wifi_mode"] = "STA";
-                v_status["ip_addr"] = WiFi.localIP().toString();
-                v_status["ssid"] = WiFi.SSID(); // 현재 연결된 SSID
+                v_status["wifi_mode"]   = "STA";
+                v_status["ip_addr"]     = WiFi.localIP().toString();
+                v_status["ssid"]        = WiFi.SSID(); // 현재 연결된 SSID
             } else {
-                v_status["wifi_mode"] = "AP";
-                v_status["ip_addr"] = WiFi.softAPIP().toString();
-                v_status["ssid"] = g_SC10_config.ap_ssid;
+                v_status["wifi_mode"]   = "AP";
+                v_status["ip_addr"]     = WiFi.softAPIP().toString();
+                v_status["ssid"]        = g_SC10_config.ap_ssid;
             }
     
             // B. 현재 설정값
             JsonObject v_config = v_doc["config"].to<JsonObject>();
-            v_config["intensity"] = g_SC10_config.wind_intensity;
-            v_config["gust_freq"] = g_SC10_config.gust_frequency;
+            v_config["intensity"]   = g_SC10_config.wind_intensity;
+            v_config["gust_freq"]   = g_SC10_config.gust_frequency;
             v_config["variability"] = g_SC10_config.wind_variability;
-            v_config["fan_limit"] = g_SC10_config.fan_speed_limit;
-            v_config["min_fan"] = g_SC10_config.minimum_fan_speed;
-            v_config["turb_len"] = g_SC10_config.turbulence_length_scale;
-            v_config["turb_sig"] = g_SC10_config.turbulence_intensity_sigma;
-            v_config["therm_str"] = g_SC10_config.thermal_bubble_strength;
-            v_config["therm_rad"] = g_SC10_config.thermal_bubble_radius;
-            v_config["preset"] = G_SC10_PRESET_MODE_NAMES[g_SC10_config.preset_mode_index];
+            v_config["fan_limit"]   = g_SC10_config.fan_speed_limit;
+            v_config["min_fan"]     = g_SC10_config.minimum_fan_speed;
+            v_config["turb_len"]    = g_SC10_config.turbulence_length_scale;
+            v_config["turb_sig"]    = g_SC10_config.turbulence_intensity_sigma;
+            v_config["therm_str"]   = g_SC10_config.thermal_bubble_strength;
+            v_config["therm_rad"]   = g_SC10_config.thermal_bubble_radius;
+            v_config["preset"]      = G_SC10_PRESET_MODE_NAMES[g_SC10_config.preset_mode_index];
             
             // C. Wi-Fi 설정값 (GET 시에는 구조체처럼 반환)
-            JsonObject v_wifi_config = v_config.createNestedObject("wifi");
-            v_wifi_config["wifi_mode"] = g_SC10_config.wifi_mode;
-            v_wifi_config["ap_ssid"] = g_SC10_config.ap_ssid;
-            v_wifi_config["ap_password"] = g_SC10_config.ap_password;
+            JsonObject v_wifi_config        = v_config.createNestedObject("wifi");
+            v_wifi_config["wifi_mode"]      = g_SC10_config.wifi_mode;
+            v_wifi_config["ap_ssid"]        = g_SC10_config.ap_ssid;
+            v_wifi_config["ap_password"]    = g_SC10_config.ap_password;
             
             JsonArray v_sta_networks_json = v_wifi_config.createNestedArray("sta_networks");
             for (int i = 0; i < g_SC10_config.sta_network_count; i++) {
-                JsonObject v_network = v_sta_networks_json.createNestedObject();
-                v_network["ssid"] = g_SC10_config.sta_networks[i].ssid;
-                v_network["pass"] = g_SC10_config.sta_networks[i].password; // 보안상 문제 있으나, 임시 설정용
+                JsonObject v_network    = v_sta_networks_json.createNestedObject();
+                v_network["ssid"]       = g_SC10_config.sta_networks[i].ssid;
+                v_network["pass"]       = g_SC10_config.sta_networks[i].password; // 보안상 문제 있으나, 임시 설정용
             }
             
             // D. 프리셋 목록
@@ -717,40 +728,57 @@ public:
     }
 
     void SC10_applyCurrentPreset(bool p_force_apply) { // p_로 시작하는 함수 파라미터
-        wind_simulation_active = false;
-        gust_active = false;
-        thermal_bubble_active = false;
-        gust_intensity = 1.0f;
+        wind_simulation_active  = false;
+        gust_active             = false;
+        thermal_bubble_active   = false;
+        gust_intensity          = 1.0f;
         
         SC10_PresetMode_t v_current_preset_mode = (SC10_PresetMode_t)g_SC10_config.preset_mode_index; // v_로 시작하는 지역 변수
         
         if (v_current_preset_mode == SC10_PRESET_OFF) {
             enable_wind_simulation = false;
             float v_steady_fan_pct = (g_SC10_config.minimum_fan_speed > 0.0f) ? g_SC10_config.minimum_fan_speed : 12.0f;
+
             SC10_applyFanSpeed(v_steady_fan_pct);
-            current_wind_speed = 0.5f;
-            target_wind_speed = 0.5f;
+            
+            current_wind_speed  = 0.5f;
+            target_wind_speed   = 0.5f;
 
         } else {
             enable_wind_simulation = true;
-            
-            if (v_current_preset_mode == SC10_PRESET_COUNTRY) {
-              base_wind_min = 0.7f; base_wind_max = 3.4f;
-              gust_probability_base = 0.006f; location_gust_strength = 1.35f; thermal_bubble_frequency = 0.015f;
-            } else if (v_current_preset_mode == SC10_PRESET_MEDITERRANEAN) {
-              base_wind_min = 1.6f; base_wind_max = 3.8f;
-              gust_probability_base = 0.012f; location_gust_strength = 1.55f; thermal_bubble_frequency = 0.035f;
-            } else if (v_current_preset_mode == SC10_PRESET_OCEAN) {
-              base_wind_min = 1.8f; base_wind_max = 5.5f;
-              gust_probability_base = 0.040f; location_gust_strength = 2.1f; thermal_bubble_frequency = 0.022f;
-            } else if (v_current_preset_mode == SC10_PRESET_MOUNTAIN) {
-              base_wind_min = 2.2f; base_wind_max = 7.5f;
-              gust_probability_base = 0.045f; location_gust_strength = 2.2f; thermal_bubble_frequency = 0.028f;
-            } else if (v_current_preset_mode == SC10_PRESET_PLAINS) {
-              base_wind_min = 4.0f; base_wind_max = 8.8f;
-              gust_probability_base = 0.070f; location_gust_strength = 2.4f; thermal_bubble_frequency = 0.018f;
+
+            if (v_current_preset_mode == SC10_PRESET_COUNTRY){
+                base_wind_min               = 0.7f;
+                base_wind_max               = 3.4f;
+                gust_probability_base       = 0.006f;
+                location_gust_strength      = 1.35f;
+                thermal_bubble_frequency    = 0.015f;
+            } else if (v_current_preset_mode == SC10_PRESET_MEDITERRANEAN){
+                base_wind_min               = 1.6f;
+                base_wind_max               = 3.8f;
+                gust_probability_base       = 0.012f;
+                location_gust_strength      = 1.55f;
+                thermal_bubble_frequency    = 0.035f;
+            } else if (v_current_preset_mode == SC10_PRESET_OCEAN){
+                base_wind_min               = 1.8f;
+                base_wind_max               = 5.5f;
+                gust_probability_base       = 0.040f;
+                location_gust_strength      = 2.1f;
+                thermal_bubble_frequency    = 0.022f;
+            } else if (v_current_preset_mode == SC10_PRESET_MOUNTAIN){
+                base_wind_min               = 2.2f;
+                base_wind_max               = 7.5f;
+                gust_probability_base       = 0.045f;
+                location_gust_strength      = 2.2f;
+                thermal_bubble_frequency    = 0.028f;
+            } else if (v_current_preset_mode == SC10_PRESET_PLAINS){
+                base_wind_min               = 4.0f;
+                base_wind_max               = 8.8f;
+                gust_probability_base       = 0.070f;
+                location_gust_strength      = 2.4f;
+                thermal_bubble_frequency    = 0.018f;
             }
-            
+
             SC10_startWindSimulation();
         }
     }
