@@ -23,8 +23,8 @@
 // ====================================================================================
 // G_SC10_으로 시작하는 전역 상수명
 const char* G_SC10_CONFIG_FILE_PATH     = "/json/config_003.json";
-const char* G_SC10_CONFIG_HTML_PATH     = "/html/SC10_main_002.html"; 
-const char* G_SC10_CONFIG_JS_PATH       = "/html/SC10_main_002.js"; 
+const char* G_SC10_CONFIG_HTML_PATH     = "/html/SC10_main_004.html"; 
+const char* G_SC10_CONFIG_JS_PATH       = "/html/SC10_main_003.js"; 
 
 
 // ====================================================================================
@@ -523,19 +523,35 @@ public:
             v_config["therm_str"]   = g_SC10_config.thermal_bubble_strength;
             v_config["therm_rad"]   = g_SC10_config.thermal_bubble_radius;
             v_config["preset"]      = G_SC10_PRESET_MODE_NAMES[g_SC10_config.preset_mode_index];
-            
+
             // C. Wi-Fi 설정값 (GET 시에는 구조체처럼 반환)
-            JsonObject v_wifi_config        = v_config.createNestedObject("wifi");
-            v_wifi_config["wifi_mode"]      = g_SC10_config.wifi_mode;
-            v_wifi_config["ap_ssid"]        = g_SC10_config.ap_ssid;
-            v_wifi_config["ap_password"]    = g_SC10_config.ap_password;
-            
-            JsonArray v_sta_networks_json = v_wifi_config.createNestedArray("sta_networks");
+            JsonObject v_wifi_config = v_config["wifi"].to<JsonObject>();
+            v_wifi_config["wifi_mode"]     = g_SC10_config.wifi_mode;
+            v_wifi_config["ap_ssid"]       = g_SC10_config.ap_ssid;
+            v_wifi_config["ap_password"]   = g_SC10_config.ap_password;
+                        
+            JsonArray v_sta_networks_json = v_wifi_config["sta_networks"].to<JsonArray>();
+
+            // 배열에 객체를 추가합니다. createNestedObject() 대신 add<JsonObject>()를 사용합니다.
             for (int i = 0; i < g_SC10_config.sta_network_count; i++) {
-                JsonObject v_network    = v_sta_networks_json.createNestedObject();
-                v_network["ssid"]       = g_SC10_config.sta_networks[i].ssid;
-                v_network["pass"]       = g_SC10_config.sta_networks[i].password; // 보안상 문제 있으나, 임시 설정용
+                // v7.4.x에서 권장되는 방식으로, JsonArray에 새 객체를 추가하며 참조를 얻습니다.
+                JsonObject v_network = v_sta_networks_json.add<JsonObject>(); 
+                v_network["ssid"]      = g_SC10_config.sta_networks[i].ssid;
+                v_network["pass"]      = g_SC10_config.sta_networks[i].password; // 보안상 문제 있으나, 임시 설정용
             }
+
+            // // C. Wi-Fi 설정값 (GET 시에는 구조체처럼 반환)
+            // JsonObject v_wifi_config        = v_config.createNestedObject("wifi");
+            // v_wifi_config["wifi_mode"]      = g_SC10_config.wifi_mode;
+            // v_wifi_config["ap_ssid"]        = g_SC10_config.ap_ssid;
+            // v_wifi_config["ap_password"]    = g_SC10_config.ap_password;
+            
+            // JsonArray v_sta_networks_json = v_wifi_config.createNestedArray("sta_networks");
+            // for (int i = 0; i < g_SC10_config.sta_network_count; i++) {
+            //     JsonObject v_network    = v_sta_networks_json.createNestedObject();
+            //     v_network["ssid"]       = g_SC10_config.sta_networks[i].ssid;
+            //     v_network["pass"]       = g_SC10_config.sta_networks[i].password; // 보안상 문제 있으나, 임시 설정용
+            // }
             
             // D. 프리셋 목록
             JsonArray v_presets = v_doc["presets"].to<JsonArray>();

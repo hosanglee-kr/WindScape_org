@@ -1,4 +1,4 @@
-<!-- SC10_main_003.html -->
+<!-- SC10_main_004.html -->
  
 <!DOCTYPE html>
 <html lang="ko">
@@ -7,50 +7,194 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SC10 WindScape Config</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
-        h2 { border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 20px; color: #333; }
-        h3 { border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 20px; color: #007bff; }
-        .status-box { background: #e0f7fa; padding: 15px; margin-bottom: 20px; border-radius: 5px; border-left: 5px solid #00bcd4; }
-        .status-box p { margin: 5px 0; }
-        .setting-group { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+        /* 기본 레이아웃 및 폰트 */
+        body { 
+            font-family: 'Arial', sans-serif; 
+            margin: 0; 
+            padding: 20px;
+            background-color: #e9ecef; /* 밝은 배경색 */
+            line-height: 1.6;
+        }
+        .container { 
+            max-width: 700px; /* 너비 확장 */
+            margin: 40px auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* 깊은 그림자 */
+        }
         
-        /* 비밀번호 토글을 위한 CSS */
-        .password-container { position: relative; margin-bottom: 10px; }
-        .password-container input[type="password"], 
-        .password-container input[type="text"] {
-            padding-right: 40px; /* 버튼 공간 확보 */
+        /* 헤더 및 섹션 */
+        h2 { 
+            font-size: 1.8em;
+            color: #343a40; 
+            border-bottom: 3px solid #007bff; 
+            padding-bottom: 10px; 
+            margin-bottom: 30px; 
+        }
+        h3 { 
+            font-size: 1.25em;
+            color: #007bff; 
+            border-bottom: 1px solid #dee2e6; 
+            padding-bottom: 8px; 
+            margin-top: 30px; 
+            margin-bottom: 15px;
+        }
+        h4 {
+            color: #495057;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        /* 상태 박스 */
+        .status-box { 
+            background: #f8f9fa; 
+            padding: 20px; 
+            margin-bottom: 30px; 
+            border-radius: 8px; 
+            border: 1px solid #ced4da;
+            line-height: 1.4;
+        }
+        .status-box p { 
+            margin: 5px 0; 
+            font-size: 0.95em;
+        }
+
+        /* 설정 그룹 */
+        .setting-group { 
+            margin-bottom: 25px; 
+            padding-bottom: 25px; 
+            border-bottom: 1px solid #e9ecef; 
+        }
+        .setting-group:last-child {
+            border-bottom: none;
+        }
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: bold; 
+            color: #495057; 
+            font-size: 0.95em;
+        }
+
+        /* 입력 요소 (Input, Select, Range) */
+        input[type="text"], input[type="password"], select { 
+            width: 100%; 
+            padding: 10px 12px; 
+            margin-bottom: 15px; 
+            border: 1px solid #ced4da; 
+            border-radius: 6px; 
+            box-sizing: border-box; 
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input[type="text"]:focus, input[type="password"]:focus, select:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #dee2e6;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #007bff;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #0056b3;
+        }
+
+        .value-display { 
+            font-weight: bold; 
+            color: #007bff; 
+            float: right; 
+            font-size: 1.1em;
+            margin-top: -30px;
+        }
+
+        /* 버튼 */
+        button[type="submit"] { 
+            background-color: #28a745; /* 녹색으로 변경하여 저장 강조 */
+            color: white; 
+            padding: 12px 15px; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            transition: background-color 0.3s; 
+            width: 100%; 
+            font-size: 1.1em;
+            margin-top: 20px;
+        }
+        button[type="submit"]:hover { 
+            background-color: #1e7e34; 
+        }
+        
+        /* 비밀번호 토글 스타일 */
+        .password-container { 
+            position: relative; 
             margin-bottom: 0;
+        }
+        .password-container input {
+             /* 토글 버튼 공간 확보 */
+             padding-right: 45px !important;
         }
         .toggle-password {
             position: absolute;
             top: 50%;
-            right: 10px;
+            right: 1px; /* 오른쪽 끝에 배치 */
             transform: translateY(-50%);
             cursor: pointer;
-            color: #777;
+            color: #6c757d;
             font-size: 1.2em;
             line-height: 1;
-            padding: 0;
+            padding: 8px; /* 클릭 영역 확장 */
             background: none;
             border: none;
             outline: none;
+            z-index: 10; /* 입력 필드 위에 오도록 */
+            transition: color 0.2s;
         }
         .toggle-password:hover {
-            color: #000;
+            color: #007bff;
         }
-        
-        /* STA 설정을 한 줄에 배치하기 위한 flexbox 사용 (기존 유지) */
-        .sta-config-item { margin-left: 15px; padding: 10px 0; border-left: 2px dashed #ccc; margin-top: 10px; padding-left: 15px; }
-        .sta-inputs { display: flex; gap: 10px; align-items: flex-end; }
-        .sta-inputs > div { flex: 1; }
-        .sta-label { font-weight: bold; color: #555; margin-bottom: 5px; display: block; }
 
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
-        input[type="text"], input[type="password"], input[type="range"], select { width: 100%; padding: 8px; margin-bottom: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button[type="submit"] { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; width: 100%; margin-top: 10px; }
-        button[type="submit"]:hover { background-color: #0056b3; }
-        .value-display { font-weight: bold; color: #007bff; float: right; }
+        /* STA 설정 레이아웃 (한 줄) */
+        .sta-config-item { 
+            padding: 15px; 
+            margin-top: 10px;
+            border: 1px solid #e9ecef;
+            border-left: 5px solid #007bff; /* 주조색으로 구분선 강조 */
+            border-radius: 6px;
+            transition: background-color 0.3s;
+        }
+        .sta-config-item:hover {
+            background-color: #f8f9fa; /* 마우스 오버 효과 */
+        }
+        .sta-inputs { 
+            display: flex; 
+            gap: 15px; 
+            margin-top: 8px;
+        }
+        .sta-inputs > div { 
+            flex: 1; 
+        }
+        .sta-label { 
+            font-weight: bold; 
+            color: #007bff; 
+            margin-bottom: 5px; 
+            display: block; 
+            font-size: 1em;
+        }
     </style>
 </head>
 <body>
@@ -68,7 +212,7 @@
 
         <form id="config-form">
             
-            <div class="setting-group" style="border-bottom: 3px solid #007bff; margin-bottom: 20px;">
+            <div class="setting-group" style="border-bottom: 3px solid #007bff;">
                 <h3>📡 Wi-Fi 연결 설정</h3>
 
                 <label for="wifi_mode">Wi-Fi 모드</label>
@@ -78,7 +222,7 @@
                     <option value="DUAL">DUAL (STA+AP)</option>
                 </select>
 
-                <h4 style="margin-top: 15px;">AP(SoftAP) 설정</h4>
+                <h4>AP(SoftAP) 설정</h4>
                 <label for="ap_ssid">AP SSID</label>
                 <input type="text" id="ap_ssid" name="ap_ssid" value="">
                 
@@ -88,7 +232,7 @@
                     <button type="button" class="toggle-password" data-target="ap_password">👀</button>
                 </div>
 
-                <h4 style="margin-top: 15px;">STA(클라이언트) 설정 (최대 5개)</h4>
+                <h4 style="margin-top: 25px;">STA(클라이언트) 설정 (최대 5개)</h4>
                 
                 <div class="sta-config-item">
                     <span class="sta-label">STA #1</span>
@@ -219,6 +363,6 @@
         </form>
     </div>
     
-    <script src="SC10_main_003.js"></script>
+    <script src="SC10_main_002.js"></script>
 </body>
 </html>
