@@ -397,12 +397,21 @@ public:
             Serial.print("Trying to connect to STA network(s)...");
             
             int v_connect_attempts = 0;
-            int v_max_attempts = 15; // 최대 시도 횟수를 늘려 연결 안정성 확보
+            int v_max_attempts = 5; // 최대 시도 횟수를 늘려 연결 안정성 확보
+            unsigned long v_last_attempt = 0; // 마지막 시도 시간을 기록
             
             while (g_SC10_wifiMulti.run() != WL_CONNECTED && v_connect_attempts < v_max_attempts) {
-                v_connect_attempts++;
-                Serial.print(".");
-                delay(1000); 
+                // 1초마다 시도 횟수를 증가시키고 로그를 출력합니다.
+                if (millis() - v_last_attempt >= 1000) { 
+                    v_connect_attempts++;
+                    Serial.print(".");
+                    v_last_attempt = millis();
+                }
+
+                // ⚡️ 중요한 변경: 짧은 delay(1) 또는 yield()를 사용하여 CPU 제어권을 양보합니다.
+                // g_SC10_wifiMulti.run() 내부에 yield가 포함되어 있을 가능성이 높지만, 
+                // 안전을 위해 명시적으로 넣어줍니다.
+                delay(1); 
             }
             
             // 3. 접속 결과 처리
