@@ -1061,6 +1061,8 @@ public:
         SC10_applyFanSpeed(v_fan_speed_percent);
         SC10_updateGustState();
         SC10_updateThermalBubbleCheck();
+
+        yield(); 
     }
 
     // --- 5. 메인 루프 실행 함수 (SC10_run() 함수 추가) ---
