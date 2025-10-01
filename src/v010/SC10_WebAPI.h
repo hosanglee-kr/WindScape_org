@@ -63,8 +63,7 @@ public:
       for (int i=0;i<SC10_PRESET_COUNT;i++) p.add(G_SC10_PRESET_MODE_NAMES[i]);
 
       String res; serializeJson(doc, res);
-      req->se
-        nd(200, "application/json", res);
+      req->send(200, "application/json", res);
     });
 
     // /api/config — 설정 갱신 및 저장(+Wi-Fi 재초기화)
