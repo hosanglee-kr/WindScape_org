@@ -55,9 +55,9 @@ typedef enum {
 
 /// Phase 이름 문자열 배열
 static const char* G_SC10_WEATHER_PHASE_NAMES[] = {
-    "Calm",
-    "Normal",
-    "Strong"
+    "Calm-잔잔한",
+    "Normal-보통",
+    "Strong-강한"
 };
 
 // ====================================================================================
@@ -81,11 +81,11 @@ typedef enum {
 /// 프리셋 모드 이름 문자열 배열
 static const char* G_SC10_PRESET_MODE_NAMES[] = {
     "Off",
-    "Countryside",
-    "Mediterranean",
-    "Ocean",
-    "Mountain",
-    "Plains"
+    "Countryside-들판",
+    "Mediterranean-지중해",
+    "Ocean-해양성",
+    "Mountain-산악",
+    "Plains-대평원"
 };
 
 // ====================================================================================
