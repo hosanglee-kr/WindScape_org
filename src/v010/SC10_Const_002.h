@@ -143,3 +143,7 @@ struct WindConfig {
 
     int preset_mode_index = SC10_PRESET_OCEAN; ///< 현재 선택된 프리셋 모드 인덱스
 };
+
+extern WindConfig g_SC10_config;
+
+
