@@ -2,22 +2,18 @@
 
 #include <Arduino.h>
 
-
 #include "v001/SC10_WindScape_006.h"
 
 
 WindScapeSimulator g_SC10_sim;   
 
-// 선택: 시리얼 로그 레벨 조정 (기본 INFO)
-SC10_Logger::setLevel(SC10_LOG_DEBUG);
-
-
 void setup() {
 
     Serial.begin(115200);
-
     delay(200);
 
+    // 선택: 시리얼 로그 레벨 조정 (기본 INFO)
+    SC10_Logger::setLevel(SC10_LOG_DEBUG);
     
     // FS 마운트가 내부적으로 필요 시 수행되지만, 초기 HTML/JSON 업로드 전에 미리 마운트 권장
     if (!LittleFS.begin(true)) {
