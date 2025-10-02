@@ -20,26 +20,32 @@ class SC10_Logger {
 		g_logLevel = p_lvl;
 	}
 
-	static void log(SC10_LogLevel p_lvl, const char* fmt, ...) {
-		if (p_lvl < g_logLevel)
+	static void log(SC10_LogLevel p_lvl, const char* p_fmt, ...) {
+		if (p_lvl < g_logLevel){
 			return;
-		char	buf[256];
-		va_list ap;
-		va_start(ap, fmt);
-		vsnprintf(buf, sizeof(buf), fmt, ap);
-		va_end(ap);
-		String line = "[" + String(levelStr(p_lvl)) + "] " + String(buf);
-		Serial.println(line);
-		push(line);
+		}
+		
+		char	v_buf[256];
+		
+		va_list v_ap;
+		va_start(v_ap, p_fmt);
+		vsnprintf(v_buf, sizeof(v_buf), p_fmt, v_ap);
+		va_end(v_ap);
+		String v_line = "[" + String(levelStr(p_lvl)) + "] " + String(v_buf);
+		Serial.println(v_line);
+		push(v_line);
 	}
 
 	static String getLogsJson() {
-		JsonDocument doc;
-		JsonArray	 arr = doc.to<JsonArray>();
-		for (auto& s : g_logs) arr.add(s);
-		String out;
-		serializeJson(doc, out);
-		return out;
+		JsonDocument v_doc;
+		JsonArray	 v_jsonArr = v_doc.to<JsonArray>();
+		for (auto& s : g_logs) {
+			v_jsonArr.add(s);
+		}
+		
+		String v_out;
+		serializeJson(v_doc, v_out);
+		return v_out;
 	}
 
    private:
@@ -59,9 +65,10 @@ class SC10_Logger {
 		}
 		return "";
 	}
-	static void push(const String& s) {
-		if (g_logs.size() > 100)
+	static void push(const String& p_s) {
+		if (g_logs.size() > 100){
 			g_logs.pop_front();
-		g_logs.push_back(s);
+		}
+		g_logs.push_back(p_s);
 	}
 };
