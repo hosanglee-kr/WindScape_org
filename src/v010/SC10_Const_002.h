@@ -24,9 +24,9 @@ namespace SC10_Const {
 constexpr char FW_VERSION[]		= "SC10_FW_1.0.0";
 constexpr char CONFIG_FILE[]	= "/json/config_010.json";
 constexpr char BACKUP_FILE[]	= "/json/config_010.json.bak";
-constexpr char HTML_FILE[]		= "/html/SC10_main_011.html";
-constexpr char CSS_FILE[]		= "/html/SC10_main_011.css";
-constexpr char JS_FILE[]		= "/html/SC10_main_010.js";
+constexpr char HTML_FILE[]		= "/html/SC10_main_012.html";
+constexpr char CSS_FILE[]		= "/html/SC10_main_012.css";
+constexpr char JS_FILE[]		= "/html/SC10_main_012.js";
 constexpr int  MAX_STA_NETWORKS = 5;
 }  // namespace SC10_Const
 
