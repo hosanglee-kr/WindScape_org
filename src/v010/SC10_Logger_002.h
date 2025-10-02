@@ -2,6 +2,7 @@
 
 #pragma once
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <deque>
 #include <vector>
 
