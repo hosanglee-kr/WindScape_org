@@ -27,7 +27,7 @@ namespace SC10_Const {
   constexpr char BACKUP_FILE[]     = "/json/config_003.json.bak";
   constexpr char HTML_FILE[]       = "/html/SC10_main_004.html";
   constexpr char JS_FILE[]         = "/html/SC10_main_003.js";
-  constexpr int  MAX_STA_NETWORKS  = 5;
+  // constexpr int  MAX_STA_NETWORKS  = 5;
 }
 
 /*
@@ -46,7 +46,7 @@ namespace SC10_Const {
 // ====================================================================================
 
 /// 저장 가능한 STA 네트워크 최대 개수
-//// #define G_SC10_MAX_STA_NETWORKS 5
+#define G_SC10_MAX_STA_NETWORKS 5
 
 /// Wi-Fi 모드 정의: AP 전용 모드
 #define G_SC10_WIFI_MODE_AP   0
