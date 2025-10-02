@@ -74,8 +74,13 @@ public:
       nullptr,
       [&p_sim,&p_multi](AsyncWebServerRequest *req, uint8_t *data, size_t len, size_t index, size_t total){
         if (index==0 && len==total) {
-          JsonDocument doc; DeserializationError err = deserializeJson(doc, (const char*)data, len);
-          if (err) { req->send(400,"application/json","{\"error\":\"Invalid JSON\"}"); return; }
+          JsonDocument doc; 
+          DeserializationError err = deserializeJson(doc, (const char*)data, len);
+          
+          if (err) { 
+            req->send(400,"application/json","{\"error\":\"Invalid JSON\"}"); 
+            return; 
+          }
           bool wifiChanged=false;
           ConfigManager::patchFromJson(g_SC10_config, doc, wifiChanged);
           ConfigManager::save(g_SC10_config);
@@ -127,9 +132,11 @@ public:
 
     // /api/version
     p_srv.on("/api/version", HTTP_GET, [](AsyncWebServerRequest *req){
-      JsonDocument d; d["fw_version"] = SC10_Const::FW_VERSION;
+      JsonDocument d; 
+      d["fw_version"] = SC10_Const::FW_VERSION;
       d["config_file"] = SC10_Const::CONFIG_FILE;
-      String res; serializeJson(d, res);
+      String res; 
+      serializeJson(d, res);
       req->send(200,"application/json",res);
     });
 
@@ -139,11 +146,17 @@ public:
       [](AsyncWebServerRequest *req, const String &filename, size_t index, uint8_t *data, size_t len, bool final){
         if (!index) {
           String path = "/" + filename; // 필요 시 "/html/" + filename 로 강제 가능
-          if (LittleFS.exists(path)) LittleFS.remove(path);
+          if (LittleFS.exists(path)) {
+            LittleFS.remove(path);
+          }
           req->_tempFile = LittleFS.open(path, "w");
         }
-        if (len && req->_tempFile) req->_tempFile.write(data, len);
-        if (final && req->_tempFile) req->_tempFile.close();
+        if (len && req->_tempFile) {
+          req->_tempFile.write(data, len);
+        }
+        if (final && req->_tempFile) {
+          req->_tempFile.close();
+        }
       }
     );
 
@@ -151,9 +164,17 @@ public:
     p_srv.on("/update", HTTP_POST,
       [](AsyncWebServerRequest *req){ /* will restart after final */ },
       [](AsyncWebServerRequest *req, const String &filename, size_t index, uint8_t *data, size_t len, bool final) {
-        if (!index) Update.begin();
-        if (len) Update.write(data, len);
-        if (final) { Update.end(true); req->send(200,"text/plain","OTA OK, rebooting"); ESP.restart(); }
+        if (!index) {
+          Update.begin();
+        }
+        if (len) {
+          Update.write(data, len);
+        }
+        if (final) { 
+          Update.end(true); 
+          req->send(200,"text/plain","OTA OK, rebooting"); 
+          ESP.restart(); 
+        }
       }
     );
 
