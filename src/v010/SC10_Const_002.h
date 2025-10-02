@@ -27,8 +27,9 @@ namespace SC10_Const {
   constexpr char BACKUP_FILE[]     = "/json/config_003.json.bak";
   constexpr char HTML_FILE[]       = "/html/SC10_main_004.html";
   constexpr char JS_FILE[]         = "/html/SC10_main_003.js";
-  // constexpr int  MAX_STA_NETWORKS  = 5;
+  constexpr int  MAX_STA_NETWORKS  = 5;
 }
+
 
 /*
 /// 기본 설정 JSON 파일 경로
@@ -128,7 +129,7 @@ struct SC10_StaCredential {
 struct WindConfig {
     // --- Wi-Fi 설정 ---
     int wifi_mode = G_SC10_WIFI_MODE_STA;  ///< 현재 Wi-Fi 모드
-    SC10_StaCredential sta_networks[G_SC10_MAX_STA_NETWORKS]; ///< STA 네트워크 목록
+    SC10_StaCredential sta_networks[SC10_Const.MAX_STA_NETWORKS]; ///< STA 네트워크 목록
     int sta_network_count = 0;             ///< 실제 저장된 STA 네트워크 수
     char ap_ssid[32] = "SC10_Config_AP";   ///< AP 모드 SSID
     char ap_password[64] = "newpassword";  ///< AP 모드 Password
