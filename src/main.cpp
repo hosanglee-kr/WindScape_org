@@ -5,7 +5,6 @@
 
 #include "v010/SC10_WindScape_002.h"
 
-WindConfig         g_SC10_config;
 WindScapeSimulator g_SC10;
 
 void setup() {
