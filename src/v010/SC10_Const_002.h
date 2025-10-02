@@ -13,11 +13,24 @@
  */
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
 
 // ====================================================================================
 // 전역 파일 경로 상수
 // ====================================================================================
 
+
+// 전역 상수/경로/버전
+namespace SC10_Const {
+  constexpr char FW_VERSION[]      = "SC10_FW_1.0.0";
+  constexpr char CONFIG_FILE[]     = "/json/config_003.json";
+  constexpr char BACKUP_FILE[]     = "/json/config_003.json.bak";
+  constexpr char HTML_FILE[]       = "/html/SC10_main_004.html";
+  constexpr char JS_FILE[]         = "/html/SC10_main_003.js";
+  constexpr int  MAX_STA_NETWORKS  = 5;
+}
+
+/*
 /// 기본 설정 JSON 파일 경로
 #define G_SC10_CONFIG_FILE_PATH   "/json/config_003.json"
 /// 설정 저장 시 기존 파일 백업본 경로 (.bak)
@@ -26,13 +39,14 @@
 #define G_SC10_CONFIG_HTML_PATH   "/html/SC10_main_004.html"
 /// 웹 UI JS (클라이언트 로직) 파일 경로
 #define G_SC10_CONFIG_JS_PATH     "/html/SC10_main_003.js"
+*/
 
 // ====================================================================================
 // Wi-Fi 설정 관련 상수
 // ====================================================================================
 
 /// 저장 가능한 STA 네트워크 최대 개수
-#define G_SC10_MAX_STA_NETWORKS 5
+//// #define G_SC10_MAX_STA_NETWORKS 5
 
 /// Wi-Fi 모드 정의: AP 전용 모드
 #define G_SC10_WIFI_MODE_AP   0
@@ -144,6 +158,14 @@ struct WindConfig {
     int preset_mode_index = SC10_PRESET_OCEAN; ///< 현재 선택된 프리셋 모드 인덱스
 };
 
-extern WindConfig g_SC10_config;
+// 전역 설정 인스턴스 (헤더 온리: inline로 ODR 방지)
+inline WindConfig g_SC10_config;
 
-
+// 난수 유틸 (0~1)
+inline float SC10_getRandom01() {
+  return (float)esp_random() / (float)UINT32_MAX;
+}
+// 난수 유틸 (범위)
+inline float SC10_randRange(float a, float b) {
+  return a + SC10_getRandom01() * (b - a);
+}
