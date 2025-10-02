@@ -127,6 +127,69 @@ class SC10_Simulation {
 					location_gust_strength	 = 2.4f;
 					thermal_bubble_frequency = 0.018f;
 					break;
+				
+				// ===== 신규 프리셋 5종 =====
+                case SC10_PRESET_HARBOR_BREEZE: {
+                  // Harbor Breeze (항구 바람)
+                  // Base Wind: 5–12 mph ≈ 2.24–5.36 m/s
+                  base_wind_min             = 2.25f;
+                  base_wind_max             = 5.35f;
+                  // Rolling/Gentle, 2.5% @ 1.8×
+                  gust_probability_base     = 0.025f;
+                  location_gust_strength    = 1.80f;
+                  // 해풍/수평 난류 + 약한 대류
+                  thermal_bubble_frequency  = 0.026f;
+                  break;
+                }
+                case SC10_PRESET_FOREST_CANOPY: {
+                  // Forest Canopy (숲 그늘 바람)
+                  // Base Wind: 3–9 mph ≈ 1.34–4.02 m/s
+                  base_wind_min             = 1.35f;
+                  base_wind_max             = 4.00f;
+                  // Rare, 1% @ 1.5×
+                  gust_probability_base     = 0.010f;
+                  location_gust_strength    = 1.50f;
+                  // 수면/휴식용: 대류는 드물고 잔잔
+                  thermal_bubble_frequency  = 0.012f;
+                  break;
+                }
+                case SC10_PRESET_URBAN_SUNSET: {
+                  // Urban Sunset (도시 석양 바람)
+                  // Base Wind: 4–11 mph ≈ 1.79–4.92 m/s
+                  base_wind_min             = 1.80f;
+                  base_wind_max             = 4.90f;
+                  // Gentle–Sharp mix, 3% @ 2.0× (골목 난류)
+                  gust_probability_base     = 0.030f;
+                  location_gust_strength    = 2.00f;
+                  // 열섬효과로 완만한 대류
+                  thermal_bubble_frequency  = 0.020f;
+                  break;
+                }
+                case SC10_PRESET_TROPICAL_RAIN: {
+                  // Tropical Rain (열대 소나기 바람)
+                  // Base Wind: 7–18 mph ≈ 3.13–8.05 m/s
+                  base_wind_min             = 3.15f;
+                  base_wind_max             = 8.05f;
+                  // Sharp/Sustained, 6% @ 2.2×
+                  gust_probability_base     = 0.060f;
+                  location_gust_strength    = 2.20f;
+                  // 대류 활발 (소나기 전후)
+                  thermal_bubble_frequency  = 0.038f;
+                  break;
+                }
+                case SC10_PRESET_DESERT_NIGHT: {
+                  // Desert Night (사막의 밤 바람)
+                  // Base Wind: 2–7 mph ≈ 0.89–3.13 m/s
+                  base_wind_min             = 0.90f;
+                  base_wind_max             = 3.10f;
+                  // Very rare & soft, 0.5% @ 1.3×
+                  gust_probability_base     = 0.005f;
+                  location_gust_strength    = 1.30f;
+                  // 복사냉각 → 약한 하강/완만한 층류
+                  thermal_bubble_frequency  = 0.008f;
+                  break;
+                }
+                // ==========================
 				default:
 					base_wind_min			 = 1.8f;
 					base_wind_max			 = 5.5f;
