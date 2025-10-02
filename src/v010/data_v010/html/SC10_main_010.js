@@ -1,6 +1,6 @@
-// SC10_main_003.js
+// SC10_main_010.js
 
-/* SC10_main_003.js
+/* SC10_main_010.js
  * - SC10 관리자용 UI 스크립트 (모든 주석 한글)
  * - /api/state 읽기 → 폼 반영
  * - /api/config POST → 설정 저장
