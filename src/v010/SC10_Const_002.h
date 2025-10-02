@@ -88,6 +88,13 @@ typedef enum {
 	SC10_PRESET_OCEAN		  = 3,	///< 해양성 바람
 	SC10_PRESET_MOUNTAIN	  = 4,	///< 산악 지역 바람
 	SC10_PRESET_PLAINS		  = 5,	///< 대평원 바람
+    // ===== 신규 프리셋 5종 =====
+    SC10_PRESET_HARBOR_BREEZE,     // 항구 바람
+    SC10_PRESET_FOREST_CANOPY,     // 숲 그늘 바람
+    SC10_PRESET_URBAN_SUNSET,      // 도시 석양 바람
+    SC10_PRESET_TROPICAL_RAIN,     // 열대 소나기 바람
+    SC10_PRESET_DESERT_NIGHT,      // 사막의 밤 바람
+  // ==========================
 	SC10_PRESET_COUNT
 } SC10_PresetMode_t;
 
@@ -98,7 +105,14 @@ static const char* G_SC10_PRESET_MODE_NAMES[] = {
 	"Mediterranean-지중해",
 	"Ocean-해양성",
 	"Mountain-산악",
-	"Plains-대평원"};
+	"Plains-대평원",
+    // 신규
+    "Harbor Breeze",
+    "Forest Canopy",
+    "Urban Sunset",
+    "Tropical Rain",
+    "Desert Night"
+};
 
 // ====================================================================================
 // Wi-Fi STA Credential 구조체 정의
