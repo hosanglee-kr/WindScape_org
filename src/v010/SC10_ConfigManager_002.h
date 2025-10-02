@@ -19,10 +19,12 @@ class ConfigManager {
 	// 설정 로드: /json/config_003.json → 파싱 실패 시 백업(/json/config_003.json.bak) 복구 시도
 	// -----------------------------------------------------------------------------
 	static bool load(WindConfig &p_cfg) {
-		if (!LittleFS.begin(true)) {
-			SC10_Logger::log(SC10_LOG_ERROR, "LittleFS mount failed");
-			return false;
-		}
+		
+		// if (!LittleFS.begin(true)) {
+		// 	SC10_Logger::log(SC10_LOG_ERROR, "LittleFS mount failed");
+		// 	return false;
+		// }
+
 		if (!LittleFS.exists(SC10_Const::CONFIG_FILE)) {
 			SC10_Logger::log(SC10_LOG_WARN, "Config not found. Using defaults");
 			return false;  // 기본값으로 진행

@@ -28,19 +28,42 @@ class WindScapeSimulator {
 		// 설정 로드(실패 시 기본값으로 진행)
 		ConfigManager::load(g_SC10_config);
 
+		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_010_ConfigManager::loaded");
+
 		// Wi-Fi 초기화
 		SC10_WiFiManager::init(g_SC10_config, g_SC10_wifiMulti);
 
+		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_020_SC10_WiFiManager::init");
+
 		// PWM/핀
 		ledcSetup(g_SC10_config.pwm_channel, g_SC10_config.pwm_frequency, g_SC10_config.pwm_resolution);
+		
+		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_031_SC10_ledcSetup");
+
 		ledcAttachPin(g_SC10_config.fan_pwm_pin, g_SC10_config.pwm_channel);
-		pinMode(g_SC10_config.fan_tach_pin, INPUT_PULLUP);
+		
+		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_032_ledcAttachPin");
+
+		//// // pinMode(g_SC10_config.fan_tach_pin, INPUT_PULLUP);
+
+		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_030_ledcSetup setup");
 
 		// WebServer
 		SC10_WebAPI::mountStatic(g_SC10_asyncWeb);
+		
+		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_040_SC10_WebAPI::mountStatic");
+
 		g_SC10_sim.begin(true);
+
+		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_050_g_SC10_sim.begin");
+
+
 		SC10_WebAPI::mountApi(g_SC10_asyncWeb, g_SC10_sim, g_SC10_wifiMulti);
+		
+		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_060_SC10_WebAPI::mountApi");
+
 		g_SC10_asyncWeb.begin();
+
 		SC10_Logger::log(SC10_LOG_INFO, "AsyncWebServer started");
 	}
 

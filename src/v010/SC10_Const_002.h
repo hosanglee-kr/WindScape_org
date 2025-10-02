@@ -24,7 +24,8 @@ namespace SC10_Const {
 constexpr char FW_VERSION[]		= "SC10_FW_1.0.0";
 constexpr char CONFIG_FILE[]	= "/json/config_010.json";
 constexpr char BACKUP_FILE[]	= "/json/config_010.json.bak";
-constexpr char HTML_FILE[]		= "/html/SC10_main_010.html";
+constexpr char HTML_FILE[]		= "/html/SC10_main_011.html";
+constexpr char CSS_FILE[]		= "/html/SC10_main_011.css";
 constexpr char JS_FILE[]		= "/html/SC10_main_010.js";
 constexpr int  MAX_STA_NETWORKS = 5;
 }  // namespace SC10_Const
@@ -131,8 +132,9 @@ struct WindConfig {
 	char			   ap_password[64]	 = "newpassword";			///< AP 모드 Password
 
 	// --- 하드웨어/시스템 상수 ---
-	int fan_pwm_pin	   = 14;	 ///< 팬 PWM 출력 핀
-	int fan_tach_pin   = 27;	 ///< 팬 회전 센서 입력 핀
+	int fan_pwm_pin	   = 6; // 14;	 ///< 팬 PWM 출력 핀
+	int fan_tach_pin   = 5;	 ///< 팬 회전 센서 입력 핀
+
 	int pwm_frequency  = 25000;	 ///< PWM 주파수
 	int pwm_channel	   = 0;		 ///< PWM 채널
 	int pwm_resolution = 10;	 ///< PWM 해상도 (비트)

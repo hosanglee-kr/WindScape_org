@@ -14,45 +14,45 @@
 class SC10_Simulation {
    public:
 	// 외부에서 읽는 상태
-	bool  wind_simulation_active = false;
-	bool  fan_power_enabled		 = true;
-	float current_wind_speed	 = 3.6f;
-	float target_wind_speed		 = 3.6f;
-	float wind_change_rate		 = 0.1f;
-	float wind_momentum			 = 0.0f;
+	bool  			wind_simulation_active 		= false;
+	bool  			fan_power_enabled		 	= true;
+	float 			current_wind_speed	 		= 3.6f;
+	float 			target_wind_speed		 	= 3.6f;
+	float 			wind_change_rate		 	= 0.1f;
+	float 			wind_momentum			 	= 0.0f;
 
 	// Phase
 	SC10_WindWeatherPhase_t current_weather_phase = SC10_WEATHER_PHASE_NORMAL;
-	float					phase_start_time	  = 0.0f;
-	float					phase_duration		  = 120.0f;
-	float					phase_wind_min		  = 2.0f;
-	float					phase_wind_max		  = 6.0f;
+	float 			phase_start_time	  		= 0.0f;
+	float 			phase_duration				= 120.0f;
+	float 			phase_wind_min				= 2.0f;
+	float 			phase_wind_max				= 6.0f;
 
 	// 베이스 환경/확률(프리셋 반영)
-	float base_wind_min			   = 1.8f;
-	float base_wind_max			   = 5.5f;
-	float gust_probability_base	   = 0.040f;
-	float location_gust_strength   = 2.1f;
-	float thermal_bubble_frequency = 0.022f;
+	float 			base_wind_min			   	= 1.8f;
+	float 			base_wind_max			   	= 5.5f;
+	float 			gust_probability_base	   	= 0.040f;
+	float 			location_gust_strength   	= 2.1f;
+	float 			thermal_bubble_frequency 	= 0.022f;
 
 	// 난류
-	float spectral_energy_buffer	 = 0.0f;
-	float spectral_phase_accumulator = 0.0f;
-	float turbulence_time_scale		 = 5.0f;
+	float 			spectral_energy_buffer	 	= 0.0f;
+	float 			spectral_phase_accumulator 	= 0.0f;
+	float 			turbulence_time_scale		= 5.0f;
 
 	// 돌풍
-	bool		  gust_active	  = false;
-	float		  gust_start_time = 0.0f;
-	float		  gust_duration	  = 3.0f;
-	float		  gust_intensity  = 1.0f;
-	unsigned long last_gust_check = 0;
+	bool		  	gust_active	  				= false;
+	float		  	gust_start_time 			= 0.0f;
+	float		  	gust_duration	  			= 3.0f;
+	float		  	gust_intensity  			= 1.0f;
+	unsigned long 	last_gust_check 			= 0;
 
 	// 열기포
-	bool		  thermal_bubble_active		   = false;
-	float		  thermal_bubble_start_time	   = 0.0f;
-	float		  thermal_bubble_duration	   = 8.0f;
-	float		  current_thermal_contribution = 0.0f;
-	unsigned long last_thermal_check		   = 0;
+	bool		  	thermal_bubble_active		= false;
+	float		  	thermal_bubble_start_time	= 0.0f;
+	float		  	thermal_bubble_duration	   	= 8.0f;
+	float		  	current_thermal_contribution = 0.0f;
+	unsigned long 	last_thermal_check		   	= 0;
 
 	// 타이머
 	unsigned long last_wind_sim_update = 0;
@@ -175,26 +175,32 @@ class SC10_Simulation {
 			ledcWrite(g_SC10_config.pwm_channel, 0);
 			return;
 		}
-		if (wind_simulation_active)
+		if (wind_simulation_active){
 			v_req *= v_intensity;
+		}
 		v_req = fmax(v_min, fmin(v_limit, v_req));
 
-		int levels = (1 << g_SC10_config.pwm_resolution) - 1;
-		int pwm	   = (int)(v_req * levels);
-		if (v_req <= 0.01f)
-			pwm = 0;
-		ledcWrite(g_SC10_config.pwm_channel, pwm);
+		int v_levels = (1 << g_SC10_config.pwm_resolution) - 1;
+		int v_pwm	   = (int)(v_req * v_levels);
+		if (v_req <= 0.01f){
+			v_pwm = 0;
+		}
+		ledcWrite(g_SC10_config.pwm_channel, v_pwm);
 	}
 
 	// Von Kármán 난류 합성
 	void calculateVonKarman(float p_dt) {
-		if (!wind_simulation_active)
+		if (!wind_simulation_active){
 			return;
+		}
+
 		float v_L	  = g_SC10_config.turbulence_length_scale;
 		float v_sigma = g_SC10_config.turbulence_intensity_sigma;
 		float v_U	  = current_wind_speed;
-		if (v_U < 0.1f)
+		
+		if (v_U < 0.1f){
 			v_U = 0.1f;
+		}
 
 		float v_sum = 0.0f;
 		for (int v_i = 1; v_i <= 12; v_i++) {

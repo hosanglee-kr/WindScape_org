@@ -9,13 +9,13 @@
                 "pass": "1234554321"
             },
             {
-                "ssid": "Office_WiFi_B",
-                "pass": "passwordB"
+                "ssid": "GalNote10-2540",
+                "pass": "91932542"
             }
         ]
     },
     "hw": {
-        "pwm_pin": 14,
+        "pwm_pin": 6,
         "pwm_freq": 25000,
         "pwm_res": 10
     },

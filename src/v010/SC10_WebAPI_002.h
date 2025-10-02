@@ -19,79 +19,95 @@ class SC10_WebAPI {
 	static void mountStatic(AsyncWebServer &p_srv) {
 		// 루트/스크립트 정적 파일 (원본 호환)
 		p_srv.on("/", HTTP_GET, [](AsyncWebServerRequest *req) {
-			if (LittleFS.begin() && LittleFS.exists(SC10_Const::HTML_FILE)) {
+			if (LittleFS.exists(SC10_Const::HTML_FILE)) {
 				req->send(LittleFS, SC10_Const::HTML_FILE, "text/html");
 			} else {
 				req->send(200, "text/html", "<h3>SC10 Web UI</h3><p>LittleFS에 HTML이 없습니다.</p>");
 			}
 		});
-		p_srv.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *req) {
-			if (LittleFS.begin() && LittleFS.exists(SC10_Const::JS_FILE)) {
+		
+		p_srv.on("/SC10_main_010.js", HTTP_GET, [](AsyncWebServerRequest *req) {
+			if (LittleFS.exists(SC10_Const::JS_FILE)) {
 				req->send(LittleFS, SC10_Const::JS_FILE, "application/javascript");
 			} else {
 				req->send(200, "application/javascript", "console.log('SC10: no JS file');");
 			}
 		});
+
+		p_srv.on("/SC10_main_011.css", HTTP_GET, [](AsyncWebServerRequest *req) {
+			if (LittleFS.exists(SC10_Const::CSS_FILE)) {
+				req->send(LittleFS, SC10_Const::CSS_FILE, "text/css");
+			} else {
+				req->send(200, "application/javascript", "console.log('SC10: no CSS file');");
+			}
+		});
+
+
+
+
 	}
 
 	static void mountApi(AsyncWebServer &p_srv, SC10_Simulation &p_sim, WiFiMulti &p_multi) {
 		// /api/state — 상태+설정+프리셋
 		p_srv.on("/api/state", HTTP_GET, [&p_sim](AsyncWebServerRequest *req) {
-			JsonDocument doc;
+			JsonDocument v_doc;
 
 			// status
-			JsonObject st	 = doc["status"].to<JsonObject>();
-			st["sim_active"] = p_sim.wind_simulation_active;
-			st["wind_speed"] = roundf(p_sim.current_wind_speed * 100.0f) / 100.0f;
-			st["fan_pwm"]	 = ledcRead(g_SC10_config.pwm_channel);
-			st["phase_name"] = G_SC10_WEATHER_PHASE_NAMES[p_sim.current_weather_phase];
+			JsonObject v_jsonObj_status	   = v_doc["status"].to<JsonObject>();
+			v_jsonObj_status["sim_active"] = p_sim.wind_simulation_active;
+			v_jsonObj_status["wind_speed"] = roundf(p_sim.current_wind_speed * 100.0f) / 100.0f;
+			v_jsonObj_status["fan_pwm"]	   = ledcRead(g_SC10_config.pwm_channel);
+			v_jsonObj_status["phase_name"] = G_SC10_WEATHER_PHASE_NAMES[p_sim.current_weather_phase];
 
 			if (g_SC10_config.wifi_mode == G_SC10_WIFI_MODE_STA && WiFi.status() == WL_CONNECTED) {
-				st["wifi_mode"] = "STA";
-				st["ip_addr"]	= WiFi.localIP().toString();
-				st["ssid"]		= WiFi.SSID();
+				v_jsonObj_status["wifi_mode"] = "STA";
+				v_jsonObj_status["ip_addr"]	  = WiFi.localIP().toString();
+				v_jsonObj_status["ssid"]	  = WiFi.SSID();
 			} else {
-				st["wifi_mode"] = "AP";
-				st["ip_addr"]	= WiFi.softAPIP().toString();
-				st["ssid"]		= g_SC10_config.ap_ssid;
+				v_jsonObj_status["wifi_mode"] = "AP";
+				v_jsonObj_status["ip_addr"]	  = WiFi.softAPIP().toString();
+				v_jsonObj_status["ssid"]	  = g_SC10_config.ap_ssid;
 			}
 
 			// config (모든 시뮬/타이밍/Wi-Fi)
-			JsonObject cfgObj = doc["config"].to<JsonObject>();
-			ConfigManager::toJson(g_SC10_config, cfgObj);
-			// ConfigManager::toJson(g_SC10_config, doc["config"].to<JsonDocument>());
+			JsonObject v_jsonObj_config = v_doc["config"].to<JsonObject>();
+			ConfigManager::toJson(g_SC10_config, v_jsonObj_config);
+			// ConfigManager::toJson(g_SC10_config, v_doc["config"].to<JsonDocument>());
 
 			// presets
-			JsonArray p = doc["presets"].to<JsonArray>();
-			for (int i = 0; i < SC10_PRESET_COUNT; i++) p.add(G_SC10_PRESET_MODE_NAMES[i]);
+			JsonArray v_jsonArry_presets = v_doc["presets"].to<JsonArray>();
+			for (int i = 0; i < SC10_PRESET_COUNT; i++) {
+				v_jsonArry_presets.add(G_SC10_PRESET_MODE_NAMES[i]);
+			}
 
-			String res;
-			serializeJson(doc, res);
-			req->send(200, "application/json", res);
+			String v_respose;
+			serializeJson(v_doc, v_respose);
+			req->send(200, "application/json", v_respose);
 		});
 
 		// /api/config — 설정 갱신 및 저장(+Wi-Fi 재초기화)
 		p_srv.on("/api/config", HTTP_POST, [](AsyncWebServerRequest *req) { /* no-op body in handler */ }, nullptr, [&p_sim, &p_multi](AsyncWebServerRequest *req, uint8_t *data, size_t len, size_t index, size_t total) {
         if (index==0 && len==total) {
-          JsonDocument doc; 
-          DeserializationError err = deserializeJson(doc, (const char*)data, len);
-          
-          if (err) { 
-            req->send(400,"application/json","{\"error\":\"Invalid JSON\"}"); 
-            return; 
-          }
-          bool wifiChanged=false;
-          ConfigManager::patchFromJson(g_SC10_config, doc, wifiChanged);
-          ConfigManager::save(g_SC10_config);
-          // 프리셋 즉시 재적용
-          p_sim.applyCurrentPreset(true);
-          // Wi-Fi 변경되었으면 재초기화
-          if (wifiChanged) {
-            SC10_Logger::log(SC10_LOG_INFO,"WiFi config changed. Re-init WiFi");
-            SC10_WiFiManager::init(g_SC10_config, p_multi);
-          }
-          req->send(200,"application/json","{\"message\":\"Config updated\"}");
-        } });
+            JsonDocument v_doc; 
+            DeserializationError v_err = deserializeJson(v_doc, (const char*)data, len);
+            
+            if (v_err) { 
+                req->send(400,"application/json","{\"error\":\"Invalid JSON\"}"); 
+                return; 
+            }
+
+            bool v_wifiChanged = false;
+            ConfigManager::patchFromJson(g_SC10_config, v_doc, v_wifiChanged);
+            ConfigManager::save(g_SC10_config);
+            // 프리셋 즉시 재적용
+            p_sim.applyCurrentPreset(true);
+            // Wi-Fi 변경되었으면 재초기화
+            if (v_wifiChanged) {
+                SC10_Logger::log(SC10_LOG_INFO,"WiFi config changed. Re-init WiFi");
+                SC10_WiFiManager::init(g_SC10_config, p_multi);
+            }
+            req->send(200,"application/json","{\"message\":\"Config updated\"}");
+            } });
 
 		// /api/scan — 주변 SSID 스캔
 		p_srv.on("/api/scan", HTTP_GET, [](AsyncWebServerRequest *req) {
@@ -100,14 +116,15 @@ class SC10_WebAPI {
 
 		// /api/diag — 진단 정보
 		p_srv.on("/api/diag", HTTP_GET, [](AsyncWebServerRequest *req) {
-			JsonDocument d;
-			d["heap"]	  = ESP.getFreeHeap();
-			d["rssi"]	  = WiFi.RSSI();
-			d["fs_total"] = LittleFS.totalBytes();
-			d["fs_used"]  = LittleFS.usedBytes();
-			String res;
-			serializeJson(d, res);
-			req->send(200, "application/json", res);
+			JsonDocument v_doc;
+			v_doc["heap"]	  = ESP.getFreeHeap();
+			v_doc["rssi"]	  = WiFi.RSSI();
+			v_doc["fs_total"] = LittleFS.totalBytes();
+			v_doc["fs_used"]  = LittleFS.usedBytes();
+            
+			String v_reponse;
+			serializeJson(v_doc, v_reponse);
+			req->send(200, "application/json", v_reponse);
 		});
 
 		// /api/logs — 최근 로그
@@ -130,22 +147,23 @@ class SC10_WebAPI {
 
 		// /api/version
 		p_srv.on("/api/version", HTTP_GET, [](AsyncWebServerRequest *req) {
-			JsonDocument d;
-			d["fw_version"]	 = SC10_Const::FW_VERSION;
-			d["config_file"] = SC10_Const::CONFIG_FILE;
-			String res;
-			serializeJson(d, res);
-			req->send(200, "application/json", res);
+			JsonDocument v_doc;
+			v_doc["fw_version"]	 = SC10_Const::FW_VERSION;
+			v_doc["config_file"] = SC10_Const::CONFIG_FILE;
+
+			String v_reponse;
+			serializeJson(v_doc, v_reponse);
+			req->send(200, "application/json", v_reponse);
 		});
 
 		// 정적 파일 업로드 (html/js/json 등)
 		p_srv.on("/upload", HTTP_POST, [](AsyncWebServerRequest *req) { req->send(200, "text/plain", "Upload OK"); }, [](AsyncWebServerRequest *req, const String &filename, size_t index, uint8_t *data, size_t len, bool final) {
         if (!index) {
-          String path = "/" + filename; // 필요 시 "/html/" + filename 로 강제 가능
-          if (LittleFS.exists(path)) {
-            LittleFS.remove(path);
+          String v_path = "/" + filename; // 필요 시 "/html/" + filename 로 강제 가능
+          if (LittleFS.exists(v_path)) {
+            LittleFS.remove(v_path);
           }
-          req->_tempFile = LittleFS.open(path, "w");
+          req->_tempFile = LittleFS.open(v_path, "w");
         }
         if (len && req->_tempFile) {
           req->_tempFile.write(data, len);
@@ -172,5 +190,9 @@ class SC10_WebAPI {
 		p_srv.onNotFound([](AsyncWebServerRequest *req) {
 			req->send(404, "text/plain", "Not found");
 		});
+
+		// 3. (추가 예시) 루트(/) 요청 시 LittleFS의 /html 폴더에서 index.html을 찾도록 설정
+    	// 이 경우, http://[IP]/ 요청 시 /html/index.html을 찾아 서비스합니다.
+		p_srv.serveStatic("/", LittleFS, "/html/"); 
 	}
 };

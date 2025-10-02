@@ -14,18 +14,22 @@ class SC10_WiFiManager {
 	// AP/STA 초기화 (STA 실패 시 AP로 폴백, 성공 시 AP 끄기)
 	static void init(WindConfig &p_cfg, WiFiMulti &p_multi) {
 		WiFi.mode(WIFI_AP_STA);
+		
 		// STA 우선 시도
 		if (p_cfg.wifi_mode == G_SC10_WIFI_MODE_STA && p_cfg.sta_network_count > 0) {
 			for (int i = 0; i < p_cfg.sta_network_count; i++) {
 				p_multi.addAP(p_cfg.sta_networks[i].ssid, p_cfg.sta_networks[i].password);
 				SC10_Logger::log(SC10_LOG_INFO, "WiFi STA added: %s", p_cfg.sta_networks[i].ssid);
 			}
-			int			  tries = 0, maxTries = 15;
-			unsigned long lastTick = millis();
-			while (p_multi.run() != WL_CONNECTED && tries < maxTries) {
-				if (millis() - lastTick >= 1000) {
-					tries++;
-					lastTick = millis();
+
+			int				v_tries 	= 0;
+			int 			v_maxTries 	= 15;
+			unsigned long 	v_lastTick 	= millis();
+
+			while (p_multi.run() != WL_CONNECTED && v_tries < v_maxTries) {
+				if (millis() - v_lastTick >= 1000) {
+					v_tries++;
+					v_lastTick = millis();
 					Serial.print(".");
 				}
 				delay(1);  // yield
@@ -46,19 +50,19 @@ class SC10_WiFiManager {
 
 	// 주변 네트워크 스캔
 	static String scanNetworksJson() {
-		int			 n = WiFi.scanNetworks();
-		JsonDocument doc;
-		JsonArray	 arr = doc.to<JsonArray>();
-		for (int i = 0; i < n; i++) {
-			JsonObject o = arr.add<JsonObject>();
-			o["ssid"]	 = WiFi.SSID(i);
-			o["rssi"]	 = WiFi.RSSI(i);
-			o["enc"]	 = (int)WiFi.encryptionType(i);
-			o["bssid"]	 = WiFi.BSSIDstr(i);
-			o["chan"]	 = WiFi.channel(i);
+		int			 v_scanedNetworks_count = WiFi.scanNetworks();
+		JsonDocument v_doc;
+		JsonArray	 v_jsonArr_Nets = v_doc.to<JsonArray>();
+		for (int i = 0; i < v_scanedNetworks_count; i++) {
+			JsonObject v_jsonObj_net = v_jsonArr_Nets.add<JsonObject>();
+			v_jsonObj_net["ssid"]	 = WiFi.SSID(i);
+			v_jsonObj_net["rssi"]	 = WiFi.RSSI(i);
+			v_jsonObj_net["enc"]	 = (int)WiFi.encryptionType(i);
+			v_jsonObj_net["bssid"]	 = WiFi.BSSIDstr(i);
+			v_jsonObj_net["chan"]	 = WiFi.channel(i);
 		}
-		String s;
-		serializeJson(doc, s);
-		return s;
+		String v_scan_networks;
+		serializeJson(v_doc, v_scan_networks);
+		return v_scan_networks;
 	}
 };
