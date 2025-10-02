@@ -23,10 +23,10 @@
 // 전역 상수/경로/버전
 namespace SC10_Const {
   constexpr char FW_VERSION[]      = "SC10_FW_1.0.0";
-  constexpr char CONFIG_FILE[]     = "/json/config_003.json";
-  constexpr char BACKUP_FILE[]     = "/json/config_003.json.bak";
-  constexpr char HTML_FILE[]       = "/html/SC10_main_004.html";
-  constexpr char JS_FILE[]         = "/html/SC10_main_003.js";
+  constexpr char CONFIG_FILE[]     = "/json/config_010.json";
+  constexpr char BACKUP_FILE[]     = "/json/config_010.json.bak";
+  constexpr char HTML_FILE[]       = "/html/SC10_main_010.html";
+  constexpr char JS_FILE[]         = "/html/SC10_main_010.js";
   constexpr int  MAX_STA_NETWORKS  = 5;
 }
 
