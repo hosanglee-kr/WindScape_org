@@ -4,11 +4,11 @@
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
 #include "SC10_Const_002.h"
-#include "SC10_Logger.h"
-#include "SC10_ConfigManager.h"
-#include "SC10_WiFiManager.h"
-#include "SC10_Simulation.h"
-#include "SC10_WebAPI.h"
+#include "SC10_Logger_002.h"
+#include "SC10_ConfigManager_002.h"
+#include "SC10_WiFiManager_002.h"
+#include "SC10_Simulation_002.h"
+#include "SC10_WebAPI_002.h"
 
 // 전체 오케스트레이션: 초기화/루프 + WebServer 조립
 class WindScapeSimulator {
