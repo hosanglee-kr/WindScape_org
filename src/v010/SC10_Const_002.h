@@ -107,11 +107,11 @@ static const char* G_SC10_PRESET_MODE_NAMES[] = {
 	"Mountain-산악",
 	"Plains-대평원",
     // 신규
-    "Harbor Breeze",
-    "Forest Canopy",
-    "Urban Sunset",
-    "Tropical Rain",
-    "Desert Night"
+    "Harbor Breeze-항구",
+    "Forest Canopy-숲그늘",
+    "Urban Sunset-도시석양",
+    "Tropical Rain-열대소나기",
+    "Desert Night-사막밤"
 };
 
 // ====================================================================================
