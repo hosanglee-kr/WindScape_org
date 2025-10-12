@@ -152,7 +152,9 @@ class SC10_WebAPI {
 
       // presets 추가
       JsonArray presets = root["presets"].to<JsonArray>();
-      for (int i = 0; i < SC10_PRESET_COUNT; i++) presets.add(G_SC10_PRESET_MODE_NAMES[i]);
+      for (int i = 0; i < SC10_PRESET_COUNT; i++){
+        presets.add(G_SC10_PRESET_MODE_NAMES[i]);
+      }
 
       res->setCode(200); addNoCache(res); addCors(res);
       req->send(res);
