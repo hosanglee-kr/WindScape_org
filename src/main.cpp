@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <LittleFS.h>
 
-#include "v010/SC10_WindScape_002.h"
+#include "v010/SC10_WindScape_003.h"
 
 WindScapeSimulator g_SC10;
 
