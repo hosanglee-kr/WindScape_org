@@ -24,7 +24,7 @@
 #include "SC10_Const_002.h"
 #include "SC10_Logger_002.h"
 #include "SC10_Simulation_002.h"
-#include "SC10_WiFiManager_002.h"
+#include "SC10_WiFiManager_003.h"
 
 class SC10_WebAPI {
   public:
