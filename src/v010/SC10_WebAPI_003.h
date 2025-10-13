@@ -155,6 +155,8 @@ class SC10_WebAPI {
 
             st["fan_pwm"]         = duty_raw;        // (기존 호환) raw duty 유지
             st["fan_pwm_percent"] = duty_percent;
+			// (선택) 클라이언트 계산용으로 해상도도 내려주면 더 좋음
+            root["config"]["pwm"]["resolution"] = g_SC10_config.pwm_resolution;
 			
 			st["phase_name"] = G_SC10_WEATHER_PHASE_NAMES[p_sim.current_weather_phase];
 
