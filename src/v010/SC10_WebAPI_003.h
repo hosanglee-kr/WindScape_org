@@ -169,7 +169,7 @@ class SC10_WebAPI {
       [&p_sim, &p_multi](AsyncWebServerRequest *req, uint8_t *data, size_t len, size_t index, size_t total) {
         if (!authorize(req)) { req->send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
         if (index == 0 && len == total) {
-          DynamicJsonDocument v_doc(4096);
+          JsonDocument v_doc;
           if (deserializeJson(v_doc, (const char*)data, len)) {
             req->send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
             return;
@@ -202,7 +202,7 @@ class SC10_WebAPI {
     // /api/diag : 메모리/FS/신호 강도 등 진단
     // -------------------
     p_srv.on("/api/diag", HTTP_GET, [](AsyncWebServerRequest *req) {
-      DynamicJsonDocument v_doc(1024);
+      JsonDocument v_doc;
       v_doc["heap"]    = ESP.getFreeHeap();
       v_doc["rssi"]    = WiFi.RSSI();
       v_doc["fs_total"]= LittleFS.totalBytes();
@@ -246,7 +246,7 @@ class SC10_WebAPI {
     // /api/version : 펌웨어 버전 정보
     // -------------------
     p_srv.on("/api/version", HTTP_GET, [](AsyncWebServerRequest *req) {
-      DynamicJsonDocument v_doc(256);
+      JsonDocument v_doc;
       v_doc["fw_version"]  = SC10_Const::FW_VERSION;
       v_doc["config_file"] = SC10_Const::CONFIG_FILE;
       String out; serializeJson(v_doc, out);
