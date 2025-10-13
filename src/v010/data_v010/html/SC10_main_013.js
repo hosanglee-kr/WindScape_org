@@ -6,6 +6,11 @@
     const $ = (sel, root = document) => root.querySelector(sel);
     const text = (el, v) => el && (el.textContent = v);
 
+    const KEY_K = 'my_secure_api_key_123';
+    const getKey = () => localStorage.getItem(KEY_K) || '';
+    const setKey = (k) => localStorage.setItem(KEY_K, k);
+
+
     document.addEventListener("DOMContentLoaded", () => {
         bindEvents();
         refreshVersion();
@@ -81,11 +86,16 @@
                 opt.body = JSON.stringify(body);
                 opt.headers['Content-Type'] = 'application/json';
             }
+
+            // ★ API Key 자동 주입
+            const k = getKey();
+            if (k) opt.headers['X-API-Key'] = k;
+            
             // API Key가 설정되어 있다면 헤더에 추가 (C/C++ 백엔드 로직에 대응)
-            if (g_config.security && g_config.security.api_key_set) {
-                // 실제 키 값은 노출하지 않고, UI에서 입력받거나 저장되어야 합니다.
-                // 여기서는 간단히 키를 설정하는 텍스트 입력 필드가 없으므로, 설정하지 않는다고 가정합니다.
-            }
+            // if (g_config.security && g_config.security.api_key_set) {
+            //    // 실제 키 값은 노출하지 않고, UI에서 입력받거나 저장되어야 합니다.
+            //     // 여기서는 간단히 키를 설정하는 텍스트 입력 필드가 없으므로, 설정하지 않는다고 가정합니다.
+            // }
 
             const r = await fetch(url, opt);
             const txt = await r.text();
