@@ -147,7 +147,15 @@ class SC10_WebAPI {
 			JsonObject st	 = root["status"].to<JsonObject>();
 			st["sim_active"] = p_sim.wind_simulation_active;
 			st["wind_speed"] = roundf(p_sim.current_wind_speed * 100.0f) / 100.0f;
-			st["fan_pwm"]	 = ledcRead(g_SC10_config.pwm_channel);
+			
+			// ▽▽ 추가/변경: PWM raw + percent 동시 제공 ▽▽
+            const int duty_raw = ledcRead(g_SC10_config.pwm_channel);
+            const int levels   = (1 << g_SC10_config.pwm_resolution) - 1;
+            const float duty_percent = (levels > 0) ? (100.0f * duty_raw / (float)levels) : 0.0f;
+
+            st["fan_pwm"]         = duty_raw;        // (기존 호환) raw duty 유지
+            st["fan_pwm_percent"] = duty_percent;
+			
 			st["phase_name"] = G_SC10_WEATHER_PHASE_NAMES[p_sim.current_weather_phase];
 
 			if (g_SC10_config.wifi_mode == G_SC10_WIFI_MODE_STA && WiFi.status() == WL_CONNECTED) {
