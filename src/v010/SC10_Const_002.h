@@ -131,6 +131,7 @@ struct SC10_StaCredential {
 // ====================================================================================
 // WindConfig 구조체
 // ====================================================================================
+#define SC10_API_KEY_MAX_LEN 64
 
 /**
  * @brief WindScape의 전체 구성(설정) 데이터 구조체
@@ -138,6 +139,8 @@ struct SC10_StaCredential {
  * - Wi-Fi, 하드웨어, 시뮬레이션 관련 설정 포함
  */
 struct WindConfig {
+    char api_key[SC10_API_KEY_MAX_LEN + 1]; // 0-terminated
+
 	// --- Wi-Fi 설정 ---
 	int				   wifi_mode = G_SC10_WIFI_MODE_STA;			///< 현재 Wi-Fi 모드
 	SC10_StaCredential sta_networks[SC10_Const::MAX_STA_NETWORKS];	///< STA 네트워크 목록
