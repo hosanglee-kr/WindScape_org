@@ -69,9 +69,10 @@ class SC10_Simulation {
 
 	// 초기화 (프리셋 적용 포함)
 	void begin(bool p_applyPreset = true) {
-		srand(esp_random());
-		if (p_applyPreset)
+		// srand(esp_random());
+		if (p_applyPreset){
 			applyCurrentPreset(true);
+		}
 	}
 
 	// 프리셋 이름 → 인덱스
@@ -493,7 +494,7 @@ class SC10_Simulation {
 	void tick() {
 		unsigned long v_now = millis();
 		// 지터 포함
-		static int s_jitter = 0;
+		static uint32_t s_jitter = 0;
 		if (v_now - last_wind_sim_update < (unsigned long)(g_SC10_config.wind_sim_interval_ms + (s_jitter % 300))) {
 			yield();
 			return;
