@@ -283,6 +283,12 @@ static bool patchFromJson(WindConfig &p_cfg, const JsonDocument &p_doc, bool &p_
 	// 직렬화(쓰기) 오버로드 1: JsonObject에 직접 채우기 (서브트리 기록용)
 	// -----------------------------------------------------------------------------
 	static void toJson(const WindConfig &p_c, JsonObject p_root) {
+
+		// --- hw (신규) ---
+        p_root["hw"]["pwm_pin"]  = p_c.fan_pwm_pin;
+        p_root["hw"]["pwm_freq"] = p_c.pwm_frequency;
+        p_root["hw"]["pwm_res"]  = p_c.pwm_resolution;
+		
 		// --- sim ---
 		p_root["sim"]["intensity"]	 = p_c.wind_intensity;
 		p_root["sim"]["gust_freq"]	 = p_c.gust_frequency;
@@ -358,6 +364,11 @@ static bool patchFromJson(WindConfig &p_cfg, const JsonDocument &p_doc, bool &p_
 			strlcpy(p_c.sta_networks[p_c.sta_network_count].password, v_pass, sizeof(SC10_StaCredential::password));
 			p_c.sta_network_count++;
 		}
+
+		// --- hw  ---
+        p_c.fan_pwm_pin    = v_root["hw"]["pwm_pin"]  | p_c.fan_pwm_pin;
+        p_c.pwm_frequency  = v_root["hw"]["pwm_freq"] | p_c.pwm_frequency;
+        p_c.pwm_resolution = v_root["hw"]["pwm_res"]  | p_c.pwm_resolution;
 
 		// --- (선택) 시뮬/타이밍 값도 JSON에 있으면 적용 ---
 		// 존재하지 않으면 기존값 유지
