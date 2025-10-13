@@ -71,6 +71,18 @@
         $('#btnUpload').addEventListener('click', uploadStatic);
         $('#btnOTA').addEventListener('click', uploadOTA);
 
+        // ★ API Key 저장 핸들러 추가
+        $('#btnSaveApiKey').addEventListener('click', async () => {
+          const newKey = $('#apiKeyInput').value.trim();
+          if (!newKey) { showToast('API Key를 입력하세요.', 'warn'); return; }
+          setKey(newKey);
+          // 백엔드에도 반영(선택) — 서버가 authorize 사용 중이면 유효키로 바로 패치 가능
+          await fetchApi('/api/config', 'POST', { security: { api_key: newKey } }, 'API Key 저장');
+          showToast('API Key 저장 완료', 'ok');
+        });
+
+        //// 팁: 페이지 로드시 기존 저장 키를 입력란에 보여주고 싶다면 DOMContentLoaded에서 $('#apiKeyInput').value = getKey(); 한 줄 추가하세요.
+
         // Wi-Fi 목록 삭제는 동적 바인딩 (refreshState -> displayStaNetworks 함수 내부)
     }
 
