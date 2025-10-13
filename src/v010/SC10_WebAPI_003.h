@@ -274,7 +274,9 @@ class SC10_WebAPI {
 		p_srv.on("/api/diag", HTTP_GET, [](AsyncWebServerRequest *req) {
 			JsonDocument v_doc;
 			v_doc["heap"]	  = ESP.getFreeHeap();
-			v_doc["rssi"]	  = WiFi.RSSI();
+			if (WiFi.status() == WL_CONNECTED) {
+                v_doc["rssi"]   = WiFi.RSSI();
+            }
 			v_doc["fs_total"] = LittleFS.totalBytes();
 			v_doc["fs_used"]  = LittleFS.usedBytes();
 			String out;
