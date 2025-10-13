@@ -298,6 +298,47 @@ class SC10_WebAPI {
 		// -------------------
 		// /upload : 정적 파일 업로드 (보안제한)
 		// -------------------
+		static bool s_uploadError = false;
+
+p_srv.on("/upload", HTTP_POST,
+  [](AsyncWebServerRequest *req) {
+    if (!authorize(req)) {
+      req->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+      return;
+    }
+    if (s_uploadError) {
+      s_uploadError = false;
+      req->send(500, "application/json", "{\"error\":\"upload failed\"}");
+    } else {
+      req->send(200, "application/json", "{\"message\":\"Upload OK\"}");
+    }
+  },
+  [](AsyncWebServerRequest *req, const String &filename, size_t index, uint8_t *data, size_t len, bool final) {
+    if (!authorize(req)) { s_uploadError = true; return; }
+    static const size_t kMaxUpload = 4 * 1024 * 1024;
+    if (index == 0) {
+      s_uploadError = false;
+      String safe = sanitizeFilename(filename);
+      if (!isAllowedExt(safe)) { s_uploadError = true; return; }
+      String v_path = "/" + safe;
+      if (LittleFS.exists(v_path)) LittleFS.remove(v_path);
+      req->_tempFile = LittleFS.open(v_path, "w");
+      if (!req->_tempFile) { s_uploadError = true; return; }
+    }
+    if (s_uploadError) return;
+    if (req->_tempFile) {
+      if (req->_tempFile.size() + len > kMaxUpload) {
+        req->_tempFile.close();
+        LittleFS.remove(req->_tempFile.name());
+        s_uploadError = true;
+        return;
+      }
+      if (len) req->_tempFile.write(data, len);
+      if (final) req->_tempFile.close();
+    }
+});
+
+		/*
 		p_srv.on("/upload", HTTP_POST, [](AsyncWebServerRequest *req) {
         if (!authorize(req)) { req->send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
         req->send(200, "application/json", "{\"message\":\"Upload OK\"}"); }, [](AsyncWebServerRequest *req, const String &filename, size_t index, uint8_t *data, size_t len, bool final) {
@@ -316,6 +357,7 @@ class SC10_WebAPI {
           if (len) req->_tempFile.write(data, len);
           if (final) req->_tempFile.close();
         } });
+		*/
 
 		// -------------------
 		// /update : OTA 펌웨어 업로드
