@@ -92,7 +92,7 @@ class SC10_WebAPI {
 		// /html/ 폴더를 기본 루트로 서비스
 		// → / 요청 시 index.html 자동 매핑
 		auto &h = p_srv.serveStatic("/", LittleFS, "/html/")
-					  .setDefaultFile("index.html")
+					  .setDefaultFile("SC10_main_013.html")
 					  .setCacheControl("max-age=86400");  // 하루 캐시
 		(void)h;
 
