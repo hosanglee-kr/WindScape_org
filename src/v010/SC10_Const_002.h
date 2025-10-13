@@ -24,9 +24,9 @@ namespace SC10_Const {
 constexpr char FW_VERSION[]		= "SC10_FW_1.0.0";
 constexpr char CONFIG_FILE[]	= "/json/config_010.json";
 constexpr char BACKUP_FILE[]	= "/json/config_010.json.bak";
-constexpr char HTML_FILE[]		= "/html/SC10_main_012.html";
-constexpr char CSS_FILE[]		= "/html/SC10_main_012.css";
-constexpr char JS_FILE[]		= "/html/SC10_main_012.js";
+constexpr char HTML_FILE[]		= "/html/SC10_main_013.html";
+constexpr char CSS_FILE[]		= "/html/SC10_main_013.css";
+constexpr char JS_FILE[]		= "/html/SC10_main_013.js";
 constexpr int  MAX_STA_NETWORKS = 5;
 }  // namespace SC10_Const
 
@@ -139,7 +139,7 @@ struct SC10_StaCredential {
  * - Wi-Fi, 하드웨어, 시뮬레이션 관련 설정 포함
  */
 struct WindConfig {
-    char api_key[SC10_API_KEY_MAX_LEN + 1]; // 0-terminated
+    char api_key[SC10_API_KEY_MAX_LEN + 1] = {'\0'}; // 0-terminated
 
 	// --- Wi-Fi 설정 ---
 	int				   wifi_mode = G_SC10_WIFI_MODE_STA;			///< 현재 Wi-Fi 모드

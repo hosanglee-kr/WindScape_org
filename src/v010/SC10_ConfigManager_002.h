@@ -88,6 +88,9 @@ class ConfigManager {
 		bool b = LittleFS.remove(SC10_Const::BACKUP_FILE);
 		(void)a;
 		(void)b;
+		 
+		g_SC10_config.api_key[0] = '\0';
+
 		return true;
 	}
 
@@ -166,6 +169,16 @@ class ConfigManager {
 		if (!v_root["thermal_int"].isNull())
 			p_cfg.thermal_check_interval_ms = v_root["thermal_int"].as<int>();
 
+		if (!v_root["security"]["api_key"].isNull()) {
+			const char* k = v_root["security"]["api_key"] | "";
+			strncpy(p_cfg.api_key, k, SC10_API_KEY_MAX_LEN);
+			
+			p_cfg.api_key[SC10_API_KEY_MAX_LEN] = '\0';
+			 SC10_Logger::log(SC10_LOG_INFO, "API Key updated via patch.");
+
+			// wifiChanged는 아님
+    	}
+
 		// --- Wi-Fi ---
 		if (!v_root["wifi_mode"].isNull()) {
 			p_cfg.wifi_mode = v_root["wifi_mode"].as<int>();
@@ -220,6 +233,10 @@ class ConfigManager {
 		p_root["timing"]["gust_int"]	= p_c.gust_check_interval_ms;
 		p_root["timing"]["thermal_int"] = p_c.thermal_check_interval_ms;
 
+		JsonObject sec = p_root["security"].to<JsonObject>();
+    	sec["api_key_set"] = (p_c.api_key[0] != '\0'); // true/false만 노출
+    	// 키 원문은 내보내지 않음
+
 		// --- wifi ---
 		JsonObject v_w	 = p_root["wifi"].to<JsonObject>();
 		v_w["wifi_mode"] = p_c.wifi_mode;
@@ -248,6 +265,10 @@ class ConfigManager {
 	// -----------------------------------------------------------------------------
 	static bool parseJson(WindConfig &p_c, JsonDocument &p_doc) {
 		JsonObjectConst v_root = p_doc.as<JsonObjectConst>();  // v7: const 뷰로 읽기
+
+		if (!v_root["security"]["api_key"].isNull()){
+    		strlcpy(p_c.api_key, v_root["security"]["api_key"] | "", sizeof(p_c.api_key));
+		}
 
 		// --- wifi ---
 		p_c.wifi_mode = v_root["wifi"]["wifi_mode"] | p_c.wifi_mode;

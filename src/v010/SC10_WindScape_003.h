@@ -37,11 +37,11 @@ class WindScapeSimulator {
 
 		// PWM/핀
 		ledcSetup(g_SC10_config.pwm_channel, g_SC10_config.pwm_frequency, g_SC10_config.pwm_resolution);
-		
+
 		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_031_SC10_ledcSetup");
 
 		ledcAttachPin(g_SC10_config.fan_pwm_pin, g_SC10_config.pwm_channel);
-		
+
 		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_032_ledcAttachPin");
 
 		//// // pinMode(g_SC10_config.fan_tach_pin, INPUT_PULLUP);
@@ -50,16 +50,15 @@ class WindScapeSimulator {
 
 		// WebServer
 		SC10_WebAPI::mountStatic(g_SC10_asyncWeb);
-		
+
 		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_040_SC10_WebAPI::mountStatic");
 
 		g_SC10_sim.begin(true);
 
 		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_050_g_SC10_sim.begin");
 
-
 		SC10_WebAPI::mountApi(g_SC10_asyncWeb, g_SC10_sim, g_SC10_wifiMulti);
-		
+
 		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_060_SC10_WebAPI::mountApi");
 
 		g_SC10_asyncWeb.begin();

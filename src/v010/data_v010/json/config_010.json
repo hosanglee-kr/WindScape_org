@@ -1,4 +1,8 @@
 {
+    "security": {
+        "api_key": "my_secure_api_key_123"
+    },
+
     "wifi": {
         "wifi_mode": 1,
         "ap_ssid": "SC10_Config_AP",
