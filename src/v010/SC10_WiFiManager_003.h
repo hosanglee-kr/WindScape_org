@@ -61,9 +61,12 @@ class SC10_WiFiManager {
     WiFi.persistent(false);          // NVS 쓰기 최소화
     WiFi.setAutoReconnect(true);
     WiFi.setSleep(false);            // 필요 시 true로 절전
+
+    /*
     if (strlen(p_cfg.hostname) > 0) {
       WiFi.setHostname(p_cfg.hostname);
     }
+    */
 
     // (선택) 국가코드 설정 - 규제 채널/출력 준수
     // esp_wifi_set_country를 직접 쓰려면 esp_wifi.h include 필요
