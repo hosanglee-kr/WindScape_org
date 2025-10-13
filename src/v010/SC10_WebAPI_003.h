@@ -202,12 +202,20 @@ class SC10_WebAPI {
 		// /api/scan : 주변 Wi-Fi 스캔
 		// -------------------
 		p_srv.on("/api/scan", HTTP_GET, [](AsyncWebServerRequest *req) {
+            bool async = req->hasParam("async");
+            String j = SC10_WiFiManager::scanNetworksJson(async);
+            auto *res = req->beginResponse(200, "application/json", j);
+             addNoCache(res); addCors(res); req->send(res);
+        });
+		/*
+		p_srv.on("/api/scan", HTTP_GET, [](AsyncWebServerRequest *req) {
 			String j   = SC10_WiFiManager::scanNetworksJson();
 			auto  *res = req->beginResponse(200, "application/json", j);
 			addNoCache(res);
 			addCors(res);
 			req->send(res);
 		});
+		*/
 
 		// -------------------
 		// /api/diag : 메모리/FS/신호 강도 등 진단
