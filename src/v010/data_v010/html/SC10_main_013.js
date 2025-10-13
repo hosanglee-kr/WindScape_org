@@ -138,7 +138,7 @@
             text($('#simActive'), j.status.sim_active ? 'Active' : 'Idle');
             text($('#phase'), j.status.phase_name);
             text($('#wind'), j.status.wind_speed.toFixed(2) + ' m/s');
-            text($('#pwm'), (j.status.fan_pwm * 100).toFixed(1) + '%'); // PWM 값을 백분율로
+            text($('#pwm'), j.status.fan_pwm_percent.toFixed(1) + '%'); // PWM 값을 백분율로
             text($('#wifiMode'), j.status.wifi_mode);
             text($('#curSsid'), j.status.ssid);
             text($('#ip'), j.status.ip_addr);
