@@ -196,10 +196,51 @@ class SC10_WebAPI {
             req->send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
             return;
           }
+
+			// 패치 전 스냅샷
+            int oldPreset = g_SC10_config.preset_mode_index;
+            int oldPin    = g_SC10_config.fan_pwm_pin;
+            int oldFreq   = g_SC10_config.pwm_frequency;
+            int oldRes    = g_SC10_config.pwm_resolution;
+
+			
           bool v_wifiChanged = false;
           ConfigManager::patchFromJson(g_SC10_config, v_doc, v_wifiChanged);
           ConfigManager::save(g_SC10_config);
-          p_sim.applyCurrentPreset(true);
+
+		  // 1) 프리셋 바뀌면 시뮬만 재시작
+          if (g_SC10_config.preset_mode_index != oldPreset) {
+              p_sim.applyCurrentPreset(true);
+          }
+
+          // 2) PWM 파라미터 변경 감지 → LEDC 재초기화
+          bool pwmChanged = (g_SC10_config.fan_pwm_pin != oldPin) ||
+                  (g_SC10_config.pwm_frequency != oldFreq) ||
+                  (g_SC10_config.pwm_resolution != oldRes);
+
+		  if (pwmChanged) {
+              // 이전 핀 디태치
+              ledcDetachPin(oldPin);
+
+               // 채널 재설정 (채널 번호는 config에서 유지)
+              ledcSetup(g_SC10_config.pwm_channel,
+                  g_SC10_config.pwm_frequency,
+                  g_SC10_config.pwm_resolution);
+
+             // 새 핀으로 재바인딩
+             ledcAttachPin(g_SC10_config.fan_pwm_pin, g_SC10_config.pwm_channel);
+
+             // 현재 요구되는 팬 출력을 재적용 (예: 0%로 안정화하거나, 직전 상태 유지)
+             // 여기서는 안전하게 0%로 초기화 후 시뮬 tick에서 다시 설정되게 함
+             ledcWrite(g_SC10_config.pwm_channel, 0);
+
+			 SC10_Logger::log(SC10_LOG_INFO,
+                "PWM reinit: pin %d->%d, freq %d->%d, res %d->%d",
+                 oldPin, g_SC10_config.fan_pwm_pin,
+                 oldFreq, g_SC10_config.pwm_frequency,
+                 oldRes, g_SC10_config.pwm_resolution);
+        }			
+          ////p_sim.applyCurrentPreset(true);
 
           if (v_wifiChanged) {
             SC10_Logger::log(SC10_LOG_INFO, "WiFi config changed. Re-init WiFi");
