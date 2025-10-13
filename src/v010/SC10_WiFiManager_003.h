@@ -144,9 +144,8 @@ class SC10_WiFiManager {
       return F("[]");
     }
 
-    // ArduinoJson 용량 산정(대략): 네트워크당 ~160바이트 여유
-    size_t v_capacity = 64 + (size_t)max(1, v_found) * 160;
-    DynamicJsonDocument v_doc(v_capacity);
+    // 
+    JsonDocument v_doc;
     JsonArray v_arr = v_doc.to<JsonArray>();
 
     for (int i = 0; i < v_found; i++) {
