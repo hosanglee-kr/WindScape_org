@@ -139,7 +139,14 @@ static bool patchFromJson(WindConfig &p_cfg, const JsonDocument &p_doc, bool &p_
     p_cfg.api_key[SC10_API_KEY_MAX_LEN] = '\0';
     SC10_Logger::log(SC10_LOG_INFO, "API Key updated via patch.");
   }
-
+  // hw (신규)
+  JsonObjectConst h = root["hw"];
+  if (!h.isNull()) {
+      if (!h["pwm_pin"].isNull())  p_cfg.fan_pwm_pin    = h["pwm_pin"].as<int>();
+      if (!h["pwm_freq"].isNull()) p_cfg.pwm_frequency  = h["pwm_freq"].as<int>();
+      if (!h["pwm_res"].isNull())  p_cfg.pwm_resolution = h["pwm_res"].as<int>();
+  }
+	
   // --- sim ---
   JsonObjectConst s = root["sim"];
   if (!s.isNull()) {
