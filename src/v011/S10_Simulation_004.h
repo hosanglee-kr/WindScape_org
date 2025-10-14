@@ -20,7 +20,7 @@
 // > 참고: 실제 돌풍 빈도는 gust_probability_base × (user_freq × phase_mul × wind_factor)로 계산되어
 // 유저 설정과 날씨 Phase에 의해 가중됩니다. 체감이 너무 드물거나 잦으면 base만 소폭 조절해도 충분합니다.
 
-class SC10_Simulation {
+class S10_Simulation {
    public:
 	// 외부에서 읽는 상태
 	bool  wind_simulation_active = false;
