@@ -33,9 +33,9 @@ class WindScapeSimulator {
 		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_010_ConfigManager::loaded");
 
 		// Wi-Fi 초기화
-		SC10_WiFiManager::init(g_SC10_config, g_SC10_wifiMulti);
+		M10_WiFiManager::init(g_SC10_config, g_SC10_wifiMulti);
 
-		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_020_SC10_WiFiManager::init");
+		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_020_M10_WiFiManager::init");
 
 		// PWM/핀
 		ledcSetup(g_SC10_config.pwm_channel, g_SC10_config.pwm_frequency, g_SC10_config.pwm_resolution);
