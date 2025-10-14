@@ -3,7 +3,7 @@
 /* 사용법
 1. 연결과 분기
 
-bool sta = SC10_WiFiManager::init(g_config, wifiMulti);
+bool sta = M10_WiFiManager::init(g_config, wifiMulti);
 if (sta) {
   // STA 경로
 } else {
@@ -11,9 +11,9 @@ if (sta) {
 }
 
 2.wifi scan 비동기 사용
-SC10_WiFiManager::scanNetworksJson(true);   // 1차: 트리거
+M10_WiFiManager::scanNetworksJson(true);   // 1차: 트리거
 delay(1500);                                // 스캔 대기
-String nets = SC10_WiFiManager::scanNetworksJson(false); // 2차: 수집
+String nets = M10_WiFiManager::scanNetworksJson(false); // 2차: 수집
 
 */
 
@@ -25,7 +25,7 @@ String nets = SC10_WiFiManager::scanNetworksJson(false); // 2차: 수집
 #include "A10_Const_004.h"
 #include "D10_Logger_004.h"
 
-class SC10_WiFiManager {
+class M10_WiFiManager {
    public:
 	// 연결 상태 캐시
 	static bool s_staConnected;
@@ -209,4 +209,4 @@ class SC10_WiFiManager {
 };
 
 // 정적 멤버 정의
-bool SC10_WiFiManager::s_staConnected = false;
+bool M10_WiFiManager::s_staConnected = false;
