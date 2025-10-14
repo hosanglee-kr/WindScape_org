@@ -85,6 +85,17 @@ class SC10_WebAPI {
 			   n.endsWith(".gz");
 	}
 
+    static void init(AsyncWebServer &p_srv, SC10_Simulation &p_sim, WiFiMulti &p_multi) {
+        
+        mountApi(p_srv, p_sim, p_multi);
+		//mountApi(g_SC10_asyncWeb, g_SC10_sim, g_SC10_wifiMulti);
+		SC10_Logger::log(SC10_LOG_INFO, "W10_init_010::mountApi");
+
+		mountStatic(g_SC10_asyncWeb);
+		SC10_Logger::log(SC10_LOG_INFO, "W10_init_020::mountStatic");
+		
+	}
+		//
 	// ======================================================
 	// 정적 파일 서빙
 	// ======================================================
