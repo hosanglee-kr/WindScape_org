@@ -141,8 +141,9 @@ class SC10_WebAPI {
 		p_srv.on("/api/state", HTTP_GET, [&p_sim](AsyncWebServerRequest *req) {
 			Serial.println("mountApi 011");
 			
-			const size_t v_CAPACITY = 4096; 
-    		JsonDocument doc(v_CAPACITY); 
+			const size_t v_CAPACITY = 2048;
+            JsonDocument doc;
+            doc.reserve(v_CAPACITY);
 
 			// 2. doc.to<JsonVariant>()를 사용하여 root 객체에 접근
     		JsonVariant root = doc.to<JsonVariant>(); 
