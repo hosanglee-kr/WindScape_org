@@ -134,8 +134,8 @@ class C10_ConfigManager {
 		// --- security ---
 		if (!root["security"]["api_key"].isNull()) {
 			const char *k = root["security"]["api_key"] | "";
-			strncpy(p_cfg.api_key, k, SC10_API_KEY_MAX_LEN);
-			p_cfg.api_key[SC10_API_KEY_MAX_LEN] = '\0';
+			strncpy(p_cfg.api_key, k, G_A10_API_KEY_MAX_LEN);
+			p_cfg.api_key[G_A10_API_KEY_MAX_LEN] = '\0';
 			SC10_Logger::log(SC10_LOG_INFO, "API Key updated via patch.");
 		}
 		// hw
@@ -201,8 +201,8 @@ class C10_ConfigManager {
 					const char *ssid = net["ssid"] | "";
 					const char *pass = net["pass"] | "";
 					if (*ssid) {
-						strlcpy(p_cfg.sta_networks[p_cfg.sta_network_count].ssid, ssid, sizeof(SC10_StaCredential::ssid));
-						strlcpy(p_cfg.sta_networks[p_cfg.sta_network_count].password, pass, sizeof(SC10_StaCredential::password));
+						strlcpy(p_cfg.sta_networks[p_cfg.sta_network_count].ssid, ssid, sizeof(A10_StaCredential::ssid));
+						strlcpy(p_cfg.sta_networks[p_cfg.sta_network_count].password, pass, sizeof(A10_StaCredential::password));
 						p_cfg.sta_network_count++;
 					}
 				}
@@ -290,8 +290,8 @@ class C10_ConfigManager {
 				break;
 			const char *v_ssid = v_net["ssid"] | "";
 			const char *v_pass = v_net["pass"] | "";
-			strlcpy(p_config.sta_networks[p_config.sta_network_count].ssid, 	v_ssid, sizeof(SC10_StaCredential::ssid));
-			strlcpy(p_config.sta_networks[p_config.sta_network_count].password, v_pass, sizeof(SC10_StaCredential::password));
+			strlcpy(p_config.sta_networks[p_config.sta_network_count].ssid, 	v_ssid, sizeof(A10_StaCredential::ssid));
+			strlcpy(p_config.sta_networks[p_config.sta_network_count].password, v_pass, sizeof(A10_StaCredential::password));
 			p_config.sta_network_count++;
 		}
 
