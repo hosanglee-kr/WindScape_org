@@ -26,7 +26,7 @@
 #include "M10_WiFiManager_004.h"
 #include "S10_Simulation_004.h"
 
-class SC10_WebAPI {
+class W10_WebAPI {
    public:
 	// ======================================================
 	// 유틸리티: 공통 헤더 설정 (보안/캐시)
@@ -206,76 +206,6 @@ class SC10_WebAPI {
 			req->send(res);
 
 		});
-		
-		/*
-		p_srv.on("/api/state", HTTP_GET, [&p_sim](AsyncWebServerRequest *req) {
-			Serial.println("mountApi 011");
-			
-			// 상태 + config + preset 전체 JSON으로
-			AsyncJsonResponse *res = new AsyncJsonResponse(false);
-
-			JsonVariant root = res->getRoot();
-
-			Serial.println("mountApi 010");
-
-			JsonObject st	 = root["status"].to<JsonObject>();
-			st["sim_active"] = p_sim.wind_simulation_active;
-			st["wind_speed"] = roundf(p_sim.current_wind_speed * 100.0f) / 100.0f;
-
-			Serial.println("mountApi 020");
-			
-			// ▽▽ 추가/변경: PWM raw + percent 동시 제공 ▽▽
-			const int	duty_raw	 = ledcRead(g_SC10_config.pwm_channel);
-			const int	levels		 = (1 << g_SC10_config.pwm_resolution) - 1;
-			const float duty_percent = (levels > 0) ? (100.0f * duty_raw / (float)levels) : 0.0f;
-
-			Serial.println("mountApi 030");
-
-			st["fan_pwm"]		  = duty_raw;  // (기존 호환) raw duty 유지
-			st["fan_pwm_percent"] = duty_percent;
-			// (선택) 클라이언트 계산용으로 해상도도 내려주면 더 좋음
-			root["config"]["pwm"]["resolution"] = g_SC10_config.pwm_resolution;
-
-			st["phase_name"] = G_SC10_WEATHER_PHASE_NAMES[p_sim.current_weather_phase];
-
-			Serial.println("mountApi 040");
-
-			if (g_SC10_config.wifi_mode == G_A10_WIFI_MODE_STA && WiFi.status() == WL_CONNECTED) {
-				st["wifi_mode"] = "STA";
-				st["ip_addr"]	= WiFi.localIP().toString();
-				st["ssid"]		= WiFi.SSID();
-			} else {
-				st["wifi_mode"] = "AP";
-				st["ip_addr"]	= WiFi.softAPIP().toString();
-				st["ssid"]		= g_SC10_config.ap_ssid;
-			}
-
-			Serial.println("mountApi 050");
-
-			// config 직렬화
-			ConfigManager::toJson(g_SC10_config, root["config"].to<JsonObject>());
-
-			Serial.println("mountApi 060");
-
-
-			// presets 추가
-			JsonArray presets = root["presets"].to<JsonArray>();
-			for (int i = 0; i < SC10_PRESET_COUNT; i++) {
-				presets.add(G_SC10_PRESET_MODE_NAMES[i]);
-			}
-
-			Serial.println("mountApi 070");
-
-
-			res->setCode(200);
-			addNoCache(res);
-			addCors(res);
-			req->send(res);
-
-			Serial.println("mountApi 080");
-
-		});
-		*/
 
 		// -------------------
 		// /api/config : 설정 변경 (Wi-Fi 재초기화 가능)
