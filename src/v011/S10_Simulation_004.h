@@ -371,7 +371,7 @@ class S10_Simulation {
 				phase_mul = 0.9f * wind_factor;
 
 			float final_p = base_prob * user_freq * phase_mul;
-			if (A10_randRange() < final_p) {
+			if (A10_getRandom01() < final_p) {
 				gust_active		   = true;
 				gust_start_time	   = now;
 				float speed_factor = current_wind_speed / 6.7f;
@@ -402,7 +402,7 @@ class S10_Simulation {
 		float phase_mul	   = (current_weather_phase == SC10_WEATHER_PHASE_CALM) ? 1.2f : (current_weather_phase == SC10_WEATHER_PHASE_STRONG) ? 0.7f
 																																			  : 1.0f;
 		float p			   = base * wind_factor * phase_mul;
-		if (A10_randRange() < p) {
+		if (A10_getRandom01() < p) {
 			thermal_bubble_active	  = true;
 			thermal_bubble_start_time = millis() / 1000.0f;
 			float dur				  = A10_randRange(8.0f, 14.0f);
@@ -423,7 +423,7 @@ class S10_Simulation {
 			return;
 
 		SC10_WindWeatherPhase_t old = current_weather_phase;
-		float					r	= A10_randRange();
+		float					r	= A10_getRandom01();
 		if (old == SC10_WEATHER_PHASE_CALM) {
 			current_weather_phase = (r < 0.7f) ? SC10_WEATHER_PHASE_NORMAL : SC10_WEATHER_PHASE_STRONG;
 		} else if (old == SC10_WEATHER_PHASE_STRONG) {
