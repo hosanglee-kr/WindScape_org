@@ -462,7 +462,7 @@ class S10_Simulation {
 		if (!wind_simulation_active)
 			return;
 		float range		  = phase_wind_max - phase_wind_min;
-		float new_t		  = phase_wind_min + SC10_getRandom01() * range;
+		float new_t		  = phase_wind_min + A10_getRandom01() * range;
 		float mid		  = (phase_wind_min + phase_wind_max) * 0.5f;
 		float bias		  = A10_randRange(0.0f, 1.0f);
 		new_t			  = (new_t + mid * bias) / (1.0f + bias);
