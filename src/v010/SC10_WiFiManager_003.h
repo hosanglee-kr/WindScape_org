@@ -113,7 +113,7 @@ class SC10_WiFiManager {
 		}
 
 		// ---------- AP 기동 ----------
-		
+
 		char v_apPass[65] = {0};
 		strlcpy(v_apPass, p_cfg.ap_password, sizeof(v_apPass));
 		/*

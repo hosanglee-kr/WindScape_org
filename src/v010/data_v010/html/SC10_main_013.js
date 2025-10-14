@@ -73,12 +73,12 @@
 
         // ★ API Key 저장 핸들러 추가
         $('#btnSaveApiKey').addEventListener('click', async () => {
-          const newKey = $('#apiKeyInput').value.trim();
-          if (!newKey) { showToast('API Key를 입력하세요.', 'warn'); return; }
-          setKey(newKey);
-          // 백엔드에도 반영(선택) — 서버가 authorize 사용 중이면 유효키로 바로 패치 가능
-          await fetchApi('/api/config', 'POST', { security: { api_key: newKey } }, 'API Key 저장');
-          showToast('API Key 저장 완료', 'ok');
+            const newKey = $('#apiKeyInput').value.trim();
+            if (!newKey) { showToast('API Key를 입력하세요.', 'warn'); return; }
+            setKey(newKey);
+            // 백엔드에도 반영(선택) — 서버가 authorize 사용 중이면 유효키로 바로 패치 가능
+            await fetchApi('/api/config', 'POST', { security: { api_key: newKey } }, 'API Key 저장');
+            showToast('API Key 저장 완료', 'ok');
         });
 
         $('#btnSavePWM').addEventListener('click', savePWMConfig);
@@ -105,7 +105,7 @@
             // ★ API Key 자동 주입
             const k = getKey();
             if (k) opt.headers['X-API-Key'] = k;
-            
+
             // API Key가 설정되어 있다면 헤더에 추가 (C/C++ 백엔드 로직에 대응)
             // if (g_config.security && g_config.security.api_key_set) {
             //    // 실제 키 값은 노출하지 않고, UI에서 입력받거나 저장되어야 합니다.
@@ -141,28 +141,28 @@
     }
 
     async function savePWMConfig() {
-  const body = {
-    hw: {
-      pwm_pin: Number($('#pwm_pin').value),
-      pwm_freq: Number($('#pwm_freq').value),
-      pwm_res: Number($('#pwm_res').value),
+        const body = {
+            hw: {
+                pwm_pin: Number($('#pwm_pin').value),
+                pwm_freq: Number($('#pwm_freq').value),
+                pwm_res: Number($('#pwm_res').value),
+            }
+        };
+        // 간단 검증
+        if (body.hw.pwm_pin >= 6 && body.hw.pwm_pin <= 11)
+            return showToast('GPIO6~11은 Flash용 핀이므로 PWM 불가', 'warn');
+        if (body.hw.pwm_pin >= 34)
+            return showToast('GPIO34 이상은 입력전용으로 PWM 불가', 'warn');
+        if (body.hw.pwm_freq < 100 || body.hw.pwm_freq > 40000)
+            return showToast('PWM 주파수는 100~40000Hz 사이여야 합니다.', 'warn');
+        if (body.hw.pwm_res < 8 || body.hw.pwm_res > 12)
+            return showToast('PWM 해상도는 8~12bit 사이여야 합니다.', 'warn');
+
+        await fetchApi('/api/config', 'POST', body, 'PWM 설정 저장');
+        refreshState();
     }
-  };
-  // 간단 검증
-  if (body.hw.pwm_pin >= 6 && body.hw.pwm_pin <= 11)
-    return showToast('GPIO6~11은 Flash용 핀이므로 PWM 불가', 'warn');
-  if (body.hw.pwm_pin >= 34)
-    return showToast('GPIO34 이상은 입력전용으로 PWM 불가', 'warn');
-  if (body.hw.pwm_freq < 100 || body.hw.pwm_freq > 40000)
-    return showToast('PWM 주파수는 100~40000Hz 사이여야 합니다.', 'warn');
-  if (body.hw.pwm_res < 8 || body.hw.pwm_res > 12)
-    return showToast('PWM 해상도는 8~12bit 사이여야 합니다.', 'warn');
 
-  await fetchApi('/api/config', 'POST', body, 'PWM 설정 저장');
-  refreshState();
-}
 
-    
     // --------- 상태 및 설정 로드 ---------
     async function refreshVersion() {
         try {

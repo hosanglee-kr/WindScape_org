@@ -20,7 +20,7 @@
 #include <LittleFS.h>
 #include <Update.h>
 
-#include "SC10_ConfigManager_002.h"
+#include "SC10_ConfigManager_003.h"
 #include "SC10_Const_002.h"
 #include "SC10_Logger_002.h"
 #include "SC10_Simulation_002.h"
@@ -48,13 +48,13 @@ class SC10_WebAPI {
 
 	// API Key 검사 → g_SC10_config.api_key 가 비어 있지 않으면 반드시 헤더 필요
 	static bool authorize(AsyncWebServerRequest *req) {
-		if (strlen(g_SC10_config.api_key) == 0){
+		if (strlen(g_SC10_config.api_key) == 0) {
 			return true;  // 설정이 비어 있으면 무조건 통과
 		}
-		if (!req->hasHeader("X-API-Key")){
+		if (!req->hasHeader("X-API-Key")) {
 			return false;  // 헤더 없으면 거부
 		}
-		
+
 		auto *h = req->getHeader("X-API-Key");
 		return (h && h->value() == String(g_SC10_config.api_key));	// 값이 일치해야 통과
 	}
@@ -140,24 +140,24 @@ class SC10_WebAPI {
 		// -------------------
 		p_srv.on("/api/state", HTTP_GET, [&p_sim](AsyncWebServerRequest *req) {
 			// 상태 + config + preset 전체 JSON으로
-			AsyncJsonResponse *res	= new AsyncJsonResponse(false);
+			AsyncJsonResponse *res = new AsyncJsonResponse(false);
 			////AsyncJsonResponse *res	= new AsyncJsonResponse(false, 4096);
-			JsonVariant		   root = res->getRoot();
+			JsonVariant root = res->getRoot();
 
 			JsonObject st	 = root["status"].to<JsonObject>();
 			st["sim_active"] = p_sim.wind_simulation_active;
 			st["wind_speed"] = roundf(p_sim.current_wind_speed * 100.0f) / 100.0f;
-			
-			// ▽▽ 추가/변경: PWM raw + percent 동시 제공 ▽▽
-            const int duty_raw = ledcRead(g_SC10_config.pwm_channel);
-            const int levels   = (1 << g_SC10_config.pwm_resolution) - 1;
-            const float duty_percent = (levels > 0) ? (100.0f * duty_raw / (float)levels) : 0.0f;
 
-            st["fan_pwm"]         = duty_raw;        // (기존 호환) raw duty 유지
-            st["fan_pwm_percent"] = duty_percent;
+			// ▽▽ 추가/변경: PWM raw + percent 동시 제공 ▽▽
+			const int	duty_raw	 = ledcRead(g_SC10_config.pwm_channel);
+			const int	levels		 = (1 << g_SC10_config.pwm_resolution) - 1;
+			const float duty_percent = (levels > 0) ? (100.0f * duty_raw / (float)levels) : 0.0f;
+
+			st["fan_pwm"]		  = duty_raw;  // (기존 호환) raw duty 유지
+			st["fan_pwm_percent"] = duty_percent;
 			// (선택) 클라이언트 계산용으로 해상도도 내려주면 더 좋음
-            root["config"]["pwm"]["resolution"] = g_SC10_config.pwm_resolution;
-			
+			root["config"]["pwm"]["resolution"] = g_SC10_config.pwm_resolution;
+
 			st["phase_name"] = G_SC10_WEATHER_PHASE_NAMES[p_sim.current_weather_phase];
 
 			if (g_SC10_config.wifi_mode == G_SC10_WIFI_MODE_STA && WiFi.status() == WL_CONNECTED) {
@@ -253,11 +253,13 @@ class SC10_WebAPI {
 		// /api/scan : 주변 Wi-Fi 스캔
 		// -------------------
 		p_srv.on("/api/scan", HTTP_GET, [](AsyncWebServerRequest *req) {
-            bool async = req->hasParam("async");
-            String j = SC10_WiFiManager::scanNetworksJson(async);
-            auto *res = req->beginResponse(200, "application/json", j);
-             addNoCache(res); addCors(res); req->send(res);
-        });
+			bool   async = req->hasParam("async");
+			String j	 = SC10_WiFiManager::scanNetworksJson(async);
+			auto  *res	 = req->beginResponse(200, "application/json", j);
+			addNoCache(res);
+			addCors(res);
+			req->send(res);
+		});
 		/*
 		p_srv.on("/api/scan", HTTP_GET, [](AsyncWebServerRequest *req) {
 			String j   = SC10_WiFiManager::scanNetworksJson();
@@ -273,10 +275,10 @@ class SC10_WebAPI {
 		// -------------------
 		p_srv.on("/api/diag", HTTP_GET, [](AsyncWebServerRequest *req) {
 			JsonDocument v_doc;
-			v_doc["heap"]	  = ESP.getFreeHeap();
+			v_doc["heap"] = ESP.getFreeHeap();
 			if (WiFi.status() == WL_CONNECTED) {
-                v_doc["rssi"]   = WiFi.RSSI();
-            }
+				v_doc["rssi"] = WiFi.RSSI();
+			}
 			v_doc["fs_total"] = LittleFS.totalBytes();
 			v_doc["fs_used"]  = LittleFS.usedBytes();
 			String out;
@@ -343,8 +345,7 @@ class SC10_WebAPI {
 		// -------------------
 		static bool s_uploadError = false;
 
-p_srv.on("/upload", HTTP_POST,
-  [](AsyncWebServerRequest *req) {
+		p_srv.on("/upload", HTTP_POST, [](AsyncWebServerRequest *req) {
     if (!authorize(req)) {
       req->send(401, "application/json", "{\"error\":\"unauthorized\"}");
       return;
@@ -354,9 +355,7 @@ p_srv.on("/upload", HTTP_POST,
       req->send(500, "application/json", "{\"error\":\"upload failed\"}");
     } else {
       req->send(200, "application/json", "{\"message\":\"Upload OK\"}");
-    }
-  },
-  [](AsyncWebServerRequest *req, const String &filename, size_t index, uint8_t *data, size_t len, bool final) {
+    } }, [](AsyncWebServerRequest *req, const String &filename, size_t index, uint8_t *data, size_t len, bool final) {
     if (!authorize(req)) { s_uploadError = true; return; }
     static const size_t kMaxUpload = 4 * 1024 * 1024;
     if (index == 0) {
@@ -378,28 +377,27 @@ p_srv.on("/upload", HTTP_POST,
       }
       if (len) req->_tempFile.write(data, len);
       if (final) req->_tempFile.close();
-    }
-});
+    } });
 
 		/*
 		p_srv.on("/upload", HTTP_POST, [](AsyncWebServerRequest *req) {
-        if (!authorize(req)) { req->send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
-        req->send(200, "application/json", "{\"message\":\"Upload OK\"}"); }, [](AsyncWebServerRequest *req, const String &filename, size_t index, uint8_t *data, size_t len, bool final) {
-        if (!authorize(req)) return;
-        static const size_t kMaxUpload = 4 * 1024 * 1024; // 4MB 제한
-        if (index == 0) {
-          String safe = sanitizeFilename(filename);
-          if (!isAllowedExt(safe)) { req->send(400, "application/json", "{\"error\":\"ext not allowed\"}"); return; }
-          String v_path = "/" + safe;
-          if (LittleFS.exists(v_path)) LittleFS.remove(v_path);
-          req->_tempFile = LittleFS.open(v_path, "w");
-          if (!req->_tempFile) { req->send(500, "application/json", "{\"error\":\"open failed\"}"); return; }
-        }
-        if (req->_tempFile) {
-          if (req->_tempFile.size() + len > kMaxUpload) { req->_tempFile.close(); LittleFS.remove(req->_tempFile.name()); return; }
-          if (len) req->_tempFile.write(data, len);
-          if (final) req->_tempFile.close();
-        } });
+		if (!authorize(req)) { req->send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
+		req->send(200, "application/json", "{\"message\":\"Upload OK\"}"); }, [](AsyncWebServerRequest *req, const String &filename, size_t index, uint8_t *data, size_t len, bool final) {
+		if (!authorize(req)) return;
+		static const size_t kMaxUpload = 4 * 1024 * 1024; // 4MB 제한
+		if (index == 0) {
+		  String safe = sanitizeFilename(filename);
+		  if (!isAllowedExt(safe)) { req->send(400, "application/json", "{\"error\":\"ext not allowed\"}"); return; }
+		  String v_path = "/" + safe;
+		  if (LittleFS.exists(v_path)) LittleFS.remove(v_path);
+		  req->_tempFile = LittleFS.open(v_path, "w");
+		  if (!req->_tempFile) { req->send(500, "application/json", "{\"error\":\"open failed\"}"); return; }
+		}
+		if (req->_tempFile) {
+		  if (req->_tempFile.size() + len > kMaxUpload) { req->_tempFile.close(); LittleFS.remove(req->_tempFile.name()); return; }
+		  if (len) req->_tempFile.write(data, len);
+		  if (final) req->_tempFile.close();
+		} });
 		*/
 
 		// -------------------

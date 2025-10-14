@@ -19,7 +19,6 @@ class ConfigManager {
 	// 설정 로드: /json/config_003.json → 파싱 실패 시 백업(/json/config_003.json.bak) 복구 시도
 	// -----------------------------------------------------------------------------
 	static bool load(WindConfig &p_cfg) {
-		
 		// if (!LittleFS.begin(true)) {
 		// 	SC10_Logger::log(SC10_LOG_ERROR, "LittleFS mount failed");
 		// 	return false;
@@ -88,7 +87,7 @@ class ConfigManager {
 		bool b = LittleFS.remove(SC10_Const::BACKUP_FILE);
 		(void)a;
 		(void)b;
-		 
+
 		g_SC10_config.api_key[0] = '\0';
 
 		return true;
@@ -127,78 +126,91 @@ class ConfigManager {
 	//  - 유효 필드만 조건 적용(존재하지 않는 필드는 건드리지 않음)
 	// -----------------------------------------------------------------------------
 
-     // ConfigManager::patchFromJson()
-static bool patchFromJson(WindConfig &p_cfg, const JsonDocument &p_doc, bool &p_wifiChanged) {
-  p_wifiChanged = false;
-  JsonObjectConst root = p_doc.as<JsonObjectConst>();
+	// ConfigManager::patchFromJson()
+	static bool patchFromJson(WindConfig &p_cfg, const JsonDocument &p_doc, bool &p_wifiChanged) {
+		p_wifiChanged		 = false;
+		JsonObjectConst root = p_doc.as<JsonObjectConst>();
 
-  // --- security ---
-  if (!root["security"]["api_key"].isNull()) {
-    const char* k = root["security"]["api_key"] | "";
-    strncpy(p_cfg.api_key, k, SC10_API_KEY_MAX_LEN);
-    p_cfg.api_key[SC10_API_KEY_MAX_LEN] = '\0';
-    SC10_Logger::log(SC10_LOG_INFO, "API Key updated via patch.");
-  }
-  // hw (신규)
-  JsonObjectConst h = root["hw"];
-  if (!h.isNull()) {
-      if (!h["pwm_pin"].isNull())  p_cfg.fan_pwm_pin    = h["pwm_pin"].as<int>();
-      if (!h["pwm_freq"].isNull()) p_cfg.pwm_frequency  = h["pwm_freq"].as<int>();
-      if (!h["pwm_res"].isNull())  p_cfg.pwm_resolution = h["pwm_res"].as<int>();
-  }
-	
-  // --- sim ---
-  JsonObjectConst s = root["sim"];
-  if (!s.isNull()) {
-    if (!s["preset"].isNull()) {
-      const char* name = s["preset"];
-      for (int i=0;i<SC10_PRESET_COUNT;i++){
-        if (strcmp(name, G_SC10_PRESET_MODE_NAMES[i])==0){ p_cfg.preset_mode_index=i; break; }
-      }
-    }
-    if (!s["intensity"].isNull()) p_cfg.wind_intensity = s["intensity"].as<float>();
-    if (!s["gust_freq"].isNull()) p_cfg.gust_frequency = s["gust_freq"].as<float>();
-    if (!s["variability"].isNull()) p_cfg.wind_variability = s["variability"].as<float>();
-    if (!s["fan_limit"].isNull()) p_cfg.fan_speed_limit = s["fan_limit"].as<float>();
-    if (!s["min_fan"].isNull()) p_cfg.minimum_fan_speed = s["min_fan"].as<float>();
-    if (!s["turb_len"].isNull()) p_cfg.turbulence_length_scale = s["turb_len"].as<float>();
-    if (!s["turb_sig"].isNull()) p_cfg.turbulence_intensity_sigma = s["turb_sig"].as<float>();
-    if (!s["therm_str"].isNull()) p_cfg.thermal_bubble_strength = s["therm_str"].as<float>();
-    if (!s["therm_rad"].isNull()) p_cfg.thermal_bubble_radius = s["therm_rad"].as<float>();
-  }
+		// --- security ---
+		if (!root["security"]["api_key"].isNull()) {
+			const char *k = root["security"]["api_key"] | "";
+			strncpy(p_cfg.api_key, k, SC10_API_KEY_MAX_LEN);
+			p_cfg.api_key[SC10_API_KEY_MAX_LEN] = '\0';
+			SC10_Logger::log(SC10_LOG_INFO, "API Key updated via patch.");
+		}
+		// hw
+		JsonObjectConst h = root["hw"];
+		if (!h.isNull()) {
+			if (!h["pwm_pin"].isNull())		p_cfg.fan_pwm_pin 		= h["pwm_pin"].as<int>();
+			if (!h["pwm_freq"].isNull())	p_cfg.pwm_frequency 	= h["pwm_freq"].as<int>();
+			if (!h["pwm_res"].isNull())		p_cfg.pwm_resolution 	= h["pwm_res"].as<int>();
+		}
 
-  // --- timing ---
-  JsonObjectConst t = root["timing"];
-  if (!t.isNull()) {
-    if (!t["sim_int"].isNull()) p_cfg.wind_sim_interval_ms = t["sim_int"].as<int>();
-    if (!t["gust_int"].isNull()) p_cfg.gust_check_interval_ms = t["gust_int"].as<int>();
-    if (!t["thermal_int"].isNull()) p_cfg.thermal_check_interval_ms = t["thermal_int"].as<int>();
-  }
+		// --- sim ---
+		JsonObjectConst s = root["sim"];
+		if (!s.isNull()) {
+			if (!s["preset"].isNull()) {
+				const char *name = s["preset"];
+				for (int i = 0; i < SC10_PRESET_COUNT; i++) {
+					if (strcmp(name, G_SC10_PRESET_MODE_NAMES[i]) == 0) {
+						p_cfg.preset_mode_index = i;
+						break;
+					}
+				}
+			}
+			if (!s["intensity"].isNull())	p_cfg.wind_intensity 				= s["intensity"].as<float>();
+			if (!s["gust_freq"].isNull())	p_cfg.gust_frequency 				= s["gust_freq"].as<float>();
+			if (!s["variability"].isNull()) p_cfg.wind_variability 				= s["variability"].as<float>();
+			if (!s["fan_limit"].isNull())  	p_cfg.fan_speed_limit 				= s["fan_limit"].as<float>();
+			if (!s["min_fan"].isNull())		p_cfg.minimum_fan_speed 			= s["min_fan"].as<float>();
+			if (!s["turb_len"].isNull())	p_cfg.turbulence_length_scale 		= s["turb_len"].as<float>();
+			if (!s["turb_sig"].isNull())	p_cfg.turbulence_intensity_sigma 	= s["turb_sig"].as<float>();
+			if (!s["therm_str"].isNull())	p_cfg.thermal_bubble_strength 		= s["therm_str"].as<float>();
+			if (!s["therm_rad"].isNull())	p_cfg.thermal_bubble_radius 		= s["therm_rad"].as<float>();
+		}
 
-  // --- wifi ---
-  JsonObjectConst w = root["wifi"];
-  if (!w.isNull()) {
-    if (!w["wifi_mode"].isNull()) { p_cfg.wifi_mode = w["wifi_mode"].as<int>(); p_wifiChanged = true; }
-    if (!w["ap_ssid"].isNull()) { strlcpy(p_cfg.ap_ssid, w["ap_ssid"], sizeof(p_cfg.ap_ssid)); p_wifiChanged = true; }
-    if (!w["ap_password"].isNull()) { strlcpy(p_cfg.ap_password, w["ap_password"], sizeof(p_cfg.ap_password)); p_wifiChanged = true; }
+		// --- timing ---
+		JsonObjectConst t = root["timing"];
+		if (!t.isNull()) {
+			if (!t["sim_int"].isNull())		p_cfg.wind_sim_interval_ms 			= t["sim_int"].as<int>();
+			if (!t["gust_int"].isNull())	p_cfg.gust_check_interval_ms 		= t["gust_int"].as<int>();
+			if (!t["thermal_int"].isNull())	p_cfg.thermal_check_interval_ms 	= t["thermal_int"].as<int>();
+		}
 
-    if (w["sta_networks"].is<JsonArrayConst>()) {
-      p_cfg.sta_network_count = 0;
-      for (JsonObjectConst net : w["sta_networks"].as<JsonArrayConst>()) {
-        if (p_cfg.sta_network_count >= SC10_Const::MAX_STA_NETWORKS) break;
-        const char* ssid = net["ssid"] | "";
-        const char* pass = net["pass"] | "";
-        if (*ssid) {
-          strlcpy(p_cfg.sta_networks[p_cfg.sta_network_count].ssid, ssid, sizeof(SC10_StaCredential::ssid));
-          strlcpy(p_cfg.sta_networks[p_cfg.sta_network_count].password, pass, sizeof(SC10_StaCredential::password));
-          p_cfg.sta_network_count++;
-        }
-      }
-      p_wifiChanged = true;
-    }
-  }
-  return true;
-}
+		// --- wifi ---
+		JsonObjectConst w = root["wifi"];
+		if (!w.isNull()) {
+			if (!w["wifi_mode"].isNull()) {
+				p_cfg.wifi_mode = w["wifi_mode"].as<int>();
+				p_wifiChanged	= true;
+			}
+			if (!w["ap_ssid"].isNull()) {
+				strlcpy(p_cfg.ap_ssid, w["ap_ssid"], sizeof(p_cfg.ap_ssid));
+				p_wifiChanged = true;
+			}
+			if (!w["ap_password"].isNull()) {
+				strlcpy(p_cfg.ap_password, w["ap_password"], sizeof(p_cfg.ap_password));
+				p_wifiChanged = true;
+			}
+
+			if (w["sta_networks"].is<JsonArrayConst>()) {
+				p_cfg.sta_network_count = 0;
+				for (JsonObjectConst net : w["sta_networks"].as<JsonArrayConst>()) {
+					if (p_cfg.sta_network_count >= SC10_Const::MAX_STA_NETWORKS)
+						break;
+					const char *ssid = net["ssid"] | "";
+					const char *pass = net["pass"] | "";
+					if (*ssid) {
+						strlcpy(p_cfg.sta_networks[p_cfg.sta_network_count].ssid, ssid, sizeof(SC10_StaCredential::ssid));
+						strlcpy(p_cfg.sta_networks[p_cfg.sta_network_count].password, pass, sizeof(SC10_StaCredential::password));
+						p_cfg.sta_network_count++;
+					}
+				}
+				p_wifiChanged = true;
+			}
+		}
+		return true;
+	}
 
 	static bool patchFromJson_old(WindConfig &p_cfg, const JsonDocument &p_doc, bool &p_wifiChanged) {
 		p_wifiChanged		   = false;
@@ -244,14 +256,14 @@ static bool patchFromJson(WindConfig &p_cfg, const JsonDocument &p_doc, bool &p_
 			p_cfg.thermal_check_interval_ms = v_root["thermal_int"].as<int>();
 
 		if (!v_root["security"]["api_key"].isNull()) {
-			const char* k = v_root["security"]["api_key"] | "";
+			const char *k = v_root["security"]["api_key"] | "";
 			strncpy(p_cfg.api_key, k, SC10_API_KEY_MAX_LEN);
-			
+
 			p_cfg.api_key[SC10_API_KEY_MAX_LEN] = '\0';
-			 SC10_Logger::log(SC10_LOG_INFO, "API Key updated via patch.");
+			SC10_Logger::log(SC10_LOG_INFO, "API Key updated via patch.");
 
 			// wifiChanged는 아님
-    	}
+		}
 
 		// --- Wi-Fi ---
 		if (!v_root["wifi_mode"].isNull()) {
@@ -290,12 +302,11 @@ static bool patchFromJson(WindConfig &p_cfg, const JsonDocument &p_doc, bool &p_
 	// 직렬화(쓰기) 오버로드 1: JsonObject에 직접 채우기 (서브트리 기록용)
 	// -----------------------------------------------------------------------------
 	static void toJson(const WindConfig &p_c, JsonObject p_root) {
-
 		// --- hw (신규) ---
-        p_root["hw"]["pwm_pin"]  = p_c.fan_pwm_pin;
-        p_root["hw"]["pwm_freq"] = p_c.pwm_frequency;
-        p_root["hw"]["pwm_res"]  = p_c.pwm_resolution;
-		
+		p_root["hw"]["pwm_pin"]	 	= p_c.fan_pwm_pin;
+		p_root["hw"]["pwm_freq"] 	= p_c.pwm_frequency;
+		p_root["hw"]["pwm_res"]	 	= p_c.pwm_resolution;
+
 		// --- sim ---
 		p_root["sim"]["intensity"]	 = p_c.wind_intensity;
 		p_root["sim"]["gust_freq"]	 = p_c.gust_frequency;
@@ -313,9 +324,9 @@ static bool patchFromJson(WindConfig &p_cfg, const JsonDocument &p_doc, bool &p_
 		p_root["timing"]["gust_int"]	= p_c.gust_check_interval_ms;
 		p_root["timing"]["thermal_int"] = p_c.thermal_check_interval_ms;
 
-		JsonObject sec = p_root["security"].to<JsonObject>();
-    	sec["api_key_set"] = (p_c.api_key[0] != '\0'); // true/false만 노출
-    	// 키 원문은 내보내지 않음
+		JsonObject sec	   = p_root["security"].to<JsonObject>();
+		sec["api_key_set"] = (p_c.api_key[0] != '\0');	// true/false만 노출
+														// 키 원문은 내보내지 않음
 
 		// --- wifi ---
 		JsonObject v_w	 = p_root["wifi"].to<JsonObject>();
@@ -346,8 +357,8 @@ static bool patchFromJson(WindConfig &p_cfg, const JsonDocument &p_doc, bool &p_
 	static bool parseJson(WindConfig &p_c, JsonDocument &p_doc) {
 		JsonObjectConst v_root = p_doc.as<JsonObjectConst>();  // v7: const 뷰로 읽기
 
-		if (!v_root["security"]["api_key"].isNull()){
-    		strlcpy(p_c.api_key, v_root["security"]["api_key"] | "", sizeof(p_c.api_key));
+		if (!v_root["security"]["api_key"].isNull()) {
+			strlcpy(p_c.api_key, v_root["security"]["api_key"] | "", sizeof(p_c.api_key));
 		}
 
 		// --- wifi ---
@@ -373,9 +384,9 @@ static bool patchFromJson(WindConfig &p_cfg, const JsonDocument &p_doc, bool &p_
 		}
 
 		// --- hw  ---
-        p_c.fan_pwm_pin    = v_root["hw"]["pwm_pin"]  | p_c.fan_pwm_pin;
-        p_c.pwm_frequency  = v_root["hw"]["pwm_freq"] | p_c.pwm_frequency;
-        p_c.pwm_resolution = v_root["hw"]["pwm_res"]  | p_c.pwm_resolution;
+		p_c.fan_pwm_pin	   = v_root["hw"]["pwm_pin"] | p_c.fan_pwm_pin;
+		p_c.pwm_frequency  = v_root["hw"]["pwm_freq"] | p_c.pwm_frequency;
+		p_c.pwm_resolution = v_root["hw"]["pwm_res"] | p_c.pwm_resolution;
 
 		// --- (선택) 시뮬/타이밍 값도 JSON에 있으면 적용 ---
 		// 존재하지 않으면 기존값 유지

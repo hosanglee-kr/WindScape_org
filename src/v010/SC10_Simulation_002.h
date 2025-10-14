@@ -20,49 +20,48 @@
 // > 참고: 실제 돌풍 빈도는 gust_probability_base × (user_freq × phase_mul × wind_factor)로 계산되어
 // 유저 설정과 날씨 Phase에 의해 가중됩니다. 체감이 너무 드물거나 잦으면 base만 소폭 조절해도 충분합니다.
 
-
 class SC10_Simulation {
    public:
 	// 외부에서 읽는 상태
-	bool  			wind_simulation_active 		= false;
-	bool  			fan_power_enabled		 	= true;
-	float 			current_wind_speed	 		= 3.6f;
-	float 			target_wind_speed		 	= 3.6f;
-	float 			wind_change_rate		 	= 0.1f;
-	float 			wind_momentum			 	= 0.0f;
+	bool  wind_simulation_active = false;
+	bool  fan_power_enabled		 = true;
+	float current_wind_speed	 = 3.6f;
+	float target_wind_speed		 = 3.6f;
+	float wind_change_rate		 = 0.1f;
+	float wind_momentum			 = 0.0f;
 
 	// Phase
 	SC10_WindWeatherPhase_t current_weather_phase = SC10_WEATHER_PHASE_NORMAL;
-	float 			phase_start_time	  		= 0.0f;
-	float 			phase_duration				= 120.0f;
-	float 			phase_wind_min				= 2.0f;
-	float 			phase_wind_max				= 6.0f;
+	float					phase_start_time	  = 0.0f;
+	float					phase_duration		  = 120.0f;
+	float					phase_wind_min		  = 2.0f;
+	float					phase_wind_max		  = 6.0f;
 
 	// 베이스 환경/확률(프리셋 반영)
-	float 			base_wind_min			   	= 1.8f;
-	float 			base_wind_max			   	= 5.5f;
-	float 			gust_probability_base	   	= 0.040f;
-	float 			location_gust_strength   	= 2.1f;
-	float 			thermal_bubble_frequency 	= 0.022f;
+	float base_wind_min			   = 1.8f;
+	float base_wind_max			   = 5.5f;
+	float gust_probability_base	   = 0.040f;
+	float location_gust_strength   = 2.1f;
+	float thermal_bubble_frequency = 0.022f;
 
 	// 난류
-	float 			spectral_energy_buffer	 	= 0.0f;
-	float 			spectral_phase_accumulator 	= 0.0f;
-	float 			turbulence_time_scale		= 5.0f;
+	float spectral_energy_buffer	 = 0.0f;
+	float spectral_phase_accumulator = 0.0f;
+	float turbulence_time_scale		 = 5.0f;
 
 	// 돌풍
-	bool		  	gust_active	  				= false;
-	float		  	gust_start_time 			= 0.0f;
-	float		  	gust_duration	  			= 3.0f;
-	float		  	gust_intensity  			= 1.0f;
-	unsigned long 	last_gust_check 			= 0;
+	bool		  gust_active	  = false;
+	float		  gust_start_time = 0.0f;
+	float		  gust_duration	  = 3.0f;
+	float		  gust_intensity  = 1.0f;
+	unsigned long last_gust_check = 0;
 
 	// 열기포
-	bool		  	thermal_bubble_active		= false;
-	float		  	thermal_bubble_start_time	= 0.0f;
-	float		  	thermal_bubble_duration	   	= 8.0f;
-	float		  	current_thermal_contribution = 0.0f;
-	unsigned long 	last_thermal_check		   	= 0;
+	bool		  thermal_bubble_active		   = false;
+	float		  thermal_bubble_start_time	   = 0.0f;
+	float		  thermal_bubble_duration	   = 8.0f;
+	float		  current_thermal_contribution = 0.0f;
+	unsigned long last_thermal_check		   = 0;
 
 	// 타이머
 	unsigned long last_wind_sim_update = 0;
@@ -70,7 +69,7 @@ class SC10_Simulation {
 	// 초기화 (프리셋 적용 포함)
 	void begin(bool p_applyPreset = true) {
 		// srand(esp_random());
-		if (p_applyPreset){
+		if (p_applyPreset) {
 			applyCurrentPreset(true);
 		}
 	}
@@ -132,81 +131,77 @@ class SC10_Simulation {
 					thermal_bubble_frequency = 0.028f;
 					break;
 				case SC10_PRESET_PLAINS:
-					base_wind_min			 = 4.0f;
-					base_wind_max			 = 8.8f;
-					gust_probability_base	 = 0.070f;
-					location_gust_strength	 = 2.4f;
-					thermal_bubble_frequency = 0.018f;
+					base_wind_min			 	= 4.0f;
+					base_wind_max			 	= 8.8f;
+					gust_probability_base	 	= 0.070f;
+					location_gust_strength	 	= 2.4f;
+					thermal_bubble_frequency 	= 0.018f;
 					break;
-				
+
 				// ===== 신규 프리셋 5종 =====
-                case SC10_PRESET_HARBOR_BREEZE: {
-                  // Harbor Breeze (항구 바람)
-                  // Base Wind: 5–12 mph ≈ 2.24–5.36 m/s
-                  base_wind_min             = 2.25f;
-                  base_wind_max             = 5.35f;
-                  // Rolling/Gentle, 2.5% @ 1.8×
-                  gust_probability_base     = 0.025f;
-                  location_gust_strength    = 1.80f;
-                  // 해풍/수평 난류 + 약한 대류
-                  thermal_bubble_frequency  = 0.026f;
-                  break;
-                }
-                case SC10_PRESET_FOREST_CANOPY: {
-                  // Forest Canopy (숲 그늘 바람)
-                  // Base Wind: 3–9 mph ≈ 1.34–4.02 m/s
-                  base_wind_min             = 1.35f;
-                  base_wind_max             = 4.00f;
-                  // Rare, 1% @ 1.5×
-                  gust_probability_base     = 0.010f;
-                  location_gust_strength    = 1.50f;
-                  // 수면/휴식용: 대류는 드물고 잔잔
-                  thermal_bubble_frequency  = 0.012f;
-                  break;
-                }
-                case SC10_PRESET_URBAN_SUNSET: {
-                  // Urban Sunset (도시 석양 바람)
-                  // Base Wind: 4–11 mph ≈ 1.79–4.92 m/s
-                  base_wind_min             = 1.80f;
-                  base_wind_max             = 4.90f;
-                  // Gentle–Sharp mix, 3% @ 2.0× (골목 난류)
-                  gust_probability_base     = 0.030f;
-                  location_gust_strength    = 2.00f;
-                  // 열섬효과로 완만한 대류
-                  thermal_bubble_frequency  = 0.020f;
-                  break;
-                }
-                case SC10_PRESET_TROPICAL_RAIN: {
-                  // Tropical Rain (열대 소나기 바람)
-                  // Base Wind: 7–18 mph ≈ 3.13–8.05 m/s
-                  base_wind_min             = 3.15f;
-                  base_wind_max             = 8.05f;
-                  // Sharp/Sustained, 6% @ 2.2×
-                  gust_probability_base     = 0.060f;
-                  location_gust_strength    = 2.20f;
-                  // 대류 활발 (소나기 전후)
-                  thermal_bubble_frequency  = 0.038f;
-                  break;
-                }
-                case SC10_PRESET_DESERT_NIGHT: {
-                  // Desert Night (사막의 밤 바람)
-                  // Base Wind: 2–7 mph ≈ 0.89–3.13 m/s
-                  base_wind_min             = 0.90f;
-                  base_wind_max             = 3.10f;
-                  // Very rare & soft, 0.5% @ 1.3×
-                  gust_probability_base     = 0.005f;
-                  location_gust_strength    = 1.30f;
-                  // 복사냉각 → 약한 하강/완만한 층류
-                  thermal_bubble_frequency  = 0.008f;
-                  break;
-                }
-                // ==========================
+				case SC10_PRESET_HARBOR_BREEZE: {
+					// Harbor Breeze (항구 바람) 		// Base Wind: 5–12 mph ≈ 2.24–5.36 m/s
+					base_wind_min 				= 2.25f;
+					base_wind_max 				= 5.35f;
+					gust_probability_base  		= 0.025f;	// Rolling/Gentle, 2.5% @ 1.8×
+					location_gust_strength 		= 1.80f;
+	
+					thermal_bubble_frequency 	= 0.026f;	// 해풍/수평 난류 + 약한 대류
+					break;
+				}
+				case SC10_PRESET_FOREST_CANOPY: {
+					// Forest Canopy (숲 그늘 바람) 			// Base Wind: 3–9 mph ≈ 1.34–4.02 m/s
+					
+					base_wind_min 				= 1.35f;
+					base_wind_max 				= 4.00f;
+					gust_probability_base  		= 0.010f;		// Rare, 1% @ 1.5×
+					location_gust_strength 		= 1.50f;
+					thermal_bubble_frequency 	= 0.012f;	  // 수면/휴식용: 대류는 드물고 잔잔
+					break;
+				}
+				case SC10_PRESET_URBAN_SUNSET: {
+					// Urban Sunset (도시 석양 바람)			// Base Wind: 4–11 mph ≈ 1.79–4.92 m/s
+					
+					base_wind_min 				= 1.80f;
+					base_wind_max 				= 4.90f;
+					
+					gust_probability_base  		= 0.030f;		// Gentle–Sharp mix, 3% @ 2.0× (골목 난류)
+					location_gust_strength 		= 2.00f;
+					
+					thermal_bubble_frequency 	= 0.020f;		// 열섬효과로 완만한 대류
+					break;
+				}
+				case SC10_PRESET_TROPICAL_RAIN: {
+					// Tropical Rain (열대 소나기 바람)		// Base Wind: 7–18 mph ≈ 3.13–8.05 m/s
+					
+					base_wind_min 				= 3.15f;
+					base_wind_max 				= 8.05f;
+					
+					gust_probability_base  		= 0.060f;		// Sharp/Sustained, 6% @ 2.2×
+					location_gust_strength 		= 2.20f;
+					
+					thermal_bubble_frequency 	= 0.038f;		// 대류 활발 (소나기 전후)
+					break;
+				}
+				case SC10_PRESET_DESERT_NIGHT: {
+					// Desert Night (사막의 밤 바람)		// Base Wind: 2–7 mph ≈ 0.89–3.13 m/s
+					
+					base_wind_min 				= 0.90f;
+					base_wind_max 				= 3.10f;
+					
+					gust_probability_base  		= 0.005f;	// Very rare & soft, 0.5% @ 1.3×
+					location_gust_strength 		= 1.30f;
+					
+					thermal_bubble_frequency 	= 0.008f;	// 복사냉각 → 약한 하강/완만한 층류
+					break;
+				}
+				// ==========================
 				default:
-					base_wind_min			 = 1.8f;
-					base_wind_max			 = 5.5f;
-					gust_probability_base	 = 0.040f;
-					location_gust_strength	 = 2.1f;
-					thermal_bubble_frequency = 0.022f;
+					base_wind_min			 	= 1.8f;
+					base_wind_max			 	= 5.5f;
+					gust_probability_base	 	= 0.040f;
+					location_gust_strength	 	= 2.1f;
+					thermal_bubble_frequency 	= 0.022f;
 					break;
 			}
 			startWindSimulation();
@@ -249,14 +244,14 @@ class SC10_Simulation {
 			ledcWrite(g_SC10_config.pwm_channel, 0);
 			return;
 		}
-		if (wind_simulation_active){
+		if (wind_simulation_active) {
 			v_req *= v_intensity;
 		}
 		v_req = fmax(v_min, fmin(v_limit, v_req));
 
 		int v_levels = (1 << g_SC10_config.pwm_resolution) - 1;
-		int v_pwm	   = (int)(v_req * v_levels);
-		if (v_req <= 0.01f){
+		int v_pwm	 = (int)(v_req * v_levels);
+		if (v_req <= 0.01f) {
 			v_pwm = 0;
 		}
 		ledcWrite(g_SC10_config.pwm_channel, v_pwm);
@@ -264,15 +259,15 @@ class SC10_Simulation {
 
 	// Von Kármán 난류 합성
 	void calculateVonKarman(float p_dt) {
-		if (!wind_simulation_active){
+		if (!wind_simulation_active) {
 			return;
 		}
 
 		float v_L	  = g_SC10_config.turbulence_length_scale;
 		float v_sigma = g_SC10_config.turbulence_intensity_sigma;
 		float v_U	  = current_wind_speed;
-		
-		if (v_U < 0.1f){
+
+		if (v_U < 0.1f) {
 			v_U = 0.1f;
 		}
 
