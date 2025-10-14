@@ -52,18 +52,18 @@ class WindScapeSimulator {
 
 		// WebServer
 
-		W10_WebAPI::init(g_SC10_asyncWeb, g_SC10_sim, g_SC10_wifiMulti);
+		W10_WebAPI::init(g_SC10_asyncWeb, g_S10_sim, g_SC10_wifiMulti);
 		SC10_Logger::log(SC10_LOG_INFO, "W10_Webapi_init_040_");
 
 		
-		// W10_WebAPI::mountApi(g_SC10_asyncWeb, g_SC10_sim, g_SC10_wifiMulti);
+		// W10_WebAPI::mountApi(g_SC10_asyncWeb, g_S10_sim, g_SC10_wifiMulti);
 		// SC10_Logger::log(SC10_LOG_INFO, "W10_init_060_SC10_WebAPI::mountApi");
 
 		// W10_WebAPI::mountStatic(g_SC10_asyncWeb);
 		// SC10_Logger::log(SC10_LOG_INFO, "W10_init_040_SC10_WebAPI::mountStatic");
 
-		g_SC10_sim.begin(true);
-		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_050_g_SC10_sim.begin");
+		g_S10_sim.begin(true);
+		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_050_g_S10_sim.begin");
 
 		g_SC10_asyncWeb.begin();
 		SC10_Logger::log(SC10_LOG_INFO, "AsyncWebServer started");
@@ -71,16 +71,16 @@ class WindScapeSimulator {
 
 	// 루프: 시뮬레이션 계산
 	void SC10_run(void) {
-		g_SC10_sim.tick();
+		g_S10_sim.tick();
 	}
 
 	// 현재 시뮬레이터 접근자 (필요 시)
-	SC10_Simulation& sim() {
-		return g_SC10_sim;
+	S10_Simulation& sim() {
+		return g_S10_sim;
 	}
 
    private:
 	AsyncWebServer	g_SC10_asyncWeb;
 	WiFiMulti		g_SC10_wifiMulti;
-	SC10_Simulation g_SC10_sim;
+	S10_Simulation  g_S10_sim;
 };
