@@ -110,8 +110,8 @@ class W10_WebAPI {
 
 		// (옵션) 개별 경로도 호환성 위해 남겨둠
 		p_srv.on("/SC10_main_013.js", HTTP_GET, [](AsyncWebServerRequest *req) {
-			if (LittleFS.exists(SC10_Const::JS_FILE)) {
-				req->send(LittleFS, SC10_Const::JS_FILE, "application/javascript");
+			if (LittleFS.exists(A10_Const::JS_FILE)) {
+				req->send(LittleFS, A10_Const::JS_FILE, "application/javascript");
 			} else {
 				auto *res = req->beginResponse(200, "application/javascript", "console.log('SC10: no JS file');");
 				addNoCache(res);
@@ -121,8 +121,8 @@ class W10_WebAPI {
 		});
 
 		p_srv.on("/SC10_main_013.css", HTTP_GET, [](AsyncWebServerRequest *req) {
-			if (LittleFS.exists(SC10_Const::CSS_FILE)) {
-				req->send(LittleFS, SC10_Const::CSS_FILE, "text/css");
+			if (LittleFS.exists(A10_Const::CSS_FILE)) {
+				req->send(LittleFS, A10_Const::CSS_FILE, "text/css");
 			} else {
 				auto *res = req->beginResponse(200, "text/css", "/* SC10: no CSS file */");
 				addNoCache(res);
@@ -343,8 +343,8 @@ class W10_WebAPI {
 		// -------------------
 		p_srv.on("/api/version", HTTP_GET, [](AsyncWebServerRequest *req) {
 			JsonDocument v_doc;
-			v_doc["fw_version"]	 = SC10_Const::FW_VERSION;
-			v_doc["config_file"] = SC10_Const::CONFIG_FILE;
+			v_doc["fw_version"]	 = A10_Const::FW_VERSION;
+			v_doc["config_file"] = A10_Const::CONFIG_FILE;
 			String out;
 			serializeJson(v_doc, out);
 			auto *res = req->beginResponse(200, "application/json", out);
