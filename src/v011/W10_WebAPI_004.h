@@ -266,7 +266,7 @@ class W10_WebAPI {
 
           if (v_wifiChanged) {
             SC10_Logger::log(SC10_LOG_INFO, "WiFi config changed. Re-init WiFi");
-            SC10_WiFiManager::init(g_SC10_config, p_multi);
+            M10_WiFiManager::init(g_SC10_config, p_multi);
           }
           req->send(200, "application/json", "{\"message\":\"Config updated\"}");
         } });
@@ -276,7 +276,7 @@ class W10_WebAPI {
 		// -------------------
 		p_srv.on("/api/scan", HTTP_GET, [](AsyncWebServerRequest *req) {
 			bool   async = req->hasParam("async");
-			String j	 = SC10_WiFiManager::scanNetworksJson(async);
+			String j	 = M10_WiFiManager::scanNetworksJson(async);
 			auto  *res	 = req->beginResponse(200, "application/json", j);
 			addNoCache(res);
 			addCors(res);
