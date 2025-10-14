@@ -139,29 +139,20 @@ class SC10_WebAPI {
 		// /api/state : 현재 상태 조회
 		// -------------------
 		p_srv.on("/api/state", HTTP_GET, [&p_sim](AsyncWebServerRequest *req) {
-			Serial.println("mountApi 011");
-			
-			const size_t v_CAPACITY = 2048;
+				
             JsonDocument doc;
-            doc.reserve(v_CAPACITY);
 
 			// 2. doc.to<JsonVariant>()를 사용하여 root 객체에 접근
     		JsonVariant root = doc.to<JsonVariant>(); 
-
-			Serial.println("mountApi 010");
 
 			JsonObject st	 = root["status"].to<JsonObject>();
 			st["sim_active"] = p_sim.wind_simulation_active;
 			st["wind_speed"] = roundf(p_sim.current_wind_speed * 100.0f) / 100.0f;
 
-			Serial.println("mountApi 020");
-			
 			// ▽▽ 추가/변경: PWM raw + percent 동시 제공 ▽▽
 			const int	duty_raw	 = ledcRead(g_SC10_config.pwm_channel);
 			const int	levels		 = (1 << g_SC10_config.pwm_resolution) - 1;
 			const float duty_percent = (levels > 0) ? (100.0f * duty_raw / (float)levels) : 0.0f;
-
-			Serial.println("mountApi 030");
 
 			st["fan_pwm"]		  = duty_raw;  // (기존 호환) raw duty 유지
 			st["fan_pwm_percent"] = duty_percent;
@@ -170,7 +161,6 @@ class SC10_WebAPI {
 
 			st["phase_name"] = G_SC10_WEATHER_PHASE_NAMES[p_sim.current_weather_phase];
 
-			Serial.println("mountApi 040");
 
 			if (g_SC10_config.wifi_mode == G_A10_WIFI_MODE_STA && WiFi.status() == WL_CONNECTED) {
 				st["wifi_mode"] = "STA";
@@ -182,21 +172,14 @@ class SC10_WebAPI {
 				st["ssid"]		= g_SC10_config.ap_ssid;
 			}
 
-			Serial.println("mountApi 050");
-
 			// config 직렬화
 			ConfigManager::toJson(g_SC10_config, root["config"].to<JsonObject>());
-
-			Serial.println("mountApi 060");
-
 
 			// presets 추가
 			JsonArray presets = root["presets"].to<JsonArray>();
 			for (int i = 0; i < SC10_PRESET_COUNT; i++) {
 				presets.add(G_SC10_PRESET_MODE_NAMES[i]);
 			}
-
-			Serial.println("mountApi 070");
 
 			// 3. StaticJsonDocument를 AsyncResponseStream에 직접 직렬화하여 응답 생성
 			// (AsyncJson.h 종속성 없이 AsyncWebServer의 기본 스트림 기능 사용)
@@ -209,8 +192,6 @@ class SC10_WebAPI {
 			addNoCache(res);
 			addCors(res);
 			req->send(res);
-
-			Serial.println("mountApi 080");
 
 		});
 		
