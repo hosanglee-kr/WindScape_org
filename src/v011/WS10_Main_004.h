@@ -51,11 +51,16 @@ class WindScapeSimulator {
 		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_030_ledcSetup setup");
 
 		// WebServer
-		SC10_WebAPI::mountApi(g_SC10_asyncWeb, g_SC10_sim, g_SC10_wifiMulti);
-		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_060_SC10_WebAPI::mountApi");
 
-		SC10_WebAPI::mountStatic(g_SC10_asyncWeb);
-		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_040_SC10_WebAPI::mountStatic");
+		SC10_WebAPI::init(g_SC10_asyncWeb, g_SC10_sim, g_SC10_wifiMulti);
+		SC10_Logger::log(SC10_LOG_INFO, "SC10_Webapi_init_040_");
+
+		
+		// SC10_WebAPI::mountApi(g_SC10_asyncWeb, g_SC10_sim, g_SC10_wifiMulti);
+		// SC10_Logger::log(SC10_LOG_INFO, "SC10_init_060_SC10_WebAPI::mountApi");
+
+		// SC10_WebAPI::mountStatic(g_SC10_asyncWeb);
+		// SC10_Logger::log(SC10_LOG_INFO, "SC10_init_040_SC10_WebAPI::mountStatic");
 
 		g_SC10_sim.begin(true);
 		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_050_g_SC10_sim.begin");
