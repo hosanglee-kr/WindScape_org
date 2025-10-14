@@ -1,15 +1,15 @@
-// C10_Const_004.h
+// A10_Const_004.h
 
 #pragma once
 /*
- * SC10_Const.h
+ * SC10_Const_004.h
  * - WindScape 프로젝트에서 공통적으로 사용되는 상수, 타입, 기본 구조 정의
  * - 다른 모듈(SC10_ConfigManager, SC10_WindScape, SC10_WebAPI 등)에서 참조
  * - 네이밍 규칙:
  *    - 전역 상수/매크로: G_SC10_ 로 시작
- *    - enum 타입: SC10_ 접두사
+ *    - enum 타입: A10_ 접두사
  *    - 구조체, typedef: SC10_ 접두사
- *    - 전역 변수: g_SC10_
+ *    - 전역 변수: g_A10_
  */
 
 #include <Arduino.h>
@@ -20,7 +20,7 @@
 // ====================================================================================
 
 // 전역 상수/경로/버전
-namespace SC10_Const {
+namespace A10_Const {
     constexpr char FW_VERSION[]		= "SC10_FW_1.0.0";
     constexpr char CONFIG_FILE[]	= "/json/config_010.json";
     constexpr char BACKUP_FILE[]	= "/json/config_010.json.bak";
@@ -29,7 +29,7 @@ namespace SC10_Const {
     constexpr char JS_FILE[]		= "/html/SC10_main_013.js";
 
     constexpr int  MAX_STA_NETWORKS = 5;   /// 저장 가능한 STA 네트워크 최대 개수
-}  // namespace SC10_Const
+}  // namespace A10_Const
 
 /*
 /// 기본 설정 JSON 파일 경로
@@ -122,7 +122,7 @@ static const char* G_SC10_PRESET_MODE_NAMES[] = {
  * - SSID: 최대 32바이트
  * - Password: 최대 64바이트
  */
-struct SC10_StaCredential {
+struct A10_StaCredential {
 	char ssid[32];
 	char password[64];
 };
@@ -130,7 +130,7 @@ struct SC10_StaCredential {
 // ====================================================================================
 // WindConfig 구조체
 // ====================================================================================
-#define SC10_API_KEY_MAX_LEN 64
+#define G_A10_API_KEY_MAX_LEN 64
 
 /**
  * @brief WindScape의 전체 구성(설정) 데이터 구조체
@@ -138,11 +138,11 @@ struct SC10_StaCredential {
  * - Wi-Fi, 하드웨어, 시뮬레이션 관련 설정 포함
  */
 struct WindConfig {
-    char api_key[SC10_API_KEY_MAX_LEN + 1] 			= {'\0'}; 				// 0-terminated
+    char api_key[G_A10_API_KEY_MAX_LEN + 1] 			= {'\0'}; 				// 0-terminated
 
 	// --- Wi-Fi 설정 ---
 	int				   wifi_mode 					= G_A10_WIFI_MODE_STA;	///< 현재 Wi-Fi 모드
-	SC10_StaCredential sta_networks[SC10_Const::MAX_STA_NETWORKS];			///< STA 네트워크 목록
+	SA10_StaCredential sta_networks[SC10_Const::MAX_STA_NETWORKS];			///< STA 네트워크 목록
 	int				   sta_network_count 			= 0;					///< 실제 저장된 STA 네트워크 수
 	char			   ap_ssid[32]		 			= "SC10_Config_AP";		///< AP 모드 SSID
 	char			   ap_password[64]	 			= "newpassword";		///< AP 모드 Password
@@ -177,10 +177,10 @@ struct WindConfig {
 inline WindConfig g_SC10_config;
 
 // 난수 유틸 (0~1)
-inline float SC10_getRandom01() {
+inline float A10_getRandom01() {
 	return (float)esp_random() / (float)UINT32_MAX;
 }
 // 난수 유틸 (범위)
-inline float SC10_randRange(float a, float b) {
-	return a + SC10_getRandom01() * (b - a);
+inline float A10_randRange(float a, float b) {
+	return a + A10_getRandom01() * (b - a);
 }
