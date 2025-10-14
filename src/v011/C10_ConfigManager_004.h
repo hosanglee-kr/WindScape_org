@@ -13,7 +13,7 @@
 #include "A10_Const_004.h"
 #include "D10_Logger_004.h"
 
-class ConfigManager {
+class C10_ConfigManager {
    public:
 	// -----------------------------------------------------------------------------
 	// 설정 로드: /json/config_003.json → 파싱 실패 시 백업(/json/config_003.json.bak) 복구 시도
@@ -126,7 +126,7 @@ class ConfigManager {
 	//  - 유효 필드만 조건 적용(존재하지 않는 필드는 건드리지 않음)
 	// -----------------------------------------------------------------------------
 
-	// ConfigManager::patchFromJson()
+	// C10_ConfigManager::patchFromJson()
 	static bool patchFromJson(WindConfig &p_cfg, const JsonDocument &p_doc, bool &p_wifiChanged) {
 		p_wifiChanged		 = false;
 		JsonObjectConst root = p_doc.as<JsonObjectConst>();
