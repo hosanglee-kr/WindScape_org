@@ -85,10 +85,10 @@ class W10_WebAPI {
 			   n.endsWith(".gz");
 	}
 
-    static void init(AsyncWebServer &p_srv, SC10_Simulation &p_sim, WiFiMulti &p_multi) {
+    static void init(AsyncWebServer &p_srv, S10_Simulation &p_sim, WiFiMulti &p_multi) {
         
         mountApi(p_srv, p_sim, p_multi);
-		//mountApi(g_SC10_asyncWeb, g_SC10_sim, g_SC10_wifiMulti);
+		//mountApi(g_SC10_asyncWeb, g_S10_sim, g_SC10_wifiMulti);
 		SC10_Logger::log(SC10_LOG_INFO, "W10_init_010::mountApi");
 
 		mountStatic(p_srv);
@@ -146,7 +146,7 @@ class W10_WebAPI {
 	// ======================================================
 	// API 라우트 등록
 	// ======================================================
-	static void mountApi(AsyncWebServer &p_srv, SC10_Simulation &p_sim, WiFiMulti &p_multi) {
+	static void mountApi(AsyncWebServer &p_srv, S10_Simulation &p_sim, WiFiMulti &p_multi) {
 		// -------------------
 		// /api/state : 현재 상태 조회
 		// -------------------
