@@ -55,7 +55,7 @@ class C10_ConfigManager {
 		// 기존 파일을 백업으로 이동
 		if (LittleFS.exists(A10_Const::CONFIG_FILE)) {
 			LittleFS.remove(A10_Const::BACKUP_FILE);
-			LittleFS.rename(A10_Const::CONFIG_FILE, SC10_Const::BACKUP_FILE);
+			LittleFS.rename(A10_Const::CONFIG_FILE, A10_Const::BACKUP_FILE);
 		}
 
 		JsonDocument v_doc;
@@ -196,7 +196,7 @@ class C10_ConfigManager {
 			if (w["sta_networks"].is<JsonArrayConst>()) {
 				p_cfg.sta_network_count = 0;
 				for (JsonObjectConst net : w["sta_networks"].as<JsonArrayConst>()) {
-					if (p_cfg.sta_network_count >= SC10_Const::MAX_STA_NETWORKS)
+					if (p_cfg.sta_network_count >= A10_Const::MAX_STA_NETWORKS)
 						break;
 					const char *ssid = net["ssid"] | "";
 					const char *pass = net["pass"] | "";
