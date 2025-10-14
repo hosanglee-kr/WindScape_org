@@ -28,9 +28,9 @@ class WindScapeSimulator {
 		}
 
 		// 설정 로드(실패 시 기본값으로 진행)
-		ConfigManager::load(g_SC10_config);
+		C10_ConfigManager::load(g_SC10_config);
 
-		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_010_ConfigManager::loaded");
+		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_010_C10_ConfigManager::loaded");
 
 		// Wi-Fi 초기화
 		M10_WiFiManager::init(g_SC10_config, g_SC10_wifiMulti);
