@@ -91,7 +91,8 @@ class SC10_WebAPI {
 		//mountApi(g_SC10_asyncWeb, g_SC10_sim, g_SC10_wifiMulti);
 		SC10_Logger::log(SC10_LOG_INFO, "W10_init_010::mountApi");
 
-		mountStatic(g_SC10_asyncWeb);
+		mountStatic(p_srv);
+		// mountStatic(g_SC10_asyncWeb);
 		SC10_Logger::log(SC10_LOG_INFO, "W10_init_020::mountStatic");
 		
 	}
