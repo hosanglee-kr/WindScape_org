@@ -2,6 +2,9 @@
 
 # WindScape
 
+* **Source**
+  https://github.com/TilmanGriesel/WindScape.git
+
 *A Home Assistant / ESPHome project that turns everyday PWM‑controlled PC fans into remarkably natural indoor wind simulators.*
 
 WindScape delivers authentic, location‑inspired airflow, from a gentle Mediterranean whisper to a brisk Alpine surge, creating a natural, immersive atmosphere for your workspace, gaming setup, or sim‑racing cockpit. It’s a versatile wind simulator ready to elevate any project you come up with.
