@@ -142,7 +142,7 @@ struct WindConfig {
 
 	// --- Wi-Fi 설정 ---
 	int				   wifi_mode 					= G_A10_WIFI_MODE_STA;	///< 현재 Wi-Fi 모드
-	SA10_StaCredential sta_networks[SC10_Const::MAX_STA_NETWORKS];			///< STA 네트워크 목록
+	A10_StaCredential sta_networks[A10_Const::MAX_STA_NETWORKS];			///< STA 네트워크 목록
 	int				   sta_network_count 			= 0;					///< 실제 저장된 STA 네트워크 수
 	char			   ap_ssid[32]		 			= "SC10_Config_AP";		///< AP 모드 SSID
 	char			   ap_password[64]	 			= "newpassword";		///< AP 모드 Password
