@@ -24,12 +24,12 @@ class C10_ConfigManager {
 		// 	return false;
 		// }
 
-		if (!LittleFS.exists(SC10_Const::CONFIG_FILE)) {
+		if (!LittleFS.exists(A10_Const::CONFIG_FILE)) {
 			SC10_Logger::log(SC10_LOG_WARN, "Config not found. Using defaults");
 			return false;  // 기본값으로 진행
 		}
 
-		File v_f = LittleFS.open(SC10_Const::CONFIG_FILE, "r");
+		File v_f = LittleFS.open(A10_Const::CONFIG_FILE, "r");
 		if (!v_f) {
 			SC10_Logger::log(SC10_LOG_ERROR, "Config open failed");
 			return false;
@@ -53,9 +53,9 @@ class C10_ConfigManager {
 	// -----------------------------------------------------------------------------
 	static bool save(WindConfig &p_cfg) {
 		// 기존 파일을 백업으로 이동
-		if (LittleFS.exists(SC10_Const::CONFIG_FILE)) {
-			LittleFS.remove(SC10_Const::BACKUP_FILE);
-			LittleFS.rename(SC10_Const::CONFIG_FILE, SC10_Const::BACKUP_FILE);
+		if (LittleFS.exists(A10_Const::CONFIG_FILE)) {
+			LittleFS.remove(A10_Const::BACKUP_FILE);
+			LittleFS.rename(A10_Const::CONFIG_FILE, SC10_Const::BACKUP_FILE);
 		}
 
 		JsonDocument v_doc;
@@ -63,7 +63,7 @@ class C10_ConfigManager {
 		JsonObject v_root = v_doc.to<JsonObject>();
 		toJson(p_cfg, v_root);
 
-		File v_f = LittleFS.open(SC10_Const::CONFIG_FILE, "w");
+		File v_f = LittleFS.open(A10_Const::CONFIG_FILE, "w");
 		if (!v_f) {
 			SC10_Logger::log(SC10_LOG_ERROR, "Config open for write failed");
 			return false;
@@ -83,8 +83,8 @@ class C10_ConfigManager {
 	// 공장 초기화: 설정/백업 파일 삭제
 	// -----------------------------------------------------------------------------
 	static bool reset() {
-		bool a = LittleFS.remove(SC10_Const::CONFIG_FILE);
-		bool b = LittleFS.remove(SC10_Const::BACKUP_FILE);
+		bool a = LittleFS.remove(A10_Const::CONFIG_FILE);
+		bool b = LittleFS.remove(A10_Const::BACKUP_FILE);
 		(void)a;
 		(void)b;
 
@@ -97,12 +97,12 @@ class C10_ConfigManager {
 	// 백업 복구: .bak → 파싱해서 구조체에 반영
 	// -----------------------------------------------------------------------------
 	static bool restoreBackup(WindConfig &p_cfg) {
-		if (!LittleFS.exists(SC10_Const::BACKUP_FILE)) {
+		if (!LittleFS.exists(A10_Const::BACKUP_FILE)) {
 			SC10_Logger::log(SC10_LOG_WARN, "No backup to restore");
 			return false;
 		}
 
-		File v_b = LittleFS.open(SC10_Const::BACKUP_FILE, "r");
+		File v_b = LittleFS.open(A10_Const::BACKUP_FILE, "r");
 		if (!v_b) {
 			SC10_Logger::log(SC10_LOG_ERROR, "Backup open failed");
 			return false;
@@ -286,7 +286,7 @@ class C10_ConfigManager {
 		p_config.sta_network_count = 0;
 		JsonArrayConst v_arr  = v_root["wifi"]["sta_networks"].as<JsonArrayConst>();
 		for (JsonObjectConst v_net : v_arr) {
-			if (p_config.sta_network_count >= SC10_Const::MAX_STA_NETWORKS)
+			if (p_config.sta_network_count >= A10_Const::MAX_STA_NETWORKS)
 				break;
 			const char *v_ssid = v_net["ssid"] | "";
 			const char *v_pass = v_net["pass"] | "";
