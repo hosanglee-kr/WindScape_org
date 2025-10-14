@@ -81,6 +81,9 @@
           showToast('API Key 저장 완료', 'ok');
         });
 
+        $('#btnSavePWM').addEventListener('click', savePWMConfig);
+
+
         //// 팁: 페이지 로드시 기존 저장 키를 입력란에 보여주고 싶다면 DOMContentLoaded에서 $('#apiKeyInput').value = getKey(); 한 줄 추가하세요.
 
         // Wi-Fi 목록 삭제는 동적 바인딩 (refreshState -> displayStaNetworks 함수 내부)
@@ -137,6 +140,29 @@
         }
     }
 
+    async function savePWMConfig() {
+  const body = {
+    hw: {
+      pwm_pin: Number($('#pwm_pin').value),
+      pwm_freq: Number($('#pwm_freq').value),
+      pwm_res: Number($('#pwm_res').value),
+    }
+  };
+  // 간단 검증
+  if (body.hw.pwm_pin >= 6 && body.hw.pwm_pin <= 11)
+    return showToast('GPIO6~11은 Flash용 핀이므로 PWM 불가', 'warn');
+  if (body.hw.pwm_pin >= 34)
+    return showToast('GPIO34 이상은 입력전용으로 PWM 불가', 'warn');
+  if (body.hw.pwm_freq < 100 || body.hw.pwm_freq > 40000)
+    return showToast('PWM 주파수는 100~40000Hz 사이여야 합니다.', 'warn');
+  if (body.hw.pwm_res < 8 || body.hw.pwm_res > 12)
+    return showToast('PWM 해상도는 8~12bit 사이여야 합니다.', 'warn');
+
+  await fetchApi('/api/config', 'POST', body, 'PWM 설정 저장');
+  refreshState();
+}
+
+    
     // --------- 상태 및 설정 로드 ---------
     async function refreshVersion() {
         try {
