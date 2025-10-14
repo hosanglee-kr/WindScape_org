@@ -305,6 +305,12 @@
                 ap_ssid: $('#ap_ssid').value,
                 ap_password: $('#ap_password').value,
                 sta_networks: g_config.config.wifi.sta_networks || [], // g_config에 저장된 임시 목록 사용
+            },
+            // 3. HW 설정 수집
+            hw: {
+                pwm_pin: Number($('#pwm_pin').value),
+                pwm_freq: Number($('#pwm_freq').value),
+                pwm_res: Number($('#pwm_res').value),
             }
         };
 
