@@ -185,7 +185,7 @@ class W10_WebAPI {
 			}
 
 			// config 직렬화
-			ConfigManager::toJson(g_SC10_config, root["config"].to<JsonObject>());
+			C10_ConfigManager::toJson(g_SC10_config, root["config"].to<JsonObject>());
 
 			// presets 추가
 			JsonArray presets = root["presets"].to<JsonArray>();
@@ -227,8 +227,8 @@ class W10_WebAPI {
 
 			
           bool v_wifiChanged = false;
-          ConfigManager::patchFromJson(g_SC10_config, v_doc, v_wifiChanged);
-          ConfigManager::save(g_SC10_config);
+          C10_ConfigManager::patchFromJson(g_SC10_config, v_doc, v_wifiChanged);
+          C10_ConfigManager::save(g_SC10_config);
 
 		  // 1) 프리셋 바뀌면 시뮬만 재시작
           if (g_SC10_config.preset_mode_index != oldPreset) {
@@ -333,7 +333,7 @@ class W10_WebAPI {
 				req->send(401, "application/json", "{\"error\":\"unauthorized\"}");
 				return;
 			}
-			ConfigManager::reset();
+			C10_ConfigManager::reset();
 			req->send(200, "text/plain", "Factory reset... Reboot");
 			ESP.restart();
 		});
