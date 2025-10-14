@@ -283,7 +283,7 @@ class S10_Simulation {
 
 			float phase_rate  = 2.0f * M_PI * v_f;
 			float phase_inc	  = phase_rate * p_dt;
-			float phase_noise = SC10_randRange(-0.1f, 0.1f);
+			float phase_noise = A10_randRange(-0.1f, 0.1f);
 			float cur_phase	  = spectral_phase_accumulator * v_i + phase_inc + phase_noise;
 
 			float amp  = sqrtf(2.0f * S * 0.083f);
@@ -371,19 +371,19 @@ class S10_Simulation {
 				phase_mul = 0.9f * wind_factor;
 
 			float final_p = base_prob * user_freq * phase_mul;
-			if (SC10_getRandom01() < final_p) {
+			if (A10_randRange() < final_p) {
 				gust_active		   = true;
 				gust_start_time	   = now;
 				float speed_factor = current_wind_speed / 6.7f;
 				if (current_weather_phase == SC10_WEATHER_PHASE_CALM) {
-					gust_duration  = SC10_randRange(3.0f, 8.0f);
-					gust_intensity = SC10_randRange(1.08f, 1.33f);
+					gust_duration  = A10_randRange(3.0f, 8.0f);
+					gust_intensity = A10_randRange(1.08f, 1.33f);
 				} else if (current_weather_phase == SC10_WEATHER_PHASE_STRONG) {
-					gust_duration  = SC10_randRange(0.8f, 3.3f);
-					gust_intensity = SC10_randRange(1.3f, 1.3f + 0.9f * (1.0f + speed_factor * 0.3f));
+					gust_duration  = A10_randRange(0.8f, 3.3f);
+					gust_intensity = A10_randRange(1.3f, 1.3f + 0.9f * (1.0f + speed_factor * 0.3f));
 				} else {
-					gust_duration  = SC10_randRange(1.8f, 5.8f);
-					gust_intensity = SC10_randRange(1.15f, 1.15f + 0.5f * (1.0f + speed_factor * 0.2f));
+					gust_duration  = A10_randRange(1.8f, 5.8f);
+					gust_intensity = A10_randRange(1.15f, 1.15f + 0.5f * (1.0f + speed_factor * 0.2f));
 				}
 				gust_intensity = fminf(gust_intensity, location_gust_strength);
 			}
@@ -402,10 +402,10 @@ class S10_Simulation {
 		float phase_mul	   = (current_weather_phase == SC10_WEATHER_PHASE_CALM) ? 1.2f : (current_weather_phase == SC10_WEATHER_PHASE_STRONG) ? 0.7f
 																																			  : 1.0f;
 		float p			   = base * wind_factor * phase_mul;
-		if (SC10_getRandom01() < p) {
+		if (A10_randRange() < p) {
 			thermal_bubble_active	  = true;
 			thermal_bubble_start_time = millis() / 1000.0f;
-			float dur				  = SC10_randRange(8.0f, 14.0f);
+			float dur				  = A10_randRange(8.0f, 14.0f);
 			if (current_weather_phase == SC10_WEATHER_PHASE_CALM)
 				dur *= 1.3f;
 			else if (current_weather_phase == SC10_WEATHER_PHASE_STRONG)
@@ -423,7 +423,7 @@ class S10_Simulation {
 			return;
 
 		SC10_WindWeatherPhase_t old = current_weather_phase;
-		float					r	= SC10_getRandom01();
+		float					r	= A10_randRange();
 		if (old == SC10_WEATHER_PHASE_CALM) {
 			current_weather_phase = (r < 0.7f) ? SC10_WEATHER_PHASE_NORMAL : SC10_WEATHER_PHASE_STRONG;
 		} else if (old == SC10_WEATHER_PHASE_STRONG) {
@@ -440,15 +440,15 @@ class S10_Simulation {
 		phase_start_time = now;
 		float span		 = base_wind_max - base_wind_min;
 		if (current_weather_phase == SC10_WEATHER_PHASE_CALM) {
-			phase_duration = SC10_randRange(90.0f, 210.0f);
+			phase_duration = A10_randRange(90.0f, 210.0f);
 			phase_wind_min = base_wind_min;
 			phase_wind_max = base_wind_min + span * 0.6f;
 		} else if (current_weather_phase == SC10_WEATHER_PHASE_NORMAL) {
-			phase_duration = SC10_randRange(120.0f, 300.0f);
+			phase_duration = A10_randRange(120.0f, 300.0f);
 			phase_wind_min = base_wind_min + span * 0.15f;
 			phase_wind_max = base_wind_min + span * 0.85f;
 		} else {
-			phase_duration = SC10_randRange(60.0f, 150.0f);
+			phase_duration = A10_randRange(60.0f, 150.0f);
 			phase_wind_min = base_wind_min + span * 0.4f;
 			phase_wind_max = base_wind_max;
 		}
@@ -464,7 +464,7 @@ class S10_Simulation {
 		float range		  = phase_wind_max - phase_wind_min;
 		float new_t		  = phase_wind_min + SC10_getRandom01() * range;
 		float mid		  = (phase_wind_min + phase_wind_max) * 0.5f;
-		float bias		  = SC10_randRange(0.0f, 1.0f);
+		float bias		  = A10_randRange(0.0f, 1.0f);
 		new_t			  = (new_t + mid * bias) / (1.0f + bias);
 		target_wind_speed = new_t;
 
@@ -482,7 +482,7 @@ class S10_Simulation {
 			U = 0.1f;
 		float time_scale = g_SC10_config.turbulence_length_scale / U;
 		base_rate *= (1.0f + time_scale * 0.1f);
-		wind_change_rate = base_rate * SC10_randRange(0.7f, 1.7f);
+		wind_change_rate = base_rate * A10_randRange(0.7f, 1.7f);
 	}
 
 	// 한 틱 계산
@@ -525,9 +525,9 @@ class S10_Simulation {
 			far_ch *= 1.5f;
 		}
 		if (fabsf(v_diff) < change_th) {
-			if (SC10_randRange(0.0f, 100.0f) < close_ch)
+			if (A10_randRange(0.0f, 100.0f) < close_ch)
 				generateWindTarget();
-		} else if (SC10_randRange(0.0f, 100.0f) < far_ch) {
+		} else if (A10_randRange(0.0f, 100.0f) < far_ch) {
 			generateWindTarget();
 		}
 
