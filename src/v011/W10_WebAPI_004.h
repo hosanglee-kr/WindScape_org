@@ -85,9 +85,9 @@ class CL_W10_WebAPI {
 			   n.endsWith(".gz");
 	}
 
-    static void init(AsyncWebServer &p_srv, CL_S10_Simulation &p_sim, WiFiMulti &p_multi) {
+    static void init(AsyncWebServer &p_srv, CL_S10_Simulation &p_sim, WiFiMulti &p_multi, CL_P10_PWM &p_P10_pwm) {
         
-        mountApi(p_srv, p_sim, p_multi);
+        mountApi(p_srv, p_sim, p_multi, p_P10_pwm);
 		//mountApi(g_WS10_asyncWeb, g_WS10_sim, g_WS10_wifiMulti);
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "W10_init_010::mountApi");
 
@@ -146,7 +146,7 @@ class CL_W10_WebAPI {
 	// ======================================================
 	// API 라우트 등록
 	// ======================================================
-	static void mountApi(AsyncWebServer &p_srv, CL_S10_Simulation &p_sim, WiFiMulti &p_multi) {
+	static void mountApi(AsyncWebServer &p_srv, CL_S10_Simulation &p_sim, WiFiMulti &p_multi, CL_P10_PWM &p_P10_pwm) {
 		// -------------------
 		// /api/state : 현재 상태 조회
 		// -------------------
@@ -236,11 +236,12 @@ class CL_W10_WebAPI {
           }
 
           // 2) PWM 파라미터 변경 감지 → LEDC 재초기화
-          bool pwmChanged = (g_A10_config.fan_pwm_pin != oldPin) ||
+          bool v_pwmChanged = (g_A10_config.fan_pwm_pin != oldPin) ||
                   (g_A10_config.pwm_frequency != oldFreq) ||
                   (g_A10_config.pwm_resolution != oldRes);
 
-		  if (pwmChanged) {
+		  if (v_pwmChanged) {
+			  p_P10_pwm.set_pwmPin();
               // 이전 핀 디태치
               ledcDetachPin(oldPin);
 
