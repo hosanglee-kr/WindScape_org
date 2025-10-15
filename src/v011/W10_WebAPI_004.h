@@ -26,6 +26,8 @@
 #include "M10_WiFiManager_004.h"
 #include "S10_Simulation_004.h"
 
+#include "P10_PWM_ctrl_004.h"
+
 class CL_W10_WebAPI {
    public:
 	// ======================================================
