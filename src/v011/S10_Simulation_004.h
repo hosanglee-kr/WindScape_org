@@ -8,6 +8,8 @@
 #include "A10_Const_004.h"
 #include "D10_Logger_004.h"
 
+#include "P10_PWM_ctrl_004.h"
+
 // 바람 시뮬레이션(Phase/난류/돌풍/열기포/팬 제어)
 // - 원본의 Von Kármán 스펙트럼 합성, Phase 전환/히스토리, 목표재생성, 지터/yield 포함
 
@@ -67,7 +69,8 @@ class CL_S10_Simulation {
 	unsigned long last_wind_sim_update = 0;
 
 	// 초기화 (프리셋 적용 포함)
-	void begin(bool p_applyPreset = true) {
+	void begin(CL_P10_PWM& p_pwmCtrl, bool p_applyPreset = true) {
+        pwmCtrl_ = &p_pwmCtrl; // PWM 제어 객체 저장
 		// srand(esp_random());
 		if (p_applyPreset) {
 			applyCurrentPreset(true);
@@ -231,8 +234,16 @@ class CL_S10_Simulation {
 
 	// 팬 속도 반영 (강도/최소/최대 반영)
 	void applyFanSpeed(float p_speed_percent) {
+		if (!pwmCtrl_) return; // PWM 컨트롤러가 설정되지 않았으면 리턴 (안전 가드)
+
+        float v_req		  = p_speed_percent / 100.0f; // 0.0-1.0 비율 (시뮬레이션 기본 출력)
+        float v_limit	  = g_A10_config.fan_speed_limit / 100.0f;
+        float v_min		  = g_A10_config.minimum_fan_speed / 100.0f;
+        float v_intensity = g_A10_config.wind_intensity / 100.0f;
+		
 		if (!fan_power_enabled) {
-			ledcWrite(g_A10_config.pwm_channel, 0);
+			pwmCtrl_->set_pwmDuty(0.0f); // set_pwmDuty 사용 (0%)
+			// ledcWrite(g_A10_config.pwm_channel, 0);
 			return;
 		}
 		float v_req		  = p_speed_percent / 100.0f;
@@ -247,14 +258,23 @@ class CL_S10_Simulation {
 		if (wind_simulation_active) {
 			v_req *= v_intensity;
 		}
-		v_req = fmax(v_min, fmin(v_limit, v_req));
+		// 최소/최대 제한 적용 (v_req는 최종 0.0 ~ 1.0 비율)
+        v_req = fmax(v_min, fmin(v_limit, v_req));
 
+		// 최종 듀티 비율(0.0 ~ 1.0)을 백분율(0.0 ~ 100.0)로 변환
+        float final_percent = v_req * 100.0f;
+
+        // CL_P10_PWM의 set_pwmDuty를 사용하여 PWM 설정 (ledcWrite 대체)
+        pwmCtrl_->set_pwmDuty(final_percent);
+		
+		/*
 		int v_levels = (1 << g_A10_config.pwm_resolution) - 1;
 		int v_pwm	 = (int)(v_req * v_levels);
 		if (v_req <= 0.01f) {
 			v_pwm = 0;
 		}
 		ledcWrite(g_A10_config.pwm_channel, v_pwm);
+		*/
 	}
 
 	// Von Kármán 난류 합성
@@ -541,4 +561,7 @@ class CL_S10_Simulation {
 
 		yield();
 	}
+private:
+	// CL_P10_PWM 포인터를 저장하는 멤버 변수 추가
+	CL_P10_PWM* pwmCtrl_ = nullptr;
 };
