@@ -22,11 +22,16 @@
 // 전역 상수/경로/버전
 namespace A10_Const {
     constexpr char FW_VERSION[]		= "SC10_FW_1.0.0";
+
     constexpr char CONFIG_FILE[]	= "/json/config_011.json";
     constexpr char BACKUP_FILE[]	= "/json/config_011.json.bak";
+
     constexpr char HTML_FILE[]		= "/html/SC10_main_014.html";
     constexpr char CSS_FILE[]		= "/html/SC10_main_014.css";
     constexpr char JS_FILE[]		= "/html/SC10_main_014.js";
+    constexpr char HTML_URI[]		= "/";
+    constexpr char CSS_URI[]		= "/SC10_main_014.css";
+    constexpr char JS_URI[]		    = "/SC10_main_014.js";
 
     constexpr int  MAX_STA_NETWORKS = 5;   /// 저장 가능한 STA 네트워크 최대 개수
 }  // namespace A10_Const
