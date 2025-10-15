@@ -212,7 +212,7 @@ class CL_W10_WebAPI {
 		// -------------------
 		// /api/config : 설정 변경 (Wi-Fi 재초기화 가능)
 		// -------------------
-		p_srv.on("/api/config", HTTP_POST, [](AsyncWebServerRequest *req) {}, nullptr, [&p_sim, &p_multi](AsyncWebServerRequest *req, uint8_t *data, size_t len, size_t index, size_t total) {
+		p_srv.on("/api/config", HTTP_POST, [](AsyncWebServerRequest *req) {}, nullptr, [&p_sim, &p_multi, &p_P10_pwm](AsyncWebServerRequest *req, uint8_t *data, size_t len, size_t index, size_t total) {
         if (!authorize(req)) { req->send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
         if (index == 0 && len == total) {
           JsonDocument v_doc;
