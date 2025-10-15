@@ -248,6 +248,7 @@ class CL_S10_Simulation {
 		}
 	
 		if (v_intensity <= 0.01f) {
+			pwmCtrl_->set_pwmDuty(0.0f); 
 			ledcWrite(g_A10_config.pwm_channel, 0);
 			return;
 		}
