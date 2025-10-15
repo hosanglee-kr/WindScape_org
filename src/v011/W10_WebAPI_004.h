@@ -220,10 +220,11 @@ class CL_W10_WebAPI {
             req->send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
             return;
           }
-			/*
 
 			// 패치 전 스냅샷
+			
             int oldPreset = g_A10_config.preset_mode_index;
+			/*
             int oldPin    = g_A10_config.fan_pwm_pin;
             int oldFreq   = g_A10_config.pwm_frequency;
             int oldRes    = g_A10_config.pwm_resolution;
