@@ -65,3 +65,6 @@ private:
     uint32_t pwmFreq = 25000;
     uint8_t pwmRes = 10;
 };
+
+
+extern CL_P10_PWM g_P10_pwm;
