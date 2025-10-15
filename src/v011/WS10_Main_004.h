@@ -79,7 +79,7 @@ class CL_WS10_WindScapeSimulator {
 		// CL_W10_WebAPI::mountStatic(g_WS10_asyncWeb);
 		// CL_D10_Logger::log(EN_L10_LOG_INFO, "W10_init_040_SC10_WebAPI::mountStatic");
 
-		g_WS10_sim.begin(true);
+		g_WS10_sim.begin(g_P10_pwm, true);
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "WS10_init_050_g_WS10_sim.begin");
 
 		g_WS10_asyncWeb.begin();
