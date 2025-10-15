@@ -26,7 +26,7 @@
 #include "M10_WiFiManager_004.h"
 #include "S10_Simulation_004.h"
 
-class W10_WebAPI {
+class CL_W10_WebAPI {
    public:
 	// ======================================================
 	// 유틸리티: 공통 헤더 설정 (보안/캐시)
@@ -46,9 +46,9 @@ class W10_WebAPI {
 		res->addHeader("Access-Control-Allow-Headers", "Content-Type, X-API-Key");
 	}
 
-	// API Key 검사 → g_SC10_config.api_key 가 비어 있지 않으면 반드시 헤더 필요
+	// API Key 검사 → g_A10_config.api_key 가 비어 있지 않으면 반드시 헤더 필요
 	static bool authorize(AsyncWebServerRequest *req) {
-		if (strlen(g_SC10_config.api_key) == 0) {
+		if (strlen(g_A10_config.api_key) == 0) {
 			return true;  // 설정이 비어 있으면 무조건 통과
 		}
 		if (!req->hasHeader("X-API-Key")) {
@@ -56,7 +56,7 @@ class W10_WebAPI {
 		}
 
 		auto *h = req->getHeader("X-API-Key");
-		return (h && h->value() == String(g_SC10_config.api_key));	// 값이 일치해야 통과
+		return (h && h->value() == String(g_A10_config.api_key));	// 값이 일치해야 통과
 	}
 
 	// 업로드 파일명 정규화 → ../ 같은 경로 탈출, 금지 문자 제거
@@ -85,15 +85,15 @@ class W10_WebAPI {
 			   n.endsWith(".gz");
 	}
 
-    static void init(AsyncWebServer &p_srv, S10_Simulation &p_sim, WiFiMulti &p_multi) {
+    static void init(AsyncWebServer &p_srv, CL_S10_Simulation &p_sim, WiFiMulti &p_multi) {
         
         mountApi(p_srv, p_sim, p_multi);
-		//mountApi(g_SC10_asyncWeb, g_S10_sim, g_SC10_wifiMulti);
-		SC10_Logger::log(SC10_LOG_INFO, "W10_init_010::mountApi");
+		//mountApi(g_WS10_asyncWeb, g_WS10_sim, g_WS10_wifiMulti);
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "W10_init_010::mountApi");
 
 		mountStatic(p_srv);
-		// mountStatic(g_SC10_asyncWeb);
-		SC10_Logger::log(SC10_LOG_INFO, "W10_init_020::mountStatic");
+		// mountStatic(g_WS10_asyncWeb);
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "W10_init_020::mountStatic");
 		
 	}
 		//
@@ -104,12 +104,12 @@ class W10_WebAPI {
 		// /html/ 폴더를 기본 루트로 서비스
 		// → / 요청 시 index.html 자동 매핑
 		auto &h = p_srv.serveStatic("/", LittleFS, "/html/")
-					  .setDefaultFile("SC10_main_013.html")
+					  .setDefaultFile("SC10_main_014.html")
 					  .setCacheControl("max-age=86400");  // 하루 캐시
 		(void)h;
 
 		// (옵션) 개별 경로도 호환성 위해 남겨둠
-		p_srv.on("/SC10_main_013.js", HTTP_GET, [](AsyncWebServerRequest *req) {
+		p_srv.on("/SC10_main_014.js", HTTP_GET, [](AsyncWebServerRequest *req) {
 			if (LittleFS.exists(A10_Const::JS_FILE)) {
 				req->send(LittleFS, A10_Const::JS_FILE, "application/javascript");
 			} else {
@@ -120,7 +120,7 @@ class W10_WebAPI {
 			}
 		});
 
-		p_srv.on("/SC10_main_013.css", HTTP_GET, [](AsyncWebServerRequest *req) {
+		p_srv.on("/SC10_main_014.css", HTTP_GET, [](AsyncWebServerRequest *req) {
 			if (LittleFS.exists(A10_Const::CSS_FILE)) {
 				req->send(LittleFS, A10_Const::CSS_FILE, "text/css");
 			} else {
@@ -146,7 +146,7 @@ class W10_WebAPI {
 	// ======================================================
 	// API 라우트 등록
 	// ======================================================
-	static void mountApi(AsyncWebServer &p_srv, S10_Simulation &p_sim, WiFiMulti &p_multi) {
+	static void mountApi(AsyncWebServer &p_srv, CL_S10_Simulation &p_sim, WiFiMulti &p_multi) {
 		// -------------------
 		// /api/state : 현재 상태 조회
 		// -------------------
@@ -162,35 +162,35 @@ class W10_WebAPI {
 			st["wind_speed"] = roundf(p_sim.current_wind_speed * 100.0f) / 100.0f;
 
 			// ▽▽ 추가/변경: PWM raw + percent 동시 제공 ▽▽
-			const int	duty_raw	 = ledcRead(g_SC10_config.pwm_channel);
-			const int	levels		 = (1 << g_SC10_config.pwm_resolution) - 1;
+			const int	duty_raw	 = ledcRead(g_A10_config.pwm_channel);
+			const int	levels		 = (1 << g_A10_config.pwm_resolution) - 1;
 			const float duty_percent = (levels > 0) ? (100.0f * duty_raw / (float)levels) : 0.0f;
 
 			st["fan_pwm"]		  = duty_raw;  // (기존 호환) raw duty 유지
 			st["fan_pwm_percent"] = duty_percent;
 			// (선택) 클라이언트 계산용으로 해상도도 내려주면 더 좋음
-			root["config"]["pwm"]["resolution"] = g_SC10_config.pwm_resolution;
+			root["config"]["pwm"]["resolution"] = g_A10_config.pwm_resolution;
 
-			st["phase_name"] = G_SC10_WEATHER_PHASE_NAMES[p_sim.current_weather_phase];
+			st["phase_name"] = g_A10_WEATHER_PHASE_NAMES_Arr[p_sim.current_weather_phase];
 
 
-			if (g_SC10_config.wifi_mode == G_A10_WIFI_MODE_STA && WiFi.status() == WL_CONNECTED) {
+			if (g_A10_config.wifi_mode == G_A10_WIFI_MODE_STA && WiFi.status() == WL_CONNECTED) {
 				st["wifi_mode"] = "STA";
 				st["ip_addr"]	= WiFi.localIP().toString();
 				st["ssid"]		= WiFi.SSID();
 			} else {
 				st["wifi_mode"] = "AP";
 				st["ip_addr"]	= WiFi.softAPIP().toString();
-				st["ssid"]		= g_SC10_config.ap_ssid;
+				st["ssid"]		= g_A10_config.ap_ssid;
 			}
 
 			// config 직렬화
-			C10_ConfigManager::toJson(g_SC10_config, root["config"].to<JsonObject>());
+			CL_C10_ConfigManager::toJson(g_A10_config, root["config"].to<JsonObject>());
 
 			// presets 추가
 			JsonArray presets = root["presets"].to<JsonArray>();
-			for (int i = 0; i < SC10_PRESET_COUNT; i++) {
-				presets.add(G_SC10_PRESET_MODE_NAMES[i]);
+			for (int i = 0; i < EN_A10_PRESET_COUNT; i++) {
+				presets.add(g_A10_PRESET_MODE_NAMES_Arr[i]);
 			}
 
 			// 3. StaticJsonDocument를 AsyncResponseStream에 직접 직렬화하여 응답 생성
@@ -220,53 +220,53 @@ class W10_WebAPI {
           }
 
 			// 패치 전 스냅샷
-            int oldPreset = g_SC10_config.preset_mode_index;
-            int oldPin    = g_SC10_config.fan_pwm_pin;
-            int oldFreq   = g_SC10_config.pwm_frequency;
-            int oldRes    = g_SC10_config.pwm_resolution;
+            int oldPreset = g_A10_config.preset_mode_index;
+            int oldPin    = g_A10_config.fan_pwm_pin;
+            int oldFreq   = g_A10_config.pwm_frequency;
+            int oldRes    = g_A10_config.pwm_resolution;
 
 			
           bool v_wifiChanged = false;
-          C10_ConfigManager::patchFromJson(g_SC10_config, v_doc, v_wifiChanged);
-          C10_ConfigManager::save(g_SC10_config);
+          CL_C10_ConfigManager::patchFromJson(g_A10_config, v_doc, v_wifiChanged);
+          CL_C10_ConfigManager::save(g_A10_config);
 
 		  // 1) 프리셋 바뀌면 시뮬만 재시작
-          if (g_SC10_config.preset_mode_index != oldPreset) {
+          if (g_A10_config.preset_mode_index != oldPreset) {
               p_sim.applyCurrentPreset(true);
           }
 
           // 2) PWM 파라미터 변경 감지 → LEDC 재초기화
-          bool pwmChanged = (g_SC10_config.fan_pwm_pin != oldPin) ||
-                  (g_SC10_config.pwm_frequency != oldFreq) ||
-                  (g_SC10_config.pwm_resolution != oldRes);
+          bool pwmChanged = (g_A10_config.fan_pwm_pin != oldPin) ||
+                  (g_A10_config.pwm_frequency != oldFreq) ||
+                  (g_A10_config.pwm_resolution != oldRes);
 
 		  if (pwmChanged) {
               // 이전 핀 디태치
               ledcDetachPin(oldPin);
 
                // 채널 재설정 (채널 번호는 config에서 유지)
-              ledcSetup(g_SC10_config.pwm_channel,
-                  g_SC10_config.pwm_frequency,
-                  g_SC10_config.pwm_resolution);
+              ledcSetup(g_A10_config.pwm_channel,
+                  g_A10_config.pwm_frequency,
+                  g_A10_config.pwm_resolution);
 
              // 새 핀으로 재바인딩
-             ledcAttachPin(g_SC10_config.fan_pwm_pin, g_SC10_config.pwm_channel);
+             ledcAttachPin(g_A10_config.fan_pwm_pin, g_A10_config.pwm_channel);
 
              // 현재 요구되는 팬 출력을 재적용 (예: 0%로 안정화하거나, 직전 상태 유지)
              // 여기서는 안전하게 0%로 초기화 후 시뮬 tick에서 다시 설정되게 함
-             ledcWrite(g_SC10_config.pwm_channel, 0);
+             ledcWrite(g_A10_config.pwm_channel, 0);
 
-			 SC10_Logger::log(SC10_LOG_INFO,
+			 CL_D10_Logger::log(EN_L10_LOG_INFO,
                 "PWM reinit: pin %d->%d, freq %d->%d, res %d->%d",
-                 oldPin, g_SC10_config.fan_pwm_pin,
-                 oldFreq, g_SC10_config.pwm_frequency,
-                 oldRes, g_SC10_config.pwm_resolution);
+                 oldPin, g_A10_config.fan_pwm_pin,
+                 oldFreq, g_A10_config.pwm_frequency,
+                 oldRes, g_A10_config.pwm_resolution);
         }			
           ////p_sim.applyCurrentPreset(true);
 
           if (v_wifiChanged) {
-            SC10_Logger::log(SC10_LOG_INFO, "WiFi config changed. Re-init WiFi");
-            M10_WiFiManager::init(g_SC10_config, p_multi);
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "WiFi config changed. Re-init WiFi");
+            CL_M10_WiFiManager::init(g_A10_config, p_multi);
           }
           req->send(200, "application/json", "{\"message\":\"Config updated\"}");
         } });
@@ -276,7 +276,7 @@ class W10_WebAPI {
 		// -------------------
 		p_srv.on("/api/scan", HTTP_GET, [](AsyncWebServerRequest *req) {
 			bool   async = req->hasParam("async");
-			String j	 = M10_WiFiManager::scanNetworksJson(async);
+			String j	 = CL_M10_WiFiManager::scanNetworksJson(async);
 			auto  *res	 = req->beginResponse(200, "application/json", j);
 			addNoCache(res);
 			addCors(res);
@@ -306,7 +306,7 @@ class W10_WebAPI {
 		// /api/logs : 최근 로그 반환
 		// -------------------
 		p_srv.on("/api/logs", HTTP_GET, [](AsyncWebServerRequest *req) {
-			String j   = SC10_Logger::getLogsJson();
+			String j   = CL_D10_Logger::getLogsJson();
 			auto  *res = req->beginResponse(200, "application/json", j);
 			addNoCache(res);
 			addCors(res);
@@ -333,7 +333,7 @@ class W10_WebAPI {
 				req->send(401, "application/json", "{\"error\":\"unauthorized\"}");
 				return;
 			}
-			C10_ConfigManager::reset();
+			CL_C10_ConfigManager::reset();
 			req->send(200, "text/plain", "Factory reset... Reboot");
 			ESP.restart();
 		});

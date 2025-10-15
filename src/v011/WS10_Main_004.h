@@ -14,73 +14,73 @@
 //WS2812 PIN 21
 
 // 전체 오케스트레이션: 초기화/루프 + WebServer 조립
-class WindScapeSimulator {
+class CL_WS10_WindScapeSimulator {
    public:
-	WindScapeSimulator() : g_SC10_asyncWeb(80) {
+	CL_WS10_WindScapeSimulator() : g_WS10_asyncWeb(80) {
 	}
 
 	// 초기화: 설정 로드 → Wi-Fi → PWM → WebServer → 프리셋/시뮬 시작
-	void SC10_init(void) {
+	void init(void) {
 		if (!LittleFS.begin(true)) {
-			SC10_Logger::log(SC10_LOG_ERROR, "LittleFS mount failed");
+			CL_D10_Logger::log(EN_L10_LOG_ERROR, "LittleFS mount failed");
 		} else {
-			SC10_Logger::log(SC10_LOG_INFO, "LittleFS mounted");
+			CL_D10_Logger::log(EN_L10_LOG_INFO, "LittleFS mounted");
 		}
 
 		// 설정 로드(실패 시 기본값으로 진행)
-		C10_ConfigManager::load(g_SC10_config);
+		CL_C10_ConfigManager::load(g_A10_config);
 
-		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_010_C10_ConfigManager::loaded");
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "WS10_init_010_C10_ConfigManager::loaded");
 
 		// Wi-Fi 초기화
-		M10_WiFiManager::init(g_SC10_config, g_SC10_wifiMulti);
+		CL_M10_WiFiManager::init(g_A10_config, g_WS10_wifiMulti);
 
-		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_020_M10_WiFiManager::init");
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "WS10_init_020_M10_WiFiManager::init");
 
 		// PWM/핀
-		ledcSetup(g_SC10_config.pwm_channel, g_SC10_config.pwm_frequency, g_SC10_config.pwm_resolution);
+		ledcSetup(g_A10_config.pwm_channel, g_A10_config.pwm_frequency, g_A10_config.pwm_resolution);
 
-		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_031_SC10_ledcSetup");
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "WS10_init_031_SC10_ledcSetup");
 
-		ledcAttachPin(g_SC10_config.fan_pwm_pin, g_SC10_config.pwm_channel);
+		ledcAttachPin(g_A10_config.fan_pwm_pin, g_A10_config.pwm_channel);
 
-		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_032_ledcAttachPin");
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "WS10_init_032_ledcAttachPin");
 
-		//// // pinMode(g_SC10_config.fan_tach_pin, INPUT_PULLUP);
+		//// // pinMode(g_A10_config.fan_tach_pin, INPUT_PULLUP);
 
-		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_030_ledcSetup setup");
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "WS10_init_030_ledcSetup setup");
 
 		// WebServer
 
-		W10_WebAPI::init(g_SC10_asyncWeb, g_S10_sim, g_SC10_wifiMulti);
-		SC10_Logger::log(SC10_LOG_INFO, "W10_Webapi_init_040_");
+		CL_W10_WebAPI::init(g_WS10_asyncWeb, g_WS10_sim, g_WS10_wifiMulti);
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "W10_Webapi_init_040_");
 
 		
-		// W10_WebAPI::mountApi(g_SC10_asyncWeb, g_S10_sim, g_SC10_wifiMulti);
-		// SC10_Logger::log(SC10_LOG_INFO, "W10_init_060_SC10_WebAPI::mountApi");
+		// CL_W10_WebAPI::mountApi(g_WS10_asyncWeb, g_WS10_sim, g_WS10_wifiMulti);
+		// CL_D10_Logger::log(EN_L10_LOG_INFO, "W10_init_060_SC10_WebAPI::mountApi");
 
-		// W10_WebAPI::mountStatic(g_SC10_asyncWeb);
-		// SC10_Logger::log(SC10_LOG_INFO, "W10_init_040_SC10_WebAPI::mountStatic");
+		// CL_W10_WebAPI::mountStatic(g_WS10_asyncWeb);
+		// CL_D10_Logger::log(EN_L10_LOG_INFO, "W10_init_040_SC10_WebAPI::mountStatic");
 
-		g_S10_sim.begin(true);
-		SC10_Logger::log(SC10_LOG_INFO, "SC10_init_050_g_S10_sim.begin");
+		g_WS10_sim.begin(true);
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "WS10_init_050_g_WS10_sim.begin");
 
-		g_SC10_asyncWeb.begin();
-		SC10_Logger::log(SC10_LOG_INFO, "AsyncWebServer started");
+		g_WS10_asyncWeb.begin();
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "AsyncWebServer started");
 	}
 
 	// 루프: 시뮬레이션 계산
-	void SC10_run(void) {
-		g_S10_sim.tick();
+	void run(void) {
+		g_WS10_sim.tick();
 	}
 
 	// 현재 시뮬레이터 접근자 (필요 시)
-	S10_Simulation& sim() {
-		return g_S10_sim;
+	CL_S10_Simulation& sim() {
+		return g_WS10_sim;
 	}
 
    private:
-	AsyncWebServer	g_SC10_asyncWeb;
-	WiFiMulti		g_SC10_wifiMulti;
-	S10_Simulation  g_S10_sim;
+	AsyncWebServer	g_WS10_asyncWeb;
+	WiFiMulti		g_WS10_wifiMulti;
+	CL_S10_Simulation  g_WS10_sim;
 };

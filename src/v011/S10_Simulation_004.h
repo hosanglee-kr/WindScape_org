@@ -20,7 +20,7 @@
 // > 참고: 실제 돌풍 빈도는 gust_probability_base × (user_freq × phase_mul × wind_factor)로 계산되어
 // 유저 설정과 날씨 Phase에 의해 가중됩니다. 체감이 너무 드물거나 잦으면 base만 소폭 조절해도 충분합니다.
 
-class S10_Simulation {
+class CL_S10_Simulation {
    public:
 	// 외부에서 읽는 상태
 	bool  wind_simulation_active = false;
@@ -31,7 +31,7 @@ class S10_Simulation {
 	float wind_momentum			 = 0.0f;
 
 	// Phase
-	SC10_WindWeatherPhase_t current_weather_phase = SC10_WEATHER_PHASE_NORMAL;
+	SC10_WindWeatherPhase_t current_weather_phase = EN_A10_WEATHER_PHASE_NORMAL;
 	float					phase_start_time	  = 0.0f;
 	float					phase_duration		  = 120.0f;
 	float					phase_wind_min		  = 2.0f;
@@ -76,8 +76,8 @@ class S10_Simulation {
 
 	// 프리셋 이름 → 인덱스
 	bool getPresetIndexByName(const char* p_name, int& p_idx) {
-		for (int i = 0; i < SC10_PRESET_COUNT; i++) {
-			if (strcmp(p_name, G_SC10_PRESET_MODE_NAMES[i]) == 0) {
+		for (int i = 0; i < EN_A10_PRESET_COUNT; i++) {
+			if (strcmp(p_name, g_A10_PRESET_MODE_NAMES_Arr[i]) == 0) {
 				p_idx = i;
 				return true;
 			}
@@ -92,45 +92,45 @@ class S10_Simulation {
 		thermal_bubble_active  = false;
 		gust_intensity		   = 1.0f;
 
-		SC10_PresetMode_t v_preset = (SC10_PresetMode_t)g_SC10_config.preset_mode_index;
-		if (v_preset == SC10_PRESET_OFF) {
+		T_A10_PresetMode_t v_preset = (T_A10_PresetMode_t)g_A10_config.preset_mode_index;
+		if (v_preset == EN_A10_PRESET_OFF) {
 			fan_power_enabled = true;
-			float v_steady	  = (g_SC10_config.minimum_fan_speed > 0.0f) ? g_SC10_config.minimum_fan_speed : 12.0f;
+			float v_steady	  = (g_A10_config.minimum_fan_speed > 0.0f) ? g_A10_config.minimum_fan_speed : 12.0f;
 			applyFanSpeed(v_steady);
 			current_wind_speed = 0.5f;
 			target_wind_speed  = 0.5f;
 		} else {
 			// 환경값 스위치
 			switch (v_preset) {
-				case SC10_PRESET_COUNTRY:
+				case EN_A10_PRESET_COUNTRY:
 					base_wind_min			 = 0.7f;
 					base_wind_max			 = 3.4f;
 					gust_probability_base	 = 0.006f;
 					location_gust_strength	 = 1.35f;
 					thermal_bubble_frequency = 0.015f;
 					break;
-				case SC10_PRESET_MEDITERRANEAN:
+				case EN_A10_PRESET_MEDITERRANEAN:
 					base_wind_min			 = 1.6f;
 					base_wind_max			 = 3.8f;
 					gust_probability_base	 = 0.012f;
 					location_gust_strength	 = 1.55f;
 					thermal_bubble_frequency = 0.035f;
 					break;
-				case SC10_PRESET_OCEAN:
+				case EN_A10_PRESET_OCEAN:
 					base_wind_min			 = 1.8f;
 					base_wind_max			 = 5.5f;
 					gust_probability_base	 = 0.040f;
 					location_gust_strength	 = 2.1f;
 					thermal_bubble_frequency = 0.022f;
 					break;
-				case SC10_PRESET_MOUNTAIN:
+				case EN_A10_PRESET_MOUNTAIN:
 					base_wind_min			 = 2.2f;
 					base_wind_max			 = 7.5f;
 					gust_probability_base	 = 0.045f;
 					location_gust_strength	 = 2.2f;
 					thermal_bubble_frequency = 0.028f;
 					break;
-				case SC10_PRESET_PLAINS:
+				case EN_A10_PRESET_PLAINS:
 					base_wind_min			 	= 4.0f;
 					base_wind_max			 	= 8.8f;
 					gust_probability_base	 	= 0.070f;
@@ -139,7 +139,7 @@ class S10_Simulation {
 					break;
 
 				// ===== 신규 프리셋 5종 =====
-				case SC10_PRESET_HARBOR_BREEZE: {
+				case EN_A10_PRESET_HARBOR_BREEZE: {
 					// Harbor Breeze (항구 바람) 		// Base Wind: 5–12 mph ≈ 2.24–5.36 m/s
 					base_wind_min 				= 2.25f;
 					base_wind_max 				= 5.35f;
@@ -149,7 +149,7 @@ class S10_Simulation {
 					thermal_bubble_frequency 	= 0.026f;	// 해풍/수평 난류 + 약한 대류
 					break;
 				}
-				case SC10_PRESET_FOREST_CANOPY: {
+				case EN_A10_PRESET_FOREST_CANOPY: {
 					// Forest Canopy (숲 그늘 바람) 			// Base Wind: 3–9 mph ≈ 1.34–4.02 m/s
 					
 					base_wind_min 				= 1.35f;
@@ -159,7 +159,7 @@ class S10_Simulation {
 					thermal_bubble_frequency 	= 0.012f;	  // 수면/휴식용: 대류는 드물고 잔잔
 					break;
 				}
-				case SC10_PRESET_URBAN_SUNSET: {
+				case EN_A10_PRESET_URBAN_SUNSET: {
 					// Urban Sunset (도시 석양 바람)			// Base Wind: 4–11 mph ≈ 1.79–4.92 m/s
 					
 					base_wind_min 				= 1.80f;
@@ -171,7 +171,7 @@ class S10_Simulation {
 					thermal_bubble_frequency 	= 0.020f;		// 열섬효과로 완만한 대류
 					break;
 				}
-				case SC10_PRESET_TROPICAL_RAIN: {
+				case EN_A10_PRESET_TROPICAL_RAIN: {
 					// Tropical Rain (열대 소나기 바람)		// Base Wind: 7–18 mph ≈ 3.13–8.05 m/s
 					
 					base_wind_min 				= 3.15f;
@@ -183,7 +183,7 @@ class S10_Simulation {
 					thermal_bubble_frequency 	= 0.038f;		// 대류 활발 (소나기 전후)
 					break;
 				}
-				case SC10_PRESET_DESERT_NIGHT: {
+				case EN_A10_PRESET_DESERT_NIGHT: {
 					// Desert Night (사막의 밤 바람)		// Base Wind: 2–7 mph ≈ 0.89–3.13 m/s
 					
 					base_wind_min 				= 0.90f;
@@ -217,7 +217,7 @@ class S10_Simulation {
 		spectral_energy_buffer	   = 0.0f;
 		spectral_phase_accumulator = 0.0f;
 
-		current_weather_phase = SC10_WEATHER_PHASE_NORMAL;
+		current_weather_phase = EN_A10_WEATHER_PHASE_NORMAL;
 		phase_start_time	  = millis() / 1000.0f;
 		phase_duration		  = 120.0f;
 
@@ -232,16 +232,16 @@ class S10_Simulation {
 	// 팬 속도 반영 (강도/최소/최대 반영)
 	void applyFanSpeed(float p_speed_percent) {
 		if (!fan_power_enabled) {
-			ledcWrite(g_SC10_config.pwm_channel, 0);
+			ledcWrite(g_A10_config.pwm_channel, 0);
 			return;
 		}
 		float v_req		  = p_speed_percent / 100.0f;
-		float v_limit	  = g_SC10_config.fan_speed_limit / 100.0f;
-		float v_min		  = g_SC10_config.minimum_fan_speed / 100.0f;
-		float v_intensity = g_SC10_config.wind_intensity / 100.0f;
+		float v_limit	  = g_A10_config.fan_speed_limit / 100.0f;
+		float v_min		  = g_A10_config.minimum_fan_speed / 100.0f;
+		float v_intensity = g_A10_config.wind_intensity / 100.0f;
 
 		if (v_intensity <= 0.01f) {
-			ledcWrite(g_SC10_config.pwm_channel, 0);
+			ledcWrite(g_A10_config.pwm_channel, 0);
 			return;
 		}
 		if (wind_simulation_active) {
@@ -249,12 +249,12 @@ class S10_Simulation {
 		}
 		v_req = fmax(v_min, fmin(v_limit, v_req));
 
-		int v_levels = (1 << g_SC10_config.pwm_resolution) - 1;
+		int v_levels = (1 << g_A10_config.pwm_resolution) - 1;
 		int v_pwm	 = (int)(v_req * v_levels);
 		if (v_req <= 0.01f) {
 			v_pwm = 0;
 		}
-		ledcWrite(g_SC10_config.pwm_channel, v_pwm);
+		ledcWrite(g_A10_config.pwm_channel, v_pwm);
 	}
 
 	// Von Kármán 난류 합성
@@ -263,8 +263,8 @@ class S10_Simulation {
 			return;
 		}
 
-		float v_L	  = g_SC10_config.turbulence_length_scale;
-		float v_sigma = g_SC10_config.turbulence_intensity_sigma;
+		float v_L	  = g_A10_config.turbulence_length_scale;
+		float v_sigma = g_A10_config.turbulence_intensity_sigma;
 		float v_U	  = current_wind_speed;
 
 		if (v_U < 0.1f) {
@@ -325,7 +325,7 @@ class S10_Simulation {
 			float d = (prog - 0.6f) / 0.4f;
 			env		= 1.0f - powf(d, 1.3f);
 		}
-		float strength				 = g_SC10_config.thermal_bubble_strength * env;
+		float strength				 = g_A10_config.thermal_bubble_strength * env;
 		current_thermal_contribution = strength - 1.0f;
 	}
 
@@ -357,15 +357,15 @@ class S10_Simulation {
 			return;
 		}
 		// 새 돌풍 발생 확률
-		if ((millis() - last_gust_check) >= (unsigned long)g_SC10_config.gust_check_interval_ms) {
+		if ((millis() - last_gust_check) >= (unsigned long)g_A10_config.gust_check_interval_ms) {
 			last_gust_check	  = millis();
 			float base_prob	  = gust_probability_base;
-			float user_freq	  = g_SC10_config.gust_frequency / 100.0f;
+			float user_freq	  = g_A10_config.gust_frequency / 100.0f;
 			float wind_factor = 1.0f + (current_wind_speed / 8.9f) * 0.5f;
 			float phase_mul	  = 1.0f;
-			if (current_weather_phase == SC10_WEATHER_PHASE_CALM)
+			if (current_weather_phase == EN_A10_WEATHER_PHASE_CALM)
 				phase_mul = 0.3f * wind_factor;
-			else if (current_weather_phase == SC10_WEATHER_PHASE_STRONG)
+			else if (current_weather_phase == EN_A10_WEATHER_PHASE_STRONG)
 				phase_mul = 2.2f * wind_factor;
 			else
 				phase_mul = 0.9f * wind_factor;
@@ -375,10 +375,10 @@ class S10_Simulation {
 				gust_active		   = true;
 				gust_start_time	   = now;
 				float speed_factor = current_wind_speed / 6.7f;
-				if (current_weather_phase == SC10_WEATHER_PHASE_CALM) {
+				if (current_weather_phase == EN_A10_WEATHER_PHASE_CALM) {
 					gust_duration  = A10_randRange(3.0f, 8.0f);
 					gust_intensity = A10_randRange(1.08f, 1.33f);
-				} else if (current_weather_phase == SC10_WEATHER_PHASE_STRONG) {
+				} else if (current_weather_phase == EN_A10_WEATHER_PHASE_STRONG) {
 					gust_duration  = A10_randRange(0.8f, 3.3f);
 					gust_intensity = A10_randRange(1.3f, 1.3f + 0.9f * (1.0f + speed_factor * 0.3f));
 				} else {
@@ -394,21 +394,21 @@ class S10_Simulation {
 	void updateThermalCheck() {
 		if (!wind_simulation_active || thermal_bubble_active)
 			return;
-		if ((millis() - last_thermal_check) < (unsigned long)g_SC10_config.thermal_check_interval_ms)
+		if ((millis() - last_thermal_check) < (unsigned long)g_A10_config.thermal_check_interval_ms)
 			return;
 		last_thermal_check = millis();
 		float base		   = thermal_bubble_frequency;
 		float wind_factor  = 1.0f + (current_wind_speed / 8.0f) * 0.3f;
-		float phase_mul	   = (current_weather_phase == SC10_WEATHER_PHASE_CALM) ? 1.2f : (current_weather_phase == SC10_WEATHER_PHASE_STRONG) ? 0.7f
+		float phase_mul	   = (current_weather_phase == EN_A10_WEATHER_PHASE_CALM) ? 1.2f : (current_weather_phase == EN_A10_WEATHER_PHASE_STRONG) ? 0.7f
 																																			  : 1.0f;
 		float p			   = base * wind_factor * phase_mul;
 		if (A10_getRandom01() < p) {
 			thermal_bubble_active	  = true;
 			thermal_bubble_start_time = millis() / 1000.0f;
 			float dur				  = A10_randRange(8.0f, 14.0f);
-			if (current_weather_phase == SC10_WEATHER_PHASE_CALM)
+			if (current_weather_phase == EN_A10_WEATHER_PHASE_CALM)
 				dur *= 1.3f;
-			else if (current_weather_phase == SC10_WEATHER_PHASE_STRONG)
+			else if (current_weather_phase == EN_A10_WEATHER_PHASE_STRONG)
 				dur *= 0.8f;
 			thermal_bubble_duration = dur;
 		}
@@ -424,26 +424,26 @@ class S10_Simulation {
 
 		SC10_WindWeatherPhase_t old = current_weather_phase;
 		float					r	= A10_getRandom01();
-		if (old == SC10_WEATHER_PHASE_CALM) {
-			current_weather_phase = (r < 0.7f) ? SC10_WEATHER_PHASE_NORMAL : SC10_WEATHER_PHASE_STRONG;
-		} else if (old == SC10_WEATHER_PHASE_STRONG) {
-			current_weather_phase = (r < 0.7f) ? SC10_WEATHER_PHASE_NORMAL : SC10_WEATHER_PHASE_CALM;
+		if (old == EN_A10_WEATHER_PHASE_CALM) {
+			current_weather_phase = (r < 0.7f) ? EN_A10_WEATHER_PHASE_NORMAL : EN_A10_WEATHER_PHASE_STRONG;
+		} else if (old == EN_A10_WEATHER_PHASE_STRONG) {
+			current_weather_phase = (r < 0.7f) ? EN_A10_WEATHER_PHASE_NORMAL : EN_A10_WEATHER_PHASE_CALM;
 		} else {
 			if (r < 0.4f)
-				current_weather_phase = SC10_WEATHER_PHASE_CALM;
+				current_weather_phase = EN_A10_WEATHER_PHASE_CALM;
 			else if (r < 0.8f)
-				current_weather_phase = SC10_WEATHER_PHASE_NORMAL;
+				current_weather_phase = EN_A10_WEATHER_PHASE_NORMAL;
 			else
-				current_weather_phase = SC10_WEATHER_PHASE_STRONG;
+				current_weather_phase = EN_A10_WEATHER_PHASE_STRONG;
 		}
 
 		phase_start_time = now;
 		float span		 = base_wind_max - base_wind_min;
-		if (current_weather_phase == SC10_WEATHER_PHASE_CALM) {
+		if (current_weather_phase == EN_A10_WEATHER_PHASE_CALM) {
 			phase_duration = A10_randRange(90.0f, 210.0f);
 			phase_wind_min = base_wind_min;
 			phase_wind_max = base_wind_min + span * 0.6f;
-		} else if (current_weather_phase == SC10_WEATHER_PHASE_NORMAL) {
+		} else if (current_weather_phase == EN_A10_WEATHER_PHASE_NORMAL) {
 			phase_duration = A10_randRange(120.0f, 300.0f);
 			phase_wind_min = base_wind_min + span * 0.15f;
 			phase_wind_max = base_wind_min + span * 0.85f;
@@ -468,11 +468,11 @@ class S10_Simulation {
 		new_t			  = (new_t + mid * bias) / (1.0f + bias);
 		target_wind_speed = new_t;
 
-		float var		= g_SC10_config.wind_variability / 100.0f;
+		float var		= g_A10_config.wind_variability / 100.0f;
 		float base_rate = 0.0f;
-		if (current_weather_phase == SC10_WEATHER_PHASE_CALM)
+		if (current_weather_phase == EN_A10_WEATHER_PHASE_CALM)
 			base_rate = 0.08f + var * 0.12f;
-		else if (current_weather_phase == SC10_WEATHER_PHASE_STRONG)
+		else if (current_weather_phase == EN_A10_WEATHER_PHASE_STRONG)
 			base_rate = 0.25f + var * 0.35f;
 		else
 			base_rate = 0.15f + var * 0.25f;
@@ -480,7 +480,7 @@ class S10_Simulation {
 		float U = current_wind_speed;
 		if (U < 0.1f)
 			U = 0.1f;
-		float time_scale = g_SC10_config.turbulence_length_scale / U;
+		float time_scale = g_A10_config.turbulence_length_scale / U;
 		base_rate *= (1.0f + time_scale * 0.1f);
 		wind_change_rate = base_rate * A10_randRange(0.7f, 1.7f);
 	}
@@ -490,7 +490,7 @@ class S10_Simulation {
 		unsigned long v_now = millis();
 		// 지터 포함
 		static uint32_t s_jitter = 0;
-		if (v_now - last_wind_sim_update < (unsigned long)(g_SC10_config.wind_sim_interval_ms + (s_jitter % 300))) {
+		if (v_now - last_wind_sim_update < (unsigned long)(g_A10_config.wind_sim_interval_ms + (s_jitter % 300))) {
 			yield();
 			return;
 		}
@@ -520,7 +520,7 @@ class S10_Simulation {
 		float change_th = 0.5f + (v_current / 20.0f);
 		float close_ch	= 30.0f;
 		float far_ch	= 6.0f;
-		if (g_SC10_config.wind_variability > 70.0f) {
+		if (g_A10_config.wind_variability > 70.0f) {
 			close_ch *= 1.5f;
 			far_ch *= 1.5f;
 		}

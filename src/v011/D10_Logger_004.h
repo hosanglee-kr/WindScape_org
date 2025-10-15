@@ -8,19 +8,19 @@
 #include <vector>
 
 typedef enum {
-	SC10_LOG_DEBUG,
-	SC10_LOG_INFO,
-	SC10_LOG_WARN,
-	SC10_LOG_ERROR
-} SC10_LogLevel;
+	EN_L10_LOG_DEBUG,
+	EN_L10_LOG_INFO,
+	EN_L10_LOG_WARN,
+	EN_L10_LOG_ERROR
+} T_D10_LogLevel;
 
-class SC10_Logger {
+class CL_D10_Logger {
    public:
-	static void setLevel(SC10_LogLevel p_lvl) {
+	static void setLevel(T_D10_LogLevel p_lvl) {
 		g_logLevel = p_lvl;
 	}
 
-	static void log(SC10_LogLevel p_lvl, const char* p_fmt, ...) {
+	static void log(T_D10_LogLevel p_lvl, const char* p_fmt, ...) {
 		if (p_lvl < g_logLevel){
 			return;
 		}
@@ -49,18 +49,18 @@ class SC10_Logger {
 	}
 
    private:
-	static inline SC10_LogLevel		 g_logLevel = SC10_LOG_INFO;
+	static inline T_D10_LogLevel		 g_logLevel = EN_L10_LOG_INFO;
 	static inline std::deque<String> g_logs;
 
-	static const char* levelStr(SC10_LogLevel l) {
+	static const char* levelStr(T_D10_LogLevel l) {
 		switch (l) {
-			case SC10_LOG_DEBUG:
+			case EN_L10_LOG_DEBUG:
 				return "DEBUG";
-			case SC10_LOG_INFO:
+			case EN_L10_LOG_INFO:
 				return "INFO";
-			case SC10_LOG_WARN:
+			case EN_L10_LOG_WARN:
 				return "WARN";
-			case SC10_LOG_ERROR:
+			case EN_L10_LOG_ERROR:
 				return "ERROR";
 		}
 		return "";

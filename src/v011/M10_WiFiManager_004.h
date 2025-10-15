@@ -3,7 +3,7 @@
 /* 사용법
 1. 연결과 분기
 
-bool sta = M10_WiFiManager::init(g_config, wifiMulti);
+bool sta = CL_M10_WiFiManager::init(g_config, wifiMulti);
 if (sta) {
   // STA 경로
 } else {
@@ -11,9 +11,9 @@ if (sta) {
 }
 
 2.wifi scan 비동기 사용
-M10_WiFiManager::scanNetworksJson(true);   // 1차: 트리거
+CL_M10_WiFiManager::scanNetworksJson(true);   // 1차: 트리거
 delay(1500);                                // 스캔 대기
-String nets = M10_WiFiManager::scanNetworksJson(false); // 2차: 수집
+String nets = CL_M10_WiFiManager::scanNetworksJson(false); // 2차: 수집
 
 */
 
@@ -25,7 +25,7 @@ String nets = M10_WiFiManager::scanNetworksJson(false); // 2차: 수집
 #include "A10_Const_004.h"
 #include "D10_Logger_004.h"
 
-class M10_WiFiManager {
+class CL_M10_WiFiManager {
    public:
 	// 연결 상태 캐시
 	static bool s_staConnected;
@@ -36,19 +36,19 @@ class M10_WiFiManager {
 		if (v_attached)
 			return;
 		WiFi.onEvent([](arduino_event_id_t, arduino_event_info_t) {
-			SC10_Logger::log(SC10_LOG_INFO, "WiFi event: STA started");
+			CL_D10_Logger::log(EN_L10_LOG_INFO, "WiFi event: STA started");
 		},
 					 ARDUINO_EVENT_WIFI_STA_START);
 
 		WiFi.onEvent([](arduino_event_id_t, arduino_event_info_t) {
-			SC10_Logger::log(SC10_LOG_INFO, "WiFi event: STA got IP: %s",
+			CL_D10_Logger::log(EN_L10_LOG_INFO, "WiFi event: STA got IP: %s",
 							 WiFi.localIP().toString().c_str());
 			s_staConnected = true;
 		},
 					 ARDUINO_EVENT_WIFI_STA_GOT_IP);
 
 		WiFi.onEvent([](arduino_event_id_t, arduino_event_info_t) {
-			SC10_Logger::log(SC10_LOG_WARN, "WiFi event: STA disconnected");
+			CL_D10_Logger::log(EN_L10_LOG_WARN, "WiFi event: STA disconnected");
 			s_staConnected = false;
 		},
 					 ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
@@ -58,7 +58,7 @@ class M10_WiFiManager {
 
 	// AP/STA 초기화 (STA 실패 시 AP로 폴백, 성공 시 AP 끄기)
 	// 반환: true = STA 연결됨, false = AP 모드로 폴백
-	static bool init(WindConfig &p_cfg, WiFiMulti &p_multi, uint8_t p_apChannel = 1,
+	static bool init(ST_A10_WindConfig &p_cfg, WiFiMulti &p_multi, uint8_t p_apChannel = 1,
 					 uint8_t p_staMaxTries = 15) {
 		attachWiFiEvents();
 
@@ -84,7 +84,7 @@ class M10_WiFiManager {
 			for (int i = 0; i < p_cfg.sta_network_count; i++) {
 				// 비밀번호는 로그 금지
 				p_multi.addAP(p_cfg.sta_networks[i].ssid, p_cfg.sta_networks[i].password);
-				SC10_Logger::log(SC10_LOG_INFO, "WiFi STA added: %s", p_cfg.sta_networks[i].ssid);
+				CL_D10_Logger::log(EN_L10_LOG_INFO, "WiFi STA added: %s", p_cfg.sta_networks[i].ssid);
 			}
 
 			const uint32_t v_tryStart = millis();
@@ -103,13 +103,13 @@ class M10_WiFiManager {
 			}
 
 			if (WiFi.status() == WL_CONNECTED) {
-				SC10_Logger::log(SC10_LOG_INFO, "\nSTA Connected: %s, IP: %s",
+				CL_D10_Logger::log(EN_L10_LOG_INFO, "\nSTA Connected: %s, IP: %s",
 								 WiFi.SSID().c_str(), WiFi.localIP().toString().c_str());
 				// STA 붙었으면 AP는 끔
 				WiFi.softAPdisconnect(true);
 				return true;
 			}
-			SC10_Logger::log(SC10_LOG_WARN, "\nSTA connect failed. Fallback to AP");
+			CL_D10_Logger::log(EN_L10_LOG_WARN, "\nSTA connect failed. Fallback to AP");
 		}
 
 		// ---------- AP 기동 ----------
@@ -125,7 +125,7 @@ class M10_WiFiManager {
 			// 간단 난수 비번 생성(개발 편의) — 제품에선 고정/UI 입력 권장
 			uint32_t r = (uint32_t)esp_random();
 			snprintf(v_apPass, sizeof(v_apPass), "ap_%08X", (unsigned)r);
-			SC10_Logger::log(SC10_LOG_WARN,
+			CL_D10_Logger::log(EN_L10_LOG_WARN,
 							 "AP password too short(<8). Using temporary password: %s", v_apPass);
 		}
 		*/
@@ -137,9 +137,9 @@ class M10_WiFiManager {
 
 		bool v_apOk = WiFi.softAP(p_cfg.ap_ssid, v_apPass, p_apChannel, false /*hidden*/, 4 /*max conn*/);
 		if (!v_apOk) {
-			SC10_Logger::log(SC10_LOG_ERROR, "AP start failed");
+			CL_D10_Logger::log(EN_L10_LOG_ERROR, "AP start failed");
 		} else {
-			SC10_Logger::log(SC10_LOG_INFO, "AP started: %s, IP: %s",
+			CL_D10_Logger::log(EN_L10_LOG_INFO, "AP started: %s, IP: %s",
 							 p_cfg.ap_ssid, WiFi.softAPIP().toString().c_str());
 		}
 		s_staConnected = false;
@@ -209,4 +209,4 @@ class M10_WiFiManager {
 };
 
 // 정적 멤버 정의
-bool M10_WiFiManager::s_staConnected = false;
+bool CL_M10_WiFiManager::s_staConnected = false;

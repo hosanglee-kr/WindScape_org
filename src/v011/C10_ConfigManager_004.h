@@ -13,25 +13,25 @@
 #include "A10_Const_004.h"
 #include "D10_Logger_004.h"
 
-class C10_ConfigManager {
+class CL_C10_ConfigManager {
    public:
 	// -----------------------------------------------------------------------------
 	// 설정 로드: /json/config_003.json → 파싱 실패 시 백업(/json/config_003.json.bak) 복구 시도
 	// -----------------------------------------------------------------------------
-	static bool load(WindConfig &p_cfg) {
+	static bool load(ST_A10_WindConfig &p_cfg) {
 		// if (!LittleFS.begin(true)) {
-		// 	SC10_Logger::log(SC10_LOG_ERROR, "LittleFS mount failed");
+		// 	CL_D10_Logger::log(EN_L10_LOG_ERROR, "LittleFS mount failed");
 		// 	return false;
 		// }
 
 		if (!LittleFS.exists(A10_Const::CONFIG_FILE)) {
-			SC10_Logger::log(SC10_LOG_WARN, "Config not found. Using defaults");
+			CL_D10_Logger::log(EN_L10_LOG_WARN, "Config not found. Using defaults");
 			return false;  // 기본값으로 진행
 		}
 
 		File v_f = LittleFS.open(A10_Const::CONFIG_FILE, "r");
 		if (!v_f) {
-			SC10_Logger::log(SC10_LOG_ERROR, "Config open failed");
+			CL_D10_Logger::log(EN_L10_LOG_ERROR, "Config open failed");
 			return false;
 		}
 
@@ -40,7 +40,7 @@ class C10_ConfigManager {
 		v_f.close();
 
 		if (v_err) {
-			SC10_Logger::log(SC10_LOG_ERROR, "Config parse failed: %s", v_err.c_str());
+			CL_D10_Logger::log(EN_L10_LOG_ERROR, "Config parse failed: %s", v_err.c_str());
 			// 백업 복구 시도
 			return restoreBackup(p_cfg);
 		}
@@ -51,7 +51,7 @@ class C10_ConfigManager {
 	// -----------------------------------------------------------------------------
 	// 설정 저장: 기존 파일을 .bak 으로 백업 후 새 파일 기록
 	// -----------------------------------------------------------------------------
-	static bool save(WindConfig &p_cfg) {
+	static bool save(ST_A10_WindConfig &p_cfg) {
 		// 기존 파일을 백업으로 이동
 		if (LittleFS.exists(A10_Const::CONFIG_FILE)) {
 			LittleFS.remove(A10_Const::BACKUP_FILE);
@@ -65,17 +65,17 @@ class C10_ConfigManager {
 
 		File v_f = LittleFS.open(A10_Const::CONFIG_FILE, "w");
 		if (!v_f) {
-			SC10_Logger::log(SC10_LOG_ERROR, "Config open for write failed");
+			CL_D10_Logger::log(EN_L10_LOG_ERROR, "Config open for write failed");
 			return false;
 		}
 
 		if (serializeJson(v_doc, v_f) == 0) {
-			SC10_Logger::log(SC10_LOG_ERROR, "Config write failed");
+			CL_D10_Logger::log(EN_L10_LOG_ERROR, "Config write failed");
 			v_f.close();
 			return false;
 		}
 		v_f.close();
-		SC10_Logger::log(SC10_LOG_INFO, "Config saved");
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "Config saved");
 		return true;
 	}
 
@@ -88,7 +88,7 @@ class C10_ConfigManager {
 		(void)a;
 		(void)b;
 
-		g_SC10_config.api_key[0] = '\0';
+		g_A10_config.api_key[0] = '\0';
 
 		return true;
 	}
@@ -96,15 +96,15 @@ class C10_ConfigManager {
 	// -----------------------------------------------------------------------------
 	// 백업 복구: .bak → 파싱해서 구조체에 반영
 	// -----------------------------------------------------------------------------
-	static bool restoreBackup(WindConfig &p_cfg) {
+	static bool restoreBackup(ST_A10_WindConfig &p_cfg) {
 		if (!LittleFS.exists(A10_Const::BACKUP_FILE)) {
-			SC10_Logger::log(SC10_LOG_WARN, "No backup to restore");
+			CL_D10_Logger::log(EN_L10_LOG_WARN, "No backup to restore");
 			return false;
 		}
 
 		File v_b = LittleFS.open(A10_Const::BACKUP_FILE, "r");
 		if (!v_b) {
-			SC10_Logger::log(SC10_LOG_ERROR, "Backup open failed");
+			CL_D10_Logger::log(EN_L10_LOG_ERROR, "Backup open failed");
 			return false;
 		}
 
@@ -113,11 +113,11 @@ class C10_ConfigManager {
 		v_b.close();
 
 		if (v_err) {
-			SC10_Logger::log(SC10_LOG_ERROR, "Backup parse failed: %s", v_err.c_str());
+			CL_D10_Logger::log(EN_L10_LOG_ERROR, "Backup parse failed: %s", v_err.c_str());
 			return false;
 		}
 
-		SC10_Logger::log(SC10_LOG_WARN, "Restored from backup");
+		CL_D10_Logger::log(EN_L10_LOG_WARN, "Restored from backup");
 		return parseJson(p_cfg, v_doc);
 	}
 
@@ -126,8 +126,8 @@ class C10_ConfigManager {
 	//  - 유효 필드만 조건 적용(존재하지 않는 필드는 건드리지 않음)
 	// -----------------------------------------------------------------------------
 
-	// C10_ConfigManager::patchFromJson()
-	static bool patchFromJson(WindConfig &p_cfg, const JsonDocument &p_doc, bool &p_wifiChanged) {
+	// CL_C10_ConfigManager::patchFromJson()
+	static bool patchFromJson(ST_A10_WindConfig &p_cfg, const JsonDocument &p_doc, bool &p_wifiChanged) {
 		p_wifiChanged		 = false;
 		JsonObjectConst root = p_doc.as<JsonObjectConst>();
 
@@ -136,7 +136,7 @@ class C10_ConfigManager {
 			const char *k = root["security"]["api_key"] | "";
 			strncpy(p_cfg.api_key, k, G_A10_API_KEY_MAX_LEN);
 			p_cfg.api_key[G_A10_API_KEY_MAX_LEN] = '\0';
-			SC10_Logger::log(SC10_LOG_INFO, "API Key updated via patch.");
+			CL_D10_Logger::log(EN_L10_LOG_INFO, "API Key updated via patch.");
 		}
 		// hw
 		JsonObjectConst h = root["hw"];
@@ -151,8 +151,8 @@ class C10_ConfigManager {
 		if (!s.isNull()) {
 			if (!s["preset"].isNull()) {
 				const char *name = s["preset"];
-				for (int i = 0; i < SC10_PRESET_COUNT; i++) {
-					if (strcmp(name, G_SC10_PRESET_MODE_NAMES[i]) == 0) {
+				for (int i = 0; i < EN_A10_PRESET_COUNT; i++) {
+					if (strcmp(name, g_A10_PRESET_MODE_NAMES_Arr[i]) == 0) {
 						p_cfg.preset_mode_index = i;
 						break;
 					}
@@ -201,8 +201,8 @@ class C10_ConfigManager {
 					const char *ssid = net["ssid"] | "";
 					const char *pass = net["pass"] | "";
 					if (*ssid) {
-						strlcpy(p_cfg.sta_networks[p_cfg.sta_network_count].ssid, ssid, sizeof(A10_StaCredential::ssid));
-						strlcpy(p_cfg.sta_networks[p_cfg.sta_network_count].password, pass, sizeof(A10_StaCredential::password));
+						strlcpy(p_cfg.sta_networks[p_cfg.sta_network_count].ssid, ssid, sizeof(ST_A10_StaCredential::ssid));
+						strlcpy(p_cfg.sta_networks[p_cfg.sta_network_count].password, pass, sizeof(ST_A10_StaCredential::password));
 						p_cfg.sta_network_count++;
 					}
 				}
@@ -217,7 +217,7 @@ class C10_ConfigManager {
 	// -----------------------------------------------------------------------------
 	// 직렬화(쓰기) 오버로드 1: JsonObject에 직접 채우기 (서브트리 기록용)
 	// -----------------------------------------------------------------------------
-	static void toJson(const WindConfig &p_config, JsonObject p_root) {
+	static void toJson(const ST_A10_WindConfig &p_config, JsonObject p_root) {
 		// --- hw (신규) ---
 		p_root["hw"]["pwm_pin"]	 	= p_config.fan_pwm_pin;
 		p_root["hw"]["pwm_freq"] 	= p_config.pwm_frequency;
@@ -233,7 +233,7 @@ class C10_ConfigManager {
 		p_root["sim"]["turb_sig"]	 = p_config.turbulence_intensity_sigma;
 		p_root["sim"]["therm_str"]	 = p_config.thermal_bubble_strength;
 		p_root["sim"]["therm_rad"]	 = p_config.thermal_bubble_radius;
-		p_root["sim"]["preset"]		 = G_SC10_PRESET_MODE_NAMES[p_config.preset_mode_index];
+		p_root["sim"]["preset"]		 = g_A10_PRESET_MODE_NAMES_Arr[p_config.preset_mode_index];
 
 		// --- timing ---
 		p_root["timing"]["sim_int"]		= p_config.wind_sim_interval_ms;
@@ -261,7 +261,7 @@ class C10_ConfigManager {
 	// -----------------------------------------------------------------------------
 	// 직렬화(쓰기) 오버로드 2: JsonDocument 루트에 생성 후 채우기 (전체 파일 기록용)
 	// -----------------------------------------------------------------------------
-	static void toJson(const WindConfig &p_config, JsonDocument &p_doc) {
+	static void toJson(const ST_A10_WindConfig &p_config, JsonDocument &p_doc) {
 		JsonObject v_root = p_doc.to<JsonObject>();
 		toJson(p_config, v_root);
 	}
@@ -270,7 +270,7 @@ class C10_ConfigManager {
 	// -----------------------------------------------------------------------------
 	// 내부: JSON → 구조체 파싱 (읽기 전용 뷰 사용: JsonObjectConst/JsonArrayConst)
 	// -----------------------------------------------------------------------------
-	static bool parseJson(WindConfig &p_config, JsonDocument &p_doc) {
+	static bool parseJson(ST_A10_WindConfig &p_config, JsonDocument &p_doc) {
 		JsonObjectConst v_root = p_doc.as<JsonObjectConst>();  // v7: const 뷰로 읽기
 
 		if (!v_root["security"]["api_key"].isNull()) {
@@ -290,8 +290,8 @@ class C10_ConfigManager {
 				break;
 			const char *v_ssid = v_net["ssid"] | "";
 			const char *v_pass = v_net["pass"] | "";
-			strlcpy(p_config.sta_networks[p_config.sta_network_count].ssid, 	v_ssid, sizeof(A10_StaCredential::ssid));
-			strlcpy(p_config.sta_networks[p_config.sta_network_count].password, v_pass, sizeof(A10_StaCredential::password));
+			strlcpy(p_config.sta_networks[p_config.sta_network_count].ssid, 	v_ssid, sizeof(ST_A10_StaCredential::ssid));
+			strlcpy(p_config.sta_networks[p_config.sta_network_count].password, v_pass, sizeof(ST_A10_StaCredential::password));
 			p_config.sta_network_count++;
 		}
 
@@ -319,8 +319,8 @@ class C10_ConfigManager {
 		// --- 프리셋 (문자열 이름일 수도 있으니 방어적 처리) ---
 		if (!v_root["sim"]["preset"].isNull()) {
 			const char *v_preset = v_root["sim"]["preset"];
-			for (int v_i = 0; v_i < SC10_PRESET_COUNT; ++v_i) {
-				if (strcmp(v_preset, G_SC10_PRESET_MODE_NAMES[v_i]) == 0) {
+			for (int v_i = 0; v_i < EN_A10_PRESET_COUNT; ++v_i) {
+				if (strcmp(v_preset, g_A10_PRESET_MODE_NAMES_Arr[v_i]) == 0) {
 					p_config.preset_mode_index = v_i;
 					break;
 				}
