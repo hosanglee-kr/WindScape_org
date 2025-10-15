@@ -111,7 +111,8 @@ class CL_W10_WebAPI {
 		(void)h;
 
 		// (옵션) 개별 경로도 호환성 위해 남겨둠
-		p_srv.on("/SC10_main_014.js", HTTP_GET, [](AsyncWebServerRequest *req) {
+		p_srv.on(A10_Const::JS_URI, HTTP_GET, [](AsyncWebServerRequest *req) {
+		// p_srv.on("/SC10_main_014.js", HTTP_GET, [](AsyncWebServerRequest *req) {
 			if (LittleFS.exists(A10_Const::JS_FILE)) {
 				req->send(LittleFS, A10_Const::JS_FILE, "application/javascript");
 			} else {
@@ -122,7 +123,8 @@ class CL_W10_WebAPI {
 			}
 		});
 
-		p_srv.on("/SC10_main_014.css", HTTP_GET, [](AsyncWebServerRequest *req) {
+		p_srv.on(A10_Const::CSS_URI, HTTP_GET, [](AsyncWebServerRequest *req) {
+		// p_srv.on("/SC10_main_014.css", HTTP_GET, [](AsyncWebServerRequest *req) {
 			if (LittleFS.exists(A10_Const::CSS_FILE)) {
 				req->send(LittleFS, A10_Const::CSS_FILE, "text/css");
 			} else {
