@@ -8,7 +8,7 @@
 #include "A10_Const_004.h"
 #include "D10_Logger_004.h"
 
-#include "P10_PWM_ctrl_004.h"
+#include "P10_PWM_ctrl_005.h"
 
 // 바람 시뮬레이션(Phase/난류/돌풍/열기포/팬 제어)
 // - 원본의 Von Kármán 스펙트럼 합성, Phase 전환/히스토리, 목표재생성, 지터/yield 포함
