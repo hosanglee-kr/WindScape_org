@@ -220,12 +220,14 @@ class CL_W10_WebAPI {
             req->send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
             return;
           }
+			/*
 
 			// 패치 전 스냅샷
             int oldPreset = g_A10_config.preset_mode_index;
             int oldPin    = g_A10_config.fan_pwm_pin;
             int oldFreq   = g_A10_config.pwm_frequency;
             int oldRes    = g_A10_config.pwm_resolution;
+			*/
 
 			
           bool v_wifiChanged = false;
@@ -250,9 +252,11 @@ class CL_W10_WebAPI {
 			  p_P10_pwm.set_pwmFrequency(g_A10_config.pwm_frequency);
 			  p_P10_pwm.set_pwmResolution(g_A10_config.pwm_resolution);
 			  
+			  // 현재 요구되는 팬 출력을 재적용 (예: 0%로 안정화하거나, 직전 상태 유지)
+             // 여기서는 안전하게 0%로 초기화 후 시뮬 tick에서 다시 설정되게 함
 			  p_P10_pwm.set_pwmDuty(0.0f);
 
-			  
+			  /*
               // 이전 핀 디태치
               ledcDetachPin(oldPin);
 
@@ -267,6 +271,7 @@ class CL_W10_WebAPI {
              // 현재 요구되는 팬 출력을 재적용 (예: 0%로 안정화하거나, 직전 상태 유지)
              // 여기서는 안전하게 0%로 초기화 후 시뮬 tick에서 다시 설정되게 함
              ledcWrite(g_A10_config.pwm_channel, 0);
+             */
 
 			 CL_D10_Logger::log(EN_L10_LOG_INFO,
                 "PWM reinit: pin %d->%d, freq %d->%d, res %d->%d",
