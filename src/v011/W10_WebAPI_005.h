@@ -26,7 +26,7 @@
 #include "M10_WiFiManager_004.h"
 #include "S10_Simulation_004.h"
 
-#include "P10_PWM_ctrl_004.h"
+#include "P10_PWM_ctrl_005.h"
 
 class CL_W10_WebAPI {
    public:
@@ -163,13 +163,22 @@ class CL_W10_WebAPI {
 			st["sim_active"] = p_sim.wind_simulation_active;
 			st["wind_speed"] = roundf(p_sim.current_wind_speed * 100.0f) / 100.0f;
 
-			// ▽▽ 추가/변경: PWM raw + percent 동시 제공 ▽▽
+           
+
+			// PWM raw + percent 동시 제공 ▽▽
+            st["fan_pwm"] = p_P10_pwm.getDutyRaw();
+            st["fan_pwm_percent"] = p_P10_pwm.getDutyPercent();
+				
+            /*
 			const int	duty_raw	 = ledcRead(g_A10_config.pwm_channel);
 			const int	levels		 = (1 << g_A10_config.pwm_resolution) - 1;
 			const float duty_percent = (levels > 0) ? (100.0f * duty_raw / (float)levels) : 0.0f;
 
 			st["fan_pwm"]		  = duty_raw;  // (기존 호환) raw duty 유지
 			st["fan_pwm_percent"] = duty_percent;
+			*/
+
+			
 			// (선택) 클라이언트 계산용으로 해상도도 내려주면 더 좋음
 			root["config"]["pwm"]["resolution"] = g_A10_config.pwm_resolution;
 
