@@ -241,7 +241,16 @@ class CL_W10_WebAPI {
                   (g_A10_config.pwm_resolution != oldRes);
 
 		  if (v_pwmChanged) {
-			  p_P10_pwm.set_pwmPin();
+			  
+			  p_P10_pwm.set_pwmPin(g_A10_config.fan_pwm_pin);
+
+			  p_P10_pwm.set_pwmChannel(g_A10_config.pwm_channel);
+			  p_P10_pwm.set_pwmFrequency(g_A10_config.pwm_frequency);
+			  p_P10_pwm.set_pwmResolution(g_A10_config.pwm_resolution);
+			  
+			  p_P10_pwm.set_pwmDuty(0.0f);
+
+			  
               // 이전 핀 디태치
               ledcDetachPin(oldPin);
 
