@@ -251,6 +251,7 @@ class CL_W10_WebAPI {
           // 2) PWM 파라미터 변경 감지 → LEDC 재초기화
 			if(g_A10_config.fan_pwm_pin != oldPin){
 				p_P10_pwm.set_pwmPin(g_A10_config.fan_pwm_pin);
+				delay(10);  // PWM 재부착 안정화 (ESP32 ghost pulse 방지)
 			}
 			if(g_A10_config.pwm_channel != oldChannel){
 				p_P10_pwm.set_pwmChannel(g_A10_config.pwm_channel);
