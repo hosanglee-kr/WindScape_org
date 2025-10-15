@@ -11,6 +11,8 @@
 #include "W10_WebAPI_004.h"
 #include "M10_WiFiManager_004.h"
 
+#include "P10_PWM_ctrl_004.h"
+
 //WS2812 PIN 21
 
 // 전체 오케스트레이션: 초기화/루프 + WebServer 조립
@@ -80,7 +82,8 @@ class CL_WS10_WindScapeSimulator {
 	}
 
    private:
-	AsyncWebServer	g_WS10_asyncWeb;
-	WiFiMulti		g_WS10_wifiMulti;
+	AsyncWebServer	   g_WS10_asyncWeb;
+	WiFiMulti		   g_WS10_wifiMulti;
 	CL_S10_Simulation  g_WS10_sim;
+    CL_P10_PWM         g_P10_pwm;
 };
