@@ -15,7 +15,7 @@ public:
         pwmChannel = ch;
         pwmFreq = freq;
         pwmRes = res;
-        setup();
+        init();
     }
 
     void init() {
@@ -32,17 +32,17 @@ public:
 
     void set_pwmChannel(uint8_t newCh) {
         pwmChannel = newCh;
-        setup();
+        init();
     }
 
     void set_pwmFrequency(uint32_t freq) {
         pwmFreq = freq;
-        setup();
+        init();
     }
 
     void set_pwmResolution(uint8_t bits) {
         pwmRes = bits;
-        setup();
+        init();
     }
 
     void set_pwmDuty(float percent) {
