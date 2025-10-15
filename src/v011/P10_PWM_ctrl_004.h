@@ -1,4 +1,4 @@
-// P10_PWMController_004.h
+// P10_PWM_ctrl_004.h
 
 #pragma once
 #include <Arduino.h>
@@ -67,4 +67,4 @@ private:
 };
 
 
-extern CL_P10_PWM g_P10_pwm;
+//extern CL_P10_PWM g_P10_pwm;
