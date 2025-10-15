@@ -152,7 +152,7 @@ class CL_W10_WebAPI {
 		// -------------------
 		// /api/state : 현재 상태 조회
 		// -------------------
-		p_srv.on("/api/state", HTTP_GET, [&p_sim](AsyncWebServerRequest *req) {
+		p_srv.on("/api/state", HTTP_GET, [&p_sim, &p_P10_pwm](AsyncWebServerRequest *req) {
 				
             JsonDocument doc;
 
