@@ -246,11 +246,7 @@ class CL_S10_Simulation {
 			// ledcWrite(g_A10_config.pwm_channel, 0);
 			return;
 		}
-		float v_req		  = p_speed_percent / 100.0f;
-		float v_limit	  = g_A10_config.fan_speed_limit / 100.0f;
-		float v_min		  = g_A10_config.minimum_fan_speed / 100.0f;
-		float v_intensity = g_A10_config.wind_intensity / 100.0f;
-
+	
 		if (v_intensity <= 0.01f) {
 			ledcWrite(g_A10_config.pwm_channel, 0);
 			return;
