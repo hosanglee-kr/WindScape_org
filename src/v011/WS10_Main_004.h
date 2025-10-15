@@ -39,14 +39,29 @@ class CL_WS10_WindScapeSimulator {
 
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "WS10_init_020_M10_WiFiManager::init");
 
-		g_P10_pwm.init(uint8_t pin, uint8_t ch, uint32_t freq, uint8_t res) {
-        
+		g_P10_pwm.init(
+      g_A10_config.fan_pwm_pin, 
+      g_A10_config.pwm_channel, 
+      g_A10_config.pwm_frequency,
+      g_A10_config.pwm_resolution
+   );
+   CL_D10_Logger::log(EN_L10_LOG_INFO, "WS10_init_031_P10_PWM_INIT");
+   
+   /*
 		// PWM/핀
-		ledcSetup(g_A10_config.pwm_channel, g_A10_config.pwm_frequency, g_A10_config.pwm_resolution);
+		ledcSetup(
+      g_A10_config.pwm_channel,
+      g_A10_config.pwm_frequency,
+      g_A10_config.pwm_resolution
+   );
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "WS10_init_031_SC10_ledcSetup");
 
-		ledcAttachPin(g_A10_config.fan_pwm_pin, g_A10_config.pwm_channel);
+		ledcAttachPin(
+      g_A10_config.fan_pwm_pin,
+      g_A10_config.pwm_channel
+   );
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "WS10_init_032_ledcAttachPin");
+   */
 
 		//// // pinMode(g_A10_config.fan_tach_pin, INPUT_PULLUP);
 
