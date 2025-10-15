@@ -69,7 +69,7 @@ class CL_WS10_WindScapeSimulator {
 
 		// WebServer
 
-		CL_W10_WebAPI::init(g_WS10_asyncWeb, g_WS10_sim, g_WS10_wifiMulti);
+		CL_W10_WebAPI::init(g_WS10_asyncWeb, g_WS10_sim, g_WS10_wifiMulti, g_P10_pwm);
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "W10_Webapi_init_040_");
 
 		
