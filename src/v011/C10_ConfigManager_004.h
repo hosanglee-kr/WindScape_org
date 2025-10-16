@@ -88,6 +88,11 @@ class CL_C10_ConfigManager {
 		(void)a;
 		(void)b;
 
+		g_A10_config.fan_pwm_pin = 6;
+        g_A10_config.pwm_frequency = 25000;
+        g_A10_config.pwm_resolution = 10;
+        save(g_A10_config);  // 기본값 저장
+
 		g_A10_config.api_key[0] = '\0';
 
 		return true;
