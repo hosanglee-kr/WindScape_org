@@ -29,15 +29,15 @@ class CL_C10_ConfigManager {
 			return false;  // 기본값으로 진행
 		}
 
-		File v_f = LittleFS.open(A10_Const::CONFIG_FILE, "r");
-		if (!v_f) {
+		File v_file = LittleFS.open(A10_Const::CONFIG_FILE, "r");
+		if (!v_file) {
 			CL_D10_Logger::log(EN_L10_LOG_ERROR, "Config open failed");
 			return false;
 		}
 
 		JsonDocument		 v_doc;
-		DeserializationError v_err = deserializeJson(v_doc, v_f);
-		v_f.close();
+		DeserializationError v_err = deserializeJson(v_doc, v_file);
+		v_file.close();
 
 		if (v_err) {
 			CL_D10_Logger::log(EN_L10_LOG_ERROR, "Config parse failed: %s", v_err.c_str());
@@ -63,18 +63,18 @@ class CL_C10_ConfigManager {
 		JsonObject v_root = v_doc.to<JsonObject>();
 		toJson(p_cfg, v_root);
 
-		File v_f = LittleFS.open(A10_Const::CONFIG_FILE, "w");
-		if (!v_f) {
+		File v_file = LittleFS.open(A10_Const::CONFIG_FILE, "w");
+		if (!v_file) {
 			CL_D10_Logger::log(EN_L10_LOG_ERROR, "Config open for write failed");
 			return false;
 		}
 
-		if (serializeJson(v_doc, v_f) == 0) {
+		if (serializeJson(v_doc, v_file) == 0) {
 			CL_D10_Logger::log(EN_L10_LOG_ERROR, "Config write failed");
-			v_f.close();
+			v_file.close();
 			return false;
 		}
-		v_f.close();
+		v_file.close();
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "Config saved");
 		return true;
 	}
@@ -142,6 +142,7 @@ class CL_C10_ConfigManager {
 		JsonObjectConst h = root["hw"];
 		if (!h.isNull()) {
 			if (!h["pwm_pin"].isNull())		p_cfg.fan_pwm_pin 		= h["pwm_pin"].as<int>();
+			if (!h["pwm_channel"].isNull())	p_cfg.pwm_channel 		= h["pwm_channel"].as<int>();
 			if (!h["pwm_freq"].isNull())	p_cfg.pwm_frequency 	= h["pwm_freq"].as<int>();
 			if (!h["pwm_res"].isNull())		p_cfg.pwm_resolution 	= h["pwm_res"].as<int>();
 		}
@@ -219,21 +220,23 @@ class CL_C10_ConfigManager {
 	// -----------------------------------------------------------------------------
 	static void toJson(const ST_A10_WindConfig &p_config, JsonObject p_root) {
 		// --- hw (신규) ---
-		p_root["hw"]["pwm_pin"]	 	= p_config.fan_pwm_pin;
-		p_root["hw"]["pwm_freq"] 	= p_config.pwm_frequency;
-		p_root["hw"]["pwm_res"]	 	= p_config.pwm_resolution;
+		p_root["hw"]["pwm_pin"]	 		= p_config.fan_pwm_pin;
+		p_root["hw"]["pwm_channel"]		= p_config.pwm_channel;
+
+		p_root["hw"]["pwm_freq"] 		= p_config.pwm_frequency;
+		p_root["hw"]["pwm_res"]	 		= p_config.pwm_resolution;
 
 		// --- sim ---
-		p_root["sim"]["intensity"]	 = p_config.wind_intensity;
-		p_root["sim"]["gust_freq"]	 = p_config.gust_frequency;
-		p_root["sim"]["variability"] = p_config.wind_variability;
-		p_root["sim"]["fan_limit"]	 = p_config.fan_speed_limit;
-		p_root["sim"]["min_fan"]	 = p_config.minimum_fan_speed;
-		p_root["sim"]["turb_len"]	 = p_config.turbulence_length_scale;
-		p_root["sim"]["turb_sig"]	 = p_config.turbulence_intensity_sigma;
-		p_root["sim"]["therm_str"]	 = p_config.thermal_bubble_strength;
-		p_root["sim"]["therm_rad"]	 = p_config.thermal_bubble_radius;
-		p_root["sim"]["preset"]		 = g_A10_PRESET_MODE_NAMES_Arr[p_config.preset_mode_index];
+		p_root["sim"]["intensity"]	 	= p_config.wind_intensity;
+		p_root["sim"]["gust_freq"]	 	= p_config.gust_frequency;
+		p_root["sim"]["variability"] 	= p_config.wind_variability;
+		p_root["sim"]["fan_limit"]	 	= p_config.fan_speed_limit;
+		p_root["sim"]["min_fan"]	 	= p_config.minimum_fan_speed;
+		p_root["sim"]["turb_len"]	 	= p_config.turbulence_length_scale;
+		p_root["sim"]["turb_sig"]	 	= p_config.turbulence_intensity_sigma;
+		p_root["sim"]["therm_str"]	 	= p_config.thermal_bubble_strength;
+		p_root["sim"]["therm_rad"]	 	= p_config.thermal_bubble_radius;
+		p_root["sim"]["preset"]		 	= g_A10_PRESET_MODE_NAMES_Arr[p_config.preset_mode_index];
 
 		// --- timing ---
 		p_root["timing"]["sim_int"]		= p_config.wind_sim_interval_ms;
@@ -297,6 +300,9 @@ class CL_C10_ConfigManager {
 
 		// --- hw  ---
 		p_config.fan_pwm_pin	   	= v_root["hw"]["pwm_pin"] | p_config.fan_pwm_pin;
+		p_config.pwm_channel	   	= v_root["hw"]["pwm_channel"] | p_config.pwm_channel;
+		
+
 		p_config.pwm_frequency  	= v_root["hw"]["pwm_freq"] | p_config.pwm_frequency;
 		p_config.pwm_resolution 	= v_root["hw"]["pwm_res"] | p_config.pwm_resolution;
 
