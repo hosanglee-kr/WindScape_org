@@ -144,6 +144,7 @@
         const body = {
             hw: {
                 pwm_pin: Number($('#pwm_pin').value),
+                pwm_channel: Number($('#pwm_channel').value),
                 pwm_freq: Number($('#pwm_freq').value),
                 pwm_res: Number($('#pwm_res').value),
             }
@@ -153,10 +154,12 @@
             return showToast('GPIO6~11은 Flash용 핀이므로 PWM 불가', 'warn');
         if (body.hw.pwm_pin >= 34)
             return showToast('GPIO34 이상은 입력전용으로 PWM 불가', 'warn');
-        if (body.hw.pwm_freq < 100 || body.hw.pwm_freq > 40000)
-            return showToast('PWM 주파수는 100~40000Hz 사이여야 합니다.', 'warn');
-        if (body.hw.pwm_res < 8 || body.hw.pwm_res > 12)
-            return showToast('PWM 해상도는 8~12bit 사이여야 합니다.', 'warn');
+        if (body.hw.pwm_channel >= 0 && body.hw.pwm_channel <= 5)
+            return showToast('PWM 채널 0~5만 가능', 'warn');
+        if (body.hw.pwm_freq < 25000 || body.hw.pwm_freq > 40000)
+            return showToast('PWM 주파수는 25,000 ~ 40,000Hz 사이여야 합니다.', 'warn');
+        if (body.hw.pwm_res < 8 || body.hw.pwm_res > 10)
+            return showToast('PWM 해상도는 8~10bit 사이여야 합니다.', 'warn');
 
         await fetchApi('/api/config', 'POST', body, 'PWM 설정 저장');
         refreshState();
@@ -335,6 +338,7 @@
             // 3. HW 설정 수집
             hw: {
                 pwm_pin: Number($('#pwm_pin').value),
+                pwm_channel: Number($('#pwm_channel').value),
                 pwm_freq: Number($('#pwm_freq').value),
                 pwm_res: Number($('#pwm_res').value),
             }

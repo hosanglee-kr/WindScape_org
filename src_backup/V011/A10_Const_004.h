@@ -142,40 +142,43 @@ struct ST_A10_StaCredential {
  * - JSON 직렬화/역직렬화 대상
  * - Wi-Fi, 하드웨어, 시뮬레이션 관련 설정 포함
  */
+
 struct ST_A10_WindConfig {
-    char api_key[G_A10_API_KEY_MAX_LEN + 1] 			= {'\0'}; 				// 0-terminated
+	
+    char 					api_key[G_A10_API_KEY_MAX_LEN + 1] 	= {'\0'}; 				// 0-terminated
 
 	// --- Wi-Fi 설정 ---
-	int				   		wifi_mode 					= G_A10_WIFI_MODE_STA;	///< 현재 Wi-Fi 모드
 	ST_A10_StaCredential 	sta_networks[A10_Const::MAX_STA_NETWORKS];			///< STA 네트워크 목록
-	int				   sta_network_count 			= 0;					///< 실제 저장된 STA 네트워크 수
-	char			   ap_ssid[32]		 			= "SC10_Config_AP";		///< AP 모드 SSID
-	char			   ap_password[64]	 			= "newpassword";		///< AP 모드 Password
+
+	int				   		sta_network_count 			= 0;					///< 실제 저장된 STA 네트워크 수
+	int				   		wifi_mode 					= G_A10_WIFI_MODE_STA;	///< 현재 Wi-Fi 모드
+	char			   		ap_ssid[32]		 			= "SC10_Config_AP";		///< AP 모드 SSID
+	char			   		ap_password[64]	 			= "newpassword";		///< AP 모드 Password
 
 	// --- 하드웨어/시스템 상수 ---
-	int 				fan_pwm_pin	   				= 6; 					// 14;	 ///< 팬 PWM 출력 핀
-	int 				fan_tach_pin   				= 5;	 				///< 팬 회전 센서 입력 핀
+	int 					fan_pwm_pin	   				= 6; 					// 14;	 ///< 팬 PWM 출력 핀
+	int 					fan_tach_pin   				= 5;	 				///< 팬 회전 센서 입력 핀
 
-	int 				pwm_frequency  				= 25000;				///< PWM 주파수
-	int 				pwm_channel	   				= 0;					///< PWM 채널
-	int 				pwm_resolution 				= 10;	 				///< PWM 해상도 (비트)
+	int 					pwm_frequency  				= 25000;				///< PWM 주파수
+	int 					pwm_channel	   				= 0;					///< PWM 채널
+	int 					pwm_resolution 				= 10;	 				///< PWM 해상도 (비트)
 
-	int 				wind_sim_interval_ms	  	= 250;   				///< 풍속 시뮬레이션 업데이트 주기 (ms)
-	int 				gust_check_interval_ms	  	= 500;   				///< 돌풍 체크 주기 (ms)
-	int 				thermal_check_interval_ms 	= 2000;  				///< 열기포 체크 주기 (ms)
+	int 					wind_sim_interval_ms	  	= 250;   				///< 풍속 시뮬레이션 업데이트 주기 (ms)
+	int 					gust_check_interval_ms	  	= 500;   				///< 돌풍 체크 주기 (ms)
+	int 					thermal_check_interval_ms 	= 2000;  				///< 열기포 체크 주기 (ms)
 
 	// --- 시뮬레이션 설정 ---			
-	float 				wind_intensity			 	= 100.0f;				///< 전체 풍속 강도 (퍼센트)
-	float 				gust_frequency			 	= 30.0f;				///< 돌풍 발생 빈도 (퍼센트)
-	float 				wind_variability			= 40.0f;				///< 풍속 변동성 (퍼센트)
-	float 				fan_speed_limit			 	= 80.0f;				///< 팬 속도 제한 (퍼센트)
-	float 				minimum_fan_speed			= 0.0f;					///< 최소 팬 속도 (퍼센트)
-	float 				turbulence_length_scale	 	= 30.0f;				///< 난류 길이 척도
-	float 				turbulence_intensity_sigma 	= 0.3f;					///< 난류 강도 분산 값
-	float 				thermal_bubble_strength	 	= 1.8f;					///< 열기포 강도
-	float 				thermal_bubble_radius		= 15.0f;				///< 열기포 반경
+	float 					wind_intensity			 	= 100.0f;				///< 전체 풍속 강도 (퍼센트)
+	float 					gust_frequency			 	= 30.0f;				///< 돌풍 발생 빈도 (퍼센트)
+	float 					wind_variability			= 40.0f;				///< 풍속 변동성 (퍼센트)
+	float 					fan_speed_limit			 	= 80.0f;				///< 팬 속도 제한 (퍼센트)
+	float 					minimum_fan_speed			= 0.0f;					///< 최소 팬 속도 (퍼센트)
+	float 					turbulence_length_scale	 	= 30.0f;				///< 난류 길이 척도
+	float 					turbulence_intensity_sigma 	= 0.3f;					///< 난류 강도 분산 값
+	float 					thermal_bubble_strength	 	= 1.8f;					///< 열기포 강도
+	float 					thermal_bubble_radius		= 15.0f;				///< 열기포 반경
 
-	int 				preset_mode_index 			= EN_A10_PRESET_OCEAN;	///< 현재 선택된 프리셋 모드 인덱스
+	int 					preset_mode_index 			= EN_A10_PRESET_OCEAN;	///< 현재 선택된 프리셋 모드 인덱스
 };
 
 // 전역 설정 인스턴스 (헤더 온리: inline로 ODR 방지)

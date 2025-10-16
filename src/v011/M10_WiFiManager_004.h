@@ -22,7 +22,7 @@ String nets = CL_M10_WiFiManager::scanNetworksJson(false); // 2차: 수집
 #include <WiFi.h>
 #include <WiFiMulti.h>
 
-#include "A10_Const_004.h"
+#include "A10_Const_005.h"
 #include "D10_Logger_004.h"
 
 class CL_M10_WiFiManager {

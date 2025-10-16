@@ -89,18 +89,18 @@ public:
     // ==============================
     void toJson(JsonDocument& doc) {
         JsonObject pwm = doc["pwm"].to<JsonObject>();
-        pwm["pin"] = pwmPin;
-        pwm["ch"] = pwmChannel;
-        pwm["freq"] = pwmFreq;
-        pwm["res"] = pwmRes;
+        pwm["pin"]          = pwmPin;
+        pwm["ch"]           = pwmChannel;
+        pwm["freq"]         = pwmFreq;
+        pwm["res"]          = pwmRes;
         pwm["duty_percent"] = getDutyPercent();
     }
 
 private:
-    uint8_t pwmPin = 6;
-    uint8_t pwmChannel = 0;
-    uint32_t pwmFreq = 25000;
-    uint8_t pwmRes = 10;
+    uint8_t pwmPin      = 6;
+    uint8_t pwmChannel  = 0;
+    uint32_t pwmFreq    = 25000;
+    uint8_t pwmRes      = 10;
 };
 
 // ✅ WebAPI 등에서 접근 가능하도록 extern 선언

@@ -10,7 +10,7 @@
 #include <ArduinoJson.h>
 #include <LittleFS.h>
 
-#include "A10_Const_004.h"
+#include "A10_Const_005.h"
 #include "D10_Logger_004.h"
 
 class CL_C10_ConfigManager {
@@ -24,12 +24,12 @@ class CL_C10_ConfigManager {
 		// 	return false;
 		// }
 
-		if (!LittleFS.exists(A10_Const::CONFIG_FILE)) {
+		if (!LittleFS.exists(A10_Const::CONFIG_JSON_FILE)) {
 			CL_D10_Logger::log(EN_L10_LOG_WARN, "Config not found. Using defaults");
 			return false;  // 기본값으로 진행
 		}
 
-		File v_file = LittleFS.open(A10_Const::CONFIG_FILE, "r");
+		File v_file = LittleFS.open(A10_Const::CONFIG_JSON_FILE, "r");
 		if (!v_file) {
 			CL_D10_Logger::log(EN_L10_LOG_ERROR, "Config open failed");
 			return false;
@@ -53,9 +53,9 @@ class CL_C10_ConfigManager {
 	// -----------------------------------------------------------------------------
 	static bool save(ST_A10_WindConfig &p_cfg) {
 		// 기존 파일을 백업으로 이동
-		if (LittleFS.exists(A10_Const::CONFIG_FILE)) {
-			LittleFS.remove(A10_Const::BACKUP_FILE);
-			LittleFS.rename(A10_Const::CONFIG_FILE, A10_Const::BACKUP_FILE);
+		if (LittleFS.exists(A10_Const::CONFIG_JSON_FILE)) {
+			LittleFS.remove(A10_Const::CONFIG_JSON_FILE_BACKUP);
+			LittleFS.rename(A10_Const::CONFIG_JSON_FILE, A10_Const::CONFIG_JSON_FILE_BACKUP);
 		}
 
 		JsonDocument v_doc;
@@ -63,7 +63,7 @@ class CL_C10_ConfigManager {
 		JsonObject v_root = v_doc.to<JsonObject>();
 		toJson(p_cfg, v_root);
 
-		File v_file = LittleFS.open(A10_Const::CONFIG_FILE, "w");
+		File v_file = LittleFS.open(A10_Const::CONFIG_JSON_FILE, "w");
 		if (!v_file) {
 			CL_D10_Logger::log(EN_L10_LOG_ERROR, "Config open for write failed");
 			return false;
@@ -83,31 +83,34 @@ class CL_C10_ConfigManager {
 	// 공장 초기화: 설정/백업 파일 삭제
 	// -----------------------------------------------------------------------------
 	static bool reset() {
-		bool a = LittleFS.remove(A10_Const::CONFIG_FILE);
-		bool b = LittleFS.remove(A10_Const::BACKUP_FILE);
+		bool a = LittleFS.remove(A10_Const::CONFIG_JSON_FILE);
+		bool b = LittleFS.remove(A10_Const::CONFIG_JSON_FILE_BACKUP);
 		(void)a;
 		(void)b;
 
-		g_A10_config.fan_pwm_pin = 6;
-        g_A10_config.pwm_frequency = 25000;
-        g_A10_config.pwm_resolution = 10;
-        save(g_A10_config);  // 기본값 저장
+		initDefaultConfig(g_A10_config);
+		// g_A10_config.fan_pwm_pin 		= 6;
+        // g_A10_config.pwm_frequency 		= 25000;
+        // g_A10_config.pwm_resolution 	= 10;
+		// g_A10_config.api_key[0] 		= '\0';
 
-		g_A10_config.api_key[0] = '\0';
+		save(g_A10_config);  // 기본값 저장
+
 
 		return true;
 	}
+
 
 	// -----------------------------------------------------------------------------
 	// 백업 복구: .bak → 파싱해서 구조체에 반영
 	// -----------------------------------------------------------------------------
 	static bool restoreBackup(ST_A10_WindConfig &p_cfg) {
-		if (!LittleFS.exists(A10_Const::BACKUP_FILE)) {
+		if (!LittleFS.exists(A10_Const::CONFIG_JSON_FILE_BACKUP)) {
 			CL_D10_Logger::log(EN_L10_LOG_WARN, "No backup to restore");
 			return false;
 		}
 
-		File v_b = LittleFS.open(A10_Const::BACKUP_FILE, "r");
+		File v_b = LittleFS.open(A10_Const::CONFIG_JSON_FILE_BACKUP, "r");
 		if (!v_b) {
 			CL_D10_Logger::log(EN_L10_LOG_ERROR, "Backup open failed");
 			return false;
@@ -218,8 +221,6 @@ class CL_C10_ConfigManager {
 		return true;
 	}
 
-
-
 	// -----------------------------------------------------------------------------
 	// 직렬화(쓰기) 오버로드 1: JsonObject에 직접 채우기 (서브트리 기록용)
 	// -----------------------------------------------------------------------------
@@ -251,7 +252,6 @@ class CL_C10_ConfigManager {
 		JsonObject sec	   				= p_root["security"].to<JsonObject>();
 		sec["api_key_set"] 				= (p_config.api_key[0] != '\0');	// true/false만 노출
 														// 키 원문은 내보내지 않음
-
 		// --- wifi ---
 		JsonObject v_w	 = p_root["wifi"].to<JsonObject>();
 		v_w["wifi_mode"] = p_config.wifi_mode;
@@ -307,7 +307,6 @@ class CL_C10_ConfigManager {
 		p_config.fan_pwm_pin	   	= v_root["hw"]["pwm_pin"] | p_config.fan_pwm_pin;
 		p_config.pwm_channel	   	= v_root["hw"]["pwm_channel"] | p_config.pwm_channel;
 		
-
 		p_config.pwm_frequency  	= v_root["hw"]["pwm_freq"] | p_config.pwm_frequency;
 		p_config.pwm_resolution 	= v_root["hw"]["pwm_res"] | p_config.pwm_resolution;
 

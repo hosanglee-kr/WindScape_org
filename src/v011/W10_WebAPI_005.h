@@ -20,7 +20,7 @@
 #include <LittleFS.h>
 #include <Update.h>
 
-#include "A10_Const_004.h"
+#include "A10_Const_005.h"
 #include "C10_ConfigManager_004.h"
 #include "D10_Logger_004.h"
 #include "M10_WiFiManager_004.h"
@@ -125,15 +125,6 @@ class CL_W10_WebAPI {
             v_jsonObj_status["fan_pwm"] = p_P10_pwm.getDutyRaw();
             v_jsonObj_status["fan_pwm_percent"] = p_P10_pwm.getDutyPercent();
 				
-            /*
-			const int	duty_raw	 = ledcRead(g_A10_config.pwm_channel);
-			const int	levels		 = (1 << g_A10_config.pwm_resolution) - 1;
-			const float duty_percent = (levels > 0) ? (100.0f * duty_raw / (float)levels) : 0.0f;
-
-			v_jsonObj_status["fan_pwm"]		  = duty_raw;  // (기존 호환) raw duty 유지
-			v_jsonObj_status["fan_pwm_percent"] = duty_percent;
-			*/
-
 			
 			// (선택) 클라이언트 계산용으로 해상도도 내려주면 더 좋음
 			v_jsonVar_root["config"]["pwm"]["resolution"] = g_A10_config.pwm_resolution;
@@ -347,7 +338,7 @@ class CL_W10_WebAPI {
 			JsonDocument v_doc;
 
 			v_doc["fw_version"]	 = A10_Const::FW_VERSION;
-			v_doc["config_file"] = A10_Const::CONFIG_FILE;
+			v_doc["config_file"] = A10_Const::CONFIG_JSON_FILE;
 			
 			String v_resp_jsonstring;
 			serializeJson(v_doc, v_resp_jsonstring);
