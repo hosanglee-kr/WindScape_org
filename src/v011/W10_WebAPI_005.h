@@ -102,7 +102,64 @@ class CL_W10_WebAPI {
 	// ======================================================
 	// 정적 파일 서빙
 	// ======================================================
-	static void mountStatic(AsyncWebServer &p_srv) {
+    // ------------------------------------------------------
+    // mountStatic (유지보수성 강화 버전)
+    // ------------------------------------------------------
+    static void mountStatic(AsyncWebServer &p_srv) {
+	    struct StaticRoute {
+		    const char *uri;
+		    const char *path;
+		    const char *mime;
+	    };
+    
+	    static const StaticRoute ROUTES[] = {
+		    { A10_Const::HTML_URI, A10_Const::HTML_FILE, "text/html" },
+		    { A10_Const::CSS_URI,  A10_Const::CSS_FILE,  "text/css" },
+		    { A10_Const::JS_URI,   A10_Const::JS_FILE,   "application/javascript" }
+	    };
+    
+	    // 공통 응답 헤더 적용
+	    auto applyHeaders = [](AsyncWebServerResponse *res, bool noCache = false) {
+		    if (noCache) addNoCache(res);
+		    addCors(res);
+	    };
+    
+	    // 파일 응답 헬퍼
+	    auto serveFile = [&](const StaticRoute &r) {
+		    p_srv.on(r.uri, HTTP_GET, [=](AsyncWebServerRequest *req) {
+			    if (LittleFS.exists(r.path)) {
+				    req->send(LittleFS, r.path, r.mime);
+			    } else {
+				    String msg = String("/* missing file: ") + r.path + " */";
+				    auto *res  = req->beginResponse(200, r.mime, msg);
+				    applyHeaders(res, true);
+				    req->send(res);
+			    }
+		    });
+	    };
+    
+	    // 루트 HTML 서빙 (기본 페이지)
+	    auto &h = p_srv.serveStatic("/", LittleFS, "/html/")
+				      .setDefaultFile(A10_Const::HTML_FILE)
+				      .setCacheControl("max-age=86400");
+	    (void)h;
+    
+	    // ROUTES 등록 (HTML/JS/CSS)
+	    for (auto &r : ROUTES) serveFile(r);
+    
+	    // OPTIONS 프리플라이트 (브라우저 CORS 사전 요청 대응)
+	    p_srv.onNotFound([](AsyncWebServerRequest *req) {
+		    if (req->method() == HTTP_OPTIONS) {
+			    auto *res = req->beginResponse(204);
+			    addCors(res);
+			    req->send(res);
+			    return;
+		    }
+		    req->send(404, "text/plain", "Not found");
+	    });
+    }
+
+	static void mountStatic_old(AsyncWebServer &p_srv) {
 		// /html/ 폴더를 기본 루트로 서비스
 		// → / 요청 시 index.html 자동 매핑
 		auto &h = p_srv.serveStatic("/", LittleFS, "/html/")
