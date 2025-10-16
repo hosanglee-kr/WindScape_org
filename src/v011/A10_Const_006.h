@@ -4,7 +4,7 @@
 
 #pragma once
 /*
- * SC10_Const_004.h
+ * SC10_Const_006.h
  * - WindScape 프로젝트에서 공통적으로 사용되는 상수, 타입, 기본 구조 정의
  * - 다른 모듈(SC10_ConfigManager, SC10_WindScape, SC10_WebAPI 등)에서 참조
  * - 네이밍 규칙:
@@ -112,6 +112,10 @@ static const char* g_A10_PRESET_MODE_NAMES_Arr[] = {
     "Desert Night-사막밤"
 };
 
+#define G_A10_WIFI_SSID_LEN		32
+#define G_A10_WIFI_PWD_LEN		64
+
+
 // ====================================================================================
 // Wi-Fi STA Credential 구조체 정의
 // ====================================================================================
@@ -122,57 +126,57 @@ static const char* g_A10_PRESET_MODE_NAMES_Arr[] = {
  * - Password: 최대 64바이트
  */
 struct ST_A10_StaCredential {
-	char ssid[32];
-	char password[64];
+	char ssid[G_A10_WIFI_SSID_LEN];
+	char password[G_A10_WIFI_PWD_LEN];
 };
 
 // ====================================================================================
-// ST_A10_WindConfig 구조체
+// ST_A10_WindConfig 구조체 (최적화 버전)
 // ====================================================================================
 #define G_A10_API_KEY_MAX_LEN 64
 
-/**
- * @brief WindScape의 전체 구성(설정) 데이터 구조체
- * - JSON 직렬화/역직렬화 대상
- * - Wi-Fi, 하드웨어, 시뮬레이션 관련 설정 포함
- */
-
-// --- 메인 설정 구조체 ---
-typedef struct {
+typedef struct __attribute__((packed)) {
     // [security]
-    char 	api_key[G_A10_API_KEY_MAX_LEN + 1];
+    char api_key[G_A10_API_KEY_MAX_LEN + 1];
 
-    // [hw] 하드웨어
-    int 	fan_pwm_pin;     					// 팬 PWM 핀 번호 (예: 6)
-    int 	pwm_channel;     					// ESP32 LEDC 채널 (예: 0)
-    int 	pwm_frequency;   					// PWM 주파수 (Hz)
-    int 	pwm_resolution;  					// PWM 해상도 (bit)
+    // ------------------------------------------------------
+    // [sim] 시뮬레이션 파라미터 (float 우선 배치 → alignment 최소화)
+    // ------------------------------------------------------
+    float wind_intensity;              // 바람 강도 (0.0 ~ 1.0)
+    float gust_frequency;              // 돌풍 발생 빈도 (Hz)
+    float wind_variability;            // 바람 변동성
+    float fan_speed_limit;             // 최대 팬 속도 제한 (%)
+    float minimum_fan_speed;           // 최소 팬 속도 (%)
+    float turbulence_length_scale;     // 난류 길이 스케일
+    float turbulence_intensity_sigma;  // 난류 강도 시그마
+    float thermal_bubble_strength;     // 열기포 강도
+    float thermal_bubble_radius;       // 열기포 반경
 
-    // [sim] 시뮬레이션
-    int 	preset_mode_index;        			// 현재 프리셋 모드 인덱스 (EN_A10_PRESET_MODE)
-    float 	wind_intensity;         			// 바람 강도 (0.0 ~ 1.0)
-    float 	gust_frequency;         			// 돌풍 발생 빈도 (Hz)
-    float 	wind_variability;       			// 바람 변동성
-    float 	fan_speed_limit;        			// 최대 팬 속도 제한 (0.0 ~ 1.0)
-    float 	minimum_fan_speed;      			// 최소 팬 속도 (0.0 ~ 1.0)
-    float 	turbulence_length_scale; 			// 난류 길이 스케일
-    float 	turbulence_intensity_sigma; 		// 난류 강도 시그마
-    float 	thermal_bubble_strength;    		// 열기포 강도
-    float 	thermal_bubble_radius;      		// 열기포 반경
+    // ------------------------------------------------------
+    // [hw] 하드웨어 설정
+    // ------------------------------------------------------
+    int16_t fan_pwm_pin;               // PWM 핀 (ESP32: -1 ~ 48)
+    uint8_t pwm_channel;               // PWM 채널 (0~7)
+    uint8_t pwm_resolution;            // PWM 해상도 (8~16)
+    uint32_t pwm_frequency;            // PWM 주파수 (Hz)
 
-    // [timing] 타이밍
-    int 	wind_sim_interval_ms;     			// 바람 시뮬레이션 갱신 간격 (ms)
-    int 	gust_check_interval_ms;   			// 돌풍 검사 간격 (ms)
-    int 	thermal_check_interval_ms; 			// 열기포 검사 간격 (ms)
+    // ------------------------------------------------------
+    // [sim/timing]
+    // ------------------------------------------------------
+    uint16_t wind_sim_interval_ms;     // 시뮬레이션 주기
+    uint16_t gust_check_interval_ms;   // 돌풍 검사 주기
+    uint16_t thermal_check_interval_ms;// 열기포 검사 주기
+    uint8_t  preset_mode_index;        // 프리셋 인덱스 (0~10)
 
+    // ------------------------------------------------------
     // [wifi]
-    int 	wifi_mode;                			// Wi-Fi 모드 (AP, STA 등)
-    char 	ap_ssid[32];             			// AP 모드 SSID
-    char 	ap_password[64];         			// AP 모드 비밀번호
-    int 	sta_network_count;        			// 저장된 STA 네트워크 수
+    // ------------------------------------------------------
+    uint8_t wifi_mode;                 // 0=AP, 1=STA
+    uint8_t sta_network_count;         // 저장된 STA 네트워크 수
+    char ap_ssid[G_A10_WIFI_SSID_LEN];
+    char ap_password[G_A10_WIFI_PWD_LEN];
     ST_A10_StaCredential sta_networks[A10_Const::MAX_STA_NETWORKS];
 } ST_A10_WindConfig;
-
 
 
 // 전역 설정 인스턴스 (헤더 온리: inline로 ODR 방지)
