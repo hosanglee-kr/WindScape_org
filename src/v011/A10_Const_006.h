@@ -25,8 +25,8 @@
 namespace A10_Const {
     constexpr char FW_VERSION[]				= "SC10_FW_1.0.0";
 
-    constexpr char CONFIG_JSON_FILE[]			= "/json/config_012.json";
-    constexpr char CONFIG_JSON_FILE_BACKUP[]	= "/json/config_012.json.bak";
+    constexpr char CONFIG_JSON_FILE[]			= "/json/config_013.json";
+    constexpr char CONFIG_JSON_FILE_BACKUP[]	= "/json/config_013.json.bak";
 
     constexpr char HTML_FILE[]					= "/html/SC10_main_014.html";
     constexpr char CSS_FILE[]					= "/html/SC10_main_014.css";
