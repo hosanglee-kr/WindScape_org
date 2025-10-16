@@ -108,9 +108,9 @@ class CL_W10_WebAPI {
 	// ======================================================
 	// 정적 파일 서빙
 	// ======================================================
-    // ------------------------------------------------------
-    // mountStatic (유지보수성 강화 버전)
-    // ------------------------------------------------------
+        // ======================================================
+    // 정적 파일 서빙 (유지보수성 강화 + 로깅 개선)
+    // ======================================================
     static void mountStatic(AsyncWebServer &p_srv) {
 	    struct StaticRoute {
 		    const char *uri;
@@ -124,11 +124,14 @@ class CL_W10_WebAPI {
 		    { A10_Const::JS_URI,   A10_Const::JS_FILE,   "application/javascript" }
 	    };
     
-	    // 공통 응답 헤더 적용
-	    auto applyHeaders = [](AsyncWebServerResponse *res, bool noCache = false) {
-		    if (noCache) addNoCache(res);
-		    addCors(res);
-	    };
+	    // 루트 HTML 서빙 (기본 페이지)
+	    if (!LittleFS.exists(A10_Const::HTML_FILE)) {
+		    CL_D10_Logger::log(EN_L10_LOG_ERROR, "[STATIC] Missing main HTML: %s", A10_Const::HTML_FILE);
+	    }
+	    auto &h = p_srv.serveStatic("/", LittleFS, "/html/")
+				      .setDefaultFile(A10_Const::HTML_FILE)
+				      .setCacheControl("max-age=86400");
+	    (void)h;
     
 	    // 파일 응답 헬퍼
 	    auto serveFile = [&](const StaticRoute &r) {
@@ -144,14 +147,12 @@ class CL_W10_WebAPI {
 		    });
 	    };
     
-	    // 루트 HTML 서빙 (기본 페이지)
-	    auto &h = p_srv.serveStatic("/", LittleFS, "/html/")
-				      .setDefaultFile(A10_Const::HTML_FILE)
-				      .setCacheControl("max-age=86400");
-	    (void)h;
-    
 	    // ROUTES 등록 (HTML/JS/CSS)
-	    for (auto &r : ROUTES) serveFile(r);
+	    for (auto &r : ROUTES) {
+		    CL_D10_Logger::log(EN_L10_LOG_INFO,
+			    "[STATIC] mount: %s -> %s (%s)", r.uri, r.path, r.mime);
+		    serveFile(r);
+	    }
     
 	    // OPTIONS 프리플라이트 (브라우저 CORS 사전 요청 대응)
 	    p_srv.onNotFound([](AsyncWebServerRequest *req) {
@@ -164,7 +165,9 @@ class CL_W10_WebAPI {
 		    req->send(404, "text/plain", "Not found");
 	    });
     }
-
+	
+    
+	    
 	static void mountStatic_old(AsyncWebServer &p_srv) {
 		// /html/ 폴더를 기본 루트로 서비스
 		// → / 요청 시 index.html 자동 매핑
