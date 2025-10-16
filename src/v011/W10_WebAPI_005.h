@@ -48,6 +48,12 @@ class CL_W10_WebAPI {
 		res->addHeader("Access-Control-Allow-Headers", "Content-Type, X-API-Key");
 	}
 
+    // 공통 응답 헤더 유틸
+    static void applyHeaders(AsyncWebServerResponse *res, bool noCache = false) {
+	    if (noCache) addNoCache(res);
+	    addCors(res);
+    }
+
 	// API Key 검사 → g_A10_config.api_key 가 비어 있지 않으면 반드시 헤더 필요
 	static bool authorize(AsyncWebServerRequest *req) {
 		if (strlen(g_A10_config.api_key) == 0) {
