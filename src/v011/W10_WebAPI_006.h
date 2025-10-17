@@ -104,6 +104,38 @@ class CL_W10_WebAPI {
             v_status["fan_pwm_percent"] = p_P10_pwm.getDutyPercent();
             v_status["phase_name"] = g_A10_WEATHER_PHASE_NAMES_Arr[p_sim.current_weather_phase];
 
+           // /api/state 핸들러 내부 — 상태 채우는 부분 갱신
+            JsonObject v_status = v_root["status"].to<JsonObject>();
+            
+            // ...기존 필드 유지
+            // Wi-Fi 모드 문자열/ IP 응답 확장
+            const uint8_t mode = g_A10_config.wifi_mode;
+            if (mode == EN_A10_WIFI_MODE_AP) {
+                v_status["wifi_mode"] = "AP";
+                v_status["ip_ap"]     = WiFi.softAPIP().toString();
+                v_status["ap_ssid"]   = g_A10_config.ap_ssid;
+            } else if (mode == EN_A10_WIFI_MODE_STA) {
+                v_status["wifi_mode"] = "STA";
+                if (WiFi.status() == WL_CONNECTED) {
+                    v_status["ip_sta"] = WiFi.localIP().toString();
+                    v_status["ssid"]   = WiFi.SSID();
+                } else {
+                    v_status["ip_sta"] = "";
+                    v_status["ssid"]   = "";
+                }
+            } else { // EN_A10_WIFI_MODE_AP_STA
+                v_status["wifi_mode"] = "AP+STA";
+                v_status["ip_ap"]     = WiFi.softAPIP().toString();
+                v_status["ap_ssid"]   = g_A10_config.ap_ssid;
+                if (WiFi.status() == WL_CONNECTED) {
+                    v_status["ip_sta"] = WiFi.localIP().toString();
+                    v_status["ssid"]   = WiFi.SSID();
+                } else {
+                    v_status["ip_sta"] = "";
+                    v_status["ssid"]   = "";
+                }
+            }
+           /*
             if (g_A10_config.wifi_mode == G_A10_WIFI_MODE_STA && WiFi.status() == WL_CONNECTED) {
                 v_status["wifi_mode"] = "STA";
                 v_status["ip_addr"] = WiFi.localIP().toString();
@@ -113,6 +145,7 @@ class CL_W10_WebAPI {
                 v_status["ip_addr"] = WiFi.softAPIP().toString();
                 v_status["ssid"] = g_A10_config.ap_ssid;
             }
+           */
 
             // config 직렬화
             CL_C10_ConfigManager::toJson(g_A10_config, v_root["config"].to<JsonObject>());
