@@ -1,21 +1,27 @@
-// M10_WiFiManager_006.h
 
-/* 사용법
-1. 연결과 분기
 
-bool sta = CL_M10_WiFiManager::init(g_config, wifiMulti);
-if (sta) {
-  // STA 경로
-} else {
-  // AP 경로(설정 페이지/캡티브 포털 등)
-}
+/*
+ * M10_WiFiManager_006.h
+ * ------------------------------------------------------
+ * Wifi Manager
+ * ------------------------------------------------------
+ * 기능 요약:
+ *  - 추가 필요
+ * ------------------------------------------------------
+  * - 네이밍 규칙:
+ *    - 네이밍 규칙의 모듈약어 : M10
+ *    - 전역 상수/매크로: G_모듈약어_ 접두사
+ *    - 전역 변수: g_A10_ 접두사
+ *    - 로컬 변수 :v_ 접두사
+ *    - 함수 인자 : p_ 접두사
+ *    - type은 T_모듈약어_ 접두사
+ *    - enum 상수 : EN_모듈약어_ 접두사
+ *    - 구조체 : ST_모듈약어_ 접두사
+ *    - 클래스 : CL_모듈약어_ 접두사
+ *    - 클래스 private 변수/함수 : _ 접두사
+ *    - 전역함수 : 모듈약어_ 접두사
+ */
 
-2.wifi scan 비동기 사용
-CL_M10_WiFiManager::scanNetworksJson(true);   // 1차: 트리거
-delay(1500);                                // 스캔 대기
-String nets = CL_M10_WiFiManager::scanNetworksJson(false); // 2차: 수집
-
-*/
 
 #pragma once
 #include <ArduinoJson.h>
