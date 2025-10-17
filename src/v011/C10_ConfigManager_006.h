@@ -194,10 +194,68 @@ class CL_C10_ConfigManager {
         return true;
     }
 
+    	// ======================================================
+	// 8️⃣ -1 구조체 → JSON 직렬화 (JsonDocument para 버전)
+	// ======================================================
+	static void toJson(const ST_A10_WindConfig &p_config, JsonDocument &p_doc) {
+		JsonObject v_root = p_doc.to<JsonObject>();
+		_toJson_Common(p_config, v_root);
+	}
+	 
+	// ======================================================
+	// 8️⃣-2 구조체 → JSON 직렬화 오버로드 (JsonObject para 버전)
+	// ======================================================
+	static void toJson(const ST_A10_WindConfig &p_config, JsonObject p_jsonObj_cfg) {
+		_toJson_Common(p_config, p_jsonObj_cfg);
+	}
+
+    static void _toJson_Common(const ST_A10_WindConfig &p_config, JsonObject p_jsonObj_cfg) {
+		// [security]
+		p_jsonObj_cfg["security"]["api_key"] = p_config.api_key;
+	 
+		// [wifi]
+		JsonObject v_wifi = p_jsonObj_cfg["wifi"].to<JsonObject>();
+		v_wifi["wifi_mode"] = p_config.wifi_mode;
+		v_wifi["ap_ssid"] = p_config.ap_ssid;
+		v_wifi["ap_password"] = p_config.ap_password;
+	 
+		JsonArray v_staArr = v_wifi["sta_networks"].to<JsonArray>();
+		for (int i = 0; i < p_config.sta_network_count; i++) {
+			JsonObject v_net = v_staArr.add<JsonObject>();
+			v_net["ssid"] = p_config.sta_networks[i].ssid;
+			v_net["pass"] = p_config.sta_networks[i].password;
+		}
+	 
+		// [hw]
+		p_jsonObj_cfg["hw"]["pwm_pin"] = p_config.fan_pwm_pin;
+		p_jsonObj_cfg["hw"]["pwm_channel"] = p_config.pwm_channel;
+		p_jsonObj_cfg["hw"]["pwm_freq"] = p_config.pwm_frequency;
+		p_jsonObj_cfg["hw"]["pwm_res"] = p_config.pwm_resolution;
+	 
+		// [timing]
+		p_jsonObj_cfg["timing"]["sim_int"] = p_config.wind_sim_interval_ms;
+		p_jsonObj_cfg["timing"]["gust_int"] = p_config.gust_check_interval_ms;
+		p_jsonObj_cfg["timing"]["thermal_int"] = p_config.thermal_check_interval_ms;
+	 
+		// [sim]
+		JsonObject v_sim = p_jsonObj_cfg["sim"].to<JsonObject>();
+		v_sim["intensity"] = p_config.wind_intensity;
+		v_sim["gust_freq"] = p_config.gust_frequency;
+		v_sim["variability"] = p_config.wind_variability;
+		v_sim["fan_limit"] = p_config.fan_speed_limit;
+		v_sim["min_fan"] = p_config.minimum_fan_speed;
+		v_sim["turb_len"] = p_config.turbulence_length_scale;
+		v_sim["turb_sig"] = p_config.turbulence_intensity_sigma;
+		v_sim["therm_str"] = p_config.thermal_bubble_strength;
+		v_sim["therm_rad"] = p_config.thermal_bubble_radius;
+		v_sim["preset"] = g_A10_PRESET_MODE_NAMES_Arr[p_config.preset_mode_index];
+	}
+
+    /*
     // ======================================================
     // 8️⃣ 구조체 → JSON 직렬화
     // ======================================================
-    static void toJson(const ST_A10_WindConfig &p_config, JsonDocument &p_doc) {
+    static void toJson_old(const ST_A10_WindConfig &p_config, JsonDocument &p_doc) {
         JsonObject v_root = p_doc.to<JsonObject>();
 
         // [security]
@@ -240,6 +298,7 @@ class CL_C10_ConfigManager {
         v_sim["therm_rad"] = p_config.thermal_bubble_radius;
         v_sim["preset"] = g_A10_PRESET_MODE_NAMES_Arr[p_config.preset_mode_index];
     }
+    */
 
     // ======================================================
     // 9️⃣ /api/config PATCH 반영
