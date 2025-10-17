@@ -28,13 +28,13 @@ namespace A10_Const {
     constexpr char CONFIG_JSON_FILE[]			= "/json/config_013.json";
     constexpr char CONFIG_JSON_FILE_BACKUP[]	= "/json/config_013.json.bak";
 
-    constexpr char HTML_FILE[]					= "/html/SC10_main_014.html";
-    constexpr char CSS_FILE[]					= "/html/SC10_main_014.css";
-    constexpr char JS_FILE[]					= "/html/SC10_main_014.js";
+    constexpr char HTML_FILE[]					= "/html/SC10_main_015.html";
+    constexpr char CSS_FILE[]					= "/html/SC10_main_015.css";
+    constexpr char JS_FILE[]					= "/html/SC10_main_015.js";
 
     constexpr char HTML_URI[]					= "/main.html";
-    constexpr char CSS_URI[]					= "/SC10_main_014.css";
-    constexpr char JS_URI[]		    			= "/SC10_main_014.js";
+    constexpr char CSS_URI[]					= "/SC10_main_015.css";
+    constexpr char JS_URI[]		    			= "/SC10_main_015.js";
 
     constexpr int  MAX_STA_NETWORKS = 5;   /// 저장 가능한 STA 네트워크 최대 개수
 }  // namespace A10_Const
