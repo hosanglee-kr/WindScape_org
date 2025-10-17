@@ -11,7 +11,20 @@
  *  - Config 변경 / Reset / Default Init
  *  - OTA 및 File Upload
  *  - API Key 인증 / CORS 헤더 / 캐시 제어
- * ------------------------------------------------------
+ * ------------------------------------------------------  
+ * - 네이밍 규칙:
+ *    - 네이밍 규칙의 모듈약어 : W10
+ *    - 전역 상수/매크로: G_모듈약어_ 접두사
+ *    - 전역 변수: g_A10_ 접두사
+ *    - 로컬 변수 :v_ 접두사
+ *    - 함수 인자 : p_ 접두사
+ *    - type은 T_모듈약어_ 접두사
+ *    - enum 상수 : EN_모듈약어_ 접두사
+ *    - 구조체 : ST_모듈약어_ 접두사
+ *    - 클래스 : CL_모듈약어_ 접두사
+ *    - 클래스 private 맴버변수/맴버함수 : _ 접두사
+ *    - 클래스 정적 맴버변수 : s_ 접두사
+ *    - 전역함수 : 모듈약어_ 접두사
  */
 
 
@@ -104,9 +117,7 @@ class CL_W10_WebAPI {
             v_status["fan_pwm_percent"] = p_P10_pwm.getDutyPercent();
             v_status["phase_name"] = g_A10_WEATHER_PHASE_NAMES_Arr[p_sim.current_weather_phase];
 
-           // /api/state 핸들러 내부 — 상태 채우는 부분 갱신
-            JsonObject v_status = v_root["status"].to<JsonObject>();
-            
+           
             // ...기존 필드 유지
             // Wi-Fi 모드 문자열/ IP 응답 확장
             const uint8_t mode = g_A10_config.wifi_mode;
