@@ -79,6 +79,30 @@ class CL_M10_WiFiManager {
 
 		WiFi.mode(WIFI_AP_STA);
 
+		// ---------- AP 기동 ----------
+		char v_apPass[65] = {0};
+		strlcpy(v_apPass, p_cfg.ap_password, sizeof(v_apPass));
+
+		// 이전 연결 상태 정리 후 AP 시작
+		WiFi.disconnect(true, true);
+		// (선택) 고정 AP IP 설정이 필요하다면:
+		// WiFi.softAPConfig(IPAddress(192,168,4,1), IPAddress(192,168,4,1), IPAddress(255,255,255,0));
+
+		bool v_apOk = WiFi.softAP(
+				p_cfg.ap_ssid, 
+				v_apPass, 
+				p_apChannel, 
+				false,  			// hidden
+				4 					//	max conn
+			);
+		if (!v_apOk) {
+			CL_D10_Logger::log(EN_L10_LOG_ERROR, "AP start failed");
+		} else {
+			CL_D10_Logger::log(EN_L10_LOG_INFO, "AP started: %s, IP: %s",
+							 p_cfg.ap_ssid, WiFi.softAPIP().toString().c_str());
+		}
+		s_staConnected = false;
+				
 		// ---------- STA 우선 시도 ----------
 		if (p_cfg.wifi_mode == G_A10_WIFI_MODE_STA && p_cfg.sta_network_count > 0) {
 			for (int i = 0; i < p_cfg.sta_network_count; i++) {
@@ -112,30 +136,38 @@ class CL_M10_WiFiManager {
 			CL_D10_Logger::log(EN_L10_LOG_WARN, "\nSTA connect failed. Fallback to AP");
 		}
 
-		// ---------- AP 기동 ----------
 
+		
+
+		// ---------- AP 기동 ----------
+		/*
 		char v_apPass[65] = {0};
 		strlcpy(v_apPass, p_cfg.ap_password, sizeof(v_apPass));
-		/*
-		// AP 비번 안전장치(8자 미만이면 임시 난수 비번 생성)
-		char v_apPass[65] = {0};
-		if (strlen(p_cfg.ap_password) >= 8) {
-			strlcpy(v_apPass, p_cfg.ap_password, sizeof(v_apPass));
-		} else {
-			// 간단 난수 비번 생성(개발 편의) — 제품에선 고정/UI 입력 권장
-			uint32_t r = (uint32_t)esp_random();
-			snprintf(v_apPass, sizeof(v_apPass), "ap_%08X", (unsigned)r);
-			CL_D10_Logger::log(EN_L10_LOG_WARN,
-							 "AP password too short(<8). Using temporary password: %s", v_apPass);
-		}
-		*/
-
+		
+		// // AP 비번 안전장치(8자 미만이면 임시 난수 비번 생성)
+		// char v_apPass[65] = {0};
+		// if (strlen(p_cfg.ap_password) >= 8) {
+		// 	strlcpy(v_apPass, p_cfg.ap_password, sizeof(v_apPass));
+		// } else {
+		// 	// 간단 난수 비번 생성(개발 편의) — 제품에선 고정/UI 입력 권장
+		// 	uint32_t r = (uint32_t)esp_random();
+		// 	snprintf(v_apPass, sizeof(v_apPass), "ap_%08X", (unsigned)r);
+		// 	CL_D10_Logger::log(EN_L10_LOG_WARN,
+		// 					 "AP password too short(<8). Using temporary password: %s", v_apPass);
+		// }
+		
 		// 이전 연결 상태 정리 후 AP 시작
 		WiFi.disconnect(true, true);
 		// (선택) 고정 AP IP 설정이 필요하다면:
 		// WiFi.softAPConfig(IPAddress(192,168,4,1), IPAddress(192,168,4,1), IPAddress(255,255,255,0));
 
-		bool v_apOk = WiFi.softAP(p_cfg.ap_ssid, v_apPass, p_apChannel, false /*hidden*/, 4 /*max conn*/);
+		bool v_apOk = WiFi.softAP(
+				p_cfg.ap_ssid, 
+				v_apPass, 
+				p_apChannel, 
+				false,  			// hidden
+				4 					//	max conn
+			);
 		if (!v_apOk) {
 			CL_D10_Logger::log(EN_L10_LOG_ERROR, "AP start failed");
 		} else {
@@ -143,6 +175,7 @@ class CL_M10_WiFiManager {
 							 p_cfg.ap_ssid, WiFi.softAPIP().toString().c_str());
 		}
 		s_staConnected = false;
+		*/
 		return false;
 	}
 

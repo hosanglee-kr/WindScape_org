@@ -14,6 +14,7 @@
  * ------------------------------------------------------
  */
 
+
 #include <ArduinoJson.h>
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
@@ -282,6 +283,8 @@ class CL_W10_WebAPI {
         p_response->addHeader("Access-Control-Allow-Headers", "Content-Type, X-API-Key");
     }
     static bool _authorize(AsyncWebServerRequest *p_request) {
+
+        
         if (strlen(g_A10_config.api_key) == 0) return true;
         if (!p_request->hasHeader("X-API-Key")) return false;
         auto *v_h = p_request->getHeader("X-API-Key");

@@ -1,20 +1,20 @@
 {
     "security": {
-        "api_key": "my_secure_api_key_123"
+        "api_key": ""
     },
 
     "wifi": {
         "wifi_mode": 1,
-        "ap_ssid": "SC10_Config_AP",
-        "ap_password": "newpassword",
+        "ap_ssid": "NatureWind",
+        "ap_password": "2540",
         "sta_networks": [
             {
                 "ssid": "LSITC_WIFI_AP",
-                "password": "1234554321"
+                "pass": "1234554321"
             },
             {
                 "ssid": "GalNote10-2540",
-                "password": "91932542"
+                "pass": "91932542"
             }
         ]
     },

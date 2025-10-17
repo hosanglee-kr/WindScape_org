@@ -39,6 +39,10 @@ class CL_C10_ConfigManager {
 
         JsonDocument v_doc;
         DeserializationError v_err = deserializeJson(v_doc, v_file);
+
+        Serial.println("load config.JSON:");
+        serializeJsonPretty(v_doc, Serial);
+
         v_file.close();
 
         if (v_err) {
@@ -53,8 +57,12 @@ class CL_C10_ConfigManager {
     // 2️⃣ 로드 or 기본 생성
     // ======================================================
     static bool loadOrCreate(ST_A10_WindConfig &p_config) {
-        if (load(p_config)) return true;
+        if (load(p_config)) {
+            return true;
+        }
+
         initDefaultConfig(p_config);
+        
         return save(p_config);
     }
 

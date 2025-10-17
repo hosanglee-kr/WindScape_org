@@ -9,7 +9,8 @@ CL_WS10_WindScapeSimulator g_WS10;
 
 void setup() {
 	Serial.begin(115200);
-	delay(100);
+	
+	delay(3000);
 
 	Serial.println("setup...");
 
