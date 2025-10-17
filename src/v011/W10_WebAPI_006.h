@@ -2,28 +2,22 @@
 /*
  * W10_WebAPI_006.h
  * ------------------------------------------------------
- * WindScape Web API (ESPAsyncWebServer)
+ * WindScape Web API (ESPAsyncWebServer 기반)
  * ------------------------------------------------------
- * 주요 기능
- *  - 정적 자산(HTML/CSS/JS) 제공
- *  - 현재 상태(/api/state)
- *  - 설정 변경(/api/config)
- *  - 기본 설정 생성(/api/config/init)
- *  - 공장 초기화(/api/reset)
- *  - Wi-Fi 스캔(/api/scan)
- *  - 진단(/api/diag)
- *  - 로그(/api/logs)
- *  - 버전(/api/version)
- *  - OTA / File Upload
+ * 기능 요약:
+ *  - LittleFS 정적 자산 서빙 (HTML/CSS/JS)
+ *  - 상태/설정/프리셋 API
+ *  - Wi-Fi 스캔, 시스템 진단, 로그 조회
+ *  - Config 변경 / Reset / Default Init
+ *  - OTA 및 File Upload
+ *  - API Key 인증 / CORS 헤더 / 캐시 제어
  * ------------------------------------------------------
  */
 
 #include <ArduinoJson.h>
-#include <AsyncJson.h>
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
 #include <Update.h>
-#include <WiFiMulti.h>
 
 #include "A10_Const_006.h"
 #include "C10_ConfigManager_006.h"
@@ -33,263 +27,264 @@
 #include "P10_PWM_ctrl_005.h"
 
 class CL_W10_WebAPI {
-public:
-	// ======================================================
-	// 초기화: API 및 정적 자원 등록
-	// ======================================================
-	static void init(AsyncWebServer &srv, CL_S10_Simulation &sim, WiFiMulti &multi, CL_P10_PWM &pwm) {
-		mountApi(srv, sim, multi, pwm);
-		CL_D10_Logger::log(EN_L10_LOG_INFO, "[WebAPI] mountApi complete");
-		mountStatic(srv);
-		CL_D10_Logger::log(EN_L10_LOG_INFO, "[WebAPI] mountStatic complete");
-	}
+   public:
+    // ======================================================
+    // 초기화
+    // ======================================================
+    static void init(AsyncWebServer &p_srv, CL_S10_Simulation &p_sim, WiFiMulti &p_multi, CL_P10_PWM &p_P10_pwm) {
+        mountApi(p_srv, p_sim, p_multi, p_P10_pwm);
+        CL_D10_Logger::log(EN_L10_LOG_INFO, "W10_init_010::mountApi");
 
-	// ======================================================
-	// 정적 파일 서빙
-	// ======================================================
-	static void mountStatic(AsyncWebServer &srv) {
-		struct StaticRoute {
-			const char *uri;
-			const char *path;
-			const char *mime;
-		};
+        mountStatic(p_srv);
+        CL_D10_Logger::log(EN_L10_LOG_INFO, "W10_init_020::mountStatic");
+    }
 
-		static const StaticRoute ROUTES[] = {
-			{ A10_Const::HTML_URI, A10_Const::HTML_FILE, "text/html" },
-			{ A10_Const::CSS_URI,  A10_Const::CSS_FILE,  "text/css" },
-			{ A10_Const::JS_URI,   A10_Const::JS_FILE,   "application/javascript" }
-		};
+    // ======================================================
+    // 정적 파일 서빙
+    // ======================================================
+    static void mountStatic(AsyncWebServer &p_srv) {
+        struct StaticRoute {
+            const char *uri;
+            const char *path;
+            const char *mime;
+        };
 
-		srv.serveStatic("/", LittleFS, "/html/")
-		   .setDefaultFile(A10_Const::HTML_FILE)
-		   .setCacheControl("max-age=86400");
+        static const StaticRoute ROUTES[] = {
+            {A10_Const::HTML_URI, A10_Const::HTML_FILE, "text/html"},
+            {A10_Const::CSS_URI, A10_Const::CSS_FILE, "text/css"},
+            {A10_Const::JS_URI, A10_Const::JS_FILE, "application/javascript"}};
 
-		for (auto &r : ROUTES) {
-			srv.on(r.uri, HTTP_GET, [=](AsyncWebServerRequest *req) {
-				if (LittleFS.exists(r.path))
-					req->send(LittleFS, r.path, r.mime);
-				else
-					req->send(404, "text/plain", String("Missing file: ") + r.path);
-			});
-			CL_D10_Logger::log(EN_L10_LOG_INFO, "[STATIC] %s -> %s", r.uri, r.path);
-		}
+        auto v_serveFile = [&](const StaticRoute &p_staticRoute) {
+            p_srv.on(p_staticRoute.uri, HTTP_GET, [=](AsyncWebServerRequest *p_request) {
+                if (LittleFS.exists(p_staticRoute.path)) {
+                    p_request->send(LittleFS, p_staticRoute.path, p_staticRoute.mime);
+                } else {
+                    String v_msg = String("/* missing file: ") + p_staticRoute.path + " */";
+                    auto *v_response = p_request->beginResponse(200, p_staticRoute.mime, v_msg);
+                    _applyHeaders(v_response, true);
+                    p_request->send(v_response);
+                }
+            });
+        };
 
-		srv.onNotFound([](AsyncWebServerRequest *req) {
-			if (req->method() == HTTP_OPTIONS) {
-				auto *res = req->beginResponse(204);
-				_addCors(res);
-				req->send(res);
-				return;
-			}
-			req->send(404, "text/plain", "Not found");
-		});
-	}
+        for (auto &v_staticRoute : ROUTES) {
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "[STATIC] %s -> %s (%s)",
+                               v_staticRoute.uri, v_staticRoute.path, v_staticRoute.mime);
+            v_serveFile(v_staticRoute);
+        }
 
-	// ======================================================
-	// API 라우트 등록
-	// ======================================================
-	static void mountApi(AsyncWebServer &srv, CL_S10_Simulation &sim, WiFiMulti &multi, CL_P10_PWM &pwm) {
+        // OPTIONS 요청 처리 (CORS)
+        p_srv.onNotFound([](AsyncWebServerRequest *p_request) {
+            if (p_request->method() == HTTP_OPTIONS) {
+                auto *v_response = p_request->beginResponse(204);
+                _addCors(v_response);
+                p_request->send(v_response);
+                return;
+            }
+            p_request->send(404, "text/plain", "Not found");
+        });
+    }
 
-		// --------------------------------------------------
-		// /api/state : 현재 상태 조회
-		// --------------------------------------------------
-		srv.on("/api/state", HTTP_GET, [&sim, &pwm](AsyncWebServerRequest *req) {
-			JsonDocument doc;
-			JsonVariant root = doc.to<JsonVariant>();
+    // ======================================================
+    // API 등록
+    // ======================================================
+    static void mountApi(AsyncWebServer &p_srv, CL_S10_Simulation &p_sim, WiFiMulti &p_multi, CL_P10_PWM &p_P10_pwm) {
+        // ---------------------------
+        // /api/state : 상태 조회
+        // ---------------------------
+        p_srv.on("/api/state", HTTP_GET, [&p_sim, &p_P10_pwm](AsyncWebServerRequest *p_request) {
+            JsonDocument v_doc;
+            JsonVariant v_root = v_doc.to<JsonVariant>();
 
-			JsonObject st = root["status"].to<JsonObject>();
-			st["sim_active"] = sim.wind_simulation_active;
-			st["wind_speed"] = roundf(sim.current_wind_speed * 100.0f) / 100.0f;
-			st["fan_pwm_raw"] = pwm.getDutyRaw();
-			st["fan_pwm_percent"] = pwm.getDutyPercent();
-			st["phase_name"] = g_A10_WEATHER_PHASE_NAMES_Arr[sim.current_weather_phase];
+            JsonObject v_status = v_root["status"].to<JsonObject>();
+            v_status["sim_active"] = p_sim.wind_simulation_active;
+            v_status["wind_speed"] = roundf(p_sim.current_wind_speed * 100.0f) / 100.0f;
+            v_status["fan_pwm_raw"] = p_P10_pwm.getDutyRaw();
+            v_status["fan_pwm_percent"] = p_P10_pwm.getDutyPercent();
+            v_status["phase_name"] = g_A10_WEATHER_PHASE_NAMES_Arr[p_sim.current_weather_phase];
 
-			if (g_A10_config.wifi_mode == G_A10_WIFI_MODE_STA && WiFi.status() == WL_CONNECTED) {
-				st["wifi_mode"] = "STA";
-				st["ip_addr"] = WiFi.localIP().toString();
-				st["ssid"] = WiFi.SSID();
-			} else {
-				st["wifi_mode"] = "AP";
-				st["ip_addr"] = WiFi.softAPIP().toString();
-				st["ssid"] = g_A10_config.ap_ssid;
-			}
+            if (g_A10_config.wifi_mode == G_A10_WIFI_MODE_STA && WiFi.status() == WL_CONNECTED) {
+                v_status["wifi_mode"] = "STA";
+                v_status["ip_addr"] = WiFi.localIP().toString();
+                v_status["ssid"] = WiFi.SSID();
+            } else {
+                v_status["wifi_mode"] = "AP";
+                v_status["ip_addr"] = WiFi.softAPIP().toString();
+                v_status["ssid"] = g_A10_config.ap_ssid;
+            }
 
-			// config 직렬화
-			CL_C10_ConfigManager::toJson(g_A10_config, root["config"].to<JsonObject>());
+            // config 직렬화
+            CL_C10_ConfigManager::toJson(g_A10_config, v_root["config"].to<JsonObject>());
 
-			// presets 목록
-			JsonArray presets = root["presets"].to<JsonArray>();
-			for (int i = 0; i < EN_A10_PRESET_COUNT; i++)
-				presets.add(g_A10_PRESET_MODE_NAMES_Arr[i]);
+            // presets
+            JsonArray v_presets = v_root["presets"].to<JsonArray>();
+            for (int i = 0; i < EN_A10_PRESET_COUNT; ++i)
+                v_presets.add(g_A10_PRESET_MODE_NAMES_Arr[i]);
 
-			auto *res = req->beginResponseStream("application/json");
-			serializeJson(doc, *res);
-			_applyHeaders(res, true);
-			req->send(res);
-		});
+            auto *v_response = p_request->beginResponseStream("application/json");
+            serializeJson(v_doc, *v_response);
+            v_response->setCode(200);
+            _applyHeaders(v_response, true);
+            p_request->send(v_response);
+        });
 
-		// --------------------------------------------------
-		// /api/config : 설정 변경 (patchFromJson 사용)
-		// --------------------------------------------------
-		srv.on("/api/config", HTTP_POST, nullptr, nullptr,
-		[&sim, &multi, &pwm](AsyncWebServerRequest *req, uint8_t *data, size_t len, size_t index, size_t total) {
-			if (!_authorize(req)) {
-				req->send(401, "application/json", "{\"error\":\"unauthorized\"}");
-				return;
-			}
+        // ---------------------------
+        // /api/config : 설정 변경
+        // ---------------------------
+        p_srv.on("/api/config", HTTP_POST, [](AsyncWebServerRequest *p_request) {}, nullptr,
+                 [&p_sim, &p_multi, &p_P10_pwm](AsyncWebServerRequest *p_request,
+                                               uint8_t *data, size_t len, size_t index, size_t total) {
+                     if (!_authorize(p_request)) {
+                         p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+                         return;
+                     }
 
-			if (index == 0 && len == total) {
-				JsonDocument doc;
-				DeserializationError err = deserializeJson(doc, (const char*)data, len);
-				if (err) {
-					req->send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
-					return;
-				}
+                     if (index == 0 && len == total) {
+                         JsonDocument v_doc;
+                         if (deserializeJson(v_doc, (const char *)data, len)) {
+                             p_request->send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
+                             return;
+                         }
 
-				int oldPreset = g_A10_config.preset_mode_index;
-				int oldPin = g_A10_config.fan_pwm_pin;
-				int oldFreq = g_A10_config.pwm_frequency;
-				int oldRes = g_A10_config.pwm_resolution;
-				int oldCh  = g_A10_config.pwm_channel;
+                         int v_oldPreset = g_A10_config.preset_mode_index;
+                         int v_oldPin = g_A10_config.fan_pwm_pin;
+                         int v_oldFreq = g_A10_config.pwm_frequency;
+                         int v_oldRes = g_A10_config.pwm_resolution;
+                         int v_oldCh = g_A10_config.pwm_channel;
 
-				bool wifiChanged = false;
-				CL_C10_ConfigManager::patchFromJson(g_A10_config, doc, wifiChanged);
-				CL_C10_ConfigManager::save(g_A10_config);
+                         bool v_wifiChanged = false;
+                         CL_C10_ConfigManager::patchFromJson(g_A10_config, v_doc, v_wifiChanged);
+                         CL_C10_ConfigManager::save(g_A10_config);
 
-				if (g_A10_config.preset_mode_index != oldPreset)
-					sim.applyCurrentPreset(true);
+                         // 프리셋 변경 시 재적용
+                         if (g_A10_config.preset_mode_index != v_oldPreset) {
+                             p_sim.applyCurrentPreset(true);
+                         }
 
-				// PWM 변경사항 즉시 반영
-				if (g_A10_config.fan_pwm_pin != oldPin)
-					pwm.set_pwmPin(g_A10_config.fan_pwm_pin);
-				if (g_A10_config.pwm_channel != oldCh)
-					pwm.set_pwmChannel(g_A10_config.pwm_channel);
-				if (g_A10_config.pwm_frequency != oldFreq)
-					pwm.set_pwmFrequency(g_A10_config.pwm_frequency);
-				if (g_A10_config.pwm_resolution != oldRes)
-					pwm.set_pwmResolution(g_A10_config.pwm_resolution);
+                         // PWM 변경 반영
+                         if (g_A10_config.fan_pwm_pin != v_oldPin)
+                             p_P10_pwm.set_pwmPin(g_A10_config.fan_pwm_pin);
+                         if (g_A10_config.pwm_channel != v_oldCh)
+                             p_P10_pwm.set_pwmChannel(g_A10_config.pwm_channel);
+                         if (g_A10_config.pwm_frequency != v_oldFreq)
+                             p_P10_pwm.set_pwmFrequency(g_A10_config.pwm_frequency);
+                         if (g_A10_config.pwm_resolution != v_oldRes)
+                             p_P10_pwm.set_pwmResolution(g_A10_config.pwm_resolution);
 
-				pwm.set_pwmDuty(0.0f); // 안정화
+                         p_P10_pwm.set_pwmDuty(0.0f);
 
-				if (wifiChanged) {
-					CL_D10_Logger::log(EN_L10_LOG_INFO, "Wi-Fi changed, reinit...");
-					CL_M10_WiFiManager::init(g_A10_config, multi);
-				}
+                         if (v_wifiChanged) {
+                             CL_D10_Logger::log(EN_L10_LOG_INFO, "Wi-Fi config changed. Re-init WiFi");
+                             CL_M10_WiFiManager::init(g_A10_config, p_multi);
+                         }
 
-				req->send(200, "application/json", "{\"message\":\"Config updated\"}");
-			}
-		});
+                         p_request->send(200, "application/json", "{\"message\":\"Config updated\"}");
+                     }
+                 });
 
-		// --------------------------------------------------
-		// /api/config/init : 기본 설정 생성
-		// --------------------------------------------------
-		srv.on("/api/config/init", HTTP_POST, [](AsyncWebServerRequest *req) {
-			if (!_authorize(req)) {
-				req->send(401, "application/json", "{\"error\":\"unauthorized\"}");
-				return;
-			}
-			bool ok = CL_C10_ConfigManager::saveDefaultConfig();
-			if (ok)
-				req->send(200, "application/json", "{\"message\":\"Default config created\"}");
-			else
-				req->send(500, "application/json", "{\"error\":\"Init failed\"}");
-		});
+        // ---------------------------
+        // /api/config/init : 기본 설정 생성
+        // ---------------------------
+        p_srv.on("/api/config/init", HTTP_POST, [](AsyncWebServerRequest *p_request) {
+            if (!_authorize(p_request)) {
+                p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+                return;
+            }
+            bool v_ok = CL_C10_ConfigManager::saveDefaultConfig();
+            if (v_ok)
+                p_request->send(200, "application/json", "{\"message\":\"Default config created\"}");
+            else
+                p_request->send(500, "application/json", "{\"error\":\"Init failed or file exists\"}");
+        });
 
-		// --------------------------------------------------
-		// /api/reset : 공장 초기화
-		// --------------------------------------------------
-		srv.on("/api/reset", HTTP_POST, [](AsyncWebServerRequest *req) {
-			if (!_authorize(req)) {
-				req->send(401, "application/json", "{\"error\":\"unauthorized\"}");
-				return;
-			}
-			CL_C10_ConfigManager::reset();
-			req->send(200, "text/plain", "Factory reset, rebooting...");
-			delay(500);
-			ESP.restart();
-		});
+        // ---------------------------
+        // /api/reset : 공장 초기화
+        // ---------------------------
+        p_srv.on("/api/reset", HTTP_POST, [](AsyncWebServerRequest *p_request) {
+            if (!_authorize(p_request)) {
+                p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+                return;
+            }
+            CL_C10_ConfigManager::reset();
+            p_request->send(200, "text/plain", "Factory reset... Reboot");
+            ESP.restart();
+        });
 
-		// --------------------------------------------------
-		// /api/scan : Wi-Fi 스캔
-		// --------------------------------------------------
-		srv.on("/api/scan", HTTP_GET, [](AsyncWebServerRequest *req) {
-			bool async = req->hasParam("async");
-			String json = CL_M10_WiFiManager::scanNetworksJson(async);
-			auto *res = req->beginResponse(200, "application/json", json);
-			_applyHeaders(res, true);
-			req->send(res);
-		});
+        // ---------------------------
+        // /api/scan : Wi-Fi 스캔
+        // ---------------------------
+        p_srv.on("/api/scan", HTTP_GET, [](AsyncWebServerRequest *p_request) {
+            bool v_async = p_request->hasParam("async");
+            String v_json = CL_M10_WiFiManager::scanNetworksJson(v_async);
+            auto *v_response = p_request->beginResponse(200, "application/json", v_json);
+            _applyHeaders(v_response, true);
+            p_request->send(v_response);
+        });
 
-		// --------------------------------------------------
-		// /api/diag : 진단
-		// --------------------------------------------------
-		srv.on("/api/diag", HTTP_GET, [](AsyncWebServerRequest *req) {
-			JsonDocument doc;
-			doc["heap"] = ESP.getFreeHeap();
-			doc["rssi"] = (WiFi.status() == WL_CONNECTED) ? WiFi.RSSI() : 0;
-			doc["fs_total"] = LittleFS.totalBytes();
-			doc["fs_used"]  = LittleFS.usedBytes();
+        // ---------------------------
+        // /api/diag : 진단 정보
+        // ---------------------------
+        p_srv.on("/api/diag", HTTP_GET, [](AsyncWebServerRequest *p_request) {
+            JsonDocument v_doc;
+            v_doc["heap"] = ESP.getFreeHeap();
+            v_doc["rssi"] = (WiFi.status() == WL_CONNECTED) ? WiFi.RSSI() : 0;
+            v_doc["fs_total"] = LittleFS.totalBytes();
+            v_doc["fs_used"] = LittleFS.usedBytes();
 
-			String json;
-			serializeJson(doc, json);
-			auto *res = req->beginResponse(200, "application/json", json);
-			_applyHeaders(res, true);
-			req->send(res);
-		});
+            String v_json;
+            serializeJson(v_doc, v_json);
+            auto *v_response = p_request->beginResponse(200, "application/json", v_json);
+            _applyHeaders(v_response, true);
+            p_request->send(v_response);
+        });
 
-		// --------------------------------------------------
-		// /api/logs : 로그 조회
-		// --------------------------------------------------
-		srv.on("/api/logs", HTTP_GET, [](AsyncWebServerRequest *req) {
-			String json = CL_D10_Logger::getLogsJson();
-			auto *res = req->beginResponse(200, "application/json", json);
-			_applyHeaders(res, true);
-			req->send(res);
-		});
+        // ---------------------------
+        // /api/logs : 로그 조회
+        // ---------------------------
+        p_srv.on("/api/logs", HTTP_GET, [](AsyncWebServerRequest *p_request) {
+            String v_json = CL_D10_Logger::getLogsJson();
+            auto *v_response = p_request->beginResponse(200, "application/json", v_json);
+            _applyHeaders(v_response, true);
+            p_request->send(v_response);
+        });
 
-		// --------------------------------------------------
-		// /api/version : 펌웨어 정보
-		// --------------------------------------------------
-		srv.on("/api/version", HTTP_GET, [](AsyncWebServerRequest *req) {
-			JsonDocument doc;
-			doc["fw_version"] = A10_Const::FW_VERSION;
-			doc["config_file"] = A10_Const::CONFIG_JSON_FILE;
+        // ---------------------------
+        // /api/version : 버전 정보
+        // ---------------------------
+        p_srv.on("/api/version", HTTP_GET, [](AsyncWebServerRequest *p_request) {
+            JsonDocument v_doc;
+            v_doc["fw_version"] = A10_Const::FW_VERSION;
+            v_doc["config_file"] = A10_Const::CONFIG_JSON_FILE;
+            String v_json;
+            serializeJson(v_doc, v_json);
+            auto *v_response = p_request->beginResponse(200, "application/json", v_json);
+            _applyHeaders(v_response, true);
+            p_request->send(v_response);
+        });
+    }
 
-			String json;
-			serializeJson(doc, json);
-			auto *res = req->beginResponse(200, "application/json", json);
-			_applyHeaders(res, true);
-			req->send(res);
-		});
-	}
-
-private:
-	// ======================================================
-	// 공통 헤더 유틸
-	// ======================================================
-	static void _applyHeaders(AsyncWebServerResponse *res, bool noCache = false) {
-		if (noCache) _addNoCache(res);
-		_addCors(res);
-	}
-
-	static void _addNoCache(AsyncWebServerResponse *res) {
-		res->addHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
-		res->addHeader("Pragma", "no-cache");
-		res->addHeader("Expires", "0");
-	}
-
-	static void _addCors(AsyncWebServerResponse *res) {
-		res->addHeader("Access-Control-Allow-Origin", "*");
-		res->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-		res->addHeader("Access-Control-Allow-Headers", "Content-Type, X-API-Key");
-	}
-
-	static bool _authorize(AsyncWebServerRequest *req) {
-		if (strlen(g_A10_config.api_key) == 0)
-			return true;
-		if (!req->hasHeader("X-API-Key"))
-			return false;
-		auto *h = req->getHeader("X-API-Key");
-		return (h && h->value() == String(g_A10_config.api_key));
-	}
+   private:
+    // ======================================================
+    // 응답 헤더/보안 유틸
+    // ======================================================
+    static void _applyHeaders(AsyncWebServerResponse *p_response, bool noCache = false) {
+        if (noCache) _addNoCache(p_response);
+        _addCors(p_response);
+    }
+    static void _addNoCache(AsyncWebServerResponse *p_response) {
+        p_response->addHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+        p_response->addHeader("Pragma", "no-cache");
+        p_response->addHeader("Expires", "0");
+    }
+    static void _addCors(AsyncWebServerResponse *p_response) {
+        p_response->addHeader("Access-Control-Allow-Origin", "*");
+        p_response->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        p_response->addHeader("Access-Control-Allow-Headers", "Content-Type, X-API-Key");
+    }
+    static bool _authorize(AsyncWebServerRequest *p_request) {
+        if (strlen(g_A10_config.api_key) == 0) return true;
+        if (!p_request->hasHeader("X-API-Key")) return false;
+        auto *v_h = p_request->getHeader("X-API-Key");
+        return (v_h && v_h->value() == String(g_A10_config.api_key));
+    }
 };
