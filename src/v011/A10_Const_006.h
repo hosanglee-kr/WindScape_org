@@ -186,10 +186,10 @@ typedef struct __attribute__((packed)) {
     // ------------------------------------------------------
     // [wifi]
     // ------------------------------------------------------
-    T_A10_WifiMode_t wifi_mode;                 // 0=AP, 1=STA
+    uint8_t wifi_mode;                 // 0=AP, 1=STA
     uint8_t sta_network_count;         // 저장된 STA 네트워크 수
-    char ap_ssid[G_A10_WIFI_SSID_LEN];
-    char ap_password[G_A10_WIFI_PWD_LEN];
+    char    ap_ssid[G_A10_WIFI_SSID_LEN];
+    char    ap_password[G_A10_WIFI_PWD_LEN];
     ST_A10_StaCredential sta_networks[A10_Const::MAX_STA_NETWORKS];
 } ST_A10_WindConfig;
 
