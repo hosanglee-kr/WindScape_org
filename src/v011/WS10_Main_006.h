@@ -19,8 +19,8 @@
 #include "A10_Const_006.h"
 #include "C10_ConfigManager_006.h"
 #include "D10_Logger_004.h"
-#include "S10_Simulation_004.h"
-#include "M10_WiFiManager_004.h"
+#include "S10_Simulation_006.h"
+#include "M10_WiFiManager_006.h"
 #include "W10_WebAPI_006.h"
 #include "P10_PWM_ctrl_005.h"
 
