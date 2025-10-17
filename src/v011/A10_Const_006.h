@@ -46,11 +46,24 @@ namespace A10_Const {
 // Wi-Fi 설정 관련 상수
 // ====================================================================================
 
+// 기존 매크로 대신 enum 사용
+typedef enum : uint8_t {
+    EN_A10_WIFI_MODE_AP      = 0,  // AP only
+    EN_A10_WIFI_MODE_STA     = 1,  // STA only
+    EN_A10_WIFI_MODE_AP_STA  = 2,  // AP + STA 동시
+} T_A10_WifiMode_t;
 
+// (가능하면 기존 매크로 제거 또는 아래처럼 유지 호환)
+#define G_A10_WIFI_MODE_AP     EN_A10_WIFI_MODE_AP
+#define G_A10_WIFI_MODE_STA    EN_A10_WIFI_MODE_STA
+#define G_A10_WIFI_MODE_AP_STA EN_A10_WIFI_MODE_AP_STA
+
+/*
 /// Wi-Fi 모드 정의: AP 전용 모드
 #define G_A10_WIFI_MODE_AP		0
 /// Wi-Fi 모드 정의: STA 전용 모드
 #define G_A10_WIFI_MODE_STA		1
+*/
 
 // ====================================================================================
 // 풍속 시뮬레이션 단계 (Phase) 정의
@@ -173,7 +186,7 @@ typedef struct __attribute__((packed)) {
     // ------------------------------------------------------
     // [wifi]
     // ------------------------------------------------------
-    uint8_t wifi_mode;                 // 0=AP, 1=STA
+    T_A10_WifiMode_t wifi_mode;                 // 0=AP, 1=STA
     uint8_t sta_network_count;         // 저장된 STA 네트워크 수
     char ap_ssid[G_A10_WIFI_SSID_LEN];
     char ap_password[G_A10_WIFI_PWD_LEN];
@@ -225,7 +238,7 @@ void initDefaultConfig(ST_A10_WindConfig &p_cfg) {
     p_cfg.thermal_check_interval_ms 	= 5000;
 
     // [wifi] 기본 Wi-Fi 설정
-    p_cfg.wifi_mode 					= G_A10_WIFI_MODE_STA;
+    p_cfg.wifi_mode 					= EN_A10_WIFI_MODE_AP_STA;
     strlcpy(p_cfg.ap_ssid, "WindSim_AP", sizeof(p_cfg.ap_ssid));
     strlcpy(p_cfg.ap_password, "password", sizeof(p_cfg.ap_password));
     p_cfg.sta_network_count 			= 0;
