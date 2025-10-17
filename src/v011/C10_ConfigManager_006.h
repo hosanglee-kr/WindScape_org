@@ -349,6 +349,6 @@ class CL_C10_ConfigManager {
         p_config.turbulence_intensity_sigma = 0.45f;
         p_config.thermal_bubble_strength = 2.2f;
         p_config.thermal_bubble_radius = 20.0f;
-        p_config.preset_mode_index = EN_A10_PRESET_COUNTRYSIDE;
+        p_config.preset_mode_index = EN_A10_PRESET_COUNTRY;
     }
 };
