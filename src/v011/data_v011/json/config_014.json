@@ -2,9 +2,22 @@
     "security": {
         "api_key": ""
     },
-
+    "web" : {
+         "html_file" : {
+               "file" : "/html/SC10_main_015.html",
+               "uri" : "/main.html"
+         },
+        "js_file" : {
+               "file" : "/html/SC10_main_015.js"",
+               "uri" : "/SC10_main_015.js"
+         },
+        "css_file" : {
+               "file" : "/html/SC10_main_015.css",
+               "uri" : "/SC10_main_015.css"
+         }
+    },
     "wifi": {
-        "wifi_mode": 1,
+        "wifi_mode": 2,
         "ap_networks" : {
             "ap_ssid": "NatureWind",
             "ap_password": "2540"
