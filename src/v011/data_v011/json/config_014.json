@@ -5,15 +5,18 @@
     "web" : {
          "html_file" : {
                "file" : "/html/SC10_main_015.html",
-               "uri" : "/main.html"
+               "uri" : "/main.html",
+               "mime" : "text/html"
          },
         "js_file" : {
                "file" : "/html/SC10_main_015.js",
-               "uri" : "/SC10_main_015.js"
+               "uri" : "/SC10_main_015.js",
+               "mime" : "application/javascript"
          },
         "css_file" : {
                "file" : "/html/SC10_main_015.css",
-               "uri" : "/SC10_main_015.css"
+               "uri" : "/SC10_main_015.css",
+               "mime" : "text/css"
          }
     },
     "wifi": {
