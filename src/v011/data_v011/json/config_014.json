@@ -18,7 +18,7 @@
     },
     "wifi": {
         "wifi_mode": 2,
-        "ap_networks" : {
+        "ap_network" : {
             "ap_ssid": "NatureWind",
             "ap_password": "2540"
         },
