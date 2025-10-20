@@ -121,9 +121,11 @@ public:
         strlcpy(p_cfg.api_key, v_root["security"]["api_key"] | "", sizeof(p_cfg.api_key));
 
         // web
+        /*
         _copyWebFile(p_cfg.web.html_file, v_root["web"]["html_file"]);
         _copyWebFile(p_cfg.web.js_file,   v_root["web"]["js_file"]);
         _copyWebFile(p_cfg.web.css_file,  v_root["web"]["css_file"]);
+        */
 
         // wifi
         p_cfg.wifi_mode = v_root["wifi"]["wifi_mode"] | p_cfg.wifi_mode;
@@ -200,11 +202,13 @@ public:
         }
 
         // web
+        /*
         if (!v_root["web"].isNull()) {
             _maybeCopyWebFile(p_cfg.web.html_file, v_root["web"]["html_file"]);
             _maybeCopyWebFile(p_cfg.web.js_file,   v_root["web"]["js_file"]);
             _maybeCopyWebFile(p_cfg.web.css_file,  v_root["web"]["css_file"]);
         }
+        */
 
         // hw
         if (!v_root["hw"].isNull()) {
