@@ -25,6 +25,8 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
+//#define G_A10_DYNIM_WEB_STATIC_FILE_USE  0
+
 namespace A10_Const {
     constexpr char FW_VERSION[] = "SC10_FW_1.0.0";
 
@@ -32,18 +34,20 @@ namespace A10_Const {
     constexpr char CONFIG_JSON_FILE[]         = "/json/config_014.json";
     constexpr char CONFIG_JSON_FILE_BACKUP[]  = "/json/config_014.json.bak";
 
-    // 기본 WEB 파일 (설정값 없거나 오류 시 Fallback)
-    constexpr char DEF_HTML_FILE[] = "/html/SC10_main_016.html";
-    constexpr char DEF_HTML_URI[]  = "/main.html";
-    constexpr char DEF_HTML_MIME[] = "text/html";
+        // 기본 WEB 파일 (설정값 없거나 오류 시 Fallback)
+        constexpr char DEF_HTML_FILE[] = "/html/SC10_main_016.html";
+        constexpr char DEF_HTML_URI[]  = "/main.html";
+        constexpr char DEF_HTML_MIME[] = "text/html";
 
-    constexpr char DEF_CSS_FILE[]  = "/html/SC10_main_016.css";
-    constexpr char DEF_CSS_URI[]   = "/SC10_main_016.css";
-    constexpr char DEF_CSS_MIME[]  = "text/css";
+        constexpr char DEF_CSS_FILE[]  = "/html/SC10_main_016.css";
+        constexpr char DEF_CSS_URI[]   = "/SC10_main_016.css";
+        constexpr char DEF_CSS_MIME[]  = "text/css";
 
-    constexpr char DEF_JS_FILE[]   = "/html/SC10_main_016.js";
-    constexpr char DEF_JS_URI[]    = "/SC10_main_016.js";
-    constexpr char DEF_JS_MIME[]   = "application/javascript";
+        constexpr char DEF_JS_FILE[]   = "/html/SC10_main_016.js";
+        constexpr char DEF_JS_URI[]    = "/SC10_main_016.js";
+        constexpr char DEF_JS_MIME[]   = "application/javascript";
+
+
 
     // STA 저장 최대 개수
     constexpr int  MAX_STA_NETWORKS = 5;
@@ -112,26 +116,30 @@ typedef struct {
     char password[G_A10_WIFI_PWD_LEN];
 } ST_A10_StaCredential;
 
-// WEB 파일 3종
-typedef struct {
-    char file[G_A10_WEB_PATH_LEN];
-    char uri[G_A10_WEB_URI_LEN];
-    char mime[G_A10_WEB_MIME_LEN];
-} ST_A10_WebFile;
+#ifdef G_A10_DYNIM_WEB_STATIC_FILE_USE
+    // WEB 파일 3종
+    typedef struct {
+        char file[G_A10_WEB_PATH_LEN];
+        char uri[G_A10_WEB_URI_LEN];
+        char mime[G_A10_WEB_MIME_LEN];
+    } ST_A10_WebFile;
 
-typedef struct {
-    ST_A10_WebFile html_file;
-    ST_A10_WebFile js_file;
-    ST_A10_WebFile css_file;
-} ST_A10_WebConfig;
+    typedef struct {
+        ST_A10_WebFile html_file;
+        ST_A10_WebFile js_file;
+        ST_A10_WebFile css_file;
+    } ST_A10_WebConfig;
+#endif
 
 // 메인 설정 구조체 (packed로 정렬 최소화)
 typedef struct __attribute__((packed)) {
     // [security]
     char api_key[G_A10_API_KEY_MAX_LEN + 1];
 
-    // [web]
-    ST_A10_WebConfig web;
+    #ifdef G_A10_DYNIM_WEB_STATIC_FILE_USE
+        // [web]
+        ST_A10_WebConfig web;
+    #endif
 
     // [sim]
     float wind_intensity;
