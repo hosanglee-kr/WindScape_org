@@ -1,30 +1,31 @@
 
 
+#pragma once
 /*
- * M10_WiFiManager_006.h
  * ------------------------------------------------------
- * Wifi Manager
+ * 소스명 : M10_WiFiManager_007.h
+ * 모듈명 : WindScape Wi-Fi Manager
  * ------------------------------------------------------
  * 기능 요약:
- *  - 추가 필요
+ *  - Wi-Fi AP/STA/AP+STA 모드 제어
+ *  - STA 우선 연결 / 실패 시 AP 폴백
+ *  - 네트워크 스캔, 이벤트 로그, 연결 상태 확인
+ *  - config_014.json 및 A10_Const_007.h 구조 완전 호환
  * ------------------------------------------------------
-  * - 네이밍 규칙:
- *    - 네이밍 규칙의 모듈약어 : M10
- *    - 전역 상수/매크로: G_모듈약어_ 접두사
- *    - 전역 변수: g_A10_ 접두사
- *    - 로컬 변수 :v_ 접두사
+ * 코드 네이밍 규칙:
+ *    - 모듈약어 : M10
+ *    - 전역 상수/매크로: G_M10_ 접두사
+ *    - 전역 변수: g_M10_ 접두사
+ *    - 로컬 변수 : v_ 접두사
  *    - 함수 인자 : p_ 접두사
- *    - type은 T_모듈약어_ 접두사
- *    - enum 상수 : EN_모듈약어_ 접두사
- *    - 구조체 : ST_모듈약어_ 접두사
- *    - 클래스 : CL_모듈약어_ 접두사
- *    - 클래스 private 맴버변수/맴버함수 : _ 접두사
- *    - 클래스 정적 맴버변수 : s_ 접두사
+ *    - type은 T_M10_ 접두사
+ *    - enum 상수 : EN_M10_ 접두사
+ *    - 구조체 : ST_M10_ 접두사
+ *    - 클래스 : CL_M10_ 접두사
+ *    - 클래스 private 멤버: _ 접두사
  *    - 전역함수 : 모듈약어_ 접두사
  */
 
-
-#pragma once
 #include <ArduinoJson.h>
 #include <WiFi.h>
 #include <WiFiMulti.h>
@@ -33,220 +34,205 @@
 #include "D10_Logger_004.h"
 
 class CL_M10_WiFiManager {
-   public:
-	// 연결 상태 캐시
-	static bool s_staConnected;
+public:
+    // -----------------------------
+    // 정적 멤버
+    // -----------------------------
+    static bool s_staConnected;
 
-	// 이벤트 핸들러 등록(한 번만)
-	static void attachWiFiEvents() {
-		static bool v_attached = false;
-		if (v_attached)
-			return;
-		WiFi.onEvent([](arduino_event_id_t, arduino_event_info_t) {
-			CL_D10_Logger::log(EN_L10_LOG_INFO, "WiFi event: STA started");
-		},
-					 ARDUINO_EVENT_WIFI_STA_START);
+    // =====================================================
+    // Wi-Fi 이벤트 핸들러 등록
+    // =====================================================
+    static void attachWiFiEvents() {
+        static bool v_attached = false;
+        if (v_attached) return;
 
-		WiFi.onEvent([](arduino_event_id_t, arduino_event_info_t) {
-			CL_D10_Logger::log(EN_L10_LOG_INFO, "WiFi event: STA got IP: %s",
-							 WiFi.localIP().toString().c_str());
-			s_staConnected = true;
-		},
-					 ARDUINO_EVENT_WIFI_STA_GOT_IP);
+        WiFi.onEvent([](arduino_event_id_t, arduino_event_info_t) {
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "WiFi STA start");
+        }, ARDUINO_EVENT_WIFI_STA_START);
 
-		WiFi.onEvent([](arduino_event_id_t, arduino_event_info_t) {
-			CL_D10_Logger::log(EN_L10_LOG_WARN, "WiFi event: STA disconnected");
-			s_staConnected = false;
-		},
-					 ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
+        WiFi.onEvent([](arduino_event_id_t, arduino_event_info_t) {
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "WiFi STA got IP: %s", WiFi.localIP().toString().c_str());
+            s_staConnected = true;
+        }, ARDUINO_EVENT_WIFI_STA_GOT_IP);
 
-		v_attached = true;
-	}
+        WiFi.onEvent([](arduino_event_id_t, arduino_event_info_t) {
+            CL_D10_Logger::log(EN_L10_LOG_WARN, "WiFi STA disconnected");
+            s_staConnected = false;
+        }, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
 
-	// AP/STA 초기화 (STA 실패 시 AP로 폴백, 성공 시 AP 끄기)
-	// 반환: true = STA 연결됨, false = AP 모드로 폴백
-	static bool init(ST_A10_WindConfig &p_cfg, WiFiMulti &p_multi, uint8_t p_apChannel = 1,
-					 uint8_t p_staMaxTries = 15) {
-		attachWiFiEvents();
+        v_attached = true;
+    }
 
-		// 기본 옵션
-		WiFi.persistent(false);	 // NVS 쓰기 최소화
-		WiFi.setAutoReconnect(true);
-		WiFi.setSleep(false);  // 필요 시 true로 절전
+    // =====================================================
+    // Wi-Fi 초기화 (AP/STA/AP+STA 모드 자동 선택)
+    // =====================================================
+    static bool init(ST_A10_WindConfig &p_cfg, WiFiMulti &p_multi, uint8_t p_apChannel = 1, uint8_t p_staMaxTries = 15) {
+        attachWiFiEvents();
+        WiFi.persistent(false);
+        WiFi.setAutoReconnect(true);
+        WiFi.setSleep(false);
 
-		/*
-		if (strlen(p_cfg.hostname) > 0) {
-		  WiFi.setHostname(p_cfg.hostname);
-		}
-		*/
+        // 기본 호스트네임 (자동 생성)
+        char v_hostname[32];
+        snprintf(v_hostname, sizeof(v_hostname), "NatureWind-%04X", (uint16_t)(esp_random() & 0xFFFF));
+        WiFi.setHostname(v_hostname);
 
-		// (선택) 국가코드 설정 - 규제 채널/출력 준수
-		// esp_wifi_set_country를 직접 쓰려면 esp_wifi.h include 필요
-		// WiFi.setCountry("KR"); // 최신 IDF 래퍼가 있는 경우
+        // ---------------------------
+        // Wi-Fi 모드 설정
+        // ---------------------------
+        switch (p_cfg.wifi_mode) {
+            case EN_A10_WIFI_MODE_AP:
+                WiFi.mode(WIFI_AP);
+                return startAP(p_cfg, p_apChannel);
+            case EN_A10_WIFI_MODE_STA:
+                WiFi.mode(WIFI_STA);
+                return startSTA(p_cfg, p_multi, p_staMaxTries);
+            case EN_A10_WIFI_MODE_AP_STA:
+            default:
+                WiFi.mode(WIFI_AP_STA);
+                startAP(p_cfg, p_apChannel);
+                return startSTA(p_cfg, p_multi, p_staMaxTries);
+        }
+    }
 
-		WiFi.mode(WIFI_AP_STA);
+    // =====================================================
+    // AP 기동
+    // =====================================================
+    static bool startAP(ST_A10_WindConfig &p_cfg, uint8_t p_channel) {
+        char v_pass[65];
+        strlcpy(v_pass, p_cfg.ap_password, sizeof(v_pass));
 
-		// ---------- AP 기동 ----------
-		char v_apPass[65] = {0};
-		strlcpy(v_apPass, p_cfg.ap_password, sizeof(v_apPass));
+        // 8자 미만 시 임시 비밀번호 생성
+        if (strlen(v_pass) < 8) {
+            uint32_t v_r = esp_random();
+            snprintf(v_pass, sizeof(v_pass), "ap_%08X", v_r);
+            CL_D10_Logger::log(EN_L10_LOG_WARN, "AP password too short (<8). Using temp: %s", v_pass);
+        }
 
-		// 이전 연결 상태 정리 후 AP 시작
-		WiFi.disconnect(true, true);
-		// (선택) 고정 AP IP 설정이 필요하다면:
-		// WiFi.softAPConfig(IPAddress(192,168,4,1), IPAddress(192,168,4,1), IPAddress(255,255,255,0));
+        WiFi.softAPdisconnect(true);
+        WiFi.disconnect(true, true);
 
-		bool v_apOk = WiFi.softAP(
-				p_cfg.ap_ssid, 
-				v_apPass, 
-				p_apChannel, 
-				false,  			// hidden
-				4 					//	max conn
-			);
-		if (!v_apOk) {
-			CL_D10_Logger::log(EN_L10_LOG_ERROR, "AP start failed");
-		} else {
-			CL_D10_Logger::log(EN_L10_LOG_INFO, "AP started: %s, IP: %s",
-							 p_cfg.ap_ssid, WiFi.softAPIP().toString().c_str());
-		}
-		s_staConnected = false;
-				
-		// ---------- STA 우선 시도 ----------
-		if (p_cfg.wifi_mode == G_A10_WIFI_MODE_STA && p_cfg.sta_network_count > 0) {
-			for (int i = 0; i < p_cfg.sta_network_count; i++) {
-				// 비밀번호는 로그 금지
-				p_multi.addAP(p_cfg.sta_networks[i].ssid, p_cfg.sta_networks[i].password);
-				CL_D10_Logger::log(EN_L10_LOG_INFO, "WiFi STA added: %s", p_cfg.sta_networks[i].ssid);
-			}
+        bool v_ok = WiFi.softAP(p_cfg.ap_ssid, v_pass, p_channel, false, 4);
+        if (v_ok) {
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "AP started: %s (%s)", p_cfg.ap_ssid, WiFi.softAPIP().toString().c_str());
+        } else {
+            CL_D10_Logger::log(EN_L10_LOG_ERROR, "AP start failed!");
+        }
+        return v_ok;
+    }
 
-			const uint32_t v_tryStart = millis();
-			uint8_t		   v_tries	  = 0;
-			uint32_t	   v_waitMs	  = 500;  // 지수 백오프 시작
-			while (WiFi.status() != WL_CONNECTED && v_tries < p_staMaxTries) {
-				wl_status_t s = (wl_status_t)WiFi.status();
-				(void)s;  // 필요하면 상태별 로깅 추가
-				if (p_multi.run(2500) == WL_CONNECTED)
-					break;	// 각 시도 2.5초
-				v_tries++;
-				delay(v_waitMs);
-				// 지수 백오프: 최대 4초까지
-				v_waitMs = (v_waitMs < 4000) ? v_waitMs * 2 : 4000;
-				Serial.print(".");
-			}
+    // =====================================================
+    // STA 기동 (WiFiMulti 이용)
+    // =====================================================
+    static bool startSTA(ST_A10_WindConfig &p_cfg, WiFiMulti &p_multi, uint8_t p_maxTries) {
+        s_staConnected = false;
+        if (p_cfg.sta_network_count == 0) {
+            CL_D10_Logger::log(EN_L10_LOG_WARN, "No STA network configured");
+            return false;
+        }
 
-			if (WiFi.status() == WL_CONNECTED) {
-				CL_D10_Logger::log(EN_L10_LOG_INFO, "\nSTA Connected: %s, IP: %s",
-								 WiFi.SSID().c_str(), WiFi.localIP().toString().c_str());
-				// STA 붙었으면 AP는 끔
-				WiFi.softAPdisconnect(true);
-				return true;
-			}
-			CL_D10_Logger::log(EN_L10_LOG_WARN, "\nSTA connect failed. Fallback to AP");
-		}
+        for (int i = 0; i < p_cfg.sta_network_count; i++) {
+            p_multi.addAP(p_cfg.sta_networks[i].ssid, p_cfg.sta_networks[i].password);
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "STA candidate: %s", p_cfg.sta_networks[i].ssid);
+        }
 
+        CL_D10_Logger::log(EN_L10_LOG_INFO, "Connecting STA...");
+        uint8_t v_try = 0;
+        uint32_t v_wait = 500;
+        while (WiFi.status() != WL_CONNECTED && v_try < p_maxTries) {
+            if (p_multi.run(2500) == WL_CONNECTED) break;
+            v_try++;
+            delay(v_wait);
+            v_wait = (v_wait < 4000) ? v_wait * 2 : 4000;
+            Serial.print(".");
+        }
 
-		
+        if (WiFi.status() == WL_CONNECTED) {
+            s_staConnected = true;
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "STA connected: %s (%s)", WiFi.SSID().c_str(), WiFi.localIP().toString().c_str());
+            return true;
+        } else {
+            CL_D10_Logger::log(EN_L10_LOG_WARN, "STA connect failed → fallback to AP");
+            return false;
+        }
+    }
 
-		// ---------- AP 기동 ----------
-		/*
-		char v_apPass[65] = {0};
-		strlcpy(v_apPass, p_cfg.ap_password, sizeof(v_apPass));
-		
-		// // AP 비번 안전장치(8자 미만이면 임시 난수 비번 생성)
-		// char v_apPass[65] = {0};
-		// if (strlen(p_cfg.ap_password) >= 8) {
-		// 	strlcpy(v_apPass, p_cfg.ap_password, sizeof(v_apPass));
-		// } else {
-		// 	// 간단 난수 비번 생성(개발 편의) — 제품에선 고정/UI 입력 권장
-		// 	uint32_t r = (uint32_t)esp_random();
-		// 	snprintf(v_apPass, sizeof(v_apPass), "ap_%08X", (unsigned)r);
-		// 	CL_D10_Logger::log(EN_L10_LOG_WARN,
-		// 					 "AP password too short(<8). Using temporary password: %s", v_apPass);
-		// }
-		
-		// 이전 연결 상태 정리 후 AP 시작
-		WiFi.disconnect(true, true);
-		// (선택) 고정 AP IP 설정이 필요하다면:
-		// WiFi.softAPConfig(IPAddress(192,168,4,1), IPAddress(192,168,4,1), IPAddress(255,255,255,0));
+    // =====================================================
+    // 네트워크 스캔 (결과 JSON 문자열)
+    // =====================================================
+    static String scanNetworksJson(bool p_async = false) {
+        int v_found = WiFi.scanNetworks(p_async, true);
+        if (p_async) return F("[]");
 
-		bool v_apOk = WiFi.softAP(
-				p_cfg.ap_ssid, 
-				v_apPass, 
-				p_apChannel, 
-				false,  			// hidden
-				4 					//	max conn
-			);
-		if (!v_apOk) {
-			CL_D10_Logger::log(EN_L10_LOG_ERROR, "AP start failed");
-		} else {
-			CL_D10_Logger::log(EN_L10_LOG_INFO, "AP started: %s, IP: %s",
-							 p_cfg.ap_ssid, WiFi.softAPIP().toString().c_str());
-		}
-		s_staConnected = false;
-		*/
-		return false;
-	}
+        JsonDocument v_doc;
+        JsonArray v_arr = v_doc.to<JsonArray>();
 
-	// 주변 네트워크 스캔 → JSON(String)
-	// 비동기 스캔을 원하면 p_async=true로 두 번 호출(1차 트리거, 2차 수집)
-	static String scanNetworksJson(bool p_async = false) {
-		int v_found = WiFi.scanNetworks(p_async /*async*/, true /*hidden*/);
-		if (p_async) {
-			// 트리거만 하고 빈 배열 반환(다음 호출에서 결과 수집)
-			return F("[]");
-		}
+        for (int i = 0; i < v_found; i++) {
+            JsonObject o = v_arr.add<JsonObject>();
+            o["ssid"]  = WiFi.SSID(i);
+            o["rssi"]  = WiFi.RSSI(i);
+            o["chan"]  = WiFi.channel(i);
+            o["bssid"] = WiFi.BSSIDstr(i);
+            o["enc"]   = encTypeToString(WiFi.encryptionType(i));
+        }
 
-		//
-		JsonDocument v_doc;
-		JsonArray	 v_arr = v_doc.to<JsonArray>();
+        String v_out;
+        serializeJson(v_doc, v_out);
+        WiFi.scanDelete();
+        return v_out;
+    }
 
-		for (int i = 0; i < v_found; i++) {
-			JsonObject o = v_arr.add<JsonObject>();
-			o["ssid"]	 = WiFi.SSID(i);
-			o["rssi"]	 = WiFi.RSSI(i);
-			o["bssid"]	 = WiFi.BSSIDstr(i);
-			o["chan"]	 = WiFi.channel(i);
-			o["enc"]	 = encTypeToString(WiFi.encryptionType(i));	 // 사람이 읽기 쉬운 문자열
-		}
+    // =====================================================
+    // 현재 연결 상태 리턴
+    // =====================================================
+    static bool isStaConnected() {
+        return s_staConnected && WiFi.status() == WL_CONNECTED;
+    }
 
-		String out;
-		serializeJson(v_doc, out);
-		// 스캔 버퍼 정리(메모리 회수)
-		WiFi.scanDelete();
-		return out;
-	}
+    // STA 상태 문자열
+    static const char* getStaStatusString() {
+        wl_status_t s = (wl_status_t)WiFi.status();
+        switch (s) {
+            case WL_CONNECTED: return "CONNECTED";
+            case WL_NO_SSID_AVAIL: return "NO_SSID";
+            case WL_CONNECT_FAILED: return "FAILED";
+            case WL_IDLE_STATUS: return "IDLE";
+            case WL_DISCONNECTED: return "DISCONNECTED";
+            default: return "UNKNOWN";
+        }
+    }
 
-	// 현재 STA 연결 여부
-	static bool isStaConnected() {
-		return s_staConnected && (WiFi.status() == WL_CONNECTED);
-	}
+    // AP 정보 JSON
+    static String getApInfoJson() {
+        JsonDocument v_doc;
+        v_doc["ssid"] = WiFi.softAPSSID();
+        v_doc["ip"]   = WiFi.softAPIP().toString();
+        v_doc["mac"]  = WiFi.softAPmacAddress();
+        String v_out;
+        serializeJson(v_doc, v_out);
+        return v_out;
+    }
 
-   private:
-	// 암호화 타입 문자열 변환
-	static const char *encTypeToString(wifi_auth_mode_t m) {
-		switch (m) {
-			case WIFI_AUTH_OPEN:
-				return "OPEN";
-			case WIFI_AUTH_WEP:
-				return "WEP";
-			case WIFI_AUTH_WPA_PSK:
-				return "WPA_PSK";
-			case WIFI_AUTH_WPA2_PSK:
-				return "WPA2_PSK";
-			case WIFI_AUTH_WPA_WPA2_PSK:
-				return "WPA_WPA2_PSK";
-			case WIFI_AUTH_WPA2_ENTERPRISE:
-				return "WPA2_ENT";
-			case WIFI_AUTH_WPA3_PSK:
-				return "WPA3_PSK";
-			case WIFI_AUTH_WPA2_WPA3_PSK:
-				return "WPA2_WPA3_PSK";
-			case WIFI_AUTH_WAPI_PSK:
-				return "WAPI_PSK";
-			default:
-				return "UNKNOWN";
-		}
-	}
+private:
+    // 암호화 타입 문자열 변환
+    static const char* encTypeToString(wifi_auth_mode_t p_mode) {
+        switch (p_mode) {
+            case WIFI_AUTH_OPEN: return "OPEN";
+            case WIFI_AUTH_WEP: return "WEP";
+            case WIFI_AUTH_WPA_PSK: return "WPA_PSK";
+            case WIFI_AUTH_WPA2_PSK: return "WPA2_PSK";
+            case WIFI_AUTH_WPA_WPA2_PSK: return "WPA_WPA2_PSK";
+            case WIFI_AUTH_WPA2_ENTERPRISE: return "WPA2_ENT";
+            case WIFI_AUTH_WPA3_PSK: return "WPA3_PSK";
+            case WIFI_AUTH_WPA2_WPA3_PSK: return "WPA2_WPA3_PSK";
+            case WIFI_AUTH_WAPI_PSK: return "WAPI_PSK";
+            default: return "UNKNOWN";
+        }
+    }
 };
 
+// ------------------------
 // 정적 멤버 정의
+// ------------------------
 bool CL_M10_WiFiManager::s_staConnected = false;
