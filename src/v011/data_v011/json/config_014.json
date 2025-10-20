@@ -4,18 +4,18 @@
     },
     "web" : {
          "html_file" : {
-               "file" : "/html/SC10_main_015.html",
+               "file" : "/html/SC10_main_017.html",
                "uri" : "/main.html",
                "mime" : "text/html"
          },
         "js_file" : {
-               "file" : "/html/SC10_main_015.js",
-               "uri" : "/SC10_main_015.js",
+               "file" : "/html/SC10_main_017.js",
+               "uri" : "/SC10_main_017.js",
                "mime" : "application/javascript"
          },
         "css_file" : {
-               "file" : "/html/SC10_main_015.css",
-               "uri" : "/SC10_main_015.css",
+               "file" : "/html/SC10_main_017.css",
+               "uri" : "/SC10_main_017.css",
                "mime" : "text/css"
          }
     },
