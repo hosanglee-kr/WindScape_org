@@ -35,16 +35,16 @@ namespace A10_Const {
     constexpr char CONFIG_JSON_FILE_BACKUP[]  = "/json/config_014.json.bak";
 
         // 기본 WEB 파일 (설정값 없거나 오류 시 Fallback)
-        constexpr char DEF_HTML_FILE[] = "/html/SC10_main_016.html";
+        constexpr char DEF_HTML_FILE[] = "/html/SC10_main_017.html";
         constexpr char DEF_HTML_URI[]  = "/main.html";
         constexpr char DEF_HTML_MIME[] = "text/html";
 
-        constexpr char DEF_CSS_FILE[]  = "/html/SC10_main_016.css";
-        constexpr char DEF_CSS_URI[]   = "/SC10_main_016.css";
+        constexpr char DEF_CSS_FILE[]  = "/html/SC10_main_017.css";
+        constexpr char DEF_CSS_URI[]   = "/SC10_main_017.css";
         constexpr char DEF_CSS_MIME[]  = "text/css";
 
-        constexpr char DEF_JS_FILE[]   = "/html/SC10_main_016.js";
-        constexpr char DEF_JS_URI[]    = "/SC10_main_016.js";
+        constexpr char DEF_JS_FILE[]   = "/html/SC10_main_017.js";
+        constexpr char DEF_JS_URI[]    = "/SC10_main_017.js";
         constexpr char DEF_JS_MIME[]   = "application/javascript";
 
 
