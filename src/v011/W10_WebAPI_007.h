@@ -1,15 +1,17 @@
+
+
 #pragma once
 /*
  * ------------------------------------------------------
  * 소스명 : W10_WebAPI_007.h
- * 모듈명 : WindScape Configuration Manager
+ * 모듈명 : WindScape Web API Manager
  * ------------------------------------------------------
  * 기능 요약:
- *  - LittleFS 정적 자산 서빙(설정 기반 동적 경로)
- *  - /api/state, /api/web, /api/config, /api/reset 등
- *  - Wi-Fi 스캔/진단/로그/버전
- *  - OTA/업로드(분리 라우트 유지 시 확장 가능)
- *  - API Key 인증 / CORS / No-Cache
+ *  - LittleFS 정적 자산 서빙(설정 기반 동적/정적 전환 가능)
+ *  - /api/state, /api/config, /api/reset, /api/version 등
+ *  - Wi-Fi 스캔/진단/로그
+ *  - OTA/업로드 확장 가능
+ *  - API Key 인증 / CORS / No-Cache 헤더 적용
  * ------------------------------------------------------
  * - 코드 네이밍 규칙:
  *    - 모듈약어 : W10
@@ -44,19 +46,28 @@ public:
         mountStatic(p_srv);
     }
 
-    // 정적 파일(설정 기반) + 루트 프록시
+    // ------------------------------------------------------
+    // 정적 파일(설정 기반 or 고정값) 서빙
+    // ------------------------------------------------------
     static void mountStatic(AsyncWebServer &p_srv) {
-        // 루트(/) → 설정된 HTML URI로 리다이렉트
+        // 루트 리다이렉트
         p_srv.on("/", HTTP_GET, [](AsyncWebServerRequest *p_req){
-            if (strlen(g_A10_config.web.html_file.uri)>0)
+#ifdef G_A10_DYNIM_WEB_STATIC_FILE_USE
+            if (strlen(g_A10_config.web.html_file.uri) > 0)
                 p_req->redirect(String(g_A10_config.web.html_file.uri));
             else
                 p_req->redirect(String(A10_Const::DEF_HTML_URI));
+#else
+            p_req->redirect(String(A10_Const::DEF_HTML_URI));
+#endif
         });
 
-        // 설정 기반 개별 라우트
+        // --------------------------
+        // 정적 자산 라우트 등록
+        // --------------------------
         struct ST_W10_Route { const char* uri; const char* file; const char* mime; };
 
+#ifdef G_A10_DYNIM_WEB_STATIC_FILE_USE
         ST_W10_Route v_routes[3] = {
             { g_A10_config.web.html_file.uri[0]? g_A10_config.web.html_file.uri : A10_Const::DEF_HTML_URI,
               g_A10_config.web.html_file.file[0]? g_A10_config.web.html_file.file : A10_Const::DEF_HTML_FILE,
@@ -70,6 +81,13 @@ public:
               g_A10_config.web.js_file.file[0]? g_A10_config.web.js_file.file : A10_Const::DEF_JS_FILE,
               g_A10_config.web.js_file.mime[0]? g_A10_config.web.js_file.mime : A10_Const::DEF_JS_MIME }
         };
+#else
+        ST_W10_Route v_routes[3] = {
+            { A10_Const::DEF_HTML_URI, A10_Const::DEF_HTML_FILE, A10_Const::DEF_HTML_MIME },
+            { A10_Const::DEF_CSS_URI,  A10_Const::DEF_CSS_FILE,  A10_Const::DEF_CSS_MIME },
+            { A10_Const::DEF_JS_URI,   A10_Const::DEF_JS_FILE,   A10_Const::DEF_JS_MIME }
+        };
+#endif
 
         for (auto &v_r : v_routes) {
             p_srv.on(v_r.uri, HTTP_GET, [=](AsyncWebServerRequest *p_request) {
@@ -96,11 +114,17 @@ public:
         });
     }
 
+    // ------------------------------------------------------
+    // API 라우트
+    // ------------------------------------------------------
     static void mountApi(AsyncWebServer &p_srv, CL_S10_Simulation &p_sim, WiFiMulti &p_multi, CL_P10_PWM &p_P10_pwm) {
-        // /api/web : 현재 web 설정만 반환 (동적 로딩용)
+
+#ifdef G_A10_DYNIM_WEB_STATIC_FILE_USE
+        // /api/web : 현재 web 설정 반환 (동적 모드에서만)
         p_srv.on("/api/web", HTTP_GET, [](AsyncWebServerRequest *p_req){
             JsonDocument v_doc;
             JsonObject v_root = v_doc.to<JsonObject>();
+
             v_root["web"]["html_file"]["file"] = g_A10_config.web.html_file.file;
             v_root["web"]["html_file"]["uri"]  = g_A10_config.web.html_file.uri;
             v_root["web"]["html_file"]["mime"] = g_A10_config.web.html_file.mime;
@@ -118,8 +142,9 @@ public:
             _applyHeaders(v_rsp, true);
             p_req->send(v_rsp);
         });
+#endif
 
-        // /api/state : 상태 + 전체 config 요약
+        // /api/state : 현재 시뮬레이션 및 config 상태
         p_srv.on("/api/state", HTTP_GET, [&p_sim, &p_P10_pwm](AsyncWebServerRequest *p_req){
             JsonDocument v_doc;
             JsonVariant v_root = v_doc.to<JsonVariant>();
@@ -148,7 +173,7 @@ public:
             // config 직렬화
             CL_C10_ConfigManager::toJson(g_A10_config, v_root["config"].to<JsonObject>());
 
-            // presets
+            // presets 배열
             JsonArray v_presets = v_root["presets"].to<JsonArray>();
             for (int v_i=0; v_i<EN_A10_PRESET_COUNT; ++v_i) v_presets.add(g_A10_PRESET_MODE_NAMES_Arr[v_i]);
 
@@ -159,7 +184,7 @@ public:
             p_req->send(v_resp);
         });
 
-        // /api/config : 설정 변경 (부분 패치)
+        // /api/config : 설정 변경 (PATCH)
         p_srv.on("/api/config", HTTP_POST, [](AsyncWebServerRequest *p_request){}, nullptr,
                  [&p_sim, &p_multi, &p_P10_pwm](AsyncWebServerRequest *p_request, uint8_t *data, size_t len, size_t index, size_t total){
             if (!_authorize(p_request)) { p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
@@ -179,9 +204,7 @@ public:
                 CL_C10_ConfigManager::patchFromJson(g_A10_config, v_doc, v_wifiChanged);
                 CL_C10_ConfigManager::save(g_A10_config);
 
-                if (g_A10_config.preset_mode_index != v_oldPreset) {
-                    p_sim.applyCurrentPreset(true);
-                }
+                if (g_A10_config.preset_mode_index != v_oldPreset) p_sim.applyCurrentPreset(true);
                 if (g_A10_config.fan_pwm_pin != v_oldPin)       p_P10_pwm.set_pwmPin(g_A10_config.fan_pwm_pin);
                 if (g_A10_config.pwm_channel != v_oldCh)        p_P10_pwm.set_pwmChannel(g_A10_config.pwm_channel);
                 if (g_A10_config.pwm_frequency != v_oldFreq)    p_P10_pwm.set_pwmFrequency(g_A10_config.pwm_frequency);
@@ -196,7 +219,7 @@ public:
             }
         });
 
-        // /api/config/init : 기본 설정 생성
+        // /api/config/init
         p_srv.on("/api/config/init", HTTP_POST, [](AsyncWebServerRequest *p_request){
             if (!_authorize(p_request)) { p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
             bool v_ok = CL_C10_ConfigManager::saveDefaultConfig();
@@ -204,7 +227,7 @@ public:
             else      p_request->send(500, "application/json", "{\"error\":\"Init failed or exists\"}");
         });
 
-        // /api/reset : 공장 초기화
+        // /api/reset
         p_srv.on("/api/reset", HTTP_POST, [](AsyncWebServerRequest *p_request){
             if (!_authorize(p_request)) { p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
             CL_C10_ConfigManager::reset();
@@ -212,7 +235,7 @@ public:
             ESP.restart();
         });
 
-        // /api/scan : Wi-Fi 스캔
+        // /api/scan
         p_srv.on("/api/scan", HTTP_GET, [](AsyncWebServerRequest *p_request){
             bool v_async = p_request->hasParam("async");
             String v_json = CL_M10_WiFiManager::scanNetworksJson(v_async);
@@ -221,7 +244,7 @@ public:
             p_request->send(v_resp);
         });
 
-        // /api/diag : 진단
+        // /api/diag
         p_srv.on("/api/diag", HTTP_GET, [](AsyncWebServerRequest *p_request){
             JsonDocument v_doc;
             v_doc["heap"]     = ESP.getFreeHeap();
@@ -234,7 +257,7 @@ public:
             p_request->send(v_resp);
         });
 
-        // /api/logs : 로그
+        // /api/logs
         p_srv.on("/api/logs", HTTP_GET, [](AsyncWebServerRequest *p_request){
             String v_json = CL_D10_Logger::getLogsJson();
             auto *v_resp = p_request->beginResponse(200, "application/json", v_json);
@@ -242,7 +265,7 @@ public:
             p_request->send(v_resp);
         });
 
-        // /api/version : 버전
+        // /api/version
         p_srv.on("/api/version", HTTP_GET, [](AsyncWebServerRequest *p_request){
             JsonDocument v_doc;
             v_doc["fw_version"]  = A10_Const::FW_VERSION;
@@ -252,11 +275,12 @@ public:
             _applyHeaders(v_resp, true);
             p_request->send(v_resp);
         });
-
-        // OTA/업로드 라우트는 기존과 동일하게 필요 시 추가
     }
 
 private:
+    // ------------------------------------------------------
+    // 내부 공통 유틸
+    // ------------------------------------------------------
     static void _applyHeaders(AsyncWebServerResponse *p_resp, bool p_noCache=false) {
         if (p_noCache) _addNoCache(p_resp);
         _addCors(p_resp);
@@ -278,3 +302,4 @@ private:
         return (v_h && v_h->value()==String(g_A10_config.api_key));
     }
 };
+
