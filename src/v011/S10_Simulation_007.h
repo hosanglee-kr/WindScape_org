@@ -1,6 +1,39 @@
-// S10_Simulation_007.h
 
 #pragma once
+/*
+ * ------------------------------------------------------
+ * 소스명 : S10_Simulation_006.h
+ * 모듈명 : WindScape 시뮬레이션 Manager
+ * ------------------------------------------------------
+ * 기능 요약:
+ *  - 작성해줘 
+ 
+ // 바람 시뮬레이션(Phase/난류/돌풍/열기포/팬 제어)
+// - 원본의 Von Kármán 스펙트럼 합성, Phase 전환/히스토리, 목표재생성, 지터/yield 포함
+
+  * 튜닝 가이드 (필요 시 미세조정)
+// 강도 더 세게: location_gust_strength를 0.1~0.3 범위에서 상향
+// 돌풍 더 자주: gust_probability_base를 0.005~0.02 단위로 조정
+// 열기포 더 자주: thermal_bubble_frequency를 0.005~0.02 단위로 조정
+// 전체 풍량(체감 세기): 프리셋별 base_wind_min/max 폭을 넓히거나, 사용자 wind_intensity(설정)로 조절
+
+// > 참고: 실제 돌풍 빈도는 gust_probability_base × (user_freq × phase_mul × wind_factor)로 계산되어
+// 유저 설정과 날씨 Phase에 의해 가중됩니다. 체감이 너무 드물거나 잦으면 base만 소폭 조절해도 충분합니다.
+ * ------------------------------------------------------
+ * - 코드 네이밍 규칙:
+ *    - 모듈약어 : S10
+ *    - 전역 상수/매크로: G_모듈약어_ 접두사
+ *    - 전역 변수: g_모듈약어_ 접두사
+ *    - 로컬 변수 : v_ 접두사
+ *    - 함수 인자 : p_ 접두사
+ *    - type은 T_모듈약어_ 접두사
+ *    - enum 상수 : EN_모듈약어_ 접두사
+ *    - 구조체 : ST_모듈약어_ 접두사
+ *    - 클래스 : CL_모듈약어_ 접두사
+ *    - 클래스 private 멤버: _ 접두사, 정적 멤버: s_
+ *    - 전역함수 : 모듈약어_ 접두사
+ */
+
 #include <Arduino.h>
 
 #include <cmath>
@@ -10,17 +43,6 @@
 
 #include "P10_PWM_ctrl_005.h"
 
-// 바람 시뮬레이션(Phase/난류/돌풍/열기포/팬 제어)
-// - 원본의 Von Kármán 스펙트럼 합성, Phase 전환/히스토리, 목표재생성, 지터/yield 포함
-
-// //튜닝 가이드 (필요 시 미세조정)
-// 강도 더 세게: location_gust_strength를 0.1~0.3 범위에서 상향
-// 돌풍 더 자주: gust_probability_base를 0.005~0.02 단위로 조정
-// 열기포 더 자주: thermal_bubble_frequency를 0.005~0.02 단위로 조정
-// 전체 풍량(체감 세기): 프리셋별 base_wind_min/max 폭을 넓히거나, 사용자 wind_intensity(설정)로 조절
-
-// > 참고: 실제 돌풍 빈도는 gust_probability_base × (user_freq × phase_mul × wind_factor)로 계산되어
-// 유저 설정과 날씨 Phase에 의해 가중됩니다. 체감이 너무 드물거나 잦으면 base만 소폭 조절해도 충분합니다.
 
 class CL_S10_Simulation {
    public:
