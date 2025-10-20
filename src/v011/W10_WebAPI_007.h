@@ -33,8 +33,8 @@
 #include "A10_Const_007.h"
 #include "C10_ConfigManager_007.h"
 #include "D10_Logger_004.h"
-#include "M10_WiFiManager_006.h"
-#include "S10_Simulation_006.h"
+#include "M10_WiFiManager_007.h"
+#include "S10_Simulation_007.h"
 #include "P10_PWM_ctrl_005.h"
 
 class CL_W10_WebAPI {
