@@ -30,6 +30,8 @@
 #include "A10_Const_007.h"
 #include "D10_Logger_004.h"
 
+#define G_C10_DYNIM_WEB_STATIC_FILE_USE  0
+
 class CL_C10_ConfigManager {
 public:
     // 로드 (없으면 false)
@@ -121,11 +123,11 @@ public:
         strlcpy(p_cfg.api_key, v_root["security"]["api_key"] | "", sizeof(p_cfg.api_key));
 
         // web
-        /*
-        _copyWebFile(p_cfg.web.html_file, v_root["web"]["html_file"]);
-        _copyWebFile(p_cfg.web.js_file,   v_root["web"]["js_file"]);
-        _copyWebFile(p_cfg.web.css_file,  v_root["web"]["css_file"]);
-        */
+        #ifdef G_C10_DYNIM_WEB_STATIC_FILE_USE
+            _copyWebFile(p_cfg.web.html_file, v_root["web"]["html_file"]);
+            _copyWebFile(p_cfg.web.js_file,   v_root["web"]["js_file"]);
+            _copyWebFile(p_cfg.web.css_file,  v_root["web"]["css_file"]);
+        #endif
 
         // wifi
         p_cfg.wifi_mode = v_root["wifi"]["wifi_mode"] | p_cfg.wifi_mode;
@@ -202,13 +204,13 @@ public:
         }
 
         // web
-        /*
-        if (!v_root["web"].isNull()) {
-            _maybeCopyWebFile(p_cfg.web.html_file, v_root["web"]["html_file"]);
-            _maybeCopyWebFile(p_cfg.web.js_file,   v_root["web"]["js_file"]);
-            _maybeCopyWebFile(p_cfg.web.css_file,  v_root["web"]["css_file"]);
-        }
-        */
+        #ifdef G_C10_DYNIM_WEB_STATIC_FILE_USE
+            if (!v_root["web"].isNull()) {
+                _maybeCopyWebFile(p_cfg.web.html_file, v_root["web"]["html_file"]);
+                _maybeCopyWebFile(p_cfg.web.js_file,   v_root["web"]["js_file"]);
+                _maybeCopyWebFile(p_cfg.web.css_file,  v_root["web"]["css_file"]);
+            }
+        #endif
 
         // hw
         if (!v_root["hw"].isNull()) {
@@ -284,17 +286,19 @@ public:
         p_cfg.api_key[0] = '\0';
 
         // web (fallback 기본 경로)
-        strlcpy(p_cfg.web.html_file.file, A10_Const::DEF_HTML_FILE, sizeof(p_cfg.web.html_file.file));
-        strlcpy(p_cfg.web.html_file.uri , A10_Const::DEF_HTML_URI , sizeof(p_cfg.web.html_file.uri ));
-        strlcpy(p_cfg.web.html_file.mime, A10_Const::DEF_HTML_MIME, sizeof(p_cfg.web.html_file.mime));
+        #ifdef G_C10_DYNIM_WEB_STATIC_FILE_USE
+            strlcpy(p_cfg.web.html_file.file, A10_Const::DEF_HTML_FILE, sizeof(p_cfg.web.html_file.file));
+            strlcpy(p_cfg.web.html_file.uri , A10_Const::DEF_HTML_URI , sizeof(p_cfg.web.html_file.uri ));
+            strlcpy(p_cfg.web.html_file.mime, A10_Const::DEF_HTML_MIME, sizeof(p_cfg.web.html_file.mime));
 
-        strlcpy(p_cfg.web.js_file.file, A10_Const::DEF_JS_FILE, sizeof(p_cfg.web.js_file.file));
-        strlcpy(p_cfg.web.js_file.uri , A10_Const::DEF_JS_URI , sizeof(p_cfg.web.js_file.uri ));
-        strlcpy(p_cfg.web.js_file.mime, A10_Const::DEF_JS_MIME, sizeof(p_cfg.web.js_file.mime));
+            strlcpy(p_cfg.web.js_file.file, A10_Const::DEF_JS_FILE, sizeof(p_cfg.web.js_file.file));
+            strlcpy(p_cfg.web.js_file.uri , A10_Const::DEF_JS_URI , sizeof(p_cfg.web.js_file.uri ));
+            strlcpy(p_cfg.web.js_file.mime, A10_Const::DEF_JS_MIME, sizeof(p_cfg.web.js_file.mime));
 
-        strlcpy(p_cfg.web.css_file.file, A10_Const::DEF_CSS_FILE, sizeof(p_cfg.web.css_file.file));
-        strlcpy(p_cfg.web.css_file.uri , A10_Const::DEF_CSS_URI , sizeof(p_cfg.web.css_file.uri ));
-        strlcpy(p_cfg.web.css_file.mime, A10_Const::DEF_CSS_MIME, sizeof(p_cfg.web.css_file.mime));
+            strlcpy(p_cfg.web.css_file.file, A10_Const::DEF_CSS_FILE, sizeof(p_cfg.web.css_file.file));
+            strlcpy(p_cfg.web.css_file.uri , A10_Const::DEF_CSS_URI , sizeof(p_cfg.web.css_file.uri ));
+            strlcpy(p_cfg.web.css_file.mime, A10_Const::DEF_CSS_MIME, sizeof(p_cfg.web.css_file.mime));
+        #endif
 
         // wifi
         p_cfg.wifi_mode = EN_A10_WIFI_MODE_AP_STA;
@@ -344,17 +348,19 @@ private:
         p_root["security"]["api_key"] = p_cfg.api_key;
 
         // web
-        p_root["web"]["html_file"]["file"] = p_cfg.web.html_file.file;
-        p_root["web"]["html_file"]["uri"]  = p_cfg.web.html_file.uri;
-        p_root["web"]["html_file"]["mime"] = p_cfg.web.html_file.mime;
+        #ifdef G_C10_DYNIM_WEB_STATIC_FILE_USE
+            p_root["web"]["html_file"]["file"] = p_cfg.web.html_file.file;
+            p_root["web"]["html_file"]["uri"]  = p_cfg.web.html_file.uri;
+            p_root["web"]["html_file"]["mime"] = p_cfg.web.html_file.mime;
 
-        p_root["web"]["js_file"]["file"] = p_cfg.web.js_file.file;
-        p_root["web"]["js_file"]["uri"]  = p_cfg.web.js_file.uri;
-        p_root["web"]["js_file"]["mime"] = p_cfg.web.js_file.mime;
+            p_root["web"]["js_file"]["file"] = p_cfg.web.js_file.file;
+            p_root["web"]["js_file"]["uri"]  = p_cfg.web.js_file.uri;
+            p_root["web"]["js_file"]["mime"] = p_cfg.web.js_file.mime;
 
-        p_root["web"]["css_file"]["file"] = p_cfg.web.css_file.file;
-        p_root["web"]["css_file"]["uri"]  = p_cfg.web.css_file.uri;
-        p_root["web"]["css_file"]["mime"] = p_cfg.web.css_file.mime;
+            p_root["web"]["css_file"]["file"] = p_cfg.web.css_file.file;
+            p_root["web"]["css_file"]["uri"]  = p_cfg.web.css_file.uri;
+            p_root["web"]["css_file"]["mime"] = p_cfg.web.css_file.mime;
+        #endif
 
         // wifi
         p_root["wifi"]["wifi_mode"] = p_cfg.wifi_mode;
