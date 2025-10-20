@@ -12,75 +12,199 @@
  *    - 로컬 변수 : v_
  * ------------------------------------------------------
 -->
+
+
+<!-- SC10_main_016.html -->
 <!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>자연풍 선풍기 관리자</title>
-  <style>
-    /* 최소 로더 UI (메인 CSS 로드 전 간이 스타일) */
-    html,body{margin:0;padding:0;background:#0f172a;color:#e5e7eb;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif}
-    .ws-wrap{max-width:1080px;margin:24px auto;padding:0 16px}
-    .ws-card{background:#111827;border:1px solid #243047;border-radius:14px;padding:16px}
-    .ws-muted{color:#94a3b8}
-  </style>
+  <title>🌿 Smart Nature Wind 어댑터 관리자</title>
+  <link rel="stylesheet" href="SC10_main_016.css">
 </head>
 <body>
-  <div class="ws-wrap">
-    <div class="ws-card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <strong>자연풍 선풍기 관리자</strong>
-        <span class="ws-muted" id="v_loading">리소스 로딩 중...</span>
-      </div>
-      <div class="ws-muted" style="margin-top:8px">
-        메인 CSS/JS를 설정(/api/web)에서 받아 로딩합니다. 잠시만 기다려주세요.
-      </div>
+  <div class="wrap">
+    <h1>🌿 스마트 네이처 윈드 어댑터 <span class="pill" id="fwVer">v…</span></h1>
+
+    <div class="grid">
+      <!-- 상태 -->
+      <section class="card col-12">
+        <div class="row">
+          <strong>시스템 상태</strong>
+          <div class="right">
+            <button class="btn" id="btnRefresh">새로고침</button>
+          </div>
+        </div>
+        <div class="status-grid">
+          <div><label>시뮬 상태</label> <div id="simActive" class="pill">-</div></div>
+          <div><label>Phase</label> <div id="phase" class="pill">-</div></div>
+          <div><label>풍속</label> <div id="wind" class="pill">-</div></div>
+          <div><label>PWM</label> <div id="pwm" class="pill">-</div></div>
+          <div><label>Wi-Fi 모드</label> <div id="wifiMode" class="pill">-</div></div>
+          <div><label>SSID</label> <div id="curSsid" class="pill">-</div></div>
+          <div><label>IP</label> <div id="ip" class="pill">-</div></div>
+        </div>
+      </section>
+
+      <!-- 시뮬레이션 -->
+      <section class="card col-12">
+        <div class="row">
+          <strong>시뮬레이션 설정 (Sim)</strong>
+          <div class="right tight">
+            <button class="btn ok" id="btnSaveSim">시뮬 저장</button>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="col-6">
+            <label>프리셋</label>
+            <select id="preset"></select>
+          </div>
+          <div class="col-6">
+            <button class="btn" id="btnPreviewPreset">미리보기</button>
+          </div>
+        </div>
+        <div id="presetPreview" class="mt12 muted">프리셋 미리보기: -</div>
+
+        <div class="grid mt16">
+          <div class="col-6"><label>강도(%)</label><input type="number" id="intensity" min="0" max="200"></div>
+          <div class="col-6"><label>가변성(%)</label><input type="number" id="variability" min="0" max="100"></div>
+          <div class="col-6"><label>돌풍 빈도(%)</label><input type="number" id="gust_freq" min="0" max="200"></div>
+          <div class="col-6"><label>팬 최대(%)</label><input type="number" id="fan_limit" min="0" max="100"></div>
+          <div class="col-6"><label>팬 최소(%)</label><input type="number" id="min_fan" min="0" max="100"></div>
+          <div class="col-6"><label>난류 길이(m)</label><input type="number" id="turb_len" min="1" max="200"></div>
+          <div class="col-6"><label>난류 시그마</label><input type="number" id="turb_sig" step="0.01" min="0" max="5"></div>
+          <div class="col-6"><label>열기포 세기</label><input type="number" id="therm_str" step="0.1" min="0" max="5"></div>
+          <div class="col-6"><label>열기포 반경(cm)</label><input type="number" id="therm_rad" min="0" max="100"></div>
+        </div>
+      </section>
+
+      <!-- 타이밍 -->
+      <section class="card col-12">
+        <div class="row">
+          <strong>타이밍 설정 (Timing)</strong>
+          <div class="right tight">
+            <button class="btn ok" id="btnSaveTiming">타이밍 저장</button>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="col-4"><label>시뮬 간격(ms)</label><input type="number" id="sim_int"></div>
+          <div class="col-4"><label>돌풍 체크(ms)</label><input type="number" id="gust_int"></div>
+          <div class="col-4"><label>열기포 체크(ms)</label><input type="number" id="thermal_int"></div>
+        </div>
+      </section>
+
+      <!-- Wi-Fi (AP 설정) -->
+      <section class="card col-12">
+        <div class="row">
+          <strong>Wi-Fi 설정 (AP)</strong>
+          <div class="right tight">
+            <button class="btn ok" id="btnSaveWifiAP">AP 저장</button>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="col-4">
+            <label>Wi-Fi 모드</label>
+            <select id="wifi_mode">
+              <option value="0">AP</option>
+              <option value="1">STA</option>
+              <option value="2">AP + STA</option>
+            </select>
+          </div>
+          <div class="col-4"><label>AP SSID</label><input id="ap_ssid"></div>
+          <div class="col-4"><label>AP Password</label><input id="ap_password" type="password"></div>
+        </div>
+      </section>
+
+      <!-- Wi-Fi (STA 목록) -->
+      <section class="card col-12">
+        <div class="row">
+          <strong>Wi-Fi 클라이언트 (STA)</strong>
+          <div class="right tight">
+            <button class="btn" id="btnScan">스캔</button>
+            <button class="btn ok" id="btnSaveWifiSTA">STA 저장</button>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="col-12"><div id="staList"></div></div>
+          <div class="col-12">
+            <div class="row tight">
+              <select id="scanList" class="fill"></select>
+              <input id="scanPass" type="password" placeholder="선택 SSID 비밀번호">
+              <button class="btn" id="btnUseScan">추가</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PWM 하드웨어 -->
+      <section class="card col-12">
+        <div class="row">
+          <strong>PWM 하드웨어</strong>
+          <div class="right tight">
+            <button class="btn ok" id="btnSavePWM">PWM 저장</button>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="col-3"><label>PWM GPIO</label><input id="pwm_pin" type="number"></div>
+          <div class="col-3"><label>채널</label><input id="pwm_channel" type="number"></div>
+          <div class="col-3"><label>주파수(Hz)</label><input id="pwm_freq" type="number"></div>
+          <div class="col-3"><label>해상도(bit)</label><input id="pwm_res" type="number"></div>
+        </div>
+      </section>
+
+      <!-- API Key -->
+      <section class="card col-12">
+        <div class="row">
+          <strong>보안(API Key)</strong>
+          <div class="right tight">
+            <button class="btn warn" id="btnSaveApiKey">API Key 저장</button>
+          </div>
+        </div>
+        <div class="grid mt8">
+          <div class="col-12">
+            <input id="apiKeyInput" type="password" placeholder="API Key 입력 또는 신규 생성">
+            <small class="muted">브라우저 로컬 저장 → 요청 시 X-API-Key 헤더로 자동 전송</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- 파일 업로드 -->
+      <section class="card col-12">
+        <strong>파일 업로드 / OTA</strong>
+        <div class="grid">
+          <div class="col-6">
+            <label>정적 파일 업로드</label>
+            <div class="row tight">
+              <input type="file" id="fileUpload">
+              <button class="btn" id="btnUploadStatic">업로드</button>
+            </div>
+            <div id="uploadMsg" class="mt8 muted"></div>
+          </div>
+          <div class="col-6">
+            <label>펌웨어 OTA 업데이트</label>
+            <div class="row tight">
+              <input type="file" id="fileOTA">
+              <button class="btn warn" id="btnUploadOTA">업데이트</button>
+            </div>
+            <div id="otaMsg" class="mt8 muted"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="hr"></div>
+    <div class="muted">
+      © 2540.kr • Smart Nature Wind System<br>
+      <a href="#" id="lnkRefresh" class="link">새로고침</a>
     </div>
   </div>
 
-  <script>
-    (function(){
-      "use strict";
-      const v_fallbackCSS = "/SC10_main_016.css";
-      const v_fallbackJS  = "/SC10_main_016.js";
+  <!-- 로딩 / 토스트 -->
+  <div id="loadingOverlay"><div class="spinner"></div></div>
+  <div id="toastContainer"></div>
 
-      function v_addCss(p_href){
-        const v_l = document.createElement("link");
-        v_l.rel  = "stylesheet";
-        v_l.href = p_href;
-        document.head.appendChild(v_l);
-      }
-      function v_addJs(p_src){
-        return new Promise((resolve, reject)=>{
-          const v_s = document.createElement("script");
-          v_s.src   = p_src;
-          v_s.defer = true;
-          v_s.onload = ()=>resolve();
-          v_s.onerror= ()=>reject(new Error("JS load failed: "+p_src));
-          document.body.appendChild(v_s);
-        });
-      }
-      async function v_boot(){
-        try{
-          const v_res = await fetch("/api/web");
-          if (!v_res.ok) throw new Error("web api http "+v_res.status);
-          const v_j = await v_res.json();
-          const v_css = (v_j.web && v_j.web.css_file && v_j.web.css_file.uri) ? v_j.web.css_file.uri : v_fallbackCSS;
-          const v_js  = (v_j.web && v_j.web.js_file  && v_j.web.js_file.uri ) ? v_j.web.js_file.uri  : v_fallbackJS;
-
-          v_addCss(v_css);
-          await v_addJs(v_js);
-          document.getElementById("v_loading").textContent = "로딩 완료";
-        }catch(e){
-          console.warn("[web-loader]", e);
-          v_addCss(v_fallbackCSS);
-          await v_addJs(v_fallbackJS);
-          document.getElementById("v_loading").textContent = "기본 리소스로 로딩됨";
-        }
-      }
-      v_boot();
-    })();
-  </script>
+  <script src="SC10_main_016.js"></script>
 </body>
 </html>
