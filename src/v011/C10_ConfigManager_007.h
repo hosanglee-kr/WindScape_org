@@ -30,8 +30,6 @@
 #include "A10_Const_007.h"
 #include "D10_Logger_004.h"
 
-#define G_C10_DYNIM_WEB_STATIC_FILE_USE  0
-
 class CL_C10_ConfigManager {
 public:
     // 로드 (없으면 false)
@@ -123,7 +121,7 @@ public:
         strlcpy(p_cfg.api_key, v_root["security"]["api_key"] | "", sizeof(p_cfg.api_key));
 
         // web
-        #ifdef G_C10_DYNIM_WEB_STATIC_FILE_USE
+        #ifdef G_A10_DYNIM_WEB_STATIC_FILE_USE
             _copyWebFile(p_cfg.web.html_file, v_root["web"]["html_file"]);
             _copyWebFile(p_cfg.web.js_file,   v_root["web"]["js_file"]);
             _copyWebFile(p_cfg.web.css_file,  v_root["web"]["css_file"]);
@@ -204,7 +202,7 @@ public:
         }
 
         // web
-        #ifdef G_C10_DYNIM_WEB_STATIC_FILE_USE
+        #ifdef G_A10_DYNIM_WEB_STATIC_FILE_USE
             if (!v_root["web"].isNull()) {
                 _maybeCopyWebFile(p_cfg.web.html_file, v_root["web"]["html_file"]);
                 _maybeCopyWebFile(p_cfg.web.js_file,   v_root["web"]["js_file"]);
@@ -286,7 +284,7 @@ public:
         p_cfg.api_key[0] = '\0';
 
         // web (fallback 기본 경로)
-        #ifdef G_C10_DYNIM_WEB_STATIC_FILE_USE
+        #ifdef G_A10_DYNIM_WEB_STATIC_FILE_USE
             strlcpy(p_cfg.web.html_file.file, A10_Const::DEF_HTML_FILE, sizeof(p_cfg.web.html_file.file));
             strlcpy(p_cfg.web.html_file.uri , A10_Const::DEF_HTML_URI , sizeof(p_cfg.web.html_file.uri ));
             strlcpy(p_cfg.web.html_file.mime, A10_Const::DEF_HTML_MIME, sizeof(p_cfg.web.html_file.mime));
@@ -331,6 +329,7 @@ public:
     }
 
 private:
+ #ifdef G_A10_DYNIM_WEB_STATIC_FILE_USE
     static void _copyWebFile(ST_A10_WebFile &p_dst, JsonObjectConst p_src) {
         if (p_src.isNull()) return;
         strlcpy(p_dst.file, p_src["file"] | "", sizeof(p_dst.file));
@@ -343,12 +342,13 @@ private:
         if (!p_src["uri"].isNull())  strlcpy(p_dst.uri , p_src["uri"] , sizeof(p_dst.uri));
         if (!p_src["mime"].isNull()) strlcpy(p_dst.mime, p_src["mime"], sizeof(p_dst.mime));
     }
+ #endif
     static void _toJson_Common(const ST_A10_WindConfig &p_cfg, JsonObject p_root) {
         // security
         p_root["security"]["api_key"] = p_cfg.api_key;
 
         // web
-        #ifdef G_C10_DYNIM_WEB_STATIC_FILE_USE
+        #ifdef G_A10_DYNIM_WEB_STATIC_FILE_USE
             p_root["web"]["html_file"]["file"] = p_cfg.web.html_file.file;
             p_root["web"]["html_file"]["uri"]  = p_cfg.web.html_file.uri;
             p_root["web"]["html_file"]["mime"] = p_cfg.web.html_file.mime;
