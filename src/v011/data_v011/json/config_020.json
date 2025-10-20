@@ -1,0 +1,176 @@
+{
+  "meta": {
+    "version": "SC10_FW_1.0.0",
+    "last_update": "2025-10-20T13:00:00+09:00",
+    "device_name": "WindScape_XY-SK10"
+  },
+
+  "time": {
+    "ntp_server": "pool.ntp.org",
+    "timezone": "Asia/Seoul",
+    "sync_interval_min": 60
+  },
+
+  "wifi": {
+    "wifi_mode": 2,
+    "ap_network": {
+      "ap_ssid": "NatureWind",
+      "ap_password": "2540"
+    },
+    "sta_networks": [
+      { "ssid": "MyHomeWiFi", "pass": "mypassword" },
+      { "ssid": "OfficeNet", "pass": "12345678" }
+    ]
+  },
+
+  "hw": {
+    "pwm_pin": 6,
+    "pwm_channel": 0,
+    "pwm_freq": 25000,
+    "pwm_res": 10
+  },
+
+  "sim": {
+    "intensity": 70.0,
+    "gust_freq": 45.0,
+    "variability": 50.0,
+    "fan_limit": 90.0,
+    "min_fan": 10.0,
+    "turb_len": 40.0,
+    "turb_sig": 0.5,
+    "therm_str": 2.0,
+    "therm_rad": 18.0,
+    "preset": "COUNTRY_BREEZE"
+  },
+
+  "schedules": [
+    {
+      "id": 1,
+      "name": "Morning Air",
+      "enabled": true,
+      "days": [1,1,1,1,1,0,0],
+      "start": "08:00",
+      "end": "12:00",
+      "segments": [
+        {
+          "on_minutes": 20,
+          "off_minutes": 10,
+          "on_mode": "preset",
+          "preset_name": "HARBOUR_BREEZE",
+          "preset_adjust": { "intensity": +10, "variability": +5 }
+        },
+        {
+          "on_minutes": 15,
+          "off_minutes": 5,
+          "on_mode": "fixed",
+          "fixed_speed": 55.0
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Evening Calm",
+      "enabled": true,
+      "days": [1,1,1,1,1,1,1],
+      "start": "19:00",
+      "end": "23:00",
+      "segments": [
+        {
+          "on_minutes": 25,
+          "off_minutes": 15,
+          "on_mode": "preset",
+          "preset_name": "COUNTRY_BREEZE"
+        }
+      ]
+    }
+  ],
+
+  "motion": {
+    "enabled": true,
+    "logic_mode": "OR", 
+    "pir": {
+      "enabled": true,
+      "pin": 13,
+      "hold_sec": 120,
+      "debounce_sec": 5
+    },
+    "ble": {
+      "enabled": true,
+      "scan_interval": 5,
+      "rssi_threshold": -70,
+      "devices": [
+        { "mac": "AA:BB:CC:11:22:33", "alias": "MyPhone", "enabled": true },
+        { "mac": "DD:EE:FF:44:55:66", "alias": "SmartBand", "enabled": false }
+      ],
+      "hold_sec": 180
+    }
+  },
+
+  "temp_control": {
+    "enabled": true,
+    "sensor": {
+      "type": "DHT22",
+      "pin": 23,
+      "interval_sec": 30
+    },
+    "zones": [
+      {
+        "min_temp": 30,
+        "max_temp": 99,
+        "mode": "fixed",
+        "fixed_speed": 80.0,
+        "hold_sec": 600
+      },
+      {
+        "min_temp": 25,
+        "max_temp": 29.9,
+        "mode": "preset",
+        "preset_name": "URBAN_WIND",
+        "preset_adjust": { "intensity": +10, "variability": +5 }
+      },
+      {
+        "min_temp": 20,
+        "max_temp": 24.9,
+        "mode": "preset",
+        "preset_name": "COUNTRY_BREEZE",
+        "preset_adjust": { "intensity": -5, "variability": -10 }
+      },
+      {
+        "min_temp": -20,
+        "max_temp": 19.9,
+        "mode": "off"
+      }
+    ]
+  },
+
+  "sensor_humidity": {
+    "enabled": true,
+    "threshold_high": 75,
+    "threshold_low": 30,
+    "action_high": {
+      "mode": "preset",
+      "preset_name": "MOUNTAIN_BREEZE",
+      "preset_adjust": { "intensity": +5, "variability": +10 }
+    },
+    "action_low": {
+      "mode": "fixed",
+      "fixed_speed": 35.0
+    }
+  },
+
+  "security": {
+    "api_key": "my_api_key_12345"
+  },
+
+  "system": {
+    "web": {
+      "html": "/html/SC10_main_016.html",
+      "css": "/html/SC10_main_016.css",
+      "js":  "/html/SC10_main_016.js"
+    },
+    "logging": {
+      "level": "INFO",
+      "max_entries": 200
+    }
+  }
+}
