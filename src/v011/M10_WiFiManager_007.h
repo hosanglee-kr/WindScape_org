@@ -87,7 +87,13 @@ public:
                 return startAP(p_cfg, p_apChannel);
             case EN_A10_WIFI_MODE_STA:
                 WiFi.mode(WIFI_STA);
-                return startSTA(p_cfg, p_multi, p_staMaxTries);
+                if(!startSTA(p_cfg, p_multi, p_staMaxTries)){
+                    CL_D10_Logger::log(EN_L10_LOG_WARN, "STA connect failed, Start AP");
+                    
+                    // WiFi.mode(WIFI_AP);
+                    return startAP(p_cfg, p_apChannel);
+                };
+
             case EN_A10_WIFI_MODE_AP_STA:
             default:
                 WiFi.mode(WIFI_AP_STA);

@@ -13,95 +13,129 @@
  * ------------------------------------------------------
 -->
 
-<!-- SC10_main_016.html -->
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>🌿 Smart Nature Wind 어댑터 관리자</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>🌿 Smart Nature Wind 어댑터 관리자</title>
 
-  <!-- CSS 동적 로딩 -->
-  <link id="dynamicCSS" rel="stylesheet" href="">
-  <style>
-    /* 최소 로딩 스켈레톤 */
-    body {
-      font-family: Pretendard, sans-serif;
-      background: #f5f7fa;
-      margin: 0;
-      padding: 0;
-      color: #333;
-      text-align: center;
-    }
-    #loadingOverlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(255,255,255,0.85);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 15px;
-      color: #555;
-    }
-    .spinner {
-      width: 42px; height: 42px;
-      border: 5px solid #ccc;
-      border-top-color: #2563eb;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-right: 12px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
+	<link id="dynamicCSS" rel="stylesheet" href="">
+	<style>
+		/* 최소 로딩 스켈레톤 */
+		body {
+			font-family: Pretendard, sans-serif;
+			background: #f5f7fa;
+			margin: 0;
+			padding: 0;
+			color: #333;
+			text-align: center;
+		}
+		#loadingOverlay {
+			position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+			background: rgba(255,255,255,0.85);
+			display: flex; align-items: center; justify-content: center;
+			font-size: 15px;
+			color: #555;
+		}
+		.spinner {
+			width: 42px; height: 42px;
+			border: 5px solid #ccc;
+			border-top-color: #2563eb;
+			border-radius: 50%;
+			animation: spin 1s linear infinite;
+			margin-right: 12px;
+		}
+		@keyframes spin { to { transform: rotate(360deg); } }
+	</style>
 </head>
 
 <body>
-  <div id="loadingOverlay">
-    <div class="spinner"></div>
-    <div>Smart Nature Wind UI 로딩 중...</div>
-  </div>
+	<div id="loadingOverlay">
+		<div class="spinner"></div>
+		<div>Smart Nature Wind UI 로딩 중...</div>
+	</div>
 
-  <!-- 토스트 메시지 컨테이너 -->
-  <div id="toastContainer" style="position:fixed;bottom:12px;right:12px;z-index:1000;"></div>
+	<div id="toastContainer" style="position:fixed;bottom:12px;right:12px;z-index:1000;"></div>
 
-  <script>
-  // ================================================================
-  //  Smart Nature Wind Frontend Dynamic Loader
-  //  - config.web.* 값 기반으로 JS / CSS 동적 로딩
-  // ================================================================
-  (async () => {
-    try {
-      const r = await fetch("/api/web");
-      if (!r.ok) throw new Error("/api/web 호출 실패 (" + r.status + ")");
-      const j = await r.json();
+	<script>
+	// ================================================================
+	// 	Smart Nature Wind Frontend Dynamic Loader
+	// 	- config.web.* 값 기반으로 JS / CSS 동적 로딩
+	// ================================================================
+	
+	// **[추가된 설정 변수]**
+	// true: /api/web에서 경로를 가져오려고 시도 (온라인/동적 모드)
+	// false: 동적 호출 없이 즉시 기본 파일(SC10_main_016.*)을 로드 (오프라인/정적 모드)
+	const G_ONLINE_MODE     = false; 
+	const G_DEFAULT_CSS_URI = "SC10_main_016.css";
+	const G_DEFAULT_JS_URI  = "SC10_main_016.js";
 
-      const cssUri = j.web?.css_file?.uri || "SC10_main_016.css";
-      const jsUri  = j.web?.js_file?.uri  || "SC10_main_016.js";
 
-      // CSS 적용
-      const cssEl = document.getElementById("dynamicCSS");
-      cssEl.href = cssUri + "?v=" + Date.now();
+	/**
+	 * 최종 CSS 및 JS를 로드하는 공통 함수
+	 * @param {string} cssUri - 로드할 CSS 경로
+	 * @param {string} jsUri - 로드할 JS 경로
+	 */
+	function loadResources(cssUri, jsUri) {
+		// CSS 적용
+		const cssEl = document.getElementById("dynamicCSS");
+		// 캐시 무효화를 위해 타임스탬프 추가
+		cssEl.href = cssUri + "?v=" + Date.now(); 
 
-      // JS 로드
-      const jsEl = document.createElement("script");
-      jsEl.src = jsUri + "?v=" + Date.now();
-      jsEl.defer = true;
+		// JS 로드
+		const jsEl = document.createElement("script");
+		jsEl.src = jsUri + "?v=" + Date.now();
+		jsEl.defer = true;
 
-      jsEl.onload = () => {
-        console.log("[SC10] JS 로드 완료:", jsUri);
-        document.getElementById("loadingOverlay").style.display = "none";
-      };
-      jsEl.onerror = (e) => {
-        document.body.innerHTML += `<p style='color:red;'>JS 로드 실패: ${e.message}</p>`;
-      };
+		jsEl.onload = () => {
+			console.log(`[SC10] JS 로드 완료: ${jsUri} (Mode: ${G_ONLINE_MODE ? 'Online' : 'Offline'})`);
+			document.getElementById("loadingOverlay").style.display = "none";
+		};
+		jsEl.onerror = (e) => {
+			// onerror 이벤트는 일반적인 파일 Not Found일 경우 e.message가 비어있을 수 있음
+			const v_errorMsg = e.type === 'error' ? '파일을 찾을 수 없습니다' : '알 수 없는 오류';
+			console.error("[SC10] JS 로드 실패:", jsUri, v_errorMsg);
+			document.body.innerHTML += `<p style='color:red;'>JS 로드 실패: ${jsUri} (${v_errorMsg})</p>`;
+		};
 
-      document.body.appendChild(jsEl);
-    } catch (e) {
-      console.error("웹 리소스 로딩 실패:", e);
-      document.body.innerHTML = `
-        <div style='padding:20px;color:red;'>
-          <h3>❌ 리소스 로드 실패</h3>
-          <p>/api/web 정보를 불러올 수 없습니다.<br>${e.message}</p>
-        </div>`;
-    }
-  })();
-  </script>
+		document.body.appendChild(jsEl);
+	}
+
+
+	(async () => {
+		if (G_ONLINE_MODE) {
+			// **온라인 모드 (Dynamic Loading)**
+			try {
+				const r = await fetch("/api/web");
+				if (!r.ok) throw new Error("/api/web 호출 실패 (" + r.status + ")");
+				const j = await r.json();
+
+				const cssUri = j.web?.css_file?.uri || G_DEFAULT_CSS_URI;
+				const jsUri 	= j.web?.js_file?.uri 	|| G_DEFAULT_JS_URI;
+
+				loadResources(cssUri, jsUri);
+
+			} catch (e) {
+				// 동적 로딩 실패 시, 오프라인 모드로 자동 전환 (Fallback)
+				console.error("웹 리소스 동적 로딩 실패, 기본 경로로 폴백:", e);
+				
+				// 오류 메시지 표시
+				document.body.innerHTML = `
+					<div style='padding:20px;color:red;'>
+						<h3>⚠️ 리소스 로드 실패 (Fallback)</h3>
+						<p>/api/web 정보를 불러올 수 없습니다.<br>${e.message}</p>
+						<p style='color:#555;'>기본 파일 로드 중... (${G_DEFAULT_CSS_URI}, ${G_DEFAULT_JS_URI})</p>
+					</div>`;
+					
+				loadResources(G_DEFAULT_CSS_URI, G_DEFAULT_JS_URI);
+			}
+		} else {
+			// **오프라인 모드 (Static Loading)**
+			console.log("[SC10] G_ONLINE_MODE = false. 기본 경로 로드.");
+			loadResources(G_DEFAULT_CSS_URI, G_DEFAULT_JS_URI);
+		}
+	})();
+	</script>
 </body>
 </html>
