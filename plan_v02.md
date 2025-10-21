@@ -195,7 +195,7 @@ ESP32 기반 펌웨어, LittleFS 기반 Web UI, PWM 제어, 환경센서, BLE/PI
     "logging": { "level": "INFO", "max_entries": 200 }
   }
 }
-
+```
 
 ---
 
