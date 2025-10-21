@@ -202,57 +202,224 @@ ESP32 펌웨어, LittleFS WebUI, PWM 제어, 환경 센서, BLE/PIR 모션 감�
 
 🧱 7. Config 구조체 (완성본)
 ```cpp
-typedef struct ST_A10_Config_t {
-  struct { char version[24]; char device_name[32]; char last_update[40]; } meta;
-  struct { char ntp_server[64]; char timezone[32]; uint16_t sync_interval_min; } time;
-  struct {
-    uint8_t wifi_mode;
-    struct { char ssid[32]; char password[64]; } ap_network;
-    struct { char ssid[32]; char pass[64]; } sta_networks[4];
-    uint8_t sta_count;
-  } wifi;
-  struct { uint8_t pwm_pin; uint8_t pwm_channel; uint32_t pwm_freq; uint8_t pwm_res; } hw;
-  struct {
-    float intensity, gust_freq, variability, fan_limit, min_fan, turb_len, turb_sig, therm_str, therm_rad;
-    char preset[32];
-  } sim;
-  struct {
-    bool enabled; uint8_t days[7]; char name[24]; char start[6]; char end[6];
-    struct {
-      uint16_t seq_no; bool enabled; char mode[8]; char preset_name[32];
-      struct { int intensity, variability, turbulence; } preset_options;
-      float fixed_speed; uint16_t duration_minutes;
-    } segments[8]; uint8_t segment_count; uint16_t id;
-  } schedules[6]; uint8_t schedule_count;
-  struct {
-    bool enabled; uint16_t scan_interval_sec, hold_sec;
-    struct { bool enabled; uint8_t pin; uint16_t debounce_sec; } pir;
-    struct { bool enabled; int rssi_threshold; struct { char mac[18]; char alias[24]; bool enabled; } devices[6]; uint8_t device_count; } ble;
-  } motion;
-  struct {
-    bool enabled; char type[8]; uint8_t pin; uint16_t interval_sec, records_max; uint8_t avg_window;
-    struct { bool enabled; char unit[2]; int range_min, range_max; } temp;
-    struct { char unit[2]; int range_min, range_max; } humid;
-    struct { bool display_temp, display_humid, dual_axis; uint16_t refresh_interval_sec; uint8_t smooth_window; } chart_options;
-  } env_monitor;
-  struct {
-    bool enabled; uint16_t interval_sec, records_max;
-    struct { bool enabled; float min_duty, max_duty; } pwm;
-    struct { bool enabled; uint8_t pin, pulses_per_rev, avg_window; uint16_t rpm_min, rpm_max; } tach;
-    struct { bool display_pwm_duty, display_rpm, dual_axis; uint16_t refresh_interval_sec; uint8_t smooth_window; } chart_options;
-  } fan_monitor;
-  struct { char api_key[64]; } security;
-  struct { struct { char html[48], css[48], js[48]; } web; struct { char level[8]; uint16_t max_entries; } logging; } system;
+// ============================================================================
+// 🌿 WindScape 통합 설정 구조체 (v5.9 기준 완성본)
+// 파일명: A10_Const_007.h
+// 목적: 시스템 전체 설정 구조 정의 (JSON <-> 구조체 직렬화 매핑)
+// ============================================================================
 
-  bool  enable_thermal_fan_boost;
-  float thermal_fan_boost_base_temp;
-  float thermal_fan_boost_per_degree;
-  bool  enable_thermal_freq_boost;
-  float thermal_freq_boost_base_temp;
-  float thermal_freq_boost_per_degree;
+typedef struct ST_A10_Config_t {
+
+  // --------------------------------------------------------------------------
+  // [1] 메타 정보 (기기 식별 및 버전)
+  // --------------------------------------------------------------------------
+  struct {
+    char version[24];         // 펌웨어 버전명 (예: "SC10_FW_1.0.6")
+    char device_name[32];     // 디바이스 이름 (예: "WindScape_XY-SK10")
+    char last_update[40];     // 마지막 설정 저장 시각 (ISO-8601 형식)
+  } meta;
+
+  // --------------------------------------------------------------------------
+  // [2] 시간 및 NTP 설정
+  // --------------------------------------------------------------------------
+  struct {
+    char ntp_server[64];      // NTP 서버 주소 (예: "pool.ntp.org")
+    char timezone[32];        // 시간대 (예: "Asia/Seoul")
+    uint16_t sync_interval_min; // NTP 동기화 주기 (분 단위)
+  } time;
+
+  // --------------------------------------------------------------------------
+  // [3] Wi-Fi 설정 (AP/STA 통합)
+  // --------------------------------------------------------------------------
+  struct {
+    uint8_t wifi_mode;        // Wi-Fi 모드 (0:AP / 1:STA / 2:AP+STA)
+    struct { 
+      char ssid[32];          // AP 모드 SSID
+      char password[64];      // AP 모드 비밀번호
+    } ap_network;
+    struct { 
+      char ssid[32];          // STA 모드 SSID
+      char pass[64];          // STA 모드 비밀번호
+    } sta_networks[4];        // 다중 STA 저장용 배열 (최대 4개)
+    uint8_t sta_count;        // STA 네트워크 등록 개수
+  } wifi;
+
+  // --------------------------------------------------------------------------
+  // [4] 하드웨어 / PWM 설정
+  // --------------------------------------------------------------------------
+  struct {
+    uint8_t pwm_pin;          // PWM 제어 핀 번호
+    uint8_t pwm_channel;      // PWM 채널 번호
+    uint32_t pwm_freq;        // PWM 주파수 (Hz 단위)
+    uint8_t pwm_res;          // PWM 분해능 (bit)
+  } hw;
+
+  // --------------------------------------------------------------------------
+  // [5] 시뮬레이션 파라미터 (바람 특성)
+  // --------------------------------------------------------------------------
+  struct {
+    float intensity;          // 기본 풍속 강도 (%)
+    float gust_freq;          // 돌풍 발생 빈도
+    float variability;        // 풍속 변동성 (랜덤성)
+    float fan_limit;          // 최대 팬 듀티 제한값 (%)
+    float min_fan;            // 최소 팬 듀티값 (%)
+    float turb_len;           // 난류 길이 스케일
+    float turb_sig;           // 난류 시그마(분산)
+    float therm_str;          // 열기포(대류) 강도
+    float therm_rad;          // 열기포 반경
+    char preset[32];          // 프리셋 이름 (예: "COUNTRY_BREEZE")
+  } sim;
+
+  // --------------------------------------------------------------------------
+  // [6] 스케줄 관리 (자동 운전)
+  // --------------------------------------------------------------------------
+  struct {
+    bool enabled;             // 해당 스케줄 활성화 여부
+    uint8_t days[7];          // 요일별 작동 여부 (월~일; 1=활성)
+    char name[24];            // 스케줄 이름
+    char start[6];            // 시작 시각 ("HH:MM")
+    char end[6];              // 종료 시각 ("HH:MM")
+
+    // 세그먼트 단위 상세 설정
+    struct {
+      uint16_t seq_no;        // 순번 (10, 20, 30 등)
+      bool enabled;           // 세그먼트 활성화 여부
+      char mode[8];           // 작동 모드 ("preset", "fixed", "off")
+      char preset_name[32];   // 프리셋 모드 시 사용되는 프리셋 이름
+      struct {
+        int intensity;        // 프리셋 강도 (%)
+        int variability;      // 변동성 (%)
+        int turbulence;       // 난류 수준 (%)
+      } preset_options;
+      float fixed_speed;      // fixed 모드일 때 고정 풍속 (%)
+      uint16_t duration_minutes; // 세그먼트 지속 시간 (분)
+    } segments[8];            // 최대 8개 세그먼트
+    uint8_t segment_count;    // 세그먼트 개수
+    uint16_t id;              // 스케줄 ID (10부터 10단위 증가)
+  } schedules[6];             // 최대 6개 스케줄 등록 가능
+  uint8_t schedule_count;     // 등록된 스케줄 총 수
+
+  // --------------------------------------------------------------------------
+  // [7] 모션 감지 설정 (PIR + BLE)
+  // --------------------------------------------------------------------------
+  struct {
+    bool enabled;             // 모션 감지 기능 전체 활성화 여부
+    uint16_t scan_interval_sec; // 감지 주기 (초)
+    uint16_t hold_sec;        // 감지 유지 시간 (초)
+    struct {
+      bool enabled;           // PIR 센서 사용 여부
+      uint8_t pin;            // PIR 연결 핀 번호
+      uint16_t debounce_sec;  // 디바운스 시간 (초)
+    } pir;
+    struct {
+      bool enabled;           // BLE 감지 기능 활성화 여부
+      int rssi_threshold;     // BLE RSSI 감도 임계값 (dBm)
+      struct {
+        char mac[18];         // BLE 기기 MAC 주소
+        char alias[24];       // 별칭
+        bool enabled;         // 개별 등록 활성화 여부
+      } devices[6];           // 등록된 BLE 기기 목록
+      uint8_t device_count;   // BLE 등록 기기 수
+    } ble;
+  } motion;
+
+  // --------------------------------------------------------------------------
+  // [8] 환경 모니터링 설정 (온도/습도)
+  // --------------------------------------------------------------------------
+  struct {
+    bool enabled;             // 환경 모니터링 활성화 여부
+    char type[8];             // 센서 타입 (예: "DHT22")
+    uint8_t pin;              // 센서 데이터 핀 번호
+    uint16_t interval_sec;    // 측정 주기 (초)
+    uint16_t records_max;     // 기록 최대 저장 개수
+    uint8_t avg_window;       // 이동평균 윈도우 크기
+    struct {
+      bool enabled;           // 온도 센싱 활성화
+      char unit[2];           // 단위 ("C")
+      int range_min;          // 최소 온도 범위
+      int range_max;          // 최대 온도 범위
+    } temp;
+    struct {
+      char unit[2];           // 단위 ("%")
+      int range_min;          // 최소 습도
+      int range_max;          // 최대 습도
+    } humid;
+    struct {
+      bool display_temp;      // 온도 그래프 표시 여부
+      bool display_humid;     // 습도 그래프 표시 여부
+      uint16_t refresh_interval_sec; // 그래프 갱신 주기
+      uint8_t smooth_window;  // 그래프 스무딩 윈도우 크기
+      bool dual_axis;         // 온/습도 듀얼축 여부
+    } chart_options;
+  } env_monitor;
+
+  // --------------------------------------------------------------------------
+  // [9] 팬 모니터링 설정
+  // --------------------------------------------------------------------------
+  struct {
+    bool enabled;             // 팬 모니터링 기능 활성화 여부
+    uint16_t interval_sec;    // 측정 주기 (초)
+    uint16_t records_max;     // 기록 저장 최대 개수
+    struct {
+      bool enabled;           // PWM 모니터링 활성화 여부
+      float min_duty;         // 최소 듀티 (%)
+      float max_duty;         // 최대 듀티 (%)
+    } pwm;
+    struct {
+      bool enabled;           // Tachometer 사용 여부
+      uint8_t pin;            // Tach 입력 핀
+      uint8_t pulses_per_rev; // 회전당 펄스 수
+      uint16_t rpm_min;       // 최소 RPM
+      uint16_t rpm_max;       // 최대 RPM
+      uint8_t avg_window;     // 이동 평균 필터 크기
+    } tach;
+    struct {
+      bool display_pwm_duty;  // 듀티 그래프 표시 여부
+      bool display_rpm;       // RPM 그래프 표시 여부
+      uint16_t refresh_interval_sec; // 갱신 주기
+      uint8_t smooth_window;  // 스무딩 윈도우
+      bool dual_axis;         // 듀얼 축 표시 여부
+    } chart_options;
+  } fan_monitor;
+
+  // --------------------------------------------------------------------------
+  // [10] 보안 및 시스템 파일 설정
+  // --------------------------------------------------------------------------
+  struct {
+    char api_key[64];         // Web API 인증용 키
+  } security;
+
+  struct {
+    struct { 
+      char html[48];          // Web UI HTML 경로
+      char css[48];           // CSS 파일 경로
+      char js[48];            // JS 파일 경로
+    } web;
+    struct {
+      char level[8];          // 로그 레벨 ("INFO", "DEBUG" 등)
+      uint16_t max_entries;   // 로그 최대 저장 수
+    } logging;
+  } system;
+
+  // --------------------------------------------------------------------------
+  // [11] 온도 기반 제어 기능 (v5.9 신규 추가)
+  // --------------------------------------------------------------------------
+  bool  enable_thermal_fan_boost;      // [체감] 온도 기반 팬 부스트 활성화
+  float thermal_fan_boost_base_temp;   // [체감] 부스트 시작 기준 온도 (℃)
+  float thermal_fan_boost_per_degree;  // [체감] 1℃ 초과 시 듀티 추가율 (%)
+
+  bool  enable_thermal_freq_boost;     // [대류] 열기포 빈도 부스트 활성화
+  float thermal_freq_boost_base_temp;  // [대류] 부스트 시작 기준 온도 (℃)
+  float thermal_freq_boost_per_degree; // [대류] 1℃ 초과 시 빈도 증가율 (%)
+
 } ST_A10_Config_t;
 
+// ============================================================================
+// End of ST_A10_Config_t
+// ============================================================================
+
 ```
+
 🚀 9. 향후 확장 계획 (v6.x)
 
 카테고리	예정 기능
