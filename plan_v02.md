@@ -1,153 +1,87 @@
+# 🌿 WindScape 시스템 통합 요구사항 명세서 (v5.8 기준)
+
+**버전:** `SC10_FW_1.0.6`  
+**디바이스:** `WindScape_XY-SK10`  
+**작성일:** `2025-10-20`  
+**작성 목적:**  
+ESP32 기반 자연풍 시뮬레이터 **WindScape**의 펌웨어, 웹UI, 설정 JSON 구조 및 기능 확장 요구사항을 체계적으로 정의함.
 
 ---
 
-🌿 WindScape 시스템 통합 요구사항 명세서 (v5.8 기준)
+## 🧩 1. 시스템 개요
 
-버전: SC10_FW_1.0.6
-디바이스: WindScape_XY-SK10
-최종 수정일: 2025-10-20
-작성 목적:
-ESP32 기반 자연풍 시뮬레이터 WindScape의 펌웨어, 웹 UI, 설정 JSON 구조 및 기능 확장 요구사항을 체계적으로 정의한다.
-
+WindScape는 일반 선풍기를 스마트 자연풍 장치로 변환하는 시스템이다.  
+ESP32 기반 펌웨어, LittleFS 기반 Web UI, PWM 제어, 환경센서, BLE/PIR 모션 감지, 스케줄링 기능 등을 통합 관리한다.
 
 ---
 
-🧩 1. 시스템 개요
+## ⚙️ 2. 주요 구성 요소
 
-WindScape는 일반 선풍기를 자연풍 시뮬레이터로 전환하는 스마트 컨트롤러다.
-ESP32S3를 기반으로 하며, Web UI를 통해 시뮬레이션, 스케줄, 모션감지, 환경센서 등을 통합 제어한다.
-
-
----
-
-⚙️ 2. 주요 구성 모듈
-
-모듈명	파일명	주요 기능
-
-상수 정의	A10_Const_007.h	Wi-Fi, WEB, Phase, Preset 정의
-설정 관리자	C10_ConfigManager_007.h	JSON 로드/저장/백업/공장 초기화
-Wi-Fi 관리자	M10_WiFiManager_007.h	AP/STA 모드 및 Multi-STA 지원
-PWM 제어기	P10_PWM_ctrl_005.h	팬 듀티, 주파수, 분해능 제어
-시뮬레이터	S10_Simulation_007.h	Phase/난류/열기포/프리셋 적용
-팬 모니터	S10_FanMonitor_001.h	PWM Duty/Tach RPM 측정 및 차트 표시
-환경 모니터	S10_EnvMonitor_002.h	DHT22 온습도 센서 측정 및 평균화
-웹 API	W10_WebAPI_007.h	/api/* 엔드포인트 관리
-통합 실행 엔진	WS10_Main_007.h	초기화, 주기 실행, 로그 관리
-
-
+| 구분 | 모듈명 | 기능 요약 |
+|------|---------|-----------|
+| A10_Const_007.h | 상수/타입 정의 | Wi-Fi, WEB, Phase, Preset 정의 |
+| C10_ConfigManager_007.h | 설정 로드/저장/백업 | JSON 직렬화, 공장 초기화 |
+| M10_WiFiManager_007.h | Wi-Fi AP/STA 관리 | 다중 STA, Smart Connect |
+| P10_PWM_ctrl_005.h | PWM 제어 | 듀티, 주파수, 분해능 설정 |
+| S10_Simulation_007.h | 자연풍 시뮬레이션 | Phase/난류/열기포/프리셋 적용 |
+| S10_FanMonitor_001.h | 팬 속도/듀티 모니터링 | PWM/Tach 데이터 수집 및 그래프 |
+| S10_EnvMonitor_002.h | 온습도 모니터링 | DHT22 데이터 수집 및 평균화 |
+| W10_WebAPI_007.h | Web API 라우팅 | `/api/*` 엔드포인트 관리 |
+| WS10_Main_007.h | 메인 엔진 | 초기화, 루프, 통합 실행 관리 |
 
 ---
 
-🕹️ 3. 핵심 기능 요약
+## 🕹️ 3. 주요 기능 요약
 
-3.1 🌬️ 자연풍 시뮬레이션
+### 3.1 시뮬레이션
+- 자연풍(Phase, 난류, 열기포 등) 구현
+- 프리셋 모드 및 고정 풍속 모드 지원
+- 프리셋별 강도·변동성 조정 가능
 
-Von Kármán 기반 난류 모델
+### 3.2 Wi-Fi 및 WebUI
+- AP / STA / AP+STA 모드 지원  
+- LittleFS 기반 정적 자산(`.html`, `.css`, `.js`) 서빙  
+- API Key 인증, CORS, no-cache 헤더 지원  
 
-프리셋(preset) 또는 고정 풍속(fixed_speed) 모드 지원
+### 3.3 스케줄 기능
+- NTP 시간 동기화 지원
+- 복수 스케줄 등록 가능 (`id`는 10부터 10씩 증가)
+- 각 스케줄 내 다중 세그먼트(`segments`) 지원
+- 세그먼트별:
+  - `mode`: `"preset"`, `"fixed"`, `"off"`
+  - `preset_name` 또는 `fixed_speed` 지정 가능
+  - `enabled`, `seq_no`, `duration_minutes` 포함
+  - 프리셋 모드 시 옵션(`intensity`, `variability`, `turbulence`) 설정 가능
+- 요일별 동작 (`days` 필드)
+- 스케줄 전체 활성화 여부(`enabled`) 포함
 
-intensity, variability, gust_freq, thermal 값 조정 가능
+### 3.4 모션 감지
+- PIR 센서와 BLE 신호 기반 감지
+- 두 방식은 OR 조건으로 동작 가능
+- 공통 설정: `scan_interval_sec`, `hold_sec`
+- 개별 설정:
+  - PIR: `pin`, `debounce_sec`
+  - BLE: `rssi_threshold`, `devices[]` (등록/비활성 가능)
+- 감지 후 일정 시간 동안 팬 작동 유지 가능
 
+### 3.5 팬 모니터링 (fan_monitor)
+- PWM 듀티 및 Tachometer RPM 동시 모니터링
+- PWM, Tach 개별 활성화 가능
+- Tach 평균 필터(`avg_window`) 적용
+- 차트 옵션(`dual_axis`, `smooth_window`) 제공
+- `/api/fan_monitor` API 제공 예정
 
-
----
-
-3.2 📶 Wi-Fi 및 Web UI
-
-AP / STA / AP+STA 모드 선택 가능
-
-Web UI 정적 로딩 방식 (SC10_main_017.html 직접 참조)
-
-API Key 인증, CORS, No-Cache 헤더 적용
-
-/api/state, /api/config, /api/web, /api/logs 제공
-
-
-
----
-
-3.3 ⏰ 스케줄 관리 기능
-
-NTP 연동으로 시간 동기화 (ntp_server, timezone)
-
-복수 스케줄 등록 가능 (id: 10부터 10씩 증가)
-
-요일별 활성화 (days: [1,1,1,1,1,0,0])
-
-각 스케줄에 여러 개의 세그먼트(segment) 등록 가능
-
-세그먼트별:
-
-mode: "preset", "fixed", "off"
-
-seq_no, enabled, duration_minutes
-
-preset_name / fixed_speed / preset_options 지정 가능
-
-
-프리셋 모드시: intensity, variability, turbulence 조정
-
-
+### 3.6 환경 모니터링 (env_monitor)
+- DHT22 센서 기반 온·습도 측정
+- `avg_window`로 이동평균 필터 적용
+- 온도/습도 범위 설정 (`range_min`, `range_max`)
+- `/api/env_monitor` API 제공
+- Chart.js 기반 듀얼축 그래프 표시
 
 ---
 
-3.4 🚶 모션 감지 기능
+## 🔧 4. JSON 설정 구조 (완전체)
 
-PIR 센서 + BLE 신호세기 감지
-
-두 방식은 OR 조건으로 동작
-
-공통 설정:
-
-scan_interval_sec, hold_sec
-
-
-개별 설정:
-
-PIR: pin, debounce_sec
-
-BLE: rssi_threshold, devices[]
-
-
-BLE 등록된 디바이스를 감지하면 팬 작동 유지
-
-
-
----
-
-3.5 🌀 팬 모니터링 (fan_monitor)
-
-PWM Duty / Tachometer RPM 동시 표시
-
-PWM, Tach 개별 활성화 가능
-
-avg_window 적용으로 평균값 표시
-
-/api/fan_monitor 엔드포인트 제공
-
-Chart.js 기반 그래프 표시 (dual_axis, smooth_window 지원)
-
-
-
----
-
-3.6 🌡️ 환경 모니터링 (env_monitor)
-
-DHT22 센서 기반 온도/습도 측정
-
-avg_window로 이동평균 필터 적용
-
-range_min / range_max 설정
-
-/api/env_monitor API로 데이터 제공
-
-Chart.js 기반 듀얼축 그래프 표시
-
-
-
----
-
-🧱 4. 설정 JSON 구조 (완전체 예시)
 ```json
 {
   "meta": {
@@ -155,26 +89,22 @@ Chart.js 기반 듀얼축 그래프 표시
     "device_name": "WindScape_XY-SK10",
     "last_update": "2025-10-20T16:20:00+09:00"
   },
-
   "time": {
     "ntp_server": "pool.ntp.org",
     "timezone": "Asia/Seoul",
     "sync_interval_min": 60
   },
-
   "wifi": {
     "wifi_mode": 2,
     "ap_network": { "ap_ssid": "NatureWind", "ap_password": "2540" },
     "sta_networks": [{ "ssid": "MyHomeWiFi", "pass": "mypassword" }]
   },
-
   "hw": {
     "pwm_pin": 6,
     "pwm_channel": 0,
     "pwm_freq": 25000,
     "pwm_res": 10
   },
-
   "sim": {
     "intensity": 70.0,
     "gust_freq": 45.0,
@@ -187,7 +117,6 @@ Chart.js 기반 듀얼축 그래프 표시
     "therm_rad": 18.0,
     "preset": "COUNTRY_BREEZE"
   },
-
   "schedules": [
     {
       "id": 10,
@@ -211,7 +140,6 @@ Chart.js 기반 듀얼축 그래프 표시
       ]
     }
   ],
-
   "motion": {
     "enabled": true,
     "scan_interval_sec": 5,
@@ -226,7 +154,6 @@ Chart.js 기반 듀얼축 그래프 표시
       ]
     }
   },
-
   "env_monitor": {
     "enabled": true,
     "type": "DHT22",
@@ -244,7 +171,6 @@ Chart.js 기반 듀얼축 그래프 표시
       "dual_axis": true
     }
   },
-
   "fan_monitor": {
     "enabled": true,
     "interval_sec": 5,
@@ -259,9 +185,7 @@ Chart.js 기반 듀얼축 그래프 표시
       "dual_axis": true
     }
   },
-
   "security": { "api_key": "my_api_key_12345" },
-
   "system": {
     "web": {
       "html": "/html/SC10_main_017.html",
@@ -271,7 +195,7 @@ Chart.js 기반 듀얼축 그래프 표시
     "logging": { "level": "INFO", "max_entries": 200 }
   }
 }
-```
+
 
 ---
 
