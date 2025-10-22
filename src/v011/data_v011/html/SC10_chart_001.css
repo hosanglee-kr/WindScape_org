@@ -41,6 +41,26 @@ canvas {
   margin-top: 6px;
 }
 
+.btn-group {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.btn {
+  background: #ddd;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn:hover { opacity: 0.85; }
+.btn.ok { background: #2563eb; color: #fff; }
+.btn.warn { background: #eab308; color: #fff; }
+
 footer {
   text-align: center;
   font-size: 12px;
@@ -48,7 +68,6 @@ footer {
   margin-top: 16px;
 }
 
-/* 반응형 */
 @media (max-width: 640px) {
   .chart-wrap { margin: 10px; padding: 14px; }
   h2 { font-size: 18px; }
