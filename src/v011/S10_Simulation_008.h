@@ -38,6 +38,9 @@
 #include <Arduino.h>
 #include <cmath>
 
+#include <deque>
+#include <ArduinoJson.h>
+
 #include "A10_Const_007.h"
 #include "D10_Logger_004.h"
 #include "P10_PWM_ctrl_005.h"
@@ -87,6 +90,27 @@ class CL_S10_Simulation {
 
 	// 타이머
 	unsigned long last_wind_sim_update           = 0;
+
+
+// ======================================================
+// 실시간 차트 로그 버퍼 (풍속/PWM duty 등 기록)
+// ======================================================
+struct ST_S10_ChartEntry {
+    unsigned long timestamp;
+    float wind_speed;
+    float pwm_duty;
+    float intensity;
+    float variability;
+    float turbulence;
+    uint8_t preset_id;
+    bool gust_active;
+    bool thermal_active;
+};
+
+static std::deque<ST_S10_ChartEntry> s_chartBuffer;
+static unsigned long s_lastChartLogMs;
+
+
 
 	// ======================================================
 	// 초기화 (프리셋 적용 포함)
@@ -582,6 +606,25 @@ class CL_S10_Simulation {
 		v_fan_pct += current_thermal_contribution * 5.0f; // thermal 기여
 
 		applyFanSpeed(v_fan_pct);
+
+
+		// ===== 실시간 로그 기록 (1초마다) =====
+if (millis() - s_lastChartLogMs > 1000) {
+    ST_S10_ChartEntry e;
+    e.timestamp   = millis();
+    e.wind_speed  = current_wind_speed;
+    e.pwm_duty    = _pwmCtrl ? _pwmCtrl->getDutyPercent() : 0.0f;
+    e.intensity   = g_A10_config.wind_intensity;
+    e.variability = g_A10_config.wind_variability;
+    e.turbulence  = g_A10_config.turbulence_intensity_sigma;
+    e.preset_id   = g_A10_config.preset_mode_index;
+    e.gust_active = gust_active;
+    e.thermal_active = thermal_bubble_active;
+    s_chartBuffer.push_back(e);
+    if (s_chartBuffer.size() > 120) s_chartBuffer.pop_front(); // 약 2분
+    s_lastChartLogMs = millis();
+}
+		
 		yield();
 	}
 
@@ -593,3 +636,6 @@ class CL_S10_Simulation {
 	// PWM 제어기 포인터
 	CL_P10_PWM *_pwmCtrl = nullptr;
 };
+
+std::deque<CL_S10_Simulation::ST_S10_ChartEntry> CL_S10_Simulation::s_chartBuffer;
+unsigned long CL_S10_Simulation::s_lastChartLogMs = 0;
