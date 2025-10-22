@@ -10,8 +10,9 @@
 <!-- 스타일 -->
 <link rel="stylesheet" href="/SC10_chart_001.css" />
 
-<!-- Chart.js -->
+<!-- Chart.js & Zoom Plugin -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 
 <!-- 컨트롤 스크립트 -->
 <script defer src="/SC10_chart_001.js"></script>
@@ -23,6 +24,12 @@
   <div class="chart-wrap">
     <canvas id="windChart"></canvas>
     <p id="refreshInfo">최근 업데이트 대기 중...</p>
+
+    <div class="btn-group">
+      <button id="btnResetZoom" class="btn">🔄 줌 초기화</button>
+      <button id="btnPause" class="btn warn">⏸ 데이터 일시정지</button>
+      <button id="btnResume" class="btn ok">▶ 재시작</button>
+    </div>
   </div>
 
   <footer>© 2025 WindScape Monitor</footer>
