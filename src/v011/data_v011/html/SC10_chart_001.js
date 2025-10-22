@@ -6,14 +6,17 @@
  * 기능 요약:
  *  - /api/chart_data 로 풍속/PWM 실시간 수집
  *  - Chart.js 기반 2축 그래프 업데이트
- *  - 자동 새로고침 / 타임스탬프 표시
+ *  - 줌/팬/정지/재시작 지원
  * ------------------------------------------------------
  */
 
 (() => {
 "use strict";
 
+let paused = false;
 const ctx = document.getElementById('windChart');
+const refreshLabel = document.getElementById('refreshInfo');
+
 const chart = new Chart(ctx, {
   type: 'line',
   data: {
@@ -58,13 +61,27 @@ const chart = new Chart(ctx, {
         suggestedMin: 0, suggestedMax: 100
       }
     },
-    plugins: { legend: { position: 'bottom' } }
+    plugins: {
+      legend: { position: 'bottom' },
+      zoom: {
+        zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
+        pan: { enabled: true, mode: 'x' },
+        limits: { x: { min: 'original', max: 'original' } }
+      }
+    }
   }
 });
 
-const refreshLabel = document.getElementById('refreshInfo');
+document.getElementById('btnResetZoom').addEventListener('click', () => chart.resetZoom());
+document.getElementById('btnPause').addEventListener('click', () => paused = true);
+document.getElementById('btnResume').addEventListener('click', () => paused = false);
 
 async function updateChart() {
+  if (paused) {
+    refreshLabel.textContent = "⏸ 일시정지 중...";
+    return;
+  }
+
   try {
     const resp = await fetch('/api/chart_data');
     const json = await resp.json();
@@ -78,9 +95,9 @@ async function updateChart() {
     chart.update('none');
 
     const last = recs.length ? new Date(recs[recs.length-1].t).toLocaleTimeString() : '-';
-    refreshLabel.textContent = `업데이트: ${last} (${recs.length} 샘플)`;
+    refreshLabel.textContent = `업데이트: ${last} (데이터 ${recs.length}개)`;
   } catch (err) {
-    refreshLabel.textContent = `데이터 수신 실패: ${err.message}`;
+    refreshLabel.textContent = `❌ 데이터 수신 실패: ${err.message}`;
   }
 }
 
@@ -88,3 +105,4 @@ setInterval(updateChart, 3000);
 updateChart();
 
 })();
+
