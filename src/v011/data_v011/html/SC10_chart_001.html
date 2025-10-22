@@ -1,0 +1,30 @@
+<!-- SC10_chart_001.html -->
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WindScape 실시간 차트</title>
+
+<!-- 스타일 -->
+<link rel="stylesheet" href="/SC10_chart_001.css" />
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- 컨트롤 스크립트 -->
+<script defer src="/SC10_chart_001.js"></script>
+</head>
+
+<body>
+  <h2>🌬️ WindScape 실시간 풍속 / PWM Duty 그래프</h2>
+
+  <div class="chart-wrap">
+    <canvas id="windChart"></canvas>
+    <p id="refreshInfo">최근 업데이트 대기 중...</p>
+  </div>
+
+  <footer>© 2025 WindScape Monitor</footer>
+</body>
+</html>
