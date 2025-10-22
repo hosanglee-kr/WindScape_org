@@ -419,4 +419,30 @@ private:
         auto *v_h = p_req->getHeader("X-API-Key");
         return (v_h && v_h->value()==String(g_A10_config.api_key));
     }
+
+    // 업로드 파일명 정규화 → ../ 같은 경로 탈출, 금지 문자 제거
+	static String _sanitizeFilename(const String &p_in) {
+		String v_out;
+		for (size_t i = 0; i < p_in.length(); i++) {
+			char v_char = p_in[i];
+			if (v_char == '/' || v_char == '\\')
+				continue;
+			if (v_char == ':' || v_char == '*' || v_char == '?' || v_char == '"' || v_char == '<' || v_char == '>' || v_char == '|')
+				continue;
+			v_out += v_char;
+		}
+		v_out.trim();
+		return v_out;
+	}
+
+	// 허용 확장자만 필터 (html/js/css/json/이미지 등)
+	static bool _isAllowedExt(const String &p_name) {
+		String v_name = p_name;
+		v_name.toLowerCase();
+		return v_name.endsWith(".html") || v_name.endsWith(".htm") || v_name.endsWith(".js") ||
+			   v_name.endsWith(".css") || v_name.endsWith(".json") || v_name.endsWith(".txt") ||
+			   v_name.endsWith(".gif") || v_name.endsWith(".png") || v_name.endsWith(".jpg") ||
+			   v_name.endsWith(".jpeg") || v_name.endsWith(".svg") || v_name.endsWith(".ico") ||
+			   v_name.endsWith(".gz");
+	}
 };
