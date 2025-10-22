@@ -8,18 +8,19 @@
  *  - WindScape 공통 상수/타입/기본 구조 정의
  *  - Wi-Fi/AP/STA/WEB 파일 경로/시뮬/HW/타이밍 등
  * ------------------------------------------------------
- * - 코드 네이밍 규칙:
- *    - 모듈약어 : A10
- *    - 전역 상수/매크로: G_모듈약어_ 접두사
- *    - 전역 변수: g_모듈약어_ 접두사
- *    - 로컬 변수 : v_ 접두사
- *    - 함수 인자 : p_ 접두사
- *    - type은 T_모듈약어_ 접두사
- *    - enum 상수 : EN_모듈약어_ 접두사
- *    - 구조체 : ST_모듈약어_ 접두사
- *    - 클래스 : CL_모듈약어_ 접두사
- *    - 클래스 private 멤버: _ 접두사, 정적 멤버: s_
- *    - 전역함수 : 모듈약어_ 접두사
+ * [코드 네이밍 규칙]
+ * 		- 현재 파일 모듈약어    : A10
+ * 		- 전역 상수,매크로      : G_모듈약어_ 접두사
+ * 		- 전역 변수             : g_모듈약어_ 접두사
+ * 		- 전역 함수             : 모듈약어_ 접두사
+ * 		- type                  : T_모듈약어_ 접두사
+ * 		- enum 상수             : EN_모듈약어_ 접두사
+ * 		- 구조체                : ST_모듈약어_ 접두사
+ * 		- 클래스명              : CL_모듈약어_ 접두사
+ * 		- 클래스 private 멤버   : _ 접두사,
+ * 		- 클래스 정적 멤버      : s_ 접두사
+ * 		- 로컬 변수             : v_ 접두사
+ * 		- 함수 인자             : p_ 접두사
  */
 
 #include <Arduino.h>
@@ -34,20 +35,18 @@ namespace A10_Const {
     constexpr char CONFIG_JSON_FILE[]         = "/json/config_014.json";
     constexpr char CONFIG_JSON_FILE_BACKUP[]  = "/json/config_014.json.bak";
 
-        // 기본 WEB 파일 (설정값 없거나 오류 시 Fallback)
-        constexpr char DEF_HTML_FILE[] = "/html/SC10_main_017.html";
-        constexpr char DEF_HTML_URI[]  = "/main.html";
-        constexpr char DEF_HTML_MIME[] = "text/html";
+    // 기본 WEB 파일 (설정값 없거나 오류 시 Fallback)
+    constexpr char DEF_HTML_FILE[] = "/html/SC10_main_017.html";
+    constexpr char DEF_HTML_URI[]  = "./main.html";
+    constexpr char DEF_HTML_MIME[] = "text/html";
 
-        constexpr char DEF_CSS_FILE[]  = "/html/SC10_main_017.css";
-        constexpr char DEF_CSS_URI[]   = "/SC10_main_017.css";
-        constexpr char DEF_CSS_MIME[]  = "text/css";
+    constexpr char DEF_CSS_FILE[]  = "/html/SC10_main_017.css";
+    constexpr char DEF_CSS_URI[]   = "./SC10_main_017.css";
+    constexpr char DEF_CSS_MIME[]  = "text/css";
 
-        constexpr char DEF_JS_FILE[]   = "/html/SC10_main_017.js";
-        constexpr char DEF_JS_URI[]    = "/SC10_main_017.js";
-        constexpr char DEF_JS_MIME[]   = "application/javascript";
-
-
+    constexpr char DEF_JS_FILE[]   = "/html/SC10_main_017.js";
+    constexpr char DEF_JS_URI[]    = "./SC10_main_017.js";
+    constexpr char DEF_JS_MIME[]   = "application/javascript";
 
     // STA 저장 최대 개수
     constexpr int  MAX_STA_NETWORKS = 5;
@@ -60,16 +59,19 @@ typedef enum {
     EN_A10_WIFI_MODE_AP_STA  = 2
 } T_A10_WifiMode_t;
 
-// 풍속 Phase
+
+// 풍속 시뮬레이션의 풍속 단계 (Phase) 정의
 typedef enum {
-    EN_A10_WEATHER_PHASE_CALM   = 0,
-    EN_A10_WEATHER_PHASE_NORMAL = 1,
-    EN_A10_WEATHER_PHASE_STRONG = 2,
-    EN_A10_WEATHER_PHASE_COUNT
+    EN_A10_WEATHER_PHASE_CALM   = 0,                        // 잔잔한 바람
+    EN_A10_WEATHER_PHASE_NORMAL = 1,                        // 보통 바람
+    EN_A10_WEATHER_PHASE_STRONG = 2,                        // 강한 바람
+                                EN_A10_WEATHER_PHASE_COUNT  // 총 단계 개수 (배열 크기 용도)
 } T_A10_WindWeatherPhase_t;
 
 static const char* g_A10_WEATHER_PHASE_NAMES_Arr[] = {
-    "Calm-잔잔한", "Normal-보통", "Strong-강한"
+    "Calm", 
+    "Normal", 
+    "Strong"
 };
 
 // 프리셋
@@ -177,5 +179,10 @@ typedef struct __attribute__((packed)) {
 inline ST_A10_WindConfig g_A10_config;
 
 // 유틸
-inline float A10_getRandom01() { return (float)esp_random() / (float)UINT32_MAX; }
-inline float A10_randRange(float p_a, float p_b) { return p_a + A10_getRandom01() * (p_b - p_a); }
+inline float A10_getRandom01() {
+	return (float)esp_random() / (float)UINT32_MAX;
+}
+
+inline float A10_randRange(float p_a, float p_b) { 
+    return p_a + A10_getRandom01() * (p_b - p_a); 
+}
