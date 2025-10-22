@@ -88,10 +88,10 @@ public:
                 { A10_Const::DEF_CSS_URI,  A10_Const::DEF_CSS_FILE,  A10_Const::DEF_CSS_MIME },
                 { A10_Const::DEF_JS_URI,   A10_Const::DEF_JS_FILE,   A10_Const::DEF_JS_MIME },
                 // --- 추가 ---
-                { "/chart", "/html/SC10_chart_001.html", "text/html" },
-                { "/SC10_chart_001.html", "/html/SC10_chart_001.html", "text/html" },
-                { "/SC10_chart_001.css",  "/html/SC10_chart_001.css",  "text/css" },
-                { "/SC10_chart_001.js",   "/html/SC10_chart_001.js",   "application/javascript" },
+                { "/chart", "/html/SC10_chart_002.html", "text/html" },
+                { "/SC10_chart_002.html", "/html/SC10_chart_002.html", "text/html" },
+                { "/SC10_chart_002.css",  "/html/SC10_chart_002.css",  "text/css" },
+                { "/SC10_chart_002.js",   "/html/SC10_chart_002.js",   "application/javascript" },
         
             };
         #endif
