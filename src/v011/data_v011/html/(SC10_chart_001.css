@@ -1,0 +1,55 @@
+/* ------------------------------------------------------
+ * 소스명 : SC10_chart_001.css
+ * 모듈명 : WindScape 실시간 차트 Style
+ * ------------------------------------------------------
+ * 기능 요약:
+ *  - Chart.js 기반 풍속/PWM 2축 그래프 스타일
+ *  - 반응형 카드형 차트 레이아웃
+ * ------------------------------------------------------ */
+
+body {
+  font-family: Pretendard, "Noto Sans KR", sans-serif;
+  background: #f7f9fc;
+  color: #222;
+  margin: 0;
+}
+
+h2 {
+  text-align: center;
+  color: #1e3a8a;
+  margin-top: 20px;
+}
+
+.chart-wrap {
+  max-width: 1000px;
+  margin: 20px auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+canvas {
+  width: 100%;
+  height: 420px;
+}
+
+#refreshInfo {
+  text-align: center;
+  font-size: 13px;
+  color: #555;
+  margin-top: 6px;
+}
+
+footer {
+  text-align: center;
+  font-size: 12px;
+  color: #888;
+  margin-top: 16px;
+}
+
+/* 반응형 */
+@media (max-width: 640px) {
+  .chart-wrap { margin: 10px; padding: 14px; }
+  h2 { font-size: 18px; }
+}
