@@ -104,6 +104,7 @@ function bindEvents() {
   $("#btnPreviewPreset")?.addEventListener("click", previewPreset);
 
   $("#btnSaveSim")?.addEventListener("click", saveSim);
+  $("#btnSaveSimInit")?.addEventListener("click", saveSimInit);
   $("#btnSaveTiming")?.addEventListener("click", saveTiming);
   $("#btnSaveWifiAP")?.addEventListener("click", saveWifiAP);
   $("#btnSaveWifiSTA")?.addEventListener("click", saveWifiSTA);
@@ -144,6 +145,12 @@ async function saveSim() {
   refreshState();
 }
 
+async function saveSimInit() {
+  const body = {
+  };
+  await fetchApi("/api/config/init", "POST", body, "시뮬 설정 초기화");
+  refreshState();
+}
 async function saveTiming() {
   const body = {
     timing: {

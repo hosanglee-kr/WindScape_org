@@ -53,14 +53,14 @@ public:
     static void mountStatic(AsyncWebServer &p_srv) {
         // 루트 리다이렉트
         p_srv.on("/", HTTP_GET, [](AsyncWebServerRequest *p_req){
-#ifdef G_A10_DYNIM_WEB_STATIC_FILE_USE
-            if (strlen(g_A10_config.web.html_file.uri) > 0)
-                p_req->redirect(String(g_A10_config.web.html_file.uri));
-            else
+            #ifdef G_A10_DYNIM_WEB_STATIC_FILE_USE
+                if (strlen(g_A10_config.web.html_file.uri) > 0)
+                    p_req->redirect(String(g_A10_config.web.html_file.uri));
+                else
+                    p_req->redirect(String(A10_Const::DEF_HTML_URI));
+            #else
                 p_req->redirect(String(A10_Const::DEF_HTML_URI));
-#else
-            p_req->redirect(String(A10_Const::DEF_HTML_URI));
-#endif
+            #endif
         });
 
         // --------------------------
@@ -68,27 +68,27 @@ public:
         // --------------------------
         struct ST_W10_Route { const char* uri; const char* file; const char* mime; };
 
-#ifdef G_A10_DYNIM_WEB_STATIC_FILE_USE
-        ST_W10_Route v_routes[3] = {
-            { g_A10_config.web.html_file.uri[0]? g_A10_config.web.html_file.uri : A10_Const::DEF_HTML_URI,
-              g_A10_config.web.html_file.file[0]? g_A10_config.web.html_file.file : A10_Const::DEF_HTML_FILE,
-              g_A10_config.web.html_file.mime[0]? g_A10_config.web.html_file.mime : A10_Const::DEF_HTML_MIME },
+        #ifdef G_A10_DYNIM_WEB_STATIC_FILE_USE
+            ST_W10_Route v_routes[3] = {
+                { g_A10_config.web.html_file.uri[0]? g_A10_config.web.html_file.uri : A10_Const::DEF_HTML_URI,
+                g_A10_config.web.html_file.file[0]? g_A10_config.web.html_file.file : A10_Const::DEF_HTML_FILE,
+                g_A10_config.web.html_file.mime[0]? g_A10_config.web.html_file.mime : A10_Const::DEF_HTML_MIME },
 
-            { g_A10_config.web.css_file.uri[0]? g_A10_config.web.css_file.uri : A10_Const::DEF_CSS_URI,
-              g_A10_config.web.css_file.file[0]? g_A10_config.web.css_file.file : A10_Const::DEF_CSS_FILE,
-              g_A10_config.web.css_file.mime[0]? g_A10_config.web.css_file.mime : A10_Const::DEF_CSS_MIME },
+                { g_A10_config.web.css_file.uri[0]? g_A10_config.web.css_file.uri : A10_Const::DEF_CSS_URI,
+                g_A10_config.web.css_file.file[0]? g_A10_config.web.css_file.file : A10_Const::DEF_CSS_FILE,
+                g_A10_config.web.css_file.mime[0]? g_A10_config.web.css_file.mime : A10_Const::DEF_CSS_MIME },
 
-            { g_A10_config.web.js_file.uri[0]? g_A10_config.web.js_file.uri : A10_Const::DEF_JS_URI,
-              g_A10_config.web.js_file.file[0]? g_A10_config.web.js_file.file : A10_Const::DEF_JS_FILE,
-              g_A10_config.web.js_file.mime[0]? g_A10_config.web.js_file.mime : A10_Const::DEF_JS_MIME }
-        };
-#else
-        ST_W10_Route v_routes[3] = {
-            { A10_Const::DEF_HTML_URI, A10_Const::DEF_HTML_FILE, A10_Const::DEF_HTML_MIME },
-            { A10_Const::DEF_CSS_URI,  A10_Const::DEF_CSS_FILE,  A10_Const::DEF_CSS_MIME },
-            { A10_Const::DEF_JS_URI,   A10_Const::DEF_JS_FILE,   A10_Const::DEF_JS_MIME }
-        };
-#endif
+                { g_A10_config.web.js_file.uri[0]? g_A10_config.web.js_file.uri : A10_Const::DEF_JS_URI,
+                g_A10_config.web.js_file.file[0]? g_A10_config.web.js_file.file : A10_Const::DEF_JS_FILE,
+                g_A10_config.web.js_file.mime[0]? g_A10_config.web.js_file.mime : A10_Const::DEF_JS_MIME }
+            };
+        #else
+            ST_W10_Route v_routes[3] = {
+                { A10_Const::DEF_HTML_URI, A10_Const::DEF_HTML_FILE, A10_Const::DEF_HTML_MIME },
+                { A10_Const::DEF_CSS_URI,  A10_Const::DEF_CSS_FILE,  A10_Const::DEF_CSS_MIME },
+                { A10_Const::DEF_JS_URI,   A10_Const::DEF_JS_FILE,   A10_Const::DEF_JS_MIME }
+            };
+        #endif
 
         for (auto &v_r : v_routes) {
             p_srv.on(v_r.uri, HTTP_GET, [=](AsyncWebServerRequest *p_request) {

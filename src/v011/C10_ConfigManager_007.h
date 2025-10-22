@@ -94,7 +94,7 @@ public:
 
     // 기본 생성 (없을 때만)
     static bool saveDefaultConfig() {
-        if (LittleFS.exists(A10_Const::CONFIG_JSON_FILE)) return false;
+        ///////////// if (LittleFS.exists(A10_Const::CONFIG_JSON_FILE)) return false;
         initDefaultConfig(g_A10_config);
         return save(g_A10_config);
     }

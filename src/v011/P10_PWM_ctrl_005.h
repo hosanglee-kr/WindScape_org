@@ -87,11 +87,15 @@ public:
     // ==============================
     // 출력 제어
     // ==============================
-    void set_pwmDuty(float percent) {
-        percent = constrain(percent, 0.0f, 100.0f);
-        uint32_t duty = (uint32_t)((pow(2, pwmRes) - 1) * (percent / 100.0f));
-        ledcWrite(pwmChannel, duty);
-        CL_D10_Logger::log(EN_L10_LOG_DEBUG, "PWM duty %.2f%% (raw=%u)", percent, duty);
+    void set_pwmDuty(float p_percent) {
+        p_percent = constrain(p_percent, 0.0f, 100.0f);
+        uint32_t v_duty = (uint32_t)((pow(2, pwmRes) - 1) * (p_percent / 100.0f));
+        ledcWrite(pwmChannel, v_duty);
+
+        CL_D10_Logger::log(EN_L10_LOG_DEBUG, "PWM duty %.2f%% (raw=%u)", p_percent, v_duty);
+
+        Serial.print(">PWM Duty:");   Serial.println(p_percent);
+
     }
 
     // ==============================
