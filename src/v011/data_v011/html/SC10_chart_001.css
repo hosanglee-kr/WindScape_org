@@ -1,6 +1,6 @@
 /* ------------------------------------------------------
  * 소스명 : SC10_chart_001.css
- * 모듈명 : WindScape 실시간 차트 Style
+ * 모듈명 : Smart Nature Wind 실시간 차트 Style
  * ------------------------------------------------------
  * 기능 요약:
  *  - Chart.js 기반 풍속/PWM 2축 그래프 스타일
@@ -30,8 +30,10 @@ h2 {
 }
 
 canvas {
-  width: 100%;
-  height: 420px;
+  margin-bottom: 24px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 6px rgba(0,0,0,0.1);
 }
 
 #refreshInfo {
