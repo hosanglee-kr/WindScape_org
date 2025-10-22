@@ -5,13 +5,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>WindScape 실시간 차트</title>
+<title>Smart Nature Wind 실시간 대시보드</title>
 
 <!-- 스타일 -->
 <link rel="stylesheet" href="/SC10_chart_001.css" />
 
 <!-- Chart.js & Zoom Plugin -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 
 <!-- 컨트롤 스크립트 -->
@@ -19,19 +20,42 @@
 </head>
 
 <body>
-  <h2>🌬️ WindScape 실시간 풍속 / PWM Duty 그래프</h2>
+  <h2>🌬️ Smart Nature Wind 실시간 시뮬레이션 대시보드</h2>
 
   <div class="chart-wrap">
-    <canvas id="windChart"></canvas>
-    <p id="refreshInfo">최근 업데이트 대기 중...</p>
+    <p id="refreshInfo">⏳ 데이터 로딩 중...</p>
 
     <div class="btn-group">
-      <button id="btnResetZoom" class="btn">🔄 줌 초기화</button>
-      <button id="btnPause" class="btn warn">⏸ 데이터 일시정지</button>
+      <button id="btnResetZoomAll" class="btn">🔄 줌 초기화</button>
+      <button id="btnPause" class="btn warn">⏸ 일시정지</button>
       <button id="btnResume" class="btn ok">▶ 재시작</button>
     </div>
+
+    <!-- 1️⃣ 풍속 / PWM Duty -->
+    <section>
+      <h3>① 풍속 / PWM Duty</h3>
+      <canvas id="chartWind" height="200"></canvas>
+    </section>
+
+    <!-- 2️⃣ 시뮬레이션 파라미터 -->
+    <section>
+      <h3>② Intensity / Variability / Turbulence</h3>
+      <canvas id="chartParams" height="200"></canvas>
+    </section>
+
+    <!-- 3️⃣ 이벤트 상태 -->
+    <section>
+      <h3>③ Gust / Thermal 활성 상태</h3>
+      <canvas id="chartEvents" height="160"></canvas>
+    </section>
+
+    <!-- 4️⃣ 프리셋 변화 -->
+    <section>
+      <h3>④ Preset 변화 로그</h3>
+      <canvas id="chartPreset" height="160"></canvas>
+    </section>
   </div>
 
-  <footer>© 2025 WindScape Monitor</footer>
+  <footer>© 2025 WindScape 실시간 모니터링</footer>
 </body>
 </html>
