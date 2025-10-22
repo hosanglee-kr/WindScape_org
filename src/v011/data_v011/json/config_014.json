@@ -1,0 +1,65 @@
+{
+    "security": {
+        "api_key": ""
+    },
+    "web" : {
+         "html_file" : {
+               "file" : "/html/SC10_main_017.html",
+               "uri" : "./main.html",
+               "mime" : "text/html"
+         },
+        "js_file" : {
+               "file" : "/html/SC10_main_017.js",
+               "uri" : "./SC10_main_017.js",
+               "mime" : "application/javascript"
+         },
+        "css_file" : {
+               "file" : "/html/SC10_main_017.css",
+               "uri" : "./SC10_main_017.css",
+               "mime" : "text/css"
+         }
+    },
+    "wifi": {
+        "wifi_mode": 2,
+        "ap_network" : {
+            "ap_ssid": "NatureWind",
+            "ap_password": "2540"
+        },
+        "sta_networks": [
+            {
+                "ssid": "LSITC_WIFI_AP",
+                "pass": "1234554321"
+            },
+            {
+                "ssid": "GalNote10-2540",
+                "pass": "91932542"
+            }
+        ]
+    },
+
+    "hw": {
+        "pwm_pin": 6,
+        "pwm_channel": 0,
+        "pwm_freq": 25000,
+        "pwm_res": 10
+    },
+
+    "timing": {
+        "sim_int": 250,
+        "gust_int": 500,
+        "thermal_int": 2000
+    },
+
+    "sim": {
+        "preset": "COUNTRY",
+    "intensity": 75,
+    "gust_freq": 50,
+    "variability": 60,
+    "fan_limit": 90,
+    "min_fan": 10,
+    "turb_len": 45,
+    "turb_sig": 0.45,
+    "therm_str": 2.2,
+    "therm_rad": 20
+    }
+}

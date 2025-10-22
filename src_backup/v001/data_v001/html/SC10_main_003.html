@@ -1,0 +1,224 @@
+<!-- SC10_main_003.html -->
+ 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SC10 WindScape Config</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        h2 { border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 20px; color: #333; }
+        h3 { border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 20px; color: #007bff; }
+        .status-box { background: #e0f7fa; padding: 15px; margin-bottom: 20px; border-radius: 5px; border-left: 5px solid #00bcd4; }
+        .status-box p { margin: 5px 0; }
+        .setting-group { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+        
+        /* 비밀번호 토글을 위한 CSS */
+        .password-container { position: relative; margin-bottom: 10px; }
+        .password-container input[type="password"], 
+        .password-container input[type="text"] {
+            padding-right: 40px; /* 버튼 공간 확보 */
+            margin-bottom: 0;
+        }
+        .toggle-password {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #777;
+            font-size: 1.2em;
+            line-height: 1;
+            padding: 0;
+            background: none;
+            border: none;
+            outline: none;
+        }
+        .toggle-password:hover {
+            color: #000;
+        }
+        
+        /* STA 설정을 한 줄에 배치하기 위한 flexbox 사용 (기존 유지) */
+        .sta-config-item { margin-left: 15px; padding: 10px 0; border-left: 2px dashed #ccc; margin-top: 10px; padding-left: 15px; }
+        .sta-inputs { display: flex; gap: 10px; align-items: flex-end; }
+        .sta-inputs > div { flex: 1; }
+        .sta-label { font-weight: bold; color: #555; margin-bottom: 5px; display: block; }
+
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input[type="text"], input[type="password"], input[type="range"], select { width: 100%; padding: 8px; margin-bottom: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button[type="submit"] { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; width: 100%; margin-top: 10px; }
+        button[type="submit"]:hover { background-color: #0056b3; }
+        .value-display { font-weight: bold; color: #007bff; float: right; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>SC10 WindScape 설정 및 상태</h2>
+        
+        <div class="status-box">
+            <p>시뮬레이션 상태: <span id="status-sim-active">...</span></p>
+            <p>현재 풍속: <span id="status-wind-speed">...</span> m/s</p>
+            <p>현재 기상 단계: <span id="status-phase-name">...</span></p>
+            <p>팬 PWM 출력: <span id="status-fan-pwm">...</span></p>
+            <p>Wi-Fi 연결 상태: <span id="status-wifi-status">...</span></p>
+            <p>연결된 SSID: <span id="status-wifi-ssid">...</span></p>
+        </div>
+
+        <form id="config-form">
+            
+            <div class="setting-group" style="border-bottom: 3px solid #007bff; margin-bottom: 20px;">
+                <h3>📡 Wi-Fi 연결 설정</h3>
+
+                <label for="wifi_mode">Wi-Fi 모드</label>
+                <select id="wifi_mode" name="wifi_mode">
+                    <option value="STA">STA (클라이언트)</option>
+                    <option value="AP">AP (액세스 포인트)</option>
+                    <option value="DUAL">DUAL (STA+AP)</option>
+                </select>
+
+                <h4 style="margin-top: 15px;">AP(SoftAP) 설정</h4>
+                <label for="ap_ssid">AP SSID</label>
+                <input type="text" id="ap_ssid" name="ap_ssid" value="">
+                
+                <label for="ap_password">AP 비밀번호</label>
+                <div class="password-container">
+                    <input type="password" id="ap_password" name="ap_password" value="">
+                    <button type="button" class="toggle-password" data-target="ap_password">👀</button>
+                </div>
+
+                <h4 style="margin-top: 15px;">STA(클라이언트) 설정 (최대 5개)</h4>
+                
+                <div class="sta-config-item">
+                    <span class="sta-label">STA #1</span>
+                    <div class="sta-inputs">
+                        <div>
+                            <input type="text" id="sta_ssid_1" name="sta_ssid_1" placeholder="SSID (필수)" value="">
+                        </div>
+                        <div>
+                            <div class="password-container">
+                                <input type="password" id="sta_pass_1" name="sta_pass_1" placeholder="비밀번호" value="">
+                                <button type="button" class="toggle-password" data-target="sta_pass_1">👀</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sta-config-item">
+                    <span class="sta-label">STA #2</span>
+                    <div class="sta-inputs">
+                        <div>
+                            <input type="text" id="sta_ssid_2" name="sta_ssid_2" placeholder="SSID (필수)" value="">
+                        </div>
+                        <div>
+                            <div class="password-container">
+                                <input type="password" id="sta_pass_2" name="sta_pass_2" placeholder="비밀번호" value="">
+                                <button type="button" class="toggle-password" data-target="sta_pass_2">👀</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sta-config-item">
+                    <span class="sta-label">STA #3</span>
+                    <div class="sta-inputs">
+                        <div>
+                            <input type="text" id="sta_ssid_3" name="sta_ssid_3" placeholder="SSID (필수)" value="">
+                        </div>
+                        <div>
+                            <div class="password-container">
+                                <input type="password" id="sta_pass_3" name="sta_pass_3" placeholder="비밀번호" value="">
+                                <button type="button" class="toggle-password" data-target="sta_pass_3">👀</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sta-config-item">
+                    <span class="sta-label">STA #4</span>
+                    <div class="sta-inputs">
+                        <div>
+                            <input type="text" id="sta_ssid_4" name="sta_ssid_4" placeholder="SSID (필수)" value="">
+                        </div>
+                        <div>
+                            <div class="password-container">
+                                <input type="password" id="sta_pass_4" name="sta_pass_4" placeholder="비밀번호" value="">
+                                <button type="button" class="toggle-password" data-target="sta_pass_4">👀</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sta-config-item">
+                    <span class="sta-label">STA #5</span>
+                    <div class="sta-inputs">
+                        <div>
+                            <input type="text" id="sta_ssid_5" name="sta_ssid_5" placeholder="SSID (필수)" value="">
+                        </div>
+                        <div>
+                            <div class="password-container">
+                                <input type="password" id="sta_pass_5" name="sta_pass_5" placeholder="비밀번호" value="">
+                                <button type="button" class="toggle-password" data-target="sta_pass_5">👀</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="setting-group">
+                <h3>💨 풍경 시뮬레이션 설정</h3>
+                <label for="preset">프리셋 모드</label>
+                <select id="preset" name="preset"></select>
+            </div>
+            
+            <div class="setting-group">
+                <label for="intensity">전체 풍속 강도 (0.0~1.0)</label>
+                <input type="range" id="intensity" name="intensity" min="0" max="1" step="0.01">
+                <span class="value-display" id="intensity-value"></span>
+            </div>
+            <div class="setting-group">
+                <label for="gust_freq">돌풍 빈도 (0.0~1.0)</label>
+                <input type="range" id="gust_freq" name="gust_freq" min="0" max="1" step="0.01">
+                <span class="value-display" id="gust_freq-value"></span>
+            </div>
+            <div class="setting-group">
+                <label for="variability">바람 변화율 (0.0~1.0)</label>
+                <input type="range" id="variability" name="variability" min="0" max="1" step="0.01">
+                <span class="value-display" id="variability-value"></span>
+            </div>
+            <div class="setting-group">
+                <label for="fan_limit">최대 팬 속도 (0~255)</label>
+                <input type="range" id="fan_limit" name="fan_limit" min="0" max="255" step="1">
+                <span class="value-display" id="fan_limit-value"></span>
+            </div>
+            <div class="setting-group">
+                <label for="min_fan">최소 팬 속도 (0~255)</label>
+                <input type="range" id="min_fan" name="min_fan" min="0" max="255" step="1">
+                <span class="value-display" id="min_fan-value"></span>
+            </div>
+            <div class="setting-group">
+                <label for="turb_len">난류 길이 스케일 (0.0~5.0)</label>
+                <input type="range" id="turb_len" name="turb_len" min="0" max="5" step="0.1">
+                <span class="value-display" id="turb_len-value"></span>
+            </div>
+            <div class="setting-group">
+                <label for="turb_sig">난류 강도 시그마 (0.0~1.0)</label>
+                <input type="range" id="turb_sig" name="turb_sig" min="0" max="1" step="0.01">
+                <span class="value-display" id="turb_sig-value"></span>
+            </div>
+            <div class="setting-group">
+                <label for="therm_str">열 상승 기류 강도 (0.0~1.0)</label>
+                <input type="range" id="therm_str" name="therm_str" min="0" max="1" step="0.01">
+                <span class="value-display" id="therm_str-value"></span>
+            </div>
+            <div class="setting-group">
+                <label for="therm_rad">열 상승 기류 반경 (0.0~5.0)</label>
+                <input type="range" id="therm_rad" name="therm_rad" min="0" max="5" step="0.1">
+                <span class="value-display" id="therm_rad-value"></span>
+            </div>
+            
+            <button type="submit">설정 저장 및 적용</button>
+        </form>
+    </div>
+    
+    <script src="SC10_main_003.js"></script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+// main.cpp
+
+#include <Arduino.h>
+
+#include "v010/SC10_WindScape_006.h"
+
+
+WindScapeSimulator g_SC10_sim;   
+
+void setup() {
+
+    Serial.begin(115200);
+    delay(200);
+
+    // 선택: 시리얼 로그 레벨 조정 (기본 INFO)
+    SC10_Logger::setLevel(SC10_LOG_DEBUG);
+    
+    // FS 마운트가 내부적으로 필요 시 수행되지만, 초기 HTML/JSON 업로드 전에 미리 마운트 권장
+    if (!LittleFS.begin(true)) {
+        Serial.println("[BOOT] LittleFS mount failed!");
+    } else {
+        Serial.println("[BOOT] LittleFS mounted.");
+    }
+
+    // 시뮬레이터 초기화: 설정 로드 → Wi-Fi(AP/STA) → PWM → Web API 오픈
+    g_SC10_sim.SC10_init();
+
+    // (선택) 초기 안내 로그
+    Serial.println("[BOOT] ==== WindScape Ready ====");
+    Serial.println("[BOOT] Open browser to http://<ESP_IP>/  or use API routes:");
+    Serial.println("[BOOT]   GET  /api/state   |  GET  /api/diag   |  GET  /api/logs");
+    Serial.println("[BOOT]   GET  /api/scan    |  GET  /api/version");
+    Serial.println("[BOOT]   POST /api/config  |  POST /api/reset   |  POST /api/reboot");
+    Serial.println("[BOOT]   POST /upload      |  POST /update (OTA)");
+}
+
+void loop() {
+    // 시뮬레이션 루프: 바람 계산/팬 제어/Phase 전환 등
+    g_SC10_sim.SC10_run();
+
+    // 너무 바쁘지 않게 약간 양보
+    delay(1);
+}
+

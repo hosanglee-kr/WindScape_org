@@ -1,0 +1,275 @@
+<!-- SC10_main_010.html -->
+
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SC10 WindScape 관리자</title>
+  <style>
+    :root {
+      --bg: #0f172a;       /* slate-900 */
+      --panel: #111827;    /* gray-900 */
+      --muted: #94a3b8;    /* slate-400 */
+      --text: #e5e7eb;     /* gray-200 */
+      --accent: #22d3ee;   /* cyan-400 */
+      --ok: #10b981;       /* emerald-500 */
+      --warn: #f59e0b;     /* amber-500 */
+      --err: #ef4444;      /* red-500 */
+      --card: #1f2937;     /* gray-800 */
+      --card2:#0b1220;     /* dark tint */
+      --input:#111827;
+    }
+    html,body {margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;}
+    .wrap {max-width: 1080px; margin: 24px auto; padding: 0 16px;}
+    h1 {font-size: 22px; margin: 0 0 16px 0;}
+    h2 {font-size: 18px; margin: 18px 0 12px;}
+    .grid {display:grid; grid-template-columns:repeat(12,1fr); gap:16px;}
+    .card {background: linear-gradient(180deg,var(--card),var(--card2)); border:1px solid #243047; border-radius:16px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.25);}
+    .col-12{grid-column:span 12;}
+    .col-6{grid-column:span 12;} @media(min-width:900px){ .col-6{grid-column:span 6;} }
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .row > * {flex:1 1 auto}
+    label{display:block; font-size:12px; color:var(--muted); margin: 8px 0 6px}
+    input,select,textarea{width:100%; box-sizing:border-box; padding:10px 12px; border-radius:10px; border:1px solid #23314b; background:var(--input); color:var(--text); outline:none}
+    input[type="number"]{appearance:textfield}
+    input[readonly]{opacity:.8}
+    .muted{color:var(--muted)}
+    .btn{display:inline-flex;align-items:center;gap:8px; padding:10px 14px; border-radius:12px; border:1px solid #23314b; background:#0b1220; color:var(--text); cursor:pointer}
+    .btn:hover{background:#0f1a31}
+    .btn.ok{border-color:#134e4a; background:#062e2a}
+    .btn.warn{border-color:#4a3713; background:#2e2306}
+    .btn.err {border-color:#4a1313; background:#2e0606}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .pill{display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid #243047; background:#0b1220; color:var(--muted)}
+    table{width:100%; border-collapse:collapse; font-size:14px}
+    th,td{padding:8px 10px; border-bottom:1px solid #243047}
+    th{color:var(--muted); font-weight:600; text-align:left}
+    .list{max-height:220px; overflow:auto; border:1px dashed #2a395e; border-radius:12px; padding:6px 8px}
+    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; background:#0b1220; border:1px solid #2a395e; padding:1px 6px; border-radius:6px}
+    .hr{height:1px;background:#243047;margin:12px -16px}
+    .right{justify-content:flex-end}
+    .tight{gap:6px}
+    .danger{color:var(--err)}
+    .okc{color:var(--ok)}
+    .accent{color:var(--accent)}
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+    .mt8{margin-top:8px} .mt12{margin-top:12px} .mt16{margin-top:16px}
+    .mb8{margin-bottom:8px} .mb12{margin-bottom:12px} .mb16{margin-bottom:16px}
+    .flex{display:flex;gap:10px;align-items:center}
+    .nowrap{white-space:nowrap}
+    .fill{width:100%}
+    pre{white-space:pre-wrap;word-break:break-all;background:#0b1220;border:1px solid #243047;padding:10px;border-radius:10px}
+    .link{color:var(--accent);text-decoration:none}
+    small{color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>SC10 WindScape 관리자 <span class="pill" id="fwVer">…</span></h1>
+
+    <div class="grid">
+      <!-- 상태 -->
+      <section class="card col-12">
+        <div class="row">
+          <div class="flex"><strong>상태</strong></div>
+          <div class="right">
+            <button class="btn" id="btnRefresh">새로고침</button>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="col-6">
+            <div class="row">
+              <div><label>시뮬 상태</label><div id="simActive" class="pill">-</div></div>
+              <div><label>Phase</label><div id="phase" class="pill">-</div></div>
+              <div><label>풍속(m/s)</label><div id="wind" class="pill">-</div></div>
+              <div><label>PWM</label><div id="pwm" class="pill">-</div></div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="row">
+              <div><label>Wi-Fi 모드</label><div id="wifiMode" class="pill">-</div></div>
+              <div><label>SSID</label><div id="curSsid" class="pill">-</div></div>
+              <div><label>IP</label><div id="ip" class="pill">-</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 프리셋/시뮬 파라미터 -->
+      <section class="card col-12">
+        <div class="row">
+          <strong>시뮬레이션 설정</strong>
+          <div class="right tight">
+            <button class="btn ok" id="btnSaveConfig">저장</button>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="col-6">
+            <label>프리셋</label>
+            <select id="preset"></select>
+          </div>
+          <div class="col-6">
+            <label>강도 (intensity %)</label>
+            <input type="number" id="intensity" min="0" max="200" step="1" value="100">
+          </div>
+
+          <div class="col-6">
+            <label>돌풍 빈도 (gust_freq %)</label>
+            <input type="number" id="gust_freq" min="0" max="200" step="1">
+          </div>
+          <div class="col-6">
+            <label>가변성 (variability %)</label>
+            <input type="number" id="variability" min="0" max="100" step="1">
+          </div>
+
+          <div class="col-6">
+            <label>팬 최대 (fan_limit %)</label>
+            <input type="number" id="fan_limit" min="0" max="100" step="1">
+          </div>
+          <div class="col-6">
+            <label>팬 최소 (min_fan %)</label>
+            <input type="number" id="min_fan" min="0" max="100" step="1">
+          </div>
+
+          <div class="col-6">
+            <label>난류 길이 스케일 (turb_len)</label>
+            <input type="number" id="turb_len" min="1" max="200" step="1">
+          </div>
+          <div class="col-6">
+            <label>난류 시그마 (turb_sig)</label>
+            <input type="number" id="turb_sig" min="0" max="5" step="0.01">
+          </div>
+
+          <div class="col-6">
+            <label>열기포 세기 (therm_str)</label>
+            <input type="number" id="therm_str" min="0" max="5" step="0.01">
+          </div>
+          <div class="col-6">
+            <label>열기포 반경 (therm_rad)</label>
+            <input type="number" id="therm_rad" min="0" max="100" step="1">
+          </div>
+
+          <div class="col-6">
+            <label>시뮬 간격(ms) (sim_int)</label>
+            <input type="number" id="sim_int" min="10" step="1">
+          </div>
+          <div class="col-3">
+            <label>돌풍 체크(ms) (gust_int)</label>
+            <input type="number" id="gust_int" min="10" step="1">
+          </div>
+          <div class="col-3">
+            <label>열기포 체크(ms) (thermal_int)</label>
+            <input type="number" id="thermal_int" min="10" step="1">
+          </div>
+        </div>
+      </section>
+
+      <!-- Wi-Fi 설정 -->
+      <section class="card col-12">
+        <div class="row">
+          <strong>Wi-Fi 설정</strong>
+          <div class="right tight">
+            <button class="btn" id="btnScan">주변 스캔</button>
+            <button class="btn ok" id="btnSaveWifi">Wi-Fi 저장</button>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="col-4">
+            <label>Wi-Fi 모드</label>
+            <select id="wifi_mode">
+              <option value="0">AP</option>
+              <option value="1">STA</option>
+            </select>
+          </div>
+          <div class="col-4">
+            <label>AP SSID</label>
+            <input id="ap_ssid" />
+          </div>
+          <div class="col-4">
+            <label>AP Password</label>
+            <input id="ap_password" type="password" />
+          </div>
+
+          <div class="col-12">
+            <div class="row">
+              <div class="flex"><label>STA 네트워크 목록</label></div>
+              <div class="right tight">
+                <button class="btn" id="btnAddSta">추가</button>
+                <button class="btn warn" id="btnClearSta">모두삭제</button>
+              </div>
+            </div>
+            <div class="list" id="staList"></div>
+            <small class="muted">※ 비밀번호는 입력 시에만 저장됩니다(상태 조회에서는 숨김 권장).</small>
+          </div>
+
+          <div class="col-12">
+            <div class="row tight">
+              <select id="scanList" class="fill"></select>
+              <input id="scanPass" placeholder="선택 SSID 비밀번호"/>
+              <button class="btn" id="btnUseScan">선택 추가</button>
+            </div>
+            <small class="muted">주변 스캔 후 SSID 선택 → 비밀번호 입력 → ‘선택 추가’</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- 시스템 -->
+      <section class="card col-12">
+        <div class="row">
+          <strong>시스템 제어 & 정보</strong>
+          <div class="right tight">
+            <button class="btn" id="btnDiag">진단</button>
+            <button class="btn" id="btnLogs">로그</button>
+            <button class="btn warn" id="btnReboot">재부팅</button>
+            <button class="btn err" id="btnReset">공장 초기화</button>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="col-6">
+            <label>진단 결과</label>
+            <pre id="diagOut">-</pre>
+          </div>
+          <div class="col-6">
+            <label>최근 로그</label>
+            <pre id="logsOut">-</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- 업로드/OTA -->
+      <section class="card col-12">
+        <strong>파일 업로드 / 펌웨어 OTA</strong>
+        <div class="grid">
+          <div class="col-6">
+            <label>정적 파일 업로드 (html/json/js)</label>
+            <div class="row tight">
+              <input type="file" id="fileUpload" />
+              <button class="btn" id="btnUpload">업로드</button>
+            </div>
+            <small>기본 경로: LittleFS 루트 (예: <span class="kbd">/html/SC10_main_004.html</span>)</small>
+            <div id="uploadMsg" class="mt8 muted"></div>
+          </div>
+          <div class="col-6">
+            <label>펌웨어 OTA 업데이트 (.bin)</label>
+            <div class="row tight">
+              <input type="file" id="fileOTA" />
+              <button class="btn warn" id="btnOTA">업데이트</button>
+            </div>
+            <small>업로드 완료 후 기기가 자동 재부팅됩니다.</small>
+            <div id="otaMsg" class="mt8 muted"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="hr"></div>
+    <div class="muted">© SC10 WindScape • <a href="#" class="link" id="lnkRefresh">새로고침</a></div>
+  </div>
+
+  <script src="SC10_main_010.js"></script>
+</body>
+</html>
+

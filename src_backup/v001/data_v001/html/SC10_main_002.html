@@ -1,0 +1,57 @@
+// SC10_main_002.html
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SC10 WindScape Config</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        .status-box { background: #e0f7fa; padding: 10px; margin-bottom: 20px; border-radius: 5px; }
+        .setting-group { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="range"], select { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .value-display { font-weight: bold; color: #333; float: right; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>SC10 WindScape 설정 및 상태</h2>
+        
+        <div class="status-box">
+            <p>시뮬레이션 상태: <span id="status-sim-active">...</span></p>
+            <p>현재 풍속: <span id="status-wind-speed">...</span> m/s</p>
+            <p>현재 기상 단계: <span id="status-phase-name">...</span></p>
+            <p>팬 PWM 출력: <span id="status-fan-pwm">...</span></p>
+        </div>
+
+        <form id="config-form">
+            <div class="setting-group">
+                <label for="preset">프리셋 모드</label>
+                <select id="preset" name="preset"></select>
+            </div>
+            
+            <div class="setting-group">
+                <label for="intensity">전체 풍속 강도 (%)</label>
+                <input type="range" id="intensity" name="intensity" min="0" max="100" step="1">
+                <span class="value-display" id="intensity-value"></span>
+            </div>
+            
+            <div class="setting-group">
+                <label for="gust_freq">돌풍 빈도 (%)</label>
+                <input type="range" id="gust_freq" name="gust_freq" min="0" max="100" step="1">
+                <span class="value-display" id="gust_freq-value"></span>
+            </div>
+
+            <button type="submit">설정 저장 및 적용</button>
+        </form>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
+
