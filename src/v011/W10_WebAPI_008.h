@@ -3,8 +3,8 @@
 #pragma once
 /*
  * ------------------------------------------------------
- * 소스명 : W10_WebAPI_007.h
- * 모듈명 : WindScape Web API Manager
+ * 소스명 : W10_WebAPI_008.h
+ * 모듈명 : Smart Nature Wind Web API Manager
  * ------------------------------------------------------
  * 기능 요약:
  *  - LittleFS 정적 자산 서빙(설정 기반 동적/정적 전환 가능)
