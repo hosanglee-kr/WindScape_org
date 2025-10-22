@@ -309,6 +309,90 @@ public:
             _applyHeaders(v_resp, true);
             p_req->send(v_resp);
         });
+
+        // -------------------
+		// /upload : 정적 파일 업로드 (보안제한)
+		// -------------------
+		static bool s_uploadError = false;
+
+		p_srv.on("/upload", HTTP_POST, [](AsyncWebServerRequest *p_request) {
+			if (!_authorize(p_request)) {
+				p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+				return;
+			}
+
+			if (s_uploadError) {
+				s_uploadError = false;
+				p_request->send(500, "application/json", "{\"error\":\"upload failed\"}");
+			} else {
+				p_request->send(200, "application/json", "{\"message\":\"Upload OK\"}");
+			} 
+		}, [](AsyncWebServerRequest *p_request, const String &filename, size_t index, uint8_t *data, size_t len, bool final) {
+			if (!_authorize(p_request)) { s_uploadError = true; return; }
+
+			static const size_t v_kMaxUpload = 4 * 1024 * 1024;
+			if (index == 0) {
+				s_uploadError = false;
+				String v_safe = _sanitizeFilename(filename);
+				if (!_isAllowedExt(v_safe)) { s_uploadError = true; return; }
+
+				String v_path = "/" + v_safe;
+				if (LittleFS.exists(v_path)) {
+					LittleFS.remove(v_path);
+				}
+
+				p_request->_tempFile = LittleFS.open(v_path, "w");
+				if (!p_request->_tempFile) { s_uploadError = true; return; }
+			}
+
+			if (s_uploadError) return;
+			if (p_request->_tempFile) {
+				if (p_request->_tempFile.size() + len > v_kMaxUpload) {
+					p_request->_tempFile.close();
+					LittleFS.remove(p_request->_tempFile.name());
+					s_uploadError = true;
+					return;
+				}
+				if (len) p_request->_tempFile.write(data, len);
+				if (final) p_request->_tempFile.close();
+			} 
+		});
+
+		// -------------------
+		// /update : OTA 펌웨어 업로드
+		// -------------------
+		p_srv.on("/update", HTTP_POST, [](AsyncWebServerRequest *p_request) {
+			if (!_authorize(p_request)) {
+				p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+				return;
+			} }, [](AsyncWebServerRequest *p_request, const String &filename, size_t index, uint8_t *data, size_t len, bool final) {
+			if (!_authorize(p_request))
+				return;
+			if (!index) {
+				size_t v_maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+				if (!Update.begin(v_maxSketchSpace)) {
+					Update.printError(Serial);
+					p_request->send(500, "text/plain", "OTA begin failed");
+					return;
+				}
+			}
+			if (len) {
+				if (Update.write(data, len) != len) {
+					Update.printError(Serial);
+					p_request->send(500, "text/plain", "OTA write failed");
+					return;
+				}
+			}
+			if (final) {
+				if (!Update.end(true)) {
+					String v_msg = "OTA end failed: ";
+					v_msg += Update.errorString();
+					p_request->send(500, "text/plain", v_msg);
+					return;
+				}
+				p_request->send(200, "text/plain", "OTA OK, rebooting");
+				ESP.restart();
+			} });
     }
 
 private:
