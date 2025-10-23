@@ -48,7 +48,7 @@ h2 {
   display: flex;
   flex-direction: column;
 }
-/* 3열 레이아웃 (새로 추가된 상세 설정용) */
+/* 3열 레이아웃 (상세 설정용) */
 .col-4 {
   flex: 1 1 calc(33.333% - 8px); 
   display: flex;
@@ -125,11 +125,10 @@ input:focus, select:focus {
 
 /* 차트 컨테이너 및 토글 스타일 (핵심 추가) */
 .chart-container {
-  /* 카드 스타일 상속 및 수정 */
   border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   margin-bottom: 16px;
-  overflow: hidden; /* 내용이 넘치지 않도록 처리 */
+  overflow: hidden; 
 }
 
 .chart-header {
@@ -142,7 +141,7 @@ input:focus, select:focus {
   cursor: pointer;
 }
 .chart-header .section-title {
-  border-left: none; /* 헤더 타이틀에서는 바를 제거 */
+  border-left: none; /* 헤더 타이틀에서는 좌측 바를 제거 */
   padding-left: 0;
   margin-bottom: 0;
   color: #1e88e5; /* 헤더 타이틀 색상 강조 */
@@ -157,7 +156,7 @@ input:focus, select:focus {
   padding: 0;
   color: #1e88e5;
   transition: transform 0.3s;
-  line-height: 1; /* 높이 고정 */
+  line-height: 1; 
 }
 
 .chart-content {
@@ -167,9 +166,9 @@ input:focus, select:focus {
 
 /* 캔버스 스타일 (Chart.js 출력 영역) */
 canvas {
-  /* 컨테이너의 패딩을 사용하도록 수정 */
-  margin-bottom: 0 !important; 
-  box-shadow: none !important;
+  width: 100% !important;
+  height: auto !important;
+  display: block;
 }
 
 #refreshInfo {
