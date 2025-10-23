@@ -41,12 +41,24 @@
 #include "P10_PWM_ctrl_005.h"
 
 
-namespacew10_Const {
+namespace W10_Const {
 
-    // 기본 WEB 파일 (설정값 없거나 오류 시 Fallback)
-    constexpr char CHART_HTML_FILE[] = "/html/SC10_chart_003.html";
-    constexpr char CHART_HTML_URI[]  = "/main.html";
-    constexpr char CHART_HTML_MIME[] = "text/html";
+    constexpr char CHART_HTML_FILE[]            = "/html/SC10_chart_003.html";
+    constexpr char CHART_HTML_URI[]             = "/SC10_chart_003.html";
+    constexpr char CHART_HTML_MIME[]            = "text/html";
+
+    constexpr char CHART_CSS_FILE[]             = "/html/SC10_chart_003.css";
+    constexpr char CHART_CSS_URI[]              = "/SC10_chart_003.css";
+    constexpr char CHART_CSS_MIME[]             = "text/css";
+
+    constexpr char CHART_JS_FILE[]              = "/html/SC10_chart_003.js";
+    constexpr char CHART_JS_URI[]               = "/SC10_chart_003.js";
+    constexpr char CHART_JS_MIME[]              = "application/javascript";
+
+    constexpr char CHART_DEFAULT_URI[]          = "/chart";
+    constexpr char CHART_DEFAULT_URI_FILE[]     = "/SC10_chart_003.html";
+    constexpr char CHART_DEFAULT_URI_MIME[]     = "text/html";
+
 }
 
 
@@ -95,14 +107,21 @@ public:
             };
         #else
             ST_W10_Route v_routes[7] = {
-                { A10_Const::DEF_HTML_URI, A10_Const::DEF_HTML_FILE, A10_Const::DEF_HTML_MIME },
-                { A10_Const::DEF_CSS_URI,  A10_Const::DEF_CSS_FILE,  A10_Const::DEF_CSS_MIME },
-                { A10_Const::DEF_JS_URI,   A10_Const::DEF_JS_FILE,   A10_Const::DEF_JS_MIME },
+                { A10_Const::DEF_HTML_URI         , A10_Const::DEF_HTML_FILE            , A10_Const::DEF_HTML_MIME          },
+                { A10_Const::DEF_CSS_URI          , A10_Const::DEF_CSS_FILE             , A10_Const::DEF_CSS_MIME           },
+                { A10_Const::DEF_JS_URI           , A10_Const::DEF_JS_FILE              , A10_Const::DEF_JS_MIME            },
                 // --- 추가 ---
-                { "/chart", "/html/SC10_chart_002.html", "text/html" },
-                { "/SC10_chart_002.html", "/html/SC10_chart_002.html", "text/html" },
-                { "/SC10_chart_002.css",  "/html/SC10_chart_002.css",  "text/css" },
-                { "/SC10_chart_002.js",   "/html/SC10_chart_002.js",   "application/javascript" },
+
+                { W10_Const::CHART_HTML_URI       , W10_Const::CHART_HTML_FILE          , W10_Const::CHART_HTML_MIME        },
+                { W10_Const::CHART_CSS_URI        , W10_Const::CHART_CSS_FILE           , W10_Const::CHART_CSS_MIME         },
+                { W10_Const::CHART_JS_URI         , W10_Const::CHART_JS_FILE            , W10_Const::CHART_JS_MIME          },
+                { W10_Const::CHART_DEFAULT_URI    , W10_Const::CHART_DEFAULT_URI_FILE   , W10_Const::CHART_DEFAULT_URI_MIME }
+               
+                
+                // { "/chart", "/html/SC10_chart_002.html", "text/html" },
+                // { "/SC10_chart_002.html", "/html/SC10_chart_002.html", "text/html" },
+                // { "/SC10_chart_002.css",  "/html/SC10_chart_002.css",  "text/css" },
+                // { "/SC10_chart_002.js",   "/html/SC10_chart_002.js",   "application/javascript" },
         
             };
         #endif
