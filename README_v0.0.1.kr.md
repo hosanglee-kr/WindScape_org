@@ -84,10 +84,10 @@ Smart Nature Wind는 잔잔한 지중해의 바람부터 알프스 산맥의 상
 
 ## 🎬 데모 (Demo)
 
-![WindScape configuration](https://github.com/TilmanGriesel/WindScape/blob/main/docs/windscape_demo_01.gif?raw=true)
-![WindScape dashboard](https://github.com/TilmanGriesel/WindScape/blob/main/docs/windscape_demo_02.gif?raw=true)
-![External sensor example](https://github.com/TilmanGriesel/WindScape/blob/main/docs/ha_iracing_01.png?raw=true)
-![Breezer9000](https://raw.githubusercontent.com/TilmanGriesel/WindScape/843b6eca3a42019fdb35a68ddca5e0dcae5bd2b5/docs/title.png?raw=true)
+![WindScape configuration]
+![WindScape dashboard]
+![External sensor example]
+![Breezer9000]
 
 ---
 
@@ -119,7 +119,7 @@ Smart Nature Wind는 잔잔한 지중해의 바람부터 알프스 산맥의 상
 | 구성품 | 예상 가격 (€) |
 |--------|---------------|
 | Noctua NF-A12x25 5 V 팬 | 33.00 |
-| 일반 ESP32 보드 | 3.00 |
+| ESP32 보드 | 3.00 |
 | 나사·부속품 | 4.00 |
 | 3D 프린트 마운트 | 5.00 |
 | **총 예상 비용** | **45.00 €** |
