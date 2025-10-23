@@ -1,4 +1,4 @@
-![Smart Nature Wind Title](https://github.com/TilmanGriesel/WindScape/blob/main/docs/title.png?raw=true)
+![WindScape Title](https://github.com/TilmanGriesel/WindScape/blob/main/docs/title.png?raw=true)
 
 # 🌿 Smart Nature Wind 단독 실행 버전 (WindScape – Standalone Ver.)
 
@@ -113,6 +113,9 @@ Smart Nature Wind는 잔잔한 지중해의 바람부터 알프스 산맥의 상
 
 ### ⚙ 5 V DIY (USB 전원형 간단 구성)
 
+<details>
+<summary>부품 목록 및 배선도</summary>
+
 | 구성품 | 예상 가격 (€) |
 |--------|---------------|
 | Noctua NF-A12x25 5 V 팬 | 33.00 |
@@ -121,6 +124,143 @@ Smart Nature Wind는 잔잔한 지중해의 바람부터 알프스 산맥의 상
 | 3D 프린트 마운트 | 5.00 |
 | **총 예상 비용** | **45.00 €** |
 
+#### 🧩 배선 예시
+
+
+<details>
+<summary>Wiring Diagram</summary>
+
+```
++----------------------------+
+|     USB Power (5V)         |
+|                            |
+|   +5V ─────────────┐       |
+|                    ▼       |
+|           +----------------------+
+|           |   ESP32 WROOM Board  |
+|           |  (AliExpress-style)  |
+|           |                      |
+|           | 5V/VIN ◄─── 5V from USB
+|           | GND    ◄─── GND from USB
+|           |                      |
+|           | GPIO14 ───┐          |
+|           |           └────► PWM (Fan Pin 4, Blue)
+|           |                      |
+|           | GPIO27 ◄──┬────── TACH (Fan Pin 3, Green)
+|           |           │
+|           |   [10kΩ pull-up to 3.3V]
+|           |           │
+|           |     [3.3kΩ] in series
+|           |           │
+|           |   [0.1nF cap to GND] ◄──(RC filter)
+|           +----------------------+
+|                     │
+|                     ▼
+|           +----------------------+
+|           |     Noctua Fan       |
+|           |    5V PWM (4-pin)    |
+|           |                      |
+|           | Pin 1 (Black): GND ◄────── GND
+|           | Pin 2 (Red or Yellow):  +5V ◄─── 5V/VIN
+|           | Pin 3 (Green): TACH ───► GPIO27 (filtered)
+|           | Pin 4 (Blue):   PWM ◄─── GPIO14
+|           +----------------------+
+```
+
+</details>
+
+</details>
+
+
 ---
 
-### 🪛 배선 예시
+## 💻 소프트웨어 설정 (Software Setup)
+
+1. 제공된 **WindScape ESPHome YAML**을 ESP32에 플래시합니다.  
+2. `secrets.yaml`에 Wi-Fi 정보를 입력합니다.  
+3. 재부팅 후, 자동으로 네트워크에서 기기를 인식합니다.
+
+---
+
+## 🌈 프리셋 라이브러리 (Preset Library)
+
+| # | 프리셋 이름 | 기본 풍속 범위 | 돌풍 스타일 | 특징 / 분위기 |
+|---|--------------|----------------|--------------|----------------|
+| 1 | **Ocean (대서양 바다)** | 8–16 mph | 완만한 파도형 | 활력 넘치는 지속 바람 |
+| 2 | **Mediterranean (지중해)** | 4–10 mph | 부드럽고 따뜻함 | 휴식과 독서에 적합 |
+| 3 | **Countryside (시골 들판)** | 2–8 mph | 드물고 잔잔함 | 수면용 바람 |
+| 4 | **Mountains (알프스 산맥)** | 6–18 mph | 날카롭고 맑음 | 상쾌한 산바람 |
+| 5 | **Plains (평원)** | 10–22 mph | 강하고 지속적 | 더운 날에 적합 |
+| 6 | **Fjord (피오르드)** | 8–20 mph | 좁은 통로형 | 극적이고 시원한 바람 |
+| 7 | **Rainy (비 오는 날)** | 3–9 mph | 간헐적 변화 | 잔잔하고 감성적 분위기 |
+| 8 | **Manual (수동)** | — | — | 사용자가 직접 조절 |
+
+</details>
+
+---
+
+## 🧭 문제 해결 (Troubleshooting)
+
+| 증상 | 확인 사항 |
+|------|-----------|
+| **팬이 돌지 않음** | 전원(5V/12V) 연결 및 PWM 핀 설정 확인 |
+| **RPM 값이 안 잡힘** | Tach 배선 및 풀업 저항 확인 |
+| **바람이 변하지 않음** | *동적 모드 활성화* 및 *변동성 조정* 확인 |
+| **너무 세게 불음** | 최대 출력 값 또는 프리셋 변경 |
+| **너무 조용함** | 풍속 강도 슬라이더 상향 조정 |
+
+---
+
+## 💡 최상의 사용 팁 (Tips for Best Experience)
+
+* **처음에는 기본값으로 시작하세요.** – 기본 프리셋은 이미 자연스러움을 기준으로 조정되어 있습니다.  
+* **조절은 천천히.** 작은 값 변경도 체감상 큰 차이를 만듭니다.  
+* **활동에 맞는 프리셋을 선택하세요.** – 수면 모드, 독서 모드, 집중 모드 등.
+
+---
+
+## 🧠 기술 노트 (Technical Notes)
+
+WindScape는 실제 대기 모델을 바탕으로 한 물리 시뮬레이션을 사용합니다.  
+
+* **난류 모델링** – 자연스러운 미세 변화를 만드는 바람의 리듬 재현  
+* **열기포 효과** – 상승 기류를 모사해 리얼한 공기 움직임 생성  
+* **기상 패턴 전환** – 조용함 → 보통 → 강풍으로 자연스럽게 변화  
+* **스마트 돌풍 알고리즘** – 돌풍이 점차 강해졌다 사라지는 리얼한 패턴  
+* **관성 기반 변화** – 갑작스러운 속도 변화 없이 부드럽게 이동  
+
+---
+
+## 🚀 로드맵 (Roadmap)
+
+* **Moodist 환경 엔진과 연동 예정**  
+  – 사용자의 기분 또는 음악 리듬에 따라 바람 강도 자동 변화  
+
+---
+
+## 🌪 WindScape 작동 원리 (How WindScape Works)
+
+1. **미세 난류** – 초당 여러 주파수의 변화를 혼합하여 잎사귀가 흔들리는 듯한 바람을 생성  
+2. **열기포 효과** – 8~15초 주기로 따뜻한 상승 기류 재현  
+3. **기상 패턴 변화** – 1.5~5분 주기로 잔잔 → 보통 → 강풍으로 순환  
+4. **부드러운 가속/감속** – 물리적 관성을 이용해 자연스러운 전환  
+5. **실시간 센서 연동** – 온도 또는 외부 데이터에 맞춰 즉시 반응  
+
+---
+
+## 🔗 링크 (Links)
+
+* **Home Assistant** – [https://www.home-assistant.io/](https://www.home-assistant.io/)  
+* **ESPHome** – [https://esphome.io/](https://esphome.io/)  
+* **Noctua Fans & Accessories** – [https://noctua.at/](https://noctua.at/)  
+  * https://noctua.at/en/nf-a12x25-pwm  
+  * https://noctua.at/en/nv-aa1-12  
+  * Noctua NV-FS1 리뷰 – [YouTube 영상](https://youtu.be/9PvWBuDTGDo)  
+* **3D 프린트 마운트 STL 파일**  
+  * https://www.printables.com/model/554226-120mm-computer-fan-desk-mount  
+  * https://www.printables.com/model/1324299-pc-desk-fan  
+  * https://www.printables.com/model/889331-noctua-inspired-desk-fan-mount  
+
+---
+
+*© 2025 Smart Nature Wind (WindScape). 특별히 명시되지 않은 경우 MIT 라이선스 적용.*
