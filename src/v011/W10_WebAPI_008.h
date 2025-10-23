@@ -40,9 +40,20 @@
 #include "S10_Simulation_008.h"
 #include "P10_PWM_ctrl_005.h"
 
+
+namespacew10_Const {
+
+    // 기본 WEB 파일 (설정값 없거나 오류 시 Fallback)
+    constexpr char CHART_HTML_FILE[] = "/html/SC10_chart_003.html";
+    constexpr char CHART_HTML_URI[]  = "/main.html";
+    constexpr char CHART_HTML_MIME[] = "text/html";
+}
+
+
 class CL_W10_WebAPI {
 public:
-    static void init(AsyncWebServer &p_srv, CL_S10_Simulation &p_sim, WiFiMulti &p_multi, CL_P10_PWM &p_P10_pwm) {
+    static void init(AsyncWebServer &p_srv, CL_S10_Simulation &p_sim, WiFiMulti &p_multi, CL_P10_PWM &p_P10_pwm) 
+{
         mountApi(p_srv, p_sim, p_multi, p_P10_pwm);
         mountStatic(p_srv);
     }
