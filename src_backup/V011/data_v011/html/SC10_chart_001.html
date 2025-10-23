@@ -1,0 +1,61 @@
+<!-- SC10_chart_001.html -->
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Smart Nature Wind 실시간 대시보드</title>
+
+<!-- 스타일 -->
+<link rel="stylesheet" href="/SC10_chart_001.css" />
+
+<!-- Chart.js & Zoom Plugin -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+
+<!-- 컨트롤 스크립트 -->
+<script defer src="/SC10_chart_001.js"></script>
+</head>
+
+<body>
+  <h2>🌬️ Smart Nature Wind 실시간 시뮬레이션 대시보드</h2>
+
+  <div class="chart-wrap">
+    <p id="refreshInfo">⏳ 데이터 로딩 중...</p>
+
+    <div class="btn-group">
+      <button id="btnResetZoomAll" class="btn">🔄 줌 초기화</button>
+      <button id="btnPause" class="btn warn">⏸ 일시정지</button>
+      <button id="btnResume" class="btn ok">▶ 재시작</button>
+    </div>
+
+    <!-- 1️⃣ 풍속 / PWM Duty -->
+    <section>
+      <h3>① 풍속 / PWM Duty</h3>
+      <canvas id="chartWind" height="200"></canvas>
+    </section>
+
+    <!-- 2️⃣ 충속 파라미터 -->
+    <section>
+      <h3>② Intensity(강도) / Variability(변동성) / Turbulence(불규칙성)</h3>
+      <canvas id="chartParams" height="200"></canvas>
+    </section>
+
+    <!-- 3️⃣ 이벤트 상태 -->
+    <section>
+      <h3>③ Gust(돌풍) / Thermal(열풍) 활성 상태</h3>
+      <canvas id="chartEvents" height="160"></canvas>
+    </section>
+
+    <!-- 4️⃣ 프리셋 변화 -->
+    <section>
+      <h3>④ Preset 변화 로그</h3>
+      <canvas id="chartPreset" height="160"></canvas>
+    </section>
+  </div>
+
+  <footer>© 2025 Nature Wind 실시간 모니터링</footer>
+</body>
+</html>

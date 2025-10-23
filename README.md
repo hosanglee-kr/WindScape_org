@@ -1,6 +1,6 @@
 ![WindScape Title](https://github.com/TilmanGriesel/WindScape/blob/main/docs/title.png?raw=true)
 
-# WindScape
+# Smart Nature Wind (WindScape)
 
 * **Source**
   https://github.com/TilmanGriesel/WindScape.git
@@ -443,3 +443,4 @@ WindScape layers multiple systems to create convincing natural wind:
 ---
 
 *© 2025  WindScape. Licensed under the MIT License unless noted otherwise.*
+

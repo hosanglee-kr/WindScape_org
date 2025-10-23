@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------
  * 소스명 : SC10_main_016.js
- * 모듈명 : WindScape Web UI Controller
+ * 모듈명 : Nature Wind Web UI Controller
  * ------------------------------------------------------
  * 기능 요약:
  *  - 설정 그룹별 저장(Wi-Fi / HW / Timing / Sim / API Key)

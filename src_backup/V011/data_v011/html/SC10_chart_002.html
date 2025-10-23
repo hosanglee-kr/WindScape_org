@@ -1,0 +1,85 @@
+<!-- SC10_chart_002.html -->
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Smart Nature Wind 실시간 차트 + 풍속 제어</title>
+
+<link rel="stylesheet" href="/SC10_chart_002.css" />
+
+<!-- Chart.js + Zoom Plugin -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+
+<script defer src="/SC10_chart_002.js"></script>
+</head>
+
+<body>
+  <div class="wrap">
+    <h2>🌬️ Smart Nature Wind 풍속 설정</h2>
+
+    <!-- ================== [1️⃣ 풍속 제어 패널] ================== -->
+    <section class="card">
+      <h3 class="section-title">풍속 설정</h3>
+
+      <div class="grid">
+        <div class="col-6">
+          <label for="preset">프리셋 선택</label>
+          <select id="preset">
+            <option value="COUNTRY">들판 바람</option>
+            <option value="OCEAN">바다 바람</option>
+            <option value="FOREST_CANOPY">숲속 바람</option>
+            <option value="MOUNTAIN">산바람</option>
+            <option value="URBAN_SUNSET">도심 석양</option>
+          </select>
+        </div>
+
+        <div class="col-6">
+          <label for="intensity">풍속 강도 (%)</label>
+          <input id="intensity" type="range" min="0" max="100" step="1" value="50" />
+          <span id="intensityVal">50%</span>
+        </div>
+
+        <div class="col-6">
+          <label for="gust_freq">돌풍 빈도 (단위)</label>
+          <input id="gust_freq" type="range" min="0" max="10" step="1" value="3" />
+          <span id="gustVal">3</span>
+        </div>
+
+        <div class="col-6">
+          <label for="variability">바람 변동성 (%)</label>
+          <input id="variability" type="range" min="0" max="100" step="1" value="20" />
+          <span id="varVal">20%</span>
+        </div>
+      </div>
+
+      <div class="row right">
+        <button id="btnSaveSim" class="btn ok">💾 시뮬레이션 적용</button>
+      </div>
+    </section>
+
+    <!-- ================== [2️⃣ 실시간 차트 섹션] ================== -->
+    <section>
+      <h3 class="section-title">실시간 시각화</h3>
+
+      <p id="refreshInfo">⏳ 데이터 로딩 중...</p>
+
+      <div class="btn-group">
+        <button id="btnResetZoomAll" class="btn">🔄 줌 초기화</button>
+        <button id="btnPause" class="btn warn">⏸ 일시정지</button>
+        <button id="btnResume" class="btn ok">▶ 재시작</button>
+      </div>
+
+      <canvas id="chartWind" height="200"></canvas>
+      <canvas id="chartParams" height="200"></canvas>
+      <canvas id="chartEvents" height="150"></canvas>
+      <canvas id="chartPreset" height="150"></canvas>
+    </section>
+
+    <footer>© 2025 Smart Nature Wind Monitor</footer>
+  </div>
+</body>
+</html>

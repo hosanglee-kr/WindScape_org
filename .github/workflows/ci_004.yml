@@ -3,7 +3,7 @@ name: PR
 
 on:
   pull_request:
-    branches: [main] # Pull Request가 main 브랜치를 대상으로 할 때 실행
+    branches: [main, main-standalone] # Pull Request가 main 브랜치를 대상으로 할 때 실행
     paths:
       - 'platformio.ini'
       - '.github/**/*.yml'

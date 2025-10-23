@@ -1,0 +1,108 @@
+/* SC10_chart_002.css */
+
+body {
+  font-family: "Pretendard", "Noto Sans KR", sans-serif;
+  background-color: #f9fafc;
+  color: #222;
+  margin: 0;
+  padding: 20px;
+}
+
+.wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  margin-bottom: 24px;
+}
+
+.section-title {
+  margin-top: 0;
+  border-left: 5px solid #2196f3;
+  padding-left: 8px;
+  font-size: 1.2em;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.col-6 {
+  flex: 1 1 calc(50% - 12px);
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+input[type=range] {
+  width: 100%;
+}
+
+span {
+  font-size: 0.9em;
+  color: #555;
+  margin-top: 2px;
+}
+
+.row.right {
+  text-align: right;
+  margin-top: 12px;
+}
+
+.btn {
+  background-color: #eee;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  margin: 4px;
+}
+
+.btn.ok {
+  background-color: #2196f3;
+  color: #fff;
+}
+
+.btn.warn {
+  background-color: #ff9800;
+  color: #fff;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+.btn-group {
+  margin: 10px 0 20px;
+  text-align: center;
+}
+
+canvas {
+  background: #fff;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  box-shadow: 0 0 6px rgba(0,0,0,0.08);
+}
+
+footer {
+  text-align: center;
+  font-size: 0.9em;
+  color: #777;
+  margin-top: 40px;
+}
