@@ -65,7 +65,7 @@ typedef enum {
     EN_A10_WEATHER_PHASE_CALM   = 0,                        // 잔잔한 바람
     EN_A10_WEATHER_PHASE_NORMAL = 1,                        // 보통 바람
     EN_A10_WEATHER_PHASE_STRONG = 2,                        // 강한 바람
-                                EN_A10_WEATHER_PHASE_COUNT  // 총 단계 개수 (배열 크기 용도)
+    EN_A10_WEATHER_PHASE_COUNT                              // 총 단계 개수 (배열 크기 용도)
 } T_A10_WindWeatherPhase_t;
 
 static const char* g_A10_WEATHER_PHASE_NAMES_Arr[] = {
@@ -76,32 +76,32 @@ static const char* g_A10_WEATHER_PHASE_NAMES_Arr[] = {
 
 // 프리셋
 typedef enum {
-    EN_A10_PRESET_OFF              = 0,
-    EN_A10_PRESET_COUNTRY          = 1,
-    EN_A10_PRESET_MEDITERRANEAN    = 2,
-    EN_A10_PRESET_OCEAN            = 3,
-    EN_A10_PRESET_MOUNTAIN         = 4,
-    EN_A10_PRESET_PLAINS           = 5,
-    EN_A10_PRESET_HARBOR_BREEZE    = 6,
-    EN_A10_PRESET_FOREST_CANOPY    = 7,
-    EN_A10_PRESET_URBAN_SUNSET     = 8,
-    EN_A10_PRESET_TROPICAL_RAIN    = 9,
-    EN_A10_PRESET_DESERT_NIGHT     = 10,
+    EN_A10_PRESET_OFF              = 0,     //	고정풍속       
+    EN_A10_PRESET_COUNTRY          = 1,     //	들판
+    EN_A10_PRESET_MEDITERRANEAN    = 2,     //	지중해
+    EN_A10_PRESET_OCEAN            = 3,     //	바다
+    EN_A10_PRESET_MOUNTAIN         = 4,     //	산바람
+    EN_A10_PRESET_PLAINS           = 5,     //	평야
+    EN_A10_PRESET_HARBOR_BREEZE    = 6,     //	숲속
+    EN_A10_PRESET_FOREST_CANOPY    = 7,     //	항구바람
+    EN_A10_PRESET_URBAN_SUNSET     = 8,     //	도심석양
+    EN_A10_PRESET_TROPICAL_RAIN    = 9,     //	열대우림
+    EN_A10_PRESET_DESERT_NIGHT     = 10,    //	사막밤   
     EN_A10_PRESET_COUNT
 } T_A10_PresetMode_t;
 
 static const char* g_A10_PRESET_MODE_NAMES_Arr[] = {
-    "OFF",
-    "COUNTRY",
-    "MEDITERRANEAN",
-    "OCEAN",
-    "MOUNTAIN",
-    "PLAINS",
-    "HARBOR_BREEZE",
-    "FOREST_CANOPY",
-    "URBAN_SUNSET",
-    "TROPICAL_RAIN",
-    "DESERT_NIGHT"
+    "OFF"          ,            //	고정풍속                         
+    "COUNTRY"      ,            //	들판 
+    "MEDITERRANEAN",            //	지중해         
+    "OCEAN"        ,            //	바다 
+    "MOUNTAIN"     ,            //	산바람 
+    "PLAINS"       ,            //	평야 
+    "HARBOR_BREEZE",            //	숲속         
+    "FOREST_CANOPY",            //	항구바람         
+    "URBAN_SUNSET" ,            //	도심석양     
+    "TROPICAL_RAIN",            //	열대우림         
+    "DESERT_NIGHT" ,            //	사막밤                    
 };
 
 // 길이 상수

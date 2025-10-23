@@ -30,6 +30,10 @@
 #include <WiFi.h>
 #include <WiFiMulti.h>
 
+#include <freertos/FreeRTOS.h>
+#include <esp_task_wdt.h>
+
+
 #include "A10_Const_008.h"
 #include "D10_Logger_008.h"
 
@@ -170,7 +174,21 @@ public:
     // 네트워크 스캔 (결과 JSON 문자열)
     // =====================================================
     static String scanNetworksJson(bool p_async = false) {
+        
+        // 1. 현재 태스크 핸들 획득
+        TaskHandle_t v_current_task = xTaskGetCurrentTaskHandle();
+        
+        // 2. 워치독 감시에서 임시 제외 (ESP32-S3 Task WDT 오류 방지)
+        // Note: esp_task_wdt_delete는 반드시 esp_task_wdt_add와 쌍을 이루어야 합니다.
+        // 오류가 발생해도 무시합니다.
+        esp_task_wdt_delete(v_current_task); 
+
+        // 3. 스캔 함수 호출
         int v_found = WiFi.scanNetworks(p_async, true);
+        
+        // 4. 워치독 감시에 다시 추가
+        esp_task_wdt_add(v_current_task);
+
         if (p_async) return F("[]");
 
         JsonDocument v_doc;
@@ -190,6 +208,28 @@ public:
         WiFi.scanDelete();
         return v_out;
     }
+    
+    // static String scanNetworksJson(bool p_async = false) {
+    //     int v_found = WiFi.scanNetworks(p_async, true);
+    //     if (p_async) return F("[]");
+
+    //     JsonDocument v_doc;
+    //     JsonArray v_arr = v_doc.to<JsonArray>();
+
+    //     for (int i = 0; i < v_found; i++) {
+    //         JsonObject o = v_arr.add<JsonObject>();
+    //         o["ssid"]  = WiFi.SSID(i);
+    //         o["rssi"]  = WiFi.RSSI(i);
+    //         o["chan"]  = WiFi.channel(i);
+    //         o["bssid"] = WiFi.BSSIDstr(i);
+    //         o["enc"]   = encTypeToString(WiFi.encryptionType(i));
+    //     }
+
+    //     String v_out;
+    //     serializeJson(v_doc, v_out);
+    //     WiFi.scanDelete();
+    //     return v_out;
+    // }
 
     // =====================================================
     // 현재 연결 상태 리턴

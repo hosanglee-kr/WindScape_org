@@ -377,19 +377,53 @@ public:
 			if (!_authorize(p_request)) { s_uploadError = true; return; }
 
 			static const size_t v_kMaxUpload = 4 * 1024 * 1024;
-			if (index == 0) {
-				s_uploadError = false;
-				String v_safe = _sanitizeFilename(filename);
-				if (!_isAllowedExt(v_safe)) { s_uploadError = true; return; }
 
-				String v_path = "/" + v_safe;
-				if (LittleFS.exists(v_path)) {
-					LittleFS.remove(v_path);
-				}
+            if (index == 0) {
+                s_uploadError = false;
+                
+                // 1. 파일명 정규화
+                String v_safe = _sanitizeFilename(filename);
+                if (!_isAllowedExt(v_safe)) { s_uploadError = true; return; }
+                
+                // 2. 확장자에 따라 저장 경로 결정 (수정된 로직)
+                String v_path;
+                String v_safe_lower = v_safe;
+                v_safe_lower.toLowerCase();
+                
+                if (v_safe_lower.endsWith(".json")) {
+                    v_path = "/json/" + v_safe; // *.json 파일은 /json/ 경로에 저장
+                } else {
+                    v_path = "/html/" + v_safe; // 나머지 파일은 /html/ 경로에 저장
+                }
+                
+                // 3. 기존 파일 제거 및 새 파일 열기
+                if (LittleFS.exists(v_path)) {
+                    LittleFS.remove(v_path);
+                }
 
-				p_request->_tempFile = LittleFS.open(v_path, "w");
-				if (!p_request->_tempFile) { s_uploadError = true; return; }
-			}
+                p_request->_tempFile = LittleFS.open(v_path, "w");
+                if (!p_request->_tempFile) { 
+                    // 로깅 추가 (선택 사항이나 문제 진단에 유용)
+                    // CL_D10_Logger::log(EN_L10_LOG_ERROR, "Upload: Failed to open file for write: %s", v_path.c_str());
+                    s_uploadError = true; 
+                    return; 
+                }
+            }
+            
+			// if (index == 0) {
+			// 	s_uploadError = false;
+
+			// 	String v_safe = _sanitizeFilename(filename);
+			// 	if (!_isAllowedExt(v_safe)) { s_uploadError = true; return; }
+
+			// 	String v_path = "/" + v_safe;
+			// 	if (LittleFS.exists(v_path)) {
+			// 		LittleFS.remove(v_path);
+			// 	}
+
+			// 	p_request->_tempFile = LittleFS.open(v_path, "w");
+			// 	if (!p_request->_tempFile) { s_uploadError = true; return; }
+			// }
 
 			if (s_uploadError) return;
 			if (p_request->_tempFile) {
