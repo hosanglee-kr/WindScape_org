@@ -7,13 +7,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Smart Nature Wind 실시간 차트 + 상세 설정</title>
 
-<link rel="stylesheet" href="/SC10_chart_003.css" />
+<link rel="stylesheet" href="./SC10_chart_003.css">
+<!-- <link rel="stylesheet" href="/SC10_chart_003.css" /> -->
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 
-<script defer src="/SC10_chart_003.js"></script> 
+<script defer src="./SC10_chart_003.js"></script>
+<!-- <script defer src="/SC10_chart_003.js"></script>  -->
 </head>
 
 <body>
@@ -22,7 +24,7 @@
 
     <section class="card">
       <div class="row">
-          <strong class="section-title">풍속 시뮬레이션 설정</strong>
+          <strong class="section-title">풍속 설정</strong>
           <div class="right tight">
             <button class="btn" id="btnPreviewPreset">미리보기</button>
             <button class="btn ok" id="btnSaveSim">풍속 설정 저장</button>
@@ -89,7 +91,7 @@
 
       <div class="chart-container card" data-chart="params">
         <div class="chart-header">
-          <strong class="section-title">내부 시뮬레이션 매개변수</strong>
+          <strong class="section-title">내부 풍속설정 매개변수</strong>
           <button class="btn-toggle">▲</button>
         </div>
         <div class="chart-content">
@@ -129,7 +131,7 @@
       
       <div class="chart-container card" data-chart="timing">
         <div class="chart-header">
-          <strong class="section-title">시뮬레이션/체크 타이밍</strong>
+          <strong class="section-title">풍속 설정 / 체크 타이밍</strong>
           <button class="btn-toggle">▲</button>
         </div>
         <div class="chart-content">

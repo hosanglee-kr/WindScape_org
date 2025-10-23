@@ -2,7 +2,7 @@
 /*
  * ------------------------------------------------------
  * 소스명 : WS10_Main_008.h
- * 모듈명 : WindScape 통합 실행 엔진 (Main Controller)
+ * 모듈명 : Smart Nature Wind 통합 실행 엔진 (Main Controller)
  * ------------------------------------------------------
  * 기능 요약:
  *  - 설정 파일 로드 및 검증 (없으면 기본 생성)
@@ -32,16 +32,16 @@
 #include <WiFi.h>
 #include <WiFiMulti.h>
 
-#include "A10_Const_007.h"
-#include "C10_ConfigManager_007.h"
-#include "D10_Logger_004.h"
+#include "A10_Const_008.h"
+#include "C10_ConfigManager_008.h"
+#include "D10_Logger_008.h"
 #include "S10_Simulation_008.h"
-#include "M10_WiFiManager_007.h"
+#include "M10_WiFiManager_008.h"
 #include "W10_WebAPI_008.h"
-#include "P10_PWM_ctrl_005.h"
+#include "P10_PWM_ctrl_008.h"
 
 // ======================================================
-// WindScape 메인 시스템 클래스
+// Smart Nature Wind 메인 시스템 클래스
 // ======================================================
 class CL_WS10_WindScapeSimulator {
 public:

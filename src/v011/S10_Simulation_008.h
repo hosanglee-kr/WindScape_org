@@ -2,14 +2,13 @@
 /*
  * ------------------------------------------------------
  * 소스명 : S10_Simulation_008.h
- * 모듈명 : WindScape 시뮬레이션 Manager
+ * 모듈명 : Smart Nature Wind 풍속 설정 Manager
  * ------------------------------------------------------
  * 기능 요약:
- *  - 바람 시뮬레이션(Phase/난류/돌풍/열기포/팬 제어)
+ *  - 바람/풍속 설정(Phase/난류/돌풍/열기포/팬 제어)
  *  - Von Kármán 스펙트럼 합성, Phase 전환/히스토리,
  *    목표 재생성 규칙, 지터/yield 포함
  *  - 프리셋 테이블(006의 상세 로직) 완전 복구
- *  - 최신 A10_Const_007.h 구조/단위(%)와 호환
  * ------------------------------------------------------
  * 튜닝 가이드 (필요 시 미세조정)
  *  - 강도 더 세게: location_gust_strength를 0.1~0.3 상향
@@ -41,9 +40,9 @@
 #include <deque>
 #include <ArduinoJson.h>
 
-#include "A10_Const_007.h"
-#include "D10_Logger_004.h"
-#include "P10_PWM_ctrl_005.h"
+#include "A10_Const_008.h"
+#include "D10_Logger_008.h"
+#include "P10_PWM_ctrl_008.h"
 
 class CL_S10_Simulation {
   public:

@@ -33,31 +33,43 @@
 #include <LittleFS.h>
 #include <Update.h>
 
-#include "A10_Const_007.h"
-#include "C10_ConfigManager_007.h"
-#include "D10_Logger_004.h"
-#include "M10_WiFiManager_007.h"
+#include "A10_Const_008.h"
+#include "C10_ConfigManager_008.h"
+#include "D10_Logger_008.h"
+#include "M10_WiFiManager_008.h"
 #include "S10_Simulation_008.h"
-#include "P10_PWM_ctrl_005.h"
+#include "P10_PWM_ctrl_008.h"
 
 
 namespace W10_Const {
+    constexpr char MAIN_PAGE_HTML_FILE[]              = "/html/SC10_main_017.html";
+    constexpr char MAIN_PAGE_HTML_URI[]               = "/main.html";
+    constexpr char MAIN_PAGE_HTML_MIME[]              = "text/html";
 
-    constexpr char CHART_HTML_FILE[]            = "/html/SC10_chart_003.html";
-    constexpr char CHART_HTML_URI[]             = "/SC10_chart_003.html";
-    constexpr char CHART_HTML_MIME[]            = "text/html";
+    constexpr char MAIN_PAGE_CSS_FILE[]               = "/html/SC10_main_017.css";
+    constexpr char MAIN_PAGE_CSS_URI[]                = "/SC10_main_017.css";
+    constexpr char MAIN_PAGE_CSS_MIME[]               = "text/css";
 
-    constexpr char CHART_CSS_FILE[]             = "/html/SC10_chart_003.css";
-    constexpr char CHART_CSS_URI[]              = "/SC10_chart_003.css";
-    constexpr char CHART_CSS_MIME[]             = "text/css";
+    constexpr char MAIN_PAGE_JS_FILE[]                = "/html/SC10_main_017.js";
+    constexpr char MAIN_PAGE_JS_URI[]                 = "/SC10_main_017.js";
+    constexpr char MAIN_PAGE_JS_MIME[]                = "application/javascript";
 
-    constexpr char CHART_JS_FILE[]              = "/html/SC10_chart_003.js";
-    constexpr char CHART_JS_URI[]               = "/SC10_chart_003.js";
-    constexpr char CHART_JS_MIME[]              = "application/javascript";
 
-    constexpr char CHART_DEFAULT_URI[]          = "/chart";
-    constexpr char CHART_DEFAULT_URI_FILE[]     = "/SC10_chart_003.html";
-    constexpr char CHART_DEFAULT_URI_MIME[]     = "text/html";
+    constexpr char CHART_PAGE_HTML_FILE[]            = "/html/SC10_chart_003.html";
+    constexpr char CHART_PAGE_HTML_URI[]             = "/SC10_chart_003.html";
+    constexpr char CHART_PAGE_HTML_MIME[]            = "text/html";
+
+    constexpr char CHART_PAGE_CSS_FILE[]             = "/html/SC10_chart_003.css";
+    constexpr char CHART_PAGE_CSS_URI[]              = "/SC10_chart_003.css";
+    constexpr char CHART_PAGE_CSS_MIME[]             = "text/css";
+
+    constexpr char CHART_PAGE_JS_FILE[]              = "/html/SC10_chart_003.js";
+    constexpr char CHART_PAGE_JS_URI[]               = "/SC10_chart_003.js";
+    constexpr char CHART_PAGE_JS_MIME[]              = "application/javascript";
+
+    constexpr char CHART_PAGE_DEFAULTURI_FILE[]     = "/SC10_chart_003.html";
+    constexpr char CHART_PAGE_DEFAULTURI_URI[]      = "/chart";
+    constexpr char CHART_PAGE_DEFAULTURI_MIME[]     = "text/html";
 
 }
 
@@ -80,42 +92,46 @@ public:
                 if (strlen(g_A10_config.web.html_file.uri) > 0)
                     p_req->redirect(String(g_A10_config.web.html_file.uri));
                 else
-                    p_req->redirect(String(A10_Const::DEF_HTML_URI));
+                    p_req->redirect(String(A10_Const::MAIN_PAGE_HTML_URI));
             #else
-                p_req->redirect(String(A10_Const::DEF_HTML_URI));
+                p_req->redirect(String(A10_Const::MAIN_PAGE_HTML_URI));
             #endif
         });
 
         // --------------------------
         // 정적 자산 라우트 등록
         // --------------------------
-        struct ST_W10_Route { const char* uri; const char* file; const char* mime; };
+        struct ST_W10_WebStatic_Route { 
+            const char* uri; 
+            const char* file; 
+            const char* mime; 
+        };
 
         #ifdef G_A10_DYNIM_WEB_STATIC_FILE_USE
-            ST_W10_Route v_routes[3] = {
-                { g_A10_config.web.html_file.uri[0]? g_A10_config.web.html_file.uri : A10_Const::DEF_HTML_URI,
-                g_A10_config.web.html_file.file[0]? g_A10_config.web.html_file.file : A10_Const::DEF_HTML_FILE,
-                g_A10_config.web.html_file.mime[0]? g_A10_config.web.html_file.mime : A10_Const::DEF_HTML_MIME },
+            ST_W10_WebStatic_Route v_webStatic_Routes_arr[3] = {
+                { g_A10_config.web.html_file.uri[0]? g_A10_config.web.html_file.uri : A10_Const::MAIN_PAGE_HTML_URI,
+                g_A10_config.web.html_file.file[0]? g_A10_config.web.html_file.file : A10_Const::MAIN_PAGE_HTML_FILE,
+                g_A10_config.web.html_file.mime[0]? g_A10_config.web.html_file.mime : A10_Const::MAIN_PAGE_HTML_MIME },
 
-                { g_A10_config.web.css_file.uri[0]? g_A10_config.web.css_file.uri : A10_Const::DEF_CSS_URI,
-                g_A10_config.web.css_file.file[0]? g_A10_config.web.css_file.file : A10_Const::DEF_CSS_FILE,
-                g_A10_config.web.css_file.mime[0]? g_A10_config.web.css_file.mime : A10_Const::DEF_CSS_MIME },
+                { g_A10_config.web.css_file.uri[0]? g_A10_config.web.css_file.uri : A10_Const::MAIN_PAGE_CSS_URI,
+                g_A10_config.web.css_file.file[0]? g_A10_config.web.css_file.file : A10_Const::MAIN_PAGE_CSS_FILE,
+                g_A10_config.web.css_file.mime[0]? g_A10_config.web.css_file.mime : A10_Const::MAIN_PAGE_CSS_MIME },
 
-                { g_A10_config.web.js_file.uri[0]? g_A10_config.web.js_file.uri : A10_Const::DEF_JS_URI,
-                g_A10_config.web.js_file.file[0]? g_A10_config.web.js_file.file : A10_Const::DEF_JS_FILE,
-                g_A10_config.web.js_file.mime[0]? g_A10_config.web.js_file.mime : A10_Const::DEF_JS_MIME }
+                { g_A10_config.web.js_file.uri[0]? g_A10_config.web.js_file.uri : A10_Const::MAIN_PAGE_JS_URI,
+                g_A10_config.web.js_file.file[0]? g_A10_config.web.js_file.file : A10_Const::MAIN_PAGE_JS_FILE,
+                g_A10_config.web.js_file.mime[0]? g_A10_config.web.js_file.mime : A10_Const::MAIN_PAGE_JS_MIME }
             };
         #else
-            ST_W10_Route v_routes[7] = {
-                { A10_Const::DEF_HTML_URI         , A10_Const::DEF_HTML_FILE            , A10_Const::DEF_HTML_MIME          },
-                { A10_Const::DEF_CSS_URI          , A10_Const::DEF_CSS_FILE             , A10_Const::DEF_CSS_MIME           },
-                { A10_Const::DEF_JS_URI           , A10_Const::DEF_JS_FILE              , A10_Const::DEF_JS_MIME            },
+            ST_W10_WebStatic_Route v_webStatic_Routes_arr[7] = {
+                { A10_Const::MAIN_PAGE_HTML_URI             , A10_Const::MAIN_PAGE_HTML_FILE            , A10_Const::MAIN_PAGE_HTML_MIME            },
+                { A10_Const::MAIN_PAGE_CSS_URI              , A10_Const::MAIN_PAGE_CSS_FILE             , A10_Const::MAIN_PAGE_CSS_MIME             },
+                { A10_Const::MAIN_PAGE_JS_URI               , A10_Const::MAIN_PAGE_JS_FILE              , A10_Const::MAIN_PAGE_JS_MIME              },
                 // --- 추가 ---
 
-                { W10_Const::CHART_HTML_URI       , W10_Const::CHART_HTML_FILE          , W10_Const::CHART_HTML_MIME        },
-                { W10_Const::CHART_CSS_URI        , W10_Const::CHART_CSS_FILE           , W10_Const::CHART_CSS_MIME         },
-                { W10_Const::CHART_JS_URI         , W10_Const::CHART_JS_FILE            , W10_Const::CHART_JS_MIME          },
-                { W10_Const::CHART_DEFAULT_URI    , W10_Const::CHART_DEFAULT_URI_FILE   , W10_Const::CHART_DEFAULT_URI_MIME }
+                { W10_Const::CHART_PAGE_HTML_URI            , W10_Const::CHART_PAGE_HTML_FILE           , W10_Const::CHART_PAGE_HTML_MIME           },
+                { W10_Const::CHART_PAGE_CSS_URI             , W10_Const::CHART_PAGE_CSS_FILE            , W10_Const::CHART_PAGE_CSS_MIME            },
+                { W10_Const::CHART_PAGE_JS_URI              , W10_Const::CHART_PAGE_JS_FILE             , W10_Const::CHART_PAGE_JS_MIME             },
+                { W10_Const::CHART_PAGE_DEFAULTURI_URI      , W10_Const::CHART_PAGE_DEFAULTURI_FILE     , W10_Const::CHART_PAGE_DEFAULTURI_MIME     }
                
                 
                 // { "/chart", "/html/SC10_chart_002.html", "text/html" },
@@ -126,13 +142,13 @@ public:
             };
         #endif
 
-        for (auto &v_r : v_routes) {
-            p_srv.on(v_r.uri, HTTP_GET, [=](AsyncWebServerRequest *p_request) {
-                if (LittleFS.exists(v_r.file)) {
-                    p_request->send(LittleFS, v_r.file, v_r.mime);
+        for (auto &v_webStatic_Route : v_webStatic_Routes_arr) {
+            p_srv.on(v_webStatic_Route.uri, HTTP_GET, [=](AsyncWebServerRequest *p_request) {
+                if (LittleFS.exists(v_webStatic_Route.file)) {
+                    p_request->send(LittleFS, v_webStatic_Route.file, v_webStatic_Route.mime);
                 } else {
-                    String v_msg = String("/* missing file: ") + v_r.file + " */";
-                    auto *v_resp = p_request->beginResponse(200, v_r.mime, v_msg);
+                    String v_msg = String("/* missing file: ") + v_webStatic_Route.file + " */";
+                    auto *v_resp = p_request->beginResponse(200, v_webStatic_Route.mime, v_msg);
                     _applyHeaders(v_resp, true);
                     p_request->send(v_resp);
                 }
@@ -181,7 +197,7 @@ public:
         });
 #endif
 
-        // /api/state : 현재 시뮬레이션 및 config 상태
+        // /api/state : 현재 풍속 설정 및 config 상태
         p_srv.on("/api/state", HTTP_GET, [&p_sim, &p_P10_pwm](AsyncWebServerRequest *p_req){
             JsonDocument v_doc;
             JsonVariant v_root = v_doc.to<JsonVariant>();
