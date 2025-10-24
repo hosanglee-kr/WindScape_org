@@ -186,3 +186,9 @@ inline float A10_getRandom01() {
 inline float A10_randRange(float p_a, float p_b) { 
     return p_a + A10_getRandom01() * (p_b - p_a); 
 }
+
+
+inline const char* A10_getPresetName(uint8_t index) {
+    if (index >= EN_A10_PRESET_COUNT) return "UNKNOWN";
+    return g_A10_PRESET_MODE_NAMES_Arr[index];
+}
