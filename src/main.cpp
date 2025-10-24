@@ -1,34 +1,62 @@
-// main.cpp
+// ======================================================
+// 파일명 : main.cpp
+// 프로젝트 : Smart Nature Wind (v011)
+// ------------------------------------------------------
+// 기능 요약:
+//  - Serial 콘솔 초기화 및 Logger 레벨 설정
+//  - Smart Nature Wind 메인 컨트롤러(CL_WS10_WindScapeSimulator) 실행
+//  - Web API 및 시뮬레이션 Tick 루프 수행
+// ------------------------------------------------------
 
 #include <Arduino.h>
 #include <LittleFS.h>
+#include "v011/WS10_Main_010.h"
 
-#include "v011/WS10_Main_008.h"
-
+// 메인 컨트롤러 인스턴스
 CL_WS10_WindScapeSimulator g_WS10;
 
 void setup() {
 	Serial.begin(115200);
-	
-	delay(3000);
+	delay(1500);
+	Serial.println();
+	Serial.println("=====================================");
+	Serial.println(" Smart Nature Wind - Boot Sequence ");
+	Serial.println("=====================================");
 
-	Serial.println("setup...");
+	// ------------------------------------------------------
+	// 1️⃣ 로그 레벨 설정 (DEBUG / INFO / WARN / ERROR)
+	// ------------------------------------------------------
+	CL_D10_Logger::setLevel(EN_L10_LOG_INFO);
+	CL_D10_Logger::log(EN_L10_LOG_INFO, "[BOOT] Logger ready");
 
-	// (선택) 로그 레벨
-	CL_D10_Logger::setLevel(EN_L10_LOG_DEBUG);
+	// ------------------------------------------------------
+	// 2️⃣ 시스템 초기화 (FS / Wi-Fi / PWM / WebAPI / Sim)
+	// ------------------------------------------------------
+	g_WS10.WS10_init();
 
-	// if (!LittleFS.begin(true)) {
-	// 	CL_D10_Logger::log(SC10_LOG_ERROR,"LittleFS mount failed");
-	// } else {
-	// 	CL_D10_Logger::log(SC10_LOG_INFO,"LittleFS mounted");
-	// }
-
-	g_WS10.init();
-
-	Serial.println("[BOOT] Ready. Try /api/state, /api/scan, /api/config, /api/diag, /api/logs...");
+	Serial.println();
+	Serial.println("[BOOT] Initialization complete");
+	Serial.println("Access endpoints:");
+	Serial.println("   → /api/state");
+	Serial.println("   → /api/config");
+	Serial.println("   → /api/chart");
+	Serial.println("   → /api/sim/start");
+	Serial.println("   → /api/logs");
+	Serial.println();
 }
 
 void loop() {
-	g_WS10.run();
-	delay(1);
+	// ------------------------------------------------------
+	// 3️⃣ Simulation Tick Loop
+	// ------------------------------------------------------
+	g_WS10.WS10_run();
+
+	// 로그나 Wi-Fi 상태를 주기적으로 출력하고 싶다면:
+	// static unsigned long lastPrint = 0;
+	// if (millis() - lastPrint > 5000) {
+	//     g_WS10.WS10_printStatus();
+	//     lastPrint = millis();
+	// }
+
+	delay(5); // CPU 점유율 완화
 }
