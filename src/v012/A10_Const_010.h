@@ -192,3 +192,38 @@ inline const char* A10_getPresetName(uint8_t index) {
     if (index >= EN_A10_PRESET_COUNT) return "UNKNOWN";
     return g_A10_PRESET_MODE_NAMES_Arr[index];
 }
+
+inline int8_t A10_getPresetIndex(const char* name) {
+    for (uint8_t i=0; i<EN_A10_PRESET_COUNT; ++i)
+        if (strcasecmp(name, g_A10_PRESET_MODE_NAMES_Arr[i]) == 0)
+            return i;
+    return -1;
+}
+
+
+inline void A10_resetToDefault(ST_A10_WindConfig &cfg) {
+    memset(&cfg, 0, sizeof(cfg));
+    strcpy(cfg.api_key, "");
+    cfg.wind_intensity = 3.0f;
+    cfg.gust_frequency = 0.2f;
+    cfg.wind_variability = 0.5f;
+    cfg.fan_speed_limit = 100.0f;
+    cfg.minimum_fan_speed = 20.0f;
+    cfg.turbulence_length_scale = 0.3f;
+    cfg.turbulence_intensity_sigma = 0.1f;
+    cfg.thermal_bubble_strength = 0.5f;
+    cfg.thermal_bubble_radius = 1.2f;
+    cfg.fan_pwm_pin = 25;
+    cfg.pwm_channel = 0;
+    cfg.pwm_resolution = 8;
+    cfg.pwm_frequency = 20000;
+    cfg.wind_sim_interval_ms = 100;
+    cfg.gust_check_interval_ms = 500;
+    cfg.thermal_check_interval_ms = 1000;
+    cfg.preset_mode_index = EN_A10_PRESET_NORMAL;
+    cfg.wifi_mode = EN_A10_WIFI_MODE_AP;
+    strcpy(cfg.ap_ssid, "SmartNatureWind");
+    strcpy(cfg.ap_password, "12345678");
+    cfg.sta_network_count = 0;
+}
+
