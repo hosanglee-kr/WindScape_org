@@ -69,14 +69,16 @@ public:
 		}
 
 		// ③ Wi-Fi 초기화
-		if (CL_M10_WiFiManager::M10_init(g_A10_config_root, _wifiMulti)) {
+		if (g_A10_config_root.wifi && CL_M10_WiFiManager::M10_init(*g_A10_config_root.wifi, _wifiMulti)) {
+		//if (CL_M10_WiFiManager::M10_init(g_A10_config_root, _wifiMulti)) {
 			CL_D10_Logger::log(EN_L10_LOG_INFO, "Wi-Fi initialized OK");
 		} else {
 			CL_D10_Logger::log(EN_L10_LOG_WARN, "Wi-Fi fallback to AP-only mode");
 		}
 
 		// ④ PWM 초기화
-		auto& v_pwmCfg = *g_A10_config_root.pwm;
+        auto& v_pwmCfg = g_A10_config_root.core.hw.fan_pwm;
+		// auto& v_pwmCfg = *g_A10_config_root.pwm;
 		_pwmCtrl.P10_init(v_pwmCfg.pin, v_pwmCfg.channel, v_pwmCfg.freq, v_pwmCfg.resolution);
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "PWM ready: pin=%d ch=%d freq=%luHz res=%d",
 			v_pwmCfg.pin, v_pwmCfg.channel, v_pwmCfg.freq, v_pwmCfg.resolution);
