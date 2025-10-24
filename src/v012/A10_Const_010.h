@@ -73,12 +73,12 @@ namespace A10_Const {
 	constexpr int MAX_BLE_DEVICES			= 5;
 
 	// JsonDocument 기본 메모리(섹션별 파싱용) - 필요 시 조정
-	constexpr size_t DOC_CORE_CAP	  = 8 * 1024;
-	constexpr size_t DOC_WIFI_CAP	  = 6 * 1024;
-	constexpr size_t DOC_SIM_CAP	  = 4 * 1024;
-	constexpr size_t DOC_ENV_CAP	  = 8 * 1024;
-	constexpr size_t DOC_SCHEDULE_CAP = 8 * 1024;
-	constexpr size_t DOC_MOTION_CAP	  = 6 * 1024;
+	constexpr size_t DOC_CORE_CAP	  		= 8 * 1024;
+	constexpr size_t DOC_WIFI_CAP	  		= 6 * 1024;
+	constexpr size_t DOC_SIM_CAP	  		= 4 * 1024;
+	constexpr size_t DOC_ENV_CAP	  		= 8 * 1024;
+	constexpr size_t DOC_SCHEDULE_CAP 		= 8 * 1024;
+	constexpr size_t DOC_MOTION_CAP	  		= 6 * 1024;
 }  // namespace A10_Const
 
 // ======================================================
@@ -383,28 +383,157 @@ inline int8_t A10_getPresetIndex(const char* name) {
 	return -1;
 }
 
-inline void A10_resetToDefault(ST_A10_WindConfig& cfg) {
-	memset(&cfg, 0, sizeof(cfg));
-	strcpy(cfg.api_key, "");
-	cfg.wind_intensity			   = 3.0f;
-	cfg.gust_frequency			   = 0.2f;
-	cfg.wind_variability		   = 0.5f;
-	cfg.fan_speed_limit			   = 100.0f;
-	cfg.minimum_fan_speed		   = 20.0f;
-	cfg.turbulence_length_scale	   = 0.3f;
-	cfg.turbulence_intensity_sigma = 0.1f;
-	cfg.thermal_bubble_strength	   = 0.5f;
-	cfg.thermal_bubble_radius	   = 1.2f;
-	cfg.fan_pwm_pin				   = 25;
-	cfg.pwm_channel				   = 0;
-	cfg.pwm_resolution			   = 8;
-	cfg.pwm_frequency			   = 20000;
-	cfg.wind_sim_interval_ms	   = 100;
-	cfg.gust_check_interval_ms	   = 500;
-	cfg.thermal_check_interval_ms  = 1000;
-	cfg.preset_mode_index		   = EN_A10_PRESET_NORMAL;
-	cfg.wifi_mode				   = EN_A10_WIFI_MODE_AP;
-	strcpy(cfg.ap_ssid, "SmartNatureWind");
-	strcpy(cfg.ap_password, "12345678");
-	cfg.sta_network_count = 0;
+
+// ------------------------------------------------------
+// 구조체별 초기화 함수
+// ------------------------------------------------------
+
+/**
+ * @brief ST_A10_CoreConfig를 기본값으로 초기화합니다.
+ * @param p_cfg 초기화할 CoreConfig 구조체 포인터
+ */
+inline void A10_resetCoreDefault(ST_A10_CoreConfig& p_cfg) {
+    // 0으로 전체 초기화
+    memset(&p_cfg, 0, sizeof(p_cfg));
+    
+    // [meta]
+    strcpy(p_cfg.meta.version, A10_Const::FW_VERSION);
+    strcpy(p_cfg.meta.device_name, "WindScape_001");
+    // last_update는 빈 문자열 또는 현재 시간으로 설정 (여기선 빈 문자열)
+    strcpy(p_cfg.meta.last_update, "");
+
+    // [system]
+    strcpy(p_cfg.system.web.html, "/index.html");
+    strcpy(p_cfg.system.web.css, "/style.css");
+    strcpy(p_cfg.system.web.js, "/app.js");
+    strcpy(p_cfg.system.logging.level, "INFO");
+    p_cfg.system.logging.max_entries = 50;
+
+    // [hw] - 팬 PWM/센서 기본 핀 설정
+    p_cfg.hw.fan_pwm.pin = 25;
+    p_cfg.hw.fan_pwm.channel = 0;
+    p_cfg.hw.fan_pwm.freq = 20000; // 20kHz
+    p_cfg.hw.fan_pwm.res = 8; // 8bit resolution
+
+    p_cfg.hw.sensors.pir.pin = 34;
+    p_cfg.hw.sensors.pir.enabled = true;
+    strcpy(p_cfg.hw.sensors.temp.type, "DHT22");
+    p_cfg.hw.sensors.temp.pin = 33;
+    p_cfg.hw.sensors.temp.interval_sec = 60;
+    p_cfg.hw.sensors.humidity.pin = 33; // DHT 센서 핀 공유
+    p_cfg.hw.sensors.humidity.shared = true;
+
+    // [security]
+    strcpy(p_cfg.security.api_key, "YOUR_DEFAULT_API_KEY"); // 실제 사용 시 보안에 주의
+
+    // [time]
+    strcpy(p_cfg.time.ntp_server, "pool.ntp.org");
+    strcpy(p_cfg.time.timezone, "KST-9"); // 대한민국 표준시
+    p_cfg.time.sync_interval_min = 60;
+}
+
+/**
+ * @brief ST_A10_WifiConfig를 기본값으로 초기화합니다.
+ * @param p_cfg 초기화할 WifiConfig 구조체 포인터
+ */
+inline void A10_resetWifiDefault(ST_A10_WifiConfig& p_cfg) {
+    // 0으로 전체 초기화
+    memset(&p_cfg, 0, sizeof(p_cfg));
+    
+    p_cfg.mode = EN_A10_WIFI_MODE_AP;
+    strcpy(p_cfg.ap.ssid, "SmartNatureWind");
+    strcpy(p_cfg.ap.password, "12345678");
+    p_cfg.sta_count = 0;
+    // sta 배열은 0으로 이미 초기화됨
+}
+
+/**
+ * @brief ST_A10_SimConfig를 기본값으로 초기화합니다.
+ * @param p_cfg 초기화할 SimConfig 구조체 포인터
+ */
+inline void A10_resetSimDefault(ST_A10_SimConfig& p_cfg) {
+    // 0으로 전체 초기화
+    memset(&p_cfg, 0, sizeof(p_cfg));
+    
+    strcpy(p_cfg.preset, "COUNTRY");
+	
+    p_cfg.wind_intensity = 50.0f;       // %
+    p_cfg.gust_frequency = 0.5f;       // 0.0 ~ 1.0
+    p_cfg.wind_variability = 0.5f;     // 0.0 ~ 1.0
+    p_cfg.fan_limit = 100.0f;          // %
+    p_cfg.min_fan = 20.0f;             // %
+    
+    // 난류 파라미터
+    p_cfg.turbulence.length_scale = 0.3f;
+    p_cfg.turbulence.intensity_sigma = 0.1f;
+    
+    // 열기포 파라미터
+    p_cfg.thermal.bubble_strength = 0.5f;
+    p_cfg.thermal.bubble_radius = 1.2f;
+}
+
+/**
+ * @brief ST_A10_EnvConfig를 기본값으로 초기화합니다.
+ * @param p_cfg 초기화할 EnvConfig 구조체 포인터
+ */
+inline void A10_resetEnvDefault(ST_A10_EnvConfig& p_cfg) {
+    // 0으로 전체 초기화
+    memset(&p_cfg, 0, sizeof(p_cfg));
+    
+    // 온도 제어
+    p_cfg.temp_control.enabled = false;
+    p_cfg.temp_control.zone_count = 1;
+    // 첫 번째 존 기본값 (OFF)
+    p_cfg.temp_control.zones[0].min_temp = 25.0f;
+    p_cfg.temp_control.zones[0].max_temp = 30.0f;
+    strcpy(p_cfg.temp_control.zones[0].mode, "off");
+    p_cfg.temp_control.zones[0].fixed_speed = 0.0f;
+    strcpy(p_cfg.temp_control.zones[0].preset_name, "");
+    p_cfg.temp_control.zones[0].adj_intensity = 0.0f;
+    p_cfg.temp_control.zones[0].adj_variability = 0.0f;
+    p_cfg.temp_control.zones[0].hold_sec = 180;
+
+    // 습도 제어
+    p_cfg.humidity_control.enabled = false;
+    p_cfg.humidity_control.threshold.high = 70.0f;
+    p_cfg.humidity_control.threshold.low = 30.0f;
+
+    // High Action
+    strcpy(p_cfg.humidity_control.action_high.mode, "preset");
+    strcpy(p_cfg.humidity_control.action_high.preset_name, "TROPICAL_RAIN");
+    p_cfg.humidity_control.action_high.adj_intensity = 20.0f;
+    p_cfg.humidity_control.action_high.adj_variability = 0.0f;
+    p_cfg.humidity_control.action_high.fixed_speed = 0.0f;
+
+    // Low Action
+    strcpy(p_cfg.humidity_control.action_low.mode, "preset");
+    strcpy(p_cfg.humidity_control.action_low.preset_name, "DESERT_NIGHT");
+    p_cfg.humidity_control.action_low.adj_intensity = 0.0f;
+    p_cfg.humidity_control.action_low.adj_variability = -20.0f;
+    p_cfg.humidity_control.action_low.fixed_speed = 0.0f;
+}
+
+
+// ------------------------------------------------------
+// 메인 초기화 함수
+// ------------------------------------------------------
+
+/**
+ * @brief ST_A10_ConfigRoot 전체를 기본값으로 초기화합니다.
+ * * core와 env는 by-value이므로 직접 초기화합니다.
+ * wifi, sim, schedule, motion은 by-pointer이므로 nullptr로 초기화합니다.
+ * @param p_root 초기화할 ST_A10_ConfigRoot 구조체 포인터
+ */
+inline void A10_resetToDefault(ST_A10_ConfigRoot& p_root) {
+    // 1. by-value 멤버 초기화 (상시 상주)
+    A10_resetCoreDefault(p_root.core);
+    A10_resetEnvDefault(p_root.env);
+
+    // 2. by-pointer 멤버 초기화 (Lazy-Load)
+    // 메모리 해제 로직은 포함하지 않음. 호출 시점에 메모리가 이미 할당되어 있다면 누수 발생 가능성 있음.
+    // 여기서는 기본값인 nullptr로 설정합니다.
+    p_root.wifi = nullptr;
+    p_root.sim = nullptr;
+    p_root.schedule = nullptr;
+    p_root.motion = nullptr;
 }
