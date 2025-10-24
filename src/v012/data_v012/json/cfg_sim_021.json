@@ -1,0 +1,18 @@
+{
+    "sim": {
+        "preset": "COUNTRY_BREEZE",
+        "wind_intensity": 70.0,
+        "gust_frequency": 45.0,
+        "wind_variability": 50.0,
+        "fan_limit": 90.0,
+        "min_fan": 10.0,
+        "turbulence": {
+            "length_scale": 40.0,
+            "intensity_sigma": 0.5
+        },
+        "thermal": {
+            "bubble_strength": 2.0,
+            "bubble_radius": 18.0
+        }
+    }
+}
