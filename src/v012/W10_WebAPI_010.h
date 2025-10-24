@@ -3,7 +3,7 @@
 #pragma once
 /*
  * ------------------------------------------------------
- * 소스명 : W10_WebAPI_010.h
+ * 소스명 : W10_WebAPI_008.h
  * 모듈명 : Smart Nature Wind Web API Manager
  * ------------------------------------------------------
  * 기능 요약:
@@ -33,12 +33,12 @@
 #include <LittleFS.h>
 #include <Update.h>
 
-#include "A10_Const_010.h"
+#include "A10_Const_008.h"
 #include "C10_ConfigManager_008.h"
-#include "D10_Logger_010.h"
-#include "M10_WiFiManager_010.h"
-#include "S10_Simulation_010.h"
-#include "P10_PWM_ctrl_010.h"
+#include "D10_Logger_008.h"
+#include "M10_WiFiManager_008.h"
+#include "S10_Simulation_008.h"
+#include "P10_PWM_ctrl_008.h"
 
 
 namespace W10_Const {
