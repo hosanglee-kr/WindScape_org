@@ -61,7 +61,8 @@ public:
 		}
 
 		// ② 설정파일 로드 (없으면 기본 생성)
-		if (!CL_C10_ConfigManager::C10_loadAll()) {
+		if (!CL_C10_ConfigManager::loadAll(g_A10_config_root)){
+			// if (!CL_C10_ConfigManager::C10_loadAll()) {
 			CL_D10_Logger::log(EN_L10_LOG_WARN, "Config invalid or missing → defaults created");
 		} else {
 			CL_D10_Logger::log(EN_L10_LOG_INFO, "All configuration files loaded successfully");
