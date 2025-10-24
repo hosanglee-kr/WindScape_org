@@ -129,7 +129,9 @@ private:
 		p_srv.onNotFound([](AsyncWebServerRequest *req){
 			if (req->method() == HTTP_OPTIONS) {
 				auto *resp = req->beginResponse(204);
-				_W10_addCors(resp);
+				_W10_applyHeaders(v_resp, false);
+				// CL_W10_WebAPI::_W10_applyHeaders(v_resp, false);
+				// _W10_addCors(resp);
 				req->send(resp);
 				return;
 			}
