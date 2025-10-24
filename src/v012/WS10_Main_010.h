@@ -82,7 +82,7 @@ public:
 		// ④ PWM 초기화
         auto& v_pwmCfg = g_A10_config_root.core.hw.fan_pwm;
 		// auto& v_pwmCfg = *g_A10_config_root.pwm;
-		_pwmCtrl.P10_init(v_pwmCfg.pin, v_pwmCfg.channel, v_pwmCfg.freq, v_pwmCfg.resolution);
+		_pwmCtrl.P10_init(v_pwmCfg.pin, v_pwmCfg.channel, v_pwmCfg.freq, v_pwmCfg.res);
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "PWM ready: pin=%d ch=%d freq=%luHz res=%d",
 			v_pwmCfg.pin, v_pwmCfg.channel, v_pwmCfg.freq, v_pwmCfg.res);
 
