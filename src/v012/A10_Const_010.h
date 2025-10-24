@@ -32,8 +32,8 @@ namespace A10_Const {
     constexpr char FW_VERSION[] = "SC10_FW_1.0.0";
 
     // 설정 파일
-    constexpr char CONFIG_JSON_FILE[]         = "/json/config_014.json";
-    constexpr char CONFIG_JSON_FILE_BACKUP[]  = "/json/config_014.json.bak";
+    constexpr char CONFIG_JSON_FILE[]         = "/json/config_020.json";
+    constexpr char CONFIG_JSON_FILE_BACKUP[]  = "/json/config_020.json.bak";
 
     // 기본 WEB 파일 (설정값 없거나 오류 시 Fallback)
     constexpr char MAIN_PAGE_HTML_FILE[] = "/html/SC10_main_017.html";
