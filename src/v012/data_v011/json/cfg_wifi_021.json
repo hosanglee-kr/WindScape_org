@@ -1,0 +1,10 @@
+{
+  "wifi": {
+    "wifi_mode": 2,
+    "ap_network": { "ap_ssid": "NatureWind", "ap_password": "2540" },
+    "sta_networks": [
+      { "ssid": "MyHomeWiFi", "pass": "mypassword" },
+      { "ssid": "OfficeNet", "pass": "12345678" }
+    ]
+  }
+}
