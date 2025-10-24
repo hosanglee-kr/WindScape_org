@@ -61,12 +61,15 @@ public:
 		}
 
 		// ② 설정파일 로드 (없으면 기본 생성)
+		CL_C10_ConfigManager::loadAll(g_A10_config_root);
+        /*
 		if (!CL_C10_ConfigManager::loadAll(g_A10_config_root)){
 			// if (!CL_C10_ConfigManager::C10_loadAll()) {
 			CL_D10_Logger::log(EN_L10_LOG_WARN, "Config invalid or missing → defaults created");
 		} else {
 			CL_D10_Logger::log(EN_L10_LOG_INFO, "All configuration files loaded successfully");
 		}
+		*/
 
 		// ③ Wi-Fi 초기화
 		if (g_A10_config_root.wifi && CL_M10_WiFiManager::M10_init(*g_A10_config_root.wifi, _wifiMulti)) {
@@ -81,7 +84,7 @@ public:
 		// auto& v_pwmCfg = *g_A10_config_root.pwm;
 		_pwmCtrl.P10_init(v_pwmCfg.pin, v_pwmCfg.channel, v_pwmCfg.freq, v_pwmCfg.resolution);
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "PWM ready: pin=%d ch=%d freq=%luHz res=%d",
-			v_pwmCfg.pin, v_pwmCfg.channel, v_pwmCfg.freq, v_pwmCfg.resolution);
+			v_pwmCfg.pin, v_pwmCfg.channel, v_pwmCfg.freq, v_pwmCfg.res);
 
 		// ⑤ Web API 서버 초기화
 		CL_W10_WebAPI::W10_init(_webServer, _sim, _wifiMulti, _pwmCtrl);
@@ -89,7 +92,9 @@ public:
 
 		// ⑥ 시뮬레이션 초기화 및 시작
 		_sim.S10_begin(_pwmCtrl);
-		CL_D10_Logger::log(EN_L10_LOG_INFO, "Simulation started (preset=%s)", _sim.S10_presetName);
+		const char* v_presetName = (g_A10_config_root.sim) ? g_A10_config_root.sim->preset : "UNKNOWN";
+        CL_D10_Logger::log(EN_L10_LOG_INFO, "Simulation started (preset=%s)", v_presetName);
+		//CL_D10_Logger::log(EN_L10_LOG_INFO, "Simulation started (preset=%s)", _sim.S10_presetName);
 
 		// ⑦ WebServer 시작
 		_webServer.begin();
