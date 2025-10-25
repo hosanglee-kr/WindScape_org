@@ -107,6 +107,15 @@ public:
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "S10: begin()");
 	}
 
+
+// 바람 시뮬레이션 중단용 헬퍼
+inline void S10_stop() {
+    S10_active = false;
+    S10_phase  = EN_A10_WEATHER_PHASE_CALM;
+    S10_targetSpeed = 0.0f;
+    S10_currentSpeed = 0.0f;
+}
+
 	// ==================================================
 	// 한 틱 업데이트
 	// ==================================================
