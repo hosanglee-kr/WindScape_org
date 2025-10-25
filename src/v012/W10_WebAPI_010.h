@@ -353,14 +353,14 @@ private:
 	}
 	static void _W10_api_upload_body(AsyncWebServerRequest *r,const String&filename,size_t index,uint8_t*data,size_t len,bool final){
 		if(index==0){
-			CL_D10_Logger::log(EN_L10_LOG_INFO,String("Upload start: ")+filename);
+			CL_D10_Logger::log(EN_L10_LOG_INFO,String("Upload start: ")+filename.c_str());
 			if(LittleFS.exists(filename))LittleFS.remove(filename);
 			s_upFile=LittleFS.open(filename,"w");
 		}
 		if(s_upFile) s_upFile.write(data,len);
 		if(final){
 			if(s_upFile){s_upFile.close();}
-			CL_D10_Logger::log(EN_L10_LOG_INFO,String("Upload finished: ")+filename);
+			CL_D10_Logger::log(EN_L10_LOG_INFO,String("Upload finished: ")+filename.c_str());
 		}
 	}
 
@@ -372,7 +372,7 @@ private:
 	static void _W10_api_update_body(AsyncWebServerRequest *r,const String&filename,size_t index,uint8_t*data,size_t len,bool final){
 		if(index==0){
 			Update.begin(UPDATE_SIZE_UNKNOWN);
-			CL_D10_Logger::log(EN_L10_LOG_INFO,String("OTA start: ")+filename);
+			CL_D10_Logger::log(EN_L10_LOG_INFO,String("OTA start: ")+filename.c_str());
 		}
 		if(Update.write(data,len)!=len)CL_D10_Logger::log(EN_L10_LOG_ERROR,"OTA write error");
 		if(final){
