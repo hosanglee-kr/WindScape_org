@@ -108,12 +108,12 @@ public:
 	}
 
 
-// 바람 시뮬레이션 중단용 헬퍼
+// 바람 시뮬레이션 중단용
 inline void S10_stop() {
     S10_active = false;
-    S10_phase  = EN_A10_WEATHER_PHASE_CALM;
-    S10_targetSpeed = 0.0f;
-    S10_currentSpeed = 0.0f;
+    S10_phase = EN_A10_WEATHER_PHASE_CALM;
+    S10_targetWindSpeed = 0.0f;
+    S10_currentWindSpeed = 0.0f;
 }
 
 	// ==================================================
