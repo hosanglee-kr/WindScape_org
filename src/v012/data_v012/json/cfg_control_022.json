@@ -23,15 +23,7 @@
         "no": 10,
         "name": "Morning Air",
         "enabled": true,
-        "days": [
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1
-        ],
+        "days": [1,1,1,1,1,1,1],
         "start_time": "08:00",
         "end_time": "12:00",
         "segments": [
@@ -59,15 +51,7 @@
         "no": 20,
         "name": "Evening Calm",
         "enabled": true,
-        "days": [
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1
-        ],
+        "days": [ 1,1,1,1,1,1,1 ],
         "start_time": "19:00",
         "end_time": "23:00",
         "segments": [
