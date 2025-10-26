@@ -4,6 +4,7 @@
       "runModeDesc": "0=Continuous Mode, 1=Schedule Mode",
       "Continuous": {
           "wind" : {
+              "enabled" : true,
               "preset": "COUNTRY_BREEZE",
               "wind_intensity": 70.0,
               "gust_frequency": 45.0,
