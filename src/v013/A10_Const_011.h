@@ -47,18 +47,13 @@ namespace A10_Const {
     constexpr char CFG_SYSTEM_FILE[]      = "/json/cfg_system_"      G_A10_CFG_JSON_FILE_VER ".json";
     constexpr char CFG_WIFI_FILE[]      = "/json/cfg_wifi_"      G_A10_CFG_JSON_FILE_VER ".json";
     constexpr char CFG_CONTROL_FILE[]      = "/json/cfg_control_"      G_A10_CFG_JSON_FILE_VER ".json";
-  
-    // constexpr char CFG_SIM_FILE[]       = "/json/cfg_sim_"       G_A10_CFG_JSON_FILE_VER ".json";
-    //constexpr char CFG_SCHEDULE_FILE[]  = "/json/cfg_schedule_"  G_A10_CFG_JSON_FILE_VER ".json";
     constexpr char CFG_MOTION_FILE[]    = "/json/cfg_motion_"    G_A10_CFG_JSON_FILE_VER ".json";
+    constexpr char CFG_DEFAULT_FILE[] = "/json/cfg_default_"    G_A10_CFG_JSON_FILE_VER ".json";
 
     // 각 파일의 백업 경로 (.bak)
     constexpr char CFG_SYSTEM_FILE_BAK[]      = "/json/cfg_system_"      G_A10_CFG_JSON_FILE_VER ".json.bak";
     constexpr char CFG_WIFI_FILE_BAK[]      = "/json/cfg_wifi_"      G_A10_CFG_JSON_FILE_VER ".json.bak";
     constexpr char CFG_CONTROL_FILE_BAK[]   = "/json/cfg_control_"      G_A10_CFG_JSON_FILE_VER ".json.bak";
-  
-    //constexpr char CFG_SIM_FILE_BAK[]       = "/json/cfg_sim_"       G_A10_CFG_JSON_FILE_VER ".json.bak";
-    //constexpr char CFG_SCHEDULE_FILE_BAK[]  = "/json/cfg_schedule_"  G_A10_CFG_JSON_FILE_VER ".json.bak";
     constexpr char CFG_MOTION_FILE_BAK[]    = "/json/cfg_motion_"    G_A10_CFG_JSON_FILE_VER ".json.bak";
 
 
