@@ -41,17 +41,21 @@
 namespace A10_Const {
     constexpr char FW_VERSION[] = "SC10_FW_1.0.0";
 
-    // JSON 파일 경로 (022 버전)
-    constexpr char CFG_SYSTEM_FILE[]  = "/json/cfg_system_022.json";
-    constexpr char CFG_WIFI_FILE[]    = "/json/cfg_wifi_022.json";
-    constexpr char CFG_MOTION_FILE[]  = "/json/cfg_motion_022.json";
-    constexpr char CFG_CONTROL_FILE[] = "/json/cfg_control_022.json";
+    #define G_A10_CFG_JSON_FILE_VER "022"
 
-    // 백업 파일
-    constexpr char CFG_SYSTEM_FILE_BAK[]  = "/json/cfg_system_022.json.bak";
-    constexpr char CFG_WIFI_FILE_BAK[]    = "/json/cfg_wifi_022.json.bak";
-    constexpr char CFG_MOTION_FILE_BAK[]  = "/json/cfg_motion_022.json.bak";
-    constexpr char CFG_CONTROL_FILE_BAK[] = "/json/cfg_control_022.json.bak";
+    // JSON 파일(분리 저장) 경로 (ENV 제외)
+    constexpr char CFG_CORE_FILE[]      = "/json/cfg_core_"      G_A10_CFG_JSON_FILE_VER ".json";
+    constexpr char CFG_WIFI_FILE[]      = "/json/cfg_wifi_"      G_A10_CFG_JSON_FILE_VER ".json";
+    constexpr char CFG_SIM_FILE[]       = "/json/cfg_sim_"       G_A10_CFG_JSON_FILE_VER ".json";
+    constexpr char CFG_SCHEDULE_FILE[]  = "/json/cfg_schedule_"  G_A10_CFG_JSON_FILE_VER ".json";
+    constexpr char CFG_MOTION_FILE[]    = "/json/cfg_motion_"    G_A10_CFG_JSON_FILE_VER ".json";
+
+    // 각 파일의 백업 경로 (.bak)
+    constexpr char CFG_CORE_FILE_BAK[]      = "/json/cfg_core_"      G_A10_CFG_JSON_FILE_VER ".json.bak";
+    constexpr char CFG_WIFI_FILE_BAK[]      = "/json/cfg_wifi_"      G_A10_CFG_JSON_FILE_VER ".json.bak";
+    constexpr char CFG_SIM_FILE_BAK[]       = "/json/cfg_sim_"       G_A10_CFG_JSON_FILE_VER ".json.bak";
+    constexpr char CFG_SCHEDULE_FILE_BAK[]  = "/json/cfg_schedule_"  G_A10_CFG_JSON_FILE_VER ".json.bak";
+    constexpr char CFG_MOTION_FILE_BAK[]    = "/json/cfg_motion_"    G_A10_CFG_JSON_FILE_VER ".json.bak";
 
 
     // BLE 디바이스 최대 개수
