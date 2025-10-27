@@ -67,113 +67,91 @@ namespace A10_Const {
     constexpr uint8_t MAX_SEGMENTS_PER_SCHEDULE = 5;
 }
 
+
 // ======================================================
-// ENUM
+// ENUM 정의
 // ======================================================
 
+// Wi-Fi 모드
 typedef enum : uint8_t {
-    EN_A10_RUNMODE_CONTINUOUS = 0,
-    EN_A10_RUNMODE_SCHEDULE   = 1
-} T_A10_RunMode_t;
-
-typedef enum : uint8_t {
-    EN_A10_WIFI_MODE_AP      = 0,
-    EN_A10_WIFI_MODE_STA     = 1,
-    EN_A10_WIFI_MODE_AP_STA  = 2
-} T_A10_WifiMode_t;
+    EN_A10_WIFI_MODE_AP = 0,
+    EN_A10_WIFI_MODE_STA = 1,
+    EN_A10_WIFI_MODE_AP_STA = 2
+} EN_A10_WIFI_MODE_t;
 
 // ======================================================
-// STRUCT DEFINITIONS
+// 구조체 정의
 // ======================================================
 
-// -------------------- SYSTEM CONFIG --------------------
+// ------------------------------------------------------
+// SYSTEM 설정 (core)
+// ------------------------------------------------------
 typedef struct {
     struct {
-        char version[16];
-        char device_name[32];
-        char last_update[32];
+        char version[32];
+        char device_name[64];
+        char last_update[64];
     } meta;
 
     struct {
         struct {
-            char html[96];
-            char css[96];
-            char js[96];
+            char html[64];
+            char css[64];
+            char js[64];
         } web;
+
         struct {
-            char level[8];
+            char level[16];
             uint16_t max_entries;
         } logging;
     } system;
 
     struct {
         struct {
-            int16_t  pin;
-            uint8_t  channel;
+            int16_t pin;
+            uint8_t channel;
             uint32_t freq;
-            uint8_t  res;
+            uint8_t res;
         } fan_pwm;
 
         struct {
-            struct {
-                bool enabled;
-                int16_t pin;
-                uint16_t debounce_sec;
-            } pir;
-
-            struct {
-                bool enabled;
-                char type[16];
-                int16_t pin;
-                uint16_t interval_sec;
-            } tempHum;
-
-            struct {
-                bool enabled;
-                uint16_t scan_interval;
-            } ble;
+            struct { bool enabled; int16_t pin; uint16_t debounce_sec; } pir;
+            struct { bool enabled; char type[16]; int16_t pin; uint16_t interval_sec; } tempHum;
+            struct { bool enabled; uint16_t scan_interval; } ble;
         } sensors;
     } hw;
 
-    struct {
-        char api_key[64];
-    } security;
+    struct { char api_key[64]; } security;
 
     struct {
         char ntp_server[64];
         char timezone[32];
         uint16_t sync_interval_min;
     } time;
-} ST_A10_SystemConfig;
+} ST_A10_CoreConfig;
 
-// -------------------- WIFI CONFIG --------------------
+// ------------------------------------------------------
+// WIFI 설정
+// ------------------------------------------------------
 typedef struct {
-    uint8_t wifiMode;
-    char    wifiModeDesc[64];
-
+    EN_A10_WIFI_MODE_t mode;
     struct {
         char ssid[32];
-        char password[64];
+        char password[32];
     } ap;
-
     struct {
         char ssid[32];
-        char pass[64];
+        char pass[32];
     } sta[A10_Const::MAX_STA_NETWORKS];
-
     uint8_t sta_count;
 } ST_A10_WifiConfig;
 
-// -------------------- MOTION CONFIG --------------------
+// ------------------------------------------------------
+// MOTION 설정
+// ------------------------------------------------------
 typedef struct {
     bool enabled;
-
-    struct {
-        bool enabled;
-        uint16_t hold_sec;
-        uint16_t debounce_sec;
-    } pir;
-
+    struct { bool enabled; uint16_t hold_sec; } pir;
     struct {
         bool enabled;
         int16_t rssi_threshold;
@@ -187,7 +165,38 @@ typedef struct {
     } ble;
 } ST_A10_MotionConfig;
 
-// -------------------- CONTROL CONFIG --------------------
+// ------------------------------------------------------
+// CONTROL 설정
+// ------------------------------------------------------
+
+// 세그먼트 단위
+typedef struct {
+    uint16_t segNo;
+    uint16_t on_minutes;
+    uint16_t off_minutes;
+    char mode[16];            // "preset" or "fixed"
+    char preset_name[32];
+    struct { float intensity; float variability; } preset_adjust;
+    float fixed_speed;
+} ST_A10_ScheduleSegment;
+
+// 스케줄 단위
+typedef struct {
+    uint16_t schNo;
+    char schName[32];
+    bool enabled;
+    uint8_t days[7];
+    char start_time[6];
+    char end_time[6];
+    uint8_t seg_count;
+    ST_A10_ScheduleSegment segments[A10_Const::MAX_SEGMENTS_PER_SCHEDULE];
+    struct {
+        struct { bool enabled; uint16_t hold_sec; } pir;
+        struct { bool enabled; int16_t rssi_threshold; uint16_t hold_sec; } ble;
+    } motion;
+} ST_A10_ScheduleItem;
+
+// 메인 Control 설정
 typedef struct {
     uint8_t runMode;                // 0=Continuous / 1=Schedule
     char runModeDesc[64];
@@ -211,44 +220,18 @@ typedef struct {
             struct { bool enabled; uint16_t hold_sec; } pir;
             struct { bool enabled; int16_t rssi_threshold; uint16_t hold_sec; } ble;
         } motion;
-    } Continuous;
+    } continuous;
 
-    struct {
-        uint16_t segNo;
-        uint16_t on_minutes;
-        uint16_t off_minutes;
-        char mode[16];
-        char preset_name[32];
-        struct { float intensity; float variability; } preset_adjust;
-        float fixed_speed;
-    } seg[A10_Const::MAX_SEGMENTS_PER_SCHEDULE];
-
-    struct {
-        uint16_t schNo;
-        char schName[32];
-        bool enabled;
-        uint8_t days[7];
-        char start_time[6];
-        char end_time[6];
-        uint8_t seg_count;
-
-        decltype(seg) segments;
-
-        struct {
-            struct { bool enabled; uint16_t hold_sec; } pir;
-            struct { bool enabled; int16_t rssi_threshold; uint16_t hold_sec; } ble;
-        } motion;
-    } schedules[A10_Const::MAX_SCHEDULES];
-
-    uint8_t sch_count;
+    ST_A10_ScheduleItem schedules[A10_Const::MAX_SCHEDULES];
+    uint8_t schedule_count;
 } ST_A10_ControlConfig;
 
-// ======================================================
-// ROOT COMPOSITE STRUCTURE
-// ======================================================
+// ------------------------------------------------------
+// 루트 구성
+// ------------------------------------------------------
 typedef struct {
-    ST_A10_SystemConfig  system;
-    ST_A10_WifiConfig*   wifi;
+    ST_A10_CoreConfig core;
+    ST_A10_WifiConfig* wifi;
     ST_A10_MotionConfig* motion;
     ST_A10_ControlConfig* control;
 } ST_A10_ConfigRoot;
@@ -256,47 +239,41 @@ typedef struct {
 inline ST_A10_ConfigRoot g_A10_config_root;
 
 // ======================================================
-// DEFAULT INITIALIZERS
+// 유틸 함수
 // ======================================================
-inline void A10_resetSystemDefault(ST_A10_SystemConfig& s) {
-    memset(&s, 0, sizeof(s));
-    strlcpy(s.meta.version, A10_Const::FW_VERSION, sizeof(s.meta.version));
-    strlcpy(s.meta.device_name, "WindScape_XY-SK10", sizeof(s.meta.device_name));
+inline float A10_rand01() { return static_cast<float>(esp_random()) / static_cast<float>(UINT32_MAX); }
+inline float A10_randRange(float p_a, float p_b) { return p_a + A10_rand01() * (p_b - p_a); }
 
-    strlcpy(s.system.web.html, "/html/SC10_main_021.html", sizeof(s.system.web.html));
-    strlcpy(s.system.web.css,  "/html/SC10_main_021.css", sizeof(s.system.web.css));
-    strlcpy(s.system.web.js,   "/html/SC10_main_021.js", sizeof(s.system.web.js));
-    strlcpy(s.system.logging.level, "INFO", sizeof(s.system.logging.level));
-    s.system.logging.max_entries = 300;
+// ======================================================
+// 기본값 초기화 함수
+// ======================================================
+inline void A10_resetCoreDefault(ST_A10_CoreConfig& c) {
+    memset(&c, 0, sizeof(c));
+    strlcpy(c.meta.version, A10_Const::FW_VERSION, sizeof(c.meta.version));
+    strlcpy(c.meta.device_name, "WindScape_XY-SK10", sizeof(c.meta.device_name));
 
-    s.hw.fan_pwm.pin = 6;
-    s.hw.fan_pwm.channel = 0;
-    s.hw.fan_pwm.freq = 25000;
-    s.hw.fan_pwm.res = 10;
+    strlcpy(c.system.web.html, "/html/SC10_main_021.html", sizeof(c.system.web.html));
+    strlcpy(c.system.web.css,  "/html/SC10_main_021.css",  sizeof(c.system.web.css));
+    strlcpy(c.system.web.js,   "/html/SC10_main_021.js",   sizeof(c.system.web.js));
+    strlcpy(c.system.logging.level, "INFO", sizeof(c.system.logging.level));
+    c.system.logging.max_entries = 300;
 
-    s.hw.sensors.pir.enabled = true;
-    s.hw.sensors.pir.pin = 13;
-    s.hw.sensors.pir.debounce_sec = 5;
+    c.hw.fan_pwm.pin = 6; c.hw.fan_pwm.channel = 0; c.hw.fan_pwm.freq = 25000; c.hw.fan_pwm.res = 10;
+    c.hw.sensors.pir.enabled = true; c.hw.sensors.pir.pin = 13; c.hw.sensors.pir.debounce_sec = 5;
+    c.hw.sensors.tempHum.enabled = true;
+    strlcpy(c.hw.sensors.tempHum.type, "DHT22", sizeof(c.hw.sensors.tempHum.type));
+    c.hw.sensors.tempHum.pin = 23; c.hw.sensors.tempHum.interval_sec = 30;
+    c.hw.sensors.ble.enabled = true; c.hw.sensors.ble.scan_interval = 5;
 
-    s.hw.sensors.tempHum.enabled = true;
-    strlcpy(s.hw.sensors.tempHum.type, "DHT22", sizeof(s.hw.sensors.tempHum.type));
-    s.hw.sensors.tempHum.pin = 23;
-    s.hw.sensors.tempHum.interval_sec = 30;
-
-    s.hw.sensors.ble.enabled = true;
-    s.hw.sensors.ble.scan_interval = 5;
-
-    strlcpy(s.security.api_key, "my_api_key_12345", sizeof(s.security.api_key));
-
-    strlcpy(s.time.ntp_server, "pool.ntp.org", sizeof(s.time.ntp_server));
-    strlcpy(s.time.timezone, "Asia/Seoul", sizeof(s.time.timezone));
-    s.time.sync_interval_min = 60;
+    strlcpy(c.security.api_key, "my_api_key_12345", sizeof(c.security.api_key));
+    strlcpy(c.time.ntp_server, "pool.ntp.org", sizeof(c.time.ntp_server));
+    strlcpy(c.time.timezone, "Asia/Seoul", sizeof(c.time.timezone));
+    c.time.sync_interval_min = 60;
 }
 
 inline void A10_resetWifiDefault(ST_A10_WifiConfig& w) {
     memset(&w, 0, sizeof(w));
-    w.wifiMode = EN_A10_WIFI_MODE_AP_STA;
-    strlcpy(w.wifiModeDesc, "0:AP, 1:STA, 2:AP+STA", sizeof(w.wifiModeDesc));
+    w.mode = EN_A10_WIFI_MODE_AP_STA;
     strlcpy(w.ap.ssid, "NatureWind", sizeof(w.ap.ssid));
     strlcpy(w.ap.password, "2540", sizeof(w.ap.password));
     w.sta_count = 0;
@@ -305,45 +282,39 @@ inline void A10_resetWifiDefault(ST_A10_WifiConfig& w) {
 inline void A10_resetMotionDefault(ST_A10_MotionConfig& m) {
     memset(&m, 0, sizeof(m));
     m.enabled = true;
-    m.pir.enabled = true;
-    m.pir.hold_sec = 120;
-    m.pir.debounce_sec = 5;
-    m.ble.enabled = true;
-    m.ble.rssi_threshold = -70;
-    m.ble.hold_sec = 120;
+    m.pir.enabled = true; m.pir.hold_sec = 120;
+    m.ble.enabled = true; m.ble.rssi_threshold = -70; m.ble.hold_sec = 120;
     m.ble.device_count = 0;
 }
 
 inline void A10_resetControlDefault(ST_A10_ControlConfig& c) {
     memset(&c, 0, sizeof(c));
-    c.runMode = EN_A10_RUNMODE_CONTINUOUS;
+    c.runMode = 0;
     strlcpy(c.runModeDesc, "0=Continuous Mode, 1=Schedule Mode", sizeof(c.runModeDesc));
 
-    c.Continuous.wind.enabled = true;
-    strlcpy(c.Continuous.wind.preset, "COUNTRY_BREEZE", sizeof(c.Continuous.wind.preset));
-    c.Continuous.wind.wind_intensity = 70.0f;
-    c.Continuous.wind.gust_frequency = 45.0f;
-    c.Continuous.wind.wind_variability = 50.0f;
-    c.Continuous.wind.fan_limit = 90.0f;
-    c.Continuous.wind.min_fan = 10.0f;
-    c.Continuous.wind.turbulence_length_scale = 40.0f;
-    c.Continuous.wind.turbulence_intensity_sigma = 0.5f;
-    c.Continuous.wind.thermal_bubble_strength = 2.0f;
-    c.Continuous.wind.thermal_bubble_radius = 18.0f;
+    // Continuous.wind
+    c.continuous.wind.enabled = true;
+    strlcpy(c.continuous.wind.preset, "COUNTRY_BREEZE", sizeof(c.continuous.wind.preset));
+    c.continuous.wind.wind_intensity = 70.0f;
+    c.continuous.wind.gust_frequency = 45.0f;
+    c.continuous.wind.wind_variability = 50.0f;
+    c.continuous.wind.fan_limit = 90.0f;
+    c.continuous.wind.min_fan = 10.0f;
+    c.continuous.wind.turbulence_length_scale = 40.0f;
+    c.continuous.wind.turbulence_intensity_sigma = 0.5f;
+    c.continuous.wind.thermal_bubble_strength = 2.0f;
+    c.continuous.wind.thermal_bubble_radius = 18.0f;
 
-    c.Continuous.motion.pir.enabled = true;
-    c.Continuous.motion.pir.hold_sec = 120;
-    c.Continuous.motion.ble.enabled = true;
-    c.Continuous.motion.ble.rssi_threshold = -70;
-    c.Continuous.motion.ble.hold_sec = 120;
+    // Continuous.motion
+    c.continuous.motion.pir.enabled = true; c.continuous.motion.pir.hold_sec = 120;
+    c.continuous.motion.ble.enabled = true; c.continuous.motion.ble.rssi_threshold = -70; c.continuous.motion.ble.hold_sec = 120;
 
-    c.sch_count = 0;
+    c.schedule_count = 0;
 }
 
-inline void A10_resetToDefault(ST_A10_ConfigRoot& r) {
-    A10_resetSystemDefault(r.system);
-    r.wifi = nullptr;
-    r.motion = nullptr;
-    r.control = nullptr;
+inline void A10_resetToDefault(ST_A10_ConfigRoot& root) {
+    A10_resetCoreDefault(root.core);
+    root.wifi = nullptr;
+    root.motion = nullptr;
+    root.control = nullptr;
 }
-
