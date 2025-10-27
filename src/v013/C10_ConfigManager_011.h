@@ -11,6 +11,11 @@
  *  - /api/config 패치(부분 갱신) 반영(patchFromJson)
  *  - JSON 파일 분리 관리(system / wifi / motion / control)
  *  - ArduinoJson v7 사용: JsonDocument 단일 타입만 사용
+  *  - CONTROL : Continuous / Schedule 모드 기반 제어 설정
+ *  - PATCH   : 부분 JSON 패치 적용 (/api/config)
+ *  - LOADALL : 모든 JSON 파일 로드
+ *  - SAVEALL : 모든 JSON 파일 저장
+ *  - RESETALL: 기본값 초기화
  * ------------------------------------------------------
  * [구현 규칙]
  *  - 항상 소스 시작 주석 체계 유지
@@ -276,8 +281,188 @@ public:
         return _saveJsonFile(A10_Const::CFG_MOTION_FILE, A10_Const::CFG_MOTION_FILE_BAK, v_doc);
     }
 
+
     // ======================================================
-    // CONTROL, PATCH, LOADALL 등은 다음 단계에 추가
+    // CONTROL 설정 로드/저장
     // ======================================================
+    static bool loadControl(ST_A10_ControlConfig& p_cfg) {
+        JsonDocument v_doc;
+        if (!_loadJsonFile(A10_Const::CFG_CONTROL_FILE, v_doc)) return false;
+        JsonObjectConst jc = v_doc["control"];
+
+        p_cfg.runMode = jc["runMode"] | 0;
+        strlcpy(p_cfg.runModeDesc, jc["runModeDesc"] | "0=Continuous,1=Schedule", sizeof(p_cfg.runModeDesc));
+
+        // Continuous wind
+        JsonObjectConst cw = jc["Continuous"]["wind"];
+        p_cfg.continuous.wind.enabled = cw["enabled"] | true;
+        strlcpy(p_cfg.continuous.wind.preset, cw["preset"] | "COUNTRY_BREEZE", sizeof(p_cfg.continuous.wind.preset));
+        p_cfg.continuous.wind.wind_intensity = cw["wind_intensity"] | 70.0f;
+        p_cfg.continuous.wind.gust_frequency = cw["gust_frequency"] | 45.0f;
+        p_cfg.continuous.wind.wind_variability = cw["wind_variability"] | 50.0f;
+        p_cfg.continuous.wind.fan_limit = cw["fan_limit"] | 90.0f;
+        p_cfg.continuous.wind.min_fan = cw["min_fan"] | 10.0f;
+        p_cfg.continuous.wind.turbulence_length_scale = cw["turbulence_length_scale"] | 40.0f;
+        p_cfg.continuous.wind.turbulence_intensity_sigma = cw["turbulence_intensity_sigma"] | 0.5f;
+        p_cfg.continuous.wind.thermal_bubble_strength = cw["thermal_bubble_strength"] | 2.0f;
+        p_cfg.continuous.wind.thermal_bubble_radius = cw["thermal_bubble_radius"] | 18.0f;
+
+        // Continuous motion
+        JsonObjectConst cm = jc["Continuous"]["motion"];
+        p_cfg.continuous.motion.pir.enabled = cm["pir"]["enabled"] | true;
+        p_cfg.continuous.motion.pir.hold_sec = cm["pir"]["hold_sec"] | 120;
+        p_cfg.continuous.motion.ble.enabled = cm["ble"]["enabled"] | true;
+        p_cfg.continuous.motion.ble.rssi_threshold = cm["ble"]["rssi_threshold"] | -70;
+        p_cfg.continuous.motion.ble.hold_sec = cm["ble"]["hold_sec"] | 120;
+
+        // Schedule list
+        p_cfg.schedule_count = 0;
+        for (JsonObjectConst js : jc["schedules"].as<JsonArrayConst>()) {
+            if (p_cfg.schedule_count >= A10_Const::MAX_SCHEDULES) break;
+            auto& sch = p_cfg.schedules[p_cfg.schedule_count++];
+            sch.schNo = js["schNo"] | 0;
+            strlcpy(sch.schName, js["schName"] | "", sizeof(sch.schName));
+            sch.enabled = js["enabled"] | true;
+            JsonArrayConst days = js["days"].as<JsonArrayConst>();
+            for (uint8_t i = 0; i < 7 && i < days.size(); i++) sch.days[i] = days[i] | 1;
+            strlcpy(sch.start_time, js["start_time"] | "08:00", sizeof(sch.start_time));
+            strlcpy(sch.end_time, js["end_time"] | "12:00", sizeof(sch.end_time));
+
+            sch.seg_count = 0;
+            for (JsonObjectConst seg : js["segments"].as<JsonArrayConst>()) {
+                if (sch.seg_count >= A10_Const::MAX_SEGMENTS_PER_SCHEDULE) break;
+                auto& s = sch.segments[sch.seg_count++];
+                s.segNo = seg["segNo"] | 0;
+                s.on_minutes = seg["on_minutes"] | 10;
+                s.off_minutes = seg["off_minutes"] | 5;
+                strlcpy(s.mode, seg["mode"] | "preset", sizeof(s.mode));
+                strlcpy(s.preset_name, seg["preset_name"] | "COUNTRY_BREEZE", sizeof(s.preset_name));
+                s.preset_adjust.intensity = seg["preset_adjust"]["intensity"] | 0.0f;
+                s.preset_adjust.variability = seg["preset_adjust"]["variability"] | 0.0f;
+                s.fixed_speed = seg["fixed_speed"] | 0.0f;
+            }
+
+            sch.motion.pir.enabled = js["motion"]["pir"]["enabled"] | true;
+            sch.motion.pir.hold_sec = js["motion"]["pir"]["hold_sec"] | 120;
+            sch.motion.ble.enabled = js["motion"]["ble"]["enabled"] | true;
+            sch.motion.ble.rssi_threshold = js["motion"]["ble"]["rssi_threshold"] | -70;
+            sch.motion.ble.hold_sec = js["motion"]["ble"]["hold_sec"] | 120;
+        }
+        return true;
+    }
+
+    static bool saveControl(const ST_A10_ControlConfig& p_cfg) {
+        JsonDocument v_doc;
+        JsonObject j = v_doc["control"];
+        j["runMode"] = p_cfg.runMode;
+        j["runModeDesc"] = p_cfg.runModeDesc;
+
+        // Continuous
+        JsonObject cw = j["Continuous"]["wind"];
+        cw["enabled"] = p_cfg.continuous.wind.enabled;
+        cw["preset"] = p_cfg.continuous.wind.preset;
+        cw["wind_intensity"] = p_cfg.continuous.wind.wind_intensity;
+        cw["gust_frequency"] = p_cfg.continuous.wind.gust_frequency;
+        cw["wind_variability"] = p_cfg.continuous.wind.wind_variability;
+        cw["fan_limit"] = p_cfg.continuous.wind.fan_limit;
+        cw["min_fan"] = p_cfg.continuous.wind.min_fan;
+        cw["turbulence_length_scale"] = p_cfg.continuous.wind.turbulence_length_scale;
+        cw["turbulence_intensity_sigma"] = p_cfg.continuous.wind.turbulence_intensity_sigma;
+        cw["thermal_bubble_strength"] = p_cfg.continuous.wind.thermal_bubble_strength;
+        cw["thermal_bubble_radius"] = p_cfg.continuous.wind.thermal_bubble_radius;
+
+        j["Continuous"]["motion"]["pir"]["enabled"] = p_cfg.continuous.motion.pir.enabled;
+        j["Continuous"]["motion"]["pir"]["hold_sec"] = p_cfg.continuous.motion.pir.hold_sec;
+        j["Continuous"]["motion"]["ble"]["enabled"] = p_cfg.continuous.motion.ble.enabled;
+        j["Continuous"]["motion"]["ble"]["rssi_threshold"] = p_cfg.continuous.motion.ble.rssi_threshold;
+        j["Continuous"]["motion"]["ble"]["hold_sec"] = p_cfg.continuous.motion.ble.hold_sec;
+
+        // Schedule list
+        for (uint8_t i = 0; i < p_cfg.schedule_count; i++) {
+            const auto& sch = p_cfg.schedules[i];
+            JsonObject sj = j["schedules"].add<JsonObject>();
+            sj["schNo"] = sch.schNo;
+            sj["schName"] = sch.schName;
+            sj["enabled"] = sch.enabled;
+            JsonArray days = sj["days"];
+            for (uint8_t d = 0; d < 7; d++) days.add(sch.days[d]);
+            sj["start_time"] = sch.start_time;
+            sj["end_time"] = sch.end_time;
+
+            for (uint8_t s = 0; s < sch.seg_count; s++) {
+                const auto& seg = sch.segments[s];
+                JsonObject sg = sj["segments"].add<JsonObject>();
+                sg["segNo"] = seg.segNo;
+                sg["on_minutes"] = seg.on_minutes;
+                sg["off_minutes"] = seg.off_minutes;
+                sg["mode"] = seg.mode;
+                sg["preset_name"] = seg.preset_name;
+                sg["preset_adjust"]["intensity"] = seg.preset_adjust.intensity;
+                sg["preset_adjust"]["variability"] = seg.preset_adjust.variability;
+                sg["fixed_speed"] = seg.fixed_speed;
+            }
+
+            sj["motion"]["pir"]["enabled"] = sch.motion.pir.enabled;
+            sj["motion"]["pir"]["hold_sec"] = sch.motion.pir.hold_sec;
+            sj["motion"]["ble"]["enabled"] = sch.motion.ble.enabled;
+            sj["motion"]["ble"]["rssi_threshold"] = sch.motion.ble.rssi_threshold;
+            sj["motion"]["ble"]["hold_sec"] = sch.motion.ble.hold_sec;
+        }
+
+        return _saveJsonFile(A10_Const::CFG_CONTROL_FILE, A10_Const::CFG_CONTROL_FILE_BAK, v_doc);
+    }
+
+    // ======================================================
+    // PATCH / LOADALL / SAVEALL / RESETALL / RESTOREALL
+    // ======================================================
+    static bool patchFromJson(ST_A10_ConfigRoot& p_root, const JsonDocument& p_patch, bool& p_wifiReinit) {
+        p_wifiReinit = false;
+        if (p_patch.containsKey("wifi")) {
+            if (!p_root.wifi) p_root.wifi = new ST_A10_WifiConfig();
+            loadWifi(*p_root.wifi);
+            p_wifiReinit = true;
+        }
+        if (p_patch.containsKey("motion")) {
+            if (!p_root.motion) p_root.motion = new ST_A10_MotionConfig();
+            loadMotion(*p_root.motion);
+        }
+        if (p_patch.containsKey("control")) {
+            if (!p_root.control) p_root.control = new ST_A10_ControlConfig();
+            loadControl(*p_root.control);
+        }
+        saveAll(p_root);
+        return true;
+    }
+
+    static void loadAll(ST_A10_ConfigRoot& p_root) {
+        A10_resetToDefault(p_root);
+        loadSystem(p_root.system);
+        p_root.wifi = new ST_A10_WifiConfig();
+        loadWifi(*p_root.wifi);
+        p_root.motion = new ST_A10_MotionConfig();
+        loadMotion(*p_root.motion);
+        p_root.control = new ST_A10_ControlConfig();
+        loadControl(*p_root.control);
+    }
+
+    static void saveAll(const ST_A10_ConfigRoot& p_root) {
+        saveSystem(p_root.system);
+        if (p_root.wifi) saveWifi(*p_root.wifi);
+        if (p_root.motion) saveMotion(*p_root.motion);
+        if (p_root.control) saveControl(*p_root.control);
+    }
+
+    static void resetAll(ST_A10_ConfigRoot& p_root) {
+        A10_resetToDefault(p_root);
+        saveAll(p_root);
+    }
+
+    static void restoreAllFromBackup() {
+        restoreBackupFile(A10_Const::CFG_SYSTEM_FILE_BAK,  A10_Const::CFG_SYSTEM_FILE);
+        restoreBackupFile(A10_Const::CFG_WIFI_FILE_BAK,    A10_Const::CFG_WIFI_FILE);
+        restoreBackupFile(A10_Const::CFG_MOTION_FILE_BAK,  A10_Const::CFG_MOTION_FILE);
+        restoreBackupFile(A10_Const::CFG_CONTROL_FILE_BAK, A10_Const::CFG_CONTROL_FILE);
+    }
+
 };
 
