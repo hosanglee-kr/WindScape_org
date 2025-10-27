@@ -1,6 +1,7 @@
 {
 	"wifi": {
-		"mode": 2,
+		"wifiMode": 2,
+		"wifiModeDesc" : "",
 		"ap": {
 			"ssid": "NatureWind",
 			"password": "2540"
