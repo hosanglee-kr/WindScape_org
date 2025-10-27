@@ -859,9 +859,18 @@ public:
         A10_resetToDefault(p_root);
         saveSystem(p_root.core);
         // Lazy 포인터는 nullptr이므로 필요 시 모듈별 즉시 초기화·저장
-        ST_A10_WifiConfig v_wifi;   A10_resetWifiDefault(v_wifi);     saveWifi(v_wifi);
-        ST_A10_MotionConfig v_motion; A10_resetMotionDefault(v_motion); saveMotion(v_motion);
-        ST_A10_ControlConfig v_control; A10_resetControlDefault(v_control); saveControl(v_control);
+        ST_A10_WifiConfig v_wifi;   
+        A10_resetWifiDefault(v_wifi);     
+        saveWifi(v_wifi);
+     
+        ST_A10_MotionConfig v_motion; 
+        A10_resetMotionDefault(v_motion); 
+        saveMotion(v_motion);
+     
+        ST_A10_ControlConfig v_control;
+        A10_resetControlDefault(v_control); 
+        saveControl(v_control);
+     
         CL_D10_Logger::log(EN_L10_LOG_INFO, "Factory reset done (all sections defaulted)");
     }
 
