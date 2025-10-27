@@ -202,8 +202,8 @@ public:
         v_doc["time"]["timezone"]         = p_cfg.time.timezone;
         v_doc["time"]["sync_interval_min"]= p_cfg.time.sync_interval_min;
 
-        // NOTE: System 파일의 백업 상수는 CFG_CORE_FILE_BAK 사용(최신 상수 정의 준수)
-        return _saveJsonFile(A10_Const::CFG_SYSTEM_FILE, A10_Const::CFG_CORE_FILE_BAK, v_doc);
+        // NOTE: System 파일의 백업 상수는 CFG_SYSTEM_FILE_BAK 사용(최신 상수 정의 준수)
+        return _saveJsonFile(A10_Const::CFG_SYSTEM_FILE, A10_Const::CFG_SYSTEM_FILE_BAK, v_doc);
     }
 
     // ======================================================
@@ -736,7 +736,7 @@ public:
     }
 
     static void restoreAllFromBackup() {
-        restoreBackupFile(A10_Const::CFG_CORE_FILE_BAK,     A10_Const::CFG_SYSTEM_FILE);
+        restoreBackupFile(A10_Const::CFG_SYSTEM_FILE_BAK,     A10_Const::CFG_SYSTEM_FILE);
         restoreBackupFile(A10_Const::CFG_WIFI_FILE_BAK,     A10_Const::CFG_WIFI_FILE);
         restoreBackupFile(A10_Const::CFG_MOTION_FILE_BAK,   A10_Const::CFG_MOTION_FILE);
         restoreBackupFile(A10_Const::CFG_CONTROL_FILE_BAK,  A10_Const::CFG_CONTROL_FILE);
