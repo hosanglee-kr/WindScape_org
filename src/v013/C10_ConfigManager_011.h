@@ -11,6 +11,14 @@
  *  - JSON 파일 분리 관리(core / wifi / sim / schedule / motion)
  *  - ArduinoJson v7 사용: JsonDocument 단일 타입만 사용
  * ------------------------------------------------------
+ * [구현 규칙]
+ *  - 항상 소스 시작 주석 체계 유지
+ *  - ArduinoJson v7.x.x 사용 (v6 이하 사용 금지)
+ *  - JsonDocument 단일 타입만 사용
+ *  - createNestedArray/Object/containsKey 사용 금지
+ *  - memset + strlcpy 기반 안전 초기화
+ *  - 주석/필드명은 JSON 구조와 동일하게 유지
+ * ------------------------------------------------------
  * [코드 네이밍 규칙]
  * 		- 현재 파일 모듈약어    : C10
  * 		- 전역 상수,매크로      : G_모듈약어_ 접두사
