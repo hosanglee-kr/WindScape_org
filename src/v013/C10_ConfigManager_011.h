@@ -724,134 +724,112 @@ public:
         if (p_root.control) saveControl(*p_root.control);
     }
 
-// ======================================================
+    // ======================================================
     // RESETALL (Default JSON 기반 공장초기화)
     // ------------------------------------------------------
     // - cfg_default_022.json 파일에서 기본값을 불러와 각 섹션 분리저장
     // - 파일이 없을 경우 내부 기본값 생성 후 cfg_default_022.json도 재생성
-    // - 규칙: ArduinoJson v7, JsonDocument 단일, 안전한 strlcpy
     // ======================================================
-    static void resetAll(ST_A10_ConfigRoot& p_root) {
-        constexpr char* DEF_FILE = (char*)A10_Const::CFG_DEFAULT_FILE;
-        JsonDocument v_doc;
+    
+   /*
+ * ------------------------------------------------------
+ * 함수명 : resetAll()
+ * ------------------------------------------------------
+ * 기능 요약:
+ *  - 공장 초기화 시 기본 JSON(cfg_default_022.json)을 참조하여
+ *    system / wifi / motion / control 각 파일로 분리 저장
+ *  - CFG_DEFAULT_FILE 경로의 JSON을 읽어 해당 섹션별 파일 생성
+ * ------------------------------------------------------
+ * 구현 규칙:
+ *  - 모든 키 존재 여부 검사 후 분기 처리
+ *  - 누락 시 A10_resetToDefault() 호출하여 안전 초기화
+ * ------------------------------------------------------
+ */
 
-        // 1️⃣ default json 존재 여부 확인
-        if (!LittleFS.exists(DEF_FILE)) {
-            CL_D10_Logger::log(EN_L10_LOG_WARN, "Default file not found: %s -> creating built-in defaults", DEF_FILE);
+static void resetAll(ST_A10_ConfigRoot& p_root) {
+    CL_D10_Logger::log(EN_L10_LOG_INFO, "[resetAll] Factory reset from %s", A10_Const::CFG_DEFAULT_FILE);
 
-            // 내장 기본값 JSON 생성
-            v_doc["meta"]["version"] = A10_Const::FW_VERSION;
-            v_doc["meta"]["device_name"] = "WindScape_XY-SK10";
-            v_doc["system"]["web"]["html"] = "/html/SC10_main_021.html";
-            v_doc["system"]["web"]["css"] = "/html/SC10_main_021.css";
-            v_doc["system"]["web"]["js"]  = "/html/SC10_main_021.js";
-            v_doc["system"]["logging"]["level"] = "INFO";
-            v_doc["system"]["logging"]["max_entries"] = 300;
-
-            v_doc["hw"]["fan_pwm"]["pin"] = 6;
-            v_doc["hw"]["fan_pwm"]["channel"] = 0;
-            v_doc["hw"]["fan_pwm"]["freq"] = 25000;
-            v_doc["hw"]["fan_pwm"]["res"] = 10;
-            v_doc["hw"]["pir"]["enabled"] = true;
-            v_doc["hw"]["pir"]["pin"] = 13;
-            v_doc["hw"]["pir"]["debounce_sec"] = 5;
-            v_doc["hw"]["tempHum"]["enabled"] = true;
-            v_doc["hw"]["tempHum"]["type"] = "DHT22";
-            v_doc["hw"]["tempHum"]["pin"] = 23;
-            v_doc["hw"]["tempHum"]["interval_sec"] = 30;
-            v_doc["hw"]["ble"]["enabled"] = true;
-            v_doc["hw"]["ble"]["scan_interval"] = 5;
-
-            v_doc["security"]["api_key"] = "my_api_key_12345";
-            v_doc["time"]["ntp_server"] = "pool.ntp.org";
-            v_doc["time"]["timezone"] = "Asia/Seoul";
-            v_doc["time"]["sync_interval_min"] = 60;
-
-            v_doc["wifi"]["mode"] = 2;
-            v_doc["wifi"]["ap"]["ssid"] = "NatureWind";
-            v_doc["wifi"]["ap"]["password"] = "2540";
-            JsonObject s = v_doc["wifi"]["sta"].add<JsonObject>();
-            s["ssid"] = "";
-            s["pass"] = "";
-
-            v_doc["motion"]["enabled"] = true;
-            v_doc["motion"]["pir"]["enabled"] = true;
-            v_doc["motion"]["pir"]["hold_sec"] = 120;
-            v_doc["motion"]["ble"]["enabled"] = true;
-            v_doc["motion"]["ble"]["rssi_threshold"] = -70;
-            v_doc["motion"]["ble"]["hold_sec"] = 120;
-
-            JsonObject def_ctrl = v_doc["control"];
-            def_ctrl["runMode"] = 0;
-            def_ctrl["runModeDesc"] = "0=Continuous,1=Schedule";
-            def_ctrl["Continuous"]["wind"]["enabled"] = true;
-            def_ctrl["Continuous"]["wind"]["preset"] = "COUNTRY_BREEZE";
-            def_ctrl["Continuous"]["wind"]["wind_intensity"] = 70.0;
-            def_ctrl["Continuous"]["wind"]["gust_frequency"] = 45.0;
-            def_ctrl["Continuous"]["wind"]["wind_variability"] = 50.0;
-            def_ctrl["Continuous"]["wind"]["fan_limit"] = 90.0;
-            def_ctrl["Continuous"]["wind"]["min_fan"] = 10.0;
-            def_ctrl["Continuous"]["wind"]["turbulence_length_scale"] = 40.0;
-            def_ctrl["Continuous"]["wind"]["turbulence_intensity_sigma"] = 0.5;
-            def_ctrl["Continuous"]["wind"]["thermal_bubble_strength"] = 2.0;
-            def_ctrl["Continuous"]["wind"]["thermal_bubble_radius"] = 18.0;
-            def_ctrl["Continuous"]["motion"]["pir"]["enabled"] = true;
-            def_ctrl["Continuous"]["motion"]["pir"]["hold_sec"] = 120;
-            def_ctrl["Continuous"]["motion"]["ble"]["enabled"] = true;
-            def_ctrl["Continuous"]["motion"]["ble"]["rssi_threshold"] = -70;
-            def_ctrl["Continuous"]["motion"]["ble"]["hold_sec"] = 120;
-
-            JsonObject sch = def_ctrl["schedules"].add<JsonObject>();
-            sch["schNo"] = 0;
-            sch["schName"] = "Morning Breeze";
-            sch["enabled"] = true;
-            JsonArray days = sch["days"];
-            for (int i = 0; i < 7; i++) days.add(i < 5 ? 1 : 0);
-            sch["start_time"] = "08:00";
-            sch["end_time"] = "12:00";
-            JsonObject seg = sch["segments"].add<JsonObject>();
-            seg["segNo"] = 1;
-            seg["on_minutes"] = 10;
-            seg["off_minutes"] = 5;
-            seg["mode"] = "preset";
-            seg["preset_name"] = "COUNTRY_BREEZE";
-            seg["preset_adjust"]["intensity"] = 0.0;
-            seg["preset_adjust"]["variability"] = 0.0;
-            seg["fixed_speed"] = 0.0;
-            sch["motion"]["pir"]["enabled"] = true;
-            sch["motion"]["pir"]["hold_sec"] = 120;
-            sch["motion"]["ble"]["enabled"] = true;
-            sch["motion"]["ble"]["rssi_threshold"] = -70;
-            sch["motion"]["ble"]["hold_sec"] = 120;
-
-            // 기본 default.json 저장
-            _saveJsonFile(DEF_FILE, "/json/cfg_default_022.json.bak", v_doc);
-            CL_D10_Logger::log(EN_L10_LOG_INFO, "Created default file: %s", DEF_FILE);
-        } 
-        else {
-            File f = LittleFS.open(DEF_FILE, "r");
-            auto err = deserializeJson(v_doc, f);
-            f.close();
-            if (err) {
-                CL_D10_Logger::log(EN_L10_LOG_ERROR, "Parse error in default.json: %s", err.c_str());
-                return;
-            }
-            CL_D10_Logger::log(EN_L10_LOG_INFO, "Loaded defaults from %s", DEF_FILE);
-        }
-
-        // 2️⃣ JSON에서 각 섹션 분리 저장
-        if (v_doc.containsKey("meta") || v_doc.containsKey("system"))
-            _saveJsonFile(A10_Const::CFG_SYSTEM_FILE, A10_Const::CFG_CORE_FILE_BAK, v_doc);
-        if (v_doc.containsKey("wifi"))
-            _saveJsonFile(A10_Const::CFG_WIFI_FILE, A10_Const::CFG_WIFI_FILE_BAK, v_doc);
-        if (v_doc.containsKey("motion"))
-            _saveJsonFile(A10_Const::CFG_MOTION_FILE, A10_Const::CFG_MOTION_FILE_BAK, v_doc);
-        if (v_doc.containsKey("control"))
-            _saveJsonFile(A10_Const::CFG_CONTROL_FILE, A10_Const::CFG_CONTROL_FILE_BAK, v_doc);
-
-        CL_D10_Logger::log(EN_L10_LOG_INFO, "Factory reset applied from %s", DEF_FILE);
+    JsonDocument v_doc;
+    if (!LittleFS.exists(A10_Const::CFG_DEFAULT_FILE)) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR, "Default file missing: %s", A10_Const::CFG_DEFAULT_FILE);
+        A10_resetToDefault(p_root);
+        saveAll(p_root);
+        return;
     }
 
+    File v_file = LittleFS.open(A10_Const::CFG_DEFAULT_FILE, "r");
+    if (!v_file) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR, "Cannot open default file: %s", A10_Const::CFG_DEFAULT_FILE);
+        A10_resetToDefault(p_root);
+        saveAll(p_root);
+        return;
+    }
+
+    auto v_err = deserializeJson(v_doc, v_file);
+    v_file.close();
+    if (v_err) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR, "Parse failed in default file: %s", v_err.c_str());
+        A10_resetToDefault(p_root);
+        saveAll(p_root);
+        return;
+    }
+
+    // ------------------------------------------------------
+    // 1️⃣ System 섹션
+    // ------------------------------------------------------
+    if (!v_doc["system"].isNull() || !v_doc["meta"].isNull() || !v_doc["hw"].isNull()) {
+        JsonDocument js;
+        js["meta"]     = v_doc["meta"];
+        js["system"]   = v_doc["system"];
+        js["hw"]       = v_doc["hw"];
+        js["security"] = v_doc["security"];
+        js["time"]     = v_doc["time"];
+        _saveJsonFile(A10_Const::CFG_SYSTEM_FILE, A10_Const::CFG_CORE_FILE_BAK, js);
+    } else {
+        CL_D10_Logger::log(EN_L10_LOG_WARN, "Default: system section missing");
+    }
+
+    // ------------------------------------------------------
+    // 2️⃣ WiFi 섹션
+    // ------------------------------------------------------
+    if (!v_doc["wifi"].isNull()) {
+        JsonDocument jw;
+        jw["wifi"] = v_doc["wifi"];
+        _saveJsonFile(A10_Const::CFG_WIFI_FILE, A10_Const::CFG_WIFI_FILE_BAK, jw);
+    } else {
+        CL_D10_Logger::log(EN_L10_LOG_WARN, "Default: wifi section missing");
+    }
+
+    // ------------------------------------------------------
+    // 3️⃣ Motion 섹션
+    // ------------------------------------------------------
+    if (!v_doc["motion"].isNull()) {
+        JsonDocument jm;
+        jm["motion"] = v_doc["motion"];
+        _saveJsonFile(A10_Const::CFG_MOTION_FILE, A10_Const::CFG_MOTION_FILE_BAK, jm);
+    } else {
+        CL_D10_Logger::log(EN_L10_LOG_WARN, "Default: motion section missing");
+    }
+
+    // ------------------------------------------------------
+    // 4️⃣ Control 섹션
+    // ------------------------------------------------------
+    if (!v_doc["control"].isNull()) {
+        JsonDocument jc;
+        jc["control"] = v_doc["control"];
+        _saveJsonFile(A10_Const::CFG_CONTROL_FILE, A10_Const::CFG_CONTROL_FILE_BAK, jc);
+    } else {
+        CL_D10_Logger::log(EN_L10_LOG_WARN, "Default: control section missing");
+    }
+
+    // ------------------------------------------------------
+    // 5️⃣ 메모리 구조체 초기화 및 반영
+    // ------------------------------------------------------
+    A10_resetToDefault(p_root);
+    loadAll(p_root);
+
+    CL_D10_Logger::log(EN_L10_LOG_INFO, "Factory reset completed from %s", A10_Const::CFG_DEFAULT_FILE);
+}         
 
 
     static void resetAll_old_001(ST_A10_ConfigRoot& p_root) {
