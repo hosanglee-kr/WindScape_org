@@ -442,3 +442,4 @@ private:
 		return (uint8_t)g_A10_config_root.control->runMode;
 	}
 };
+
