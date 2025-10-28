@@ -72,6 +72,23 @@ PIR 센서나 BLE 근접센서를 이용해 “사람이 근처에 있는지”�
 // 전방 선언
 class CL_M10_MotionLogic;
 
+typedef enum : uint8_t  { 
+    EN_CT10_OVERRIDE_NONE=0, 
+    EN_CT10_OVERRIDE_FIXED=1, 
+    EN_CT10_OVERRIDE_PRESET=2 
+} EN_CT10_override_mode_t;
+
+// Override 상태
+typedef struct  {
+	bool active = false;
+	unsigned long until_sec = 0;
+	EN_CT10_override_mode_t overrideMode = EN_CT10_OVERRIDE_NONE;
+	float fixedPercent = 0.0f;
+	char preset[24] = {0};
+	int adjIntensity = 0;
+	int adjVariability = 0;
+} ST_CT10_overrideState;
+
 class CL_CT10_ControlManager {
 public:
 	bool active = false;
@@ -83,6 +100,7 @@ public:
 	bool segOnPhase = false;
 	unsigned long segPhaseStartMs = 0;
 
+    /*
 	// Override 상태
 	struct ST_Override {
 		bool active = false;
@@ -93,6 +111,7 @@ public:
 		int adjIntensity = 0;
 		int adjVariability = 0;
 	} overrideState;
+	*/
 
 public:
 	// ==================================================
