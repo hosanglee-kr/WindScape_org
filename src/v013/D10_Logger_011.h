@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ------------------------------------------------------
- * 소스명 : D10_Logger_010.h
+ * 소스명 : D10_Logger_011.h
  * 모듈명 : Smart Nature Wind Logger
  * ------------------------------------------------------
  * 기능 요약:
@@ -29,7 +29,7 @@
 #include <ArduinoJson.h>
 #include <deque>
 #include <vector>
-#include "A10_Const_010.h"
+#include "A10_Const_011.h"
 
 // ======================================================
 // ENUM - 로그 레벨
