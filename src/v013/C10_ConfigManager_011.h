@@ -6,11 +6,32 @@
  * 모듈명 : Smart Nature Wind Configuration Manager (v011)
  * ------------------------------------------------------
  * 기능 요약:
- *  - JSON 설정 분리 로드/저장/백업/복구 (system / wifi / motion / control)
- *  - 구조체 ↔ JSON 직렬화 (toJson / parseJson)
- *  - /api/config 패치(부분 갱신) 반영 (patchConfigFromJson)
- *  - 공장 초기화(factoryResetFromDefault): cfg_default_022.json → 각 파일 분리 저장
- *  - loadAllConfigs / saveAllConfigs / restoreAllFromBackups 제공
+ *  - Smart Nature Wind 전체 설정(JSON 기반) 관리 매니저
+ *  - 설정 파일 단위 분리 관리 (system / wifi / motion / control)
+ *  - 구조체 ↔ JSON 직렬화 및 역직렬화 (ArduinoJson v7 전용)
+ *  - 파일 백업(.bak) / 복구 / 공장초기화(factoryResetFromDefault) 지원
+ *  - PATCH 기반 부분 업데이트(patchConfigFromJson) 지원
+ *  - Lazy-Load 하이브리드 구성 (필요 섹션만 동적 로드)
+ *  - Wi-Fi 재초기화 판단(p_needWifiReinit) 및 상태 관리
+  * ------------------------------------------------------
+ * 구성 파일 구조:
+ *  ├─ /json/cfg_system_022.json    → 시스템, 하드웨어, 보안, 시간 설정
+ *  ├─ /json/cfg_wifi_022.json      → Wi-Fi/AP/STA 설정
+ *  ├─ /json/cfg_motion_022.json    → 모션 감지(PIR/BLE 디바이스) 설정
+ *  ├─ /json/cfg_control_022.json   → 제어모드(Continuous, Schedule) 설정
+ *  ├─ /json/cfg_default_022.json   → 초기화 기준(모든 섹션 통합본)
+ *  └─ 각 파일의 .bak 백업본 (자동 생성/복원)
+  * ------------------------------------------------------
+ * 주요 기능 함수:
+ *  - loadSystemConfig() / saveSystemConfig()
+ *  - loadWifiConfig()   / saveWifiConfig()
+ *  - loadMotionConfig() / saveMotionConfig()
+ *  - loadControlConfig()/ saveControlConfig()
+ *  - patchConfigFromJson()      → 부분 업데이트
+ *  - loadAllConfigs() / saveAllConfigs()
+ *  - factoryResetFromDefault()  → 공장초기화
+ *  - restoreAllFromBackups()    → 백업 복원
+ * ------------------------------------------------------
  * ------------------------------------------------------
  * 구현 규칙:
  *  - ArduinoJson v7.x.x 사용 (v6 이하 금지), JsonDocument 단일 타입만 사용
@@ -20,18 +41,18 @@
  *  - 주석/필드명은 JSON 구조와 동일하게 유지
  *  - 단일 헤더(h) 파일로 구성 (cpp 없음)
  * ------------------------------------------------------
- * 코드 네이밍 규칙:
- *  - 전역 상수/매크로 : G_모듈약어_
- *  - 전역 변수       : g_모듈약어_
- *  - 전역 함수       : 모듈약어_ 접두사
- *  - type            : T_모듈약어_
- *  - enum            : EN_모듈약어_
- *  - 구조체          : ST_모듈약어_
- *  - 클래스          : CL_모듈약어_
- *  - private 멤버    : _ 접두사
- *  - static 멤버     : s_ 접두사
- *  - 로컬 변수       : v_
- *  - 함수 인자       : p_
+ * [코드 네이밍 규칙]
+ * 		- 전역 상수,매크로      : G_모듈약어_ 접두사
+ * 		- 전역 변수             : g_모듈약어_ 접두사
+ * 		- 전역 함수             : 모듈약어_ 접두사
+ * 		- type                  : T_모듈약어_ 접두사
+ * 		- enum 상수             : EN_모듈약어_ 접두사
+ * 		- 구조체                : ST_모듈약어_ 접두사
+ * 		- 클래스명              : CL_모듈약어_ 접두사
+ * 		- 클래스 private 멤버   : _ 접두사,
+ * 		- 클래스 정적 멤버      : s_ 접두사
+ * 		- 로컬 변수             : v_ 접두사
+ * 		- 함수 인자             : p_ 접두사
  * ------------------------------------------------------
  */
 
@@ -39,7 +60,7 @@
 #include <ArduinoJson.h>   // v7.x.x 전용
 #include <LittleFS.h>
 #include "A10_Const_011.h"
-#include "D10_Logger_010.h"
+#include "D10_Logger_011.h"
 
 class CL_C10_ConfigManager {
 public:
