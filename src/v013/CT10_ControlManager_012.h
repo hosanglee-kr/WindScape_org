@@ -27,12 +27,14 @@
  * 		- 전역 변수             : g_모듈약어_ 접두사
  * 		- 전역 함수             : 모듈약어_ 접두사
  * 		- type                  : T_모듈약어_ 접두사
+ *      - typedef               : _t  접미사
  * 		- enum 상수             : EN_모듈약어_ 접두사
  * 		- 구조체                : ST_모듈약어_ 접두사
  * 		- 클래스명              : CL_모듈약어_ 접두사
- * 		- 클래스 private 멤버   : _ 접두사,
+ * 		- 클래스 private 멤버   : _ 접두사
+ *      - 클래스 멤버 함수,변수   : 모듈약어 접두사 미시용
  * 		- 클래스 정적 멤버      : s_ 접두사
- * 		- 로컬 변수             : v_ 접두사
+ * 		- 함수 로컬 변수             : v_ 접두사
  * 		- 함수 인자             : p_ 접두사
  * ------------------------------------------------------
  Override 기능 (수동 강제 제어)
@@ -59,6 +61,22 @@ PIR 센서나 BLE 근접센서를 이용해 “사람이 근처에 있는지”�
 
  */
 
+
+#pragma once
+/*
+ * ------------------------------------------------------
+ * 소스명 : CT10_ControlManager_012.h
+ * 모듈명 : Smart Nature Wind 통합 제어 Manager
+ * ------------------------------------------------------
+ * 기능 요약:
+ *  - cfg_control_022.json 기반 Continuous / Schedule 모드 제어
+ *  - Segment on/off 주기 제어
+ *  - Motion 게이팅(PIR/BLE)
+ *  - Override 기능 (초 단위)
+ *  - Simulation / PWM 연동
+ * ------------------------------------------------------
+ */
+
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <ctime>
@@ -69,82 +87,74 @@ PIR 센서나 BLE 근접센서를 이용해 “사람이 근처에 있는지”�
 #include "S10_Simulation_010.h"
 #include "P10_PWM_ctrl_010.h"
 
-// 전방 선언
-class CL_M10_MotionLogic;
-
-typedef enum : uint8_t  { 
-    EN_CT10_OVERRIDE_NONE=0, 
-    EN_CT10_OVERRIDE_FIXED=1, 
-    EN_CT10_OVERRIDE_PRESET=2 
+// ------------------------------------------------------
+// Override 타입 정의
+// ------------------------------------------------------
+typedef enum : uint8_t  {
+    EN_CT10_OVERRIDE_NONE   = 0,
+    EN_CT10_OVERRIDE_FIXED  = 1,
+    EN_CT10_OVERRIDE_PRESET = 2
 } EN_CT10_override_mode_t;
 
-// Override 상태
-typedef struct  {
+typedef struct {
 	bool active = false;
-	unsigned long until_sec = 0;
+	unsigned long until_sec = 0;     // 만료 시각(초 단위)
 	EN_CT10_override_mode_t overrideMode = EN_CT10_OVERRIDE_NONE;
 	float fixedPercent = 0.0f;
 	char preset[24] = {0};
 	int adjIntensity = 0;
 	int adjVariability = 0;
-} ST_CT10_overrideState;
+} ST_CT10_overrideState_t;
 
+// ------------------------------------------------------
+// 모션 로직 전방선언
+// ------------------------------------------------------
+class CL_M10_MotionLogic;
+
+// ------------------------------------------------------
+// CT10 ControlManager 클래스
+// ------------------------------------------------------
 class CL_CT10_ControlManager {
 public:
 	bool active = false;
-	uint8_t runMode = 0; // 0:Continuous, 1:Schedule
+	uint8_t runMode = 0;  // 0: Continuous, 1: Schedule
 
-	// 현재 스케줄 상태
 	int curSchedule = -1;
 	int curSegment = -1;
 	bool segOnPhase = false;
 	unsigned long segPhaseStartMs = 0;
 
-    /*
-	// Override 상태
-	struct ST_Override {
-		bool active = false;
-		unsigned long untilMs = 0;
-		enum EN_Mode { NONE=0, FIXED=1, PRESET=2 } mode = NONE;
-		float fixedPercent = 0.0f;
-		char preset[24] = {0};
-		int adjIntensity = 0;
-		int adjVariability = 0;
-	} overrideState;
-	*/
+	ST_CT10_overrideState_t overrideState; // 오버라이드 상태
 
 public:
 	// ==================================================
 	// 초기화
 	// ==================================================
-	void begin(CL_S10_Simulation& sim, CL_P10_PWM& pwm) {
-		_sim = &sim;
-		_pwm = &pwm;
+	void begin(CL_S10_Simulation& p_sim, CL_P10_PWM& p_pwm) {
+		sim = &p_sim;
+		pwm = &p_pwm;
 		active = true;
 
 		runMode = _getRunMode();
-		CL_D10_Logger::log(EN_L10_LOG_INFO, "CT10 ControlManager started (mode=%u)", runMode);
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "CT10 ControlManager begin (mode=%u)", runMode);
 
-		if (runMode == 0) {
-			_applyContinuousPreset();
-		}
+		if (runMode == 0) _applyContinuousPreset();
 	}
 
-	void setMotion(CL_M10_MotionLogic* motion) { 
-		_motion = motion;
-	}
+	void setMotion(CL_M10_MotionLogic* p_motion) { motion = p_motion; }
 
 	// ==================================================
-	// 주기 동작
+	// 주기 Tick
 	// ==================================================
 	void tick() {
-		if (!active || !_pwm) return;
+		if (!active || !pwm) return;
 
-		// 1. 오버라이드 우선
+		// 오버라이드 우선
 		if (overrideState.active) {
-			if (millis() >= overrideState.untilMs) {
+			unsigned long v_nowSec = millis() / 1000UL;
+			if (v_nowSec >= overrideState.until_sec) {
 				overrideState.active = false;
-				overrideState.mode = ST_Override::NONE;
+				overrideState.overrideMode = EN_CT10_OVERRIDE_NONE;
 				CL_D10_Logger::log(EN_L10_LOG_INFO, "CT10 Override expired");
 				_reapplyMode();
 			} else {
@@ -153,41 +163,41 @@ public:
 			}
 		}
 
-		// 2. 런모드 분기
 		runMode = _getRunMode();
 		if (runMode == 0) _tickContinuous();
 		else               _tickSchedule();
 	}
 
 	// ==================================================
-	// 오버라이드
+	// Override (초 단위)
 	// ==================================================
-	void overrideFixed(float percent, uint16_t minutes) {
+	void overrideFixed(float p_percent, uint32_t p_seconds) {
 		overrideState.active = true;
-		overrideState.mode = ST_Override::FIXED;
-		overrideState.fixedPercent = constrain(percent, 0.0f, 100.0f);
-		overrideState.untilMs = millis() + (unsigned long)minutes * 60UL * 1000UL;
+		overrideState.overrideMode = EN_CT10_OVERRIDE_FIXED;
+		overrideState.fixedPercent = constrain(p_percent, 0.0f, 100.0f);
+		overrideState.until_sec = (millis() / 1000UL) + p_seconds;
 
-		CL_D10_Logger::log(EN_L10_LOG_INFO, "CT10 Override fixed %.1f%% for %u min", percent, minutes);
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "CT10 Override FIXED %.1f%% for %lu sec",
+			p_percent, (unsigned long)p_seconds);
 		_applyOverride();
 	}
 
-	void overridePreset(const char* preset, int adjInt, int adjVar, uint16_t minutes) {
+	void overridePreset(const char* p_preset, int p_adjInt, int p_adjVar, uint32_t p_seconds) {
 		overrideState.active = true;
-		overrideState.mode = ST_Override::PRESET;
-		strlcpy(overrideState.preset, preset ? preset : "OCEAN", sizeof(overrideState.preset));
-		overrideState.adjIntensity = adjInt;
-		overrideState.adjVariability = adjVar;
-		overrideState.untilMs = millis() + (unsigned long)minutes * 60UL * 1000UL;
+		overrideState.overrideMode = EN_CT10_OVERRIDE_PRESET;
+		strlcpy(overrideState.preset, p_preset ? p_preset : "OCEAN", sizeof(overrideState.preset));
+		overrideState.adjIntensity = p_adjInt;
+		overrideState.adjVariability = p_adjVar;
+		overrideState.until_sec = (millis() / 1000UL) + p_seconds;
 
-		CL_D10_Logger::log(EN_L10_LOG_INFO, "CT10 Override preset %s (+%d,+%d) %u min",
-			preset, adjInt, adjVar, minutes);
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "CT10 Override PRESET %s (+%d,+%d) %lu sec",
+			p_preset, p_adjInt, p_adjVar, (unsigned long)p_seconds);
 		_applyOverride();
 	}
 
 	void releaseOverride() {
 		if (!overrideState.active) return;
-		overrideState = ST_Override{};
+		overrideState = ST_CT10_overrideState_t{};
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "CT10 Override released");
 		_reapplyMode();
 	}
@@ -195,57 +205,57 @@ public:
 	// ==================================================
 	// 상태 JSON
 	// ==================================================
-	void toJson(JsonDocument& doc) {
-		JsonObject o = doc["control"].to<JsonObject>();
+	void toJson(JsonDocument& p_doc) {
+		JsonObject o = p_doc["control"].to<JsonObject>();
 		o["active"] = active;
 		o["runMode"] = runMode;
 
 		JsonObject ov = o["override"].to<JsonObject>();
 		ov["active"] = overrideState.active;
-		ov["mode"] = (int)overrideState.mode;
-		ov["remainMs"] = overrideState.active ? (int32_t)(overrideState.untilMs - millis()) : 0;
-		if (overrideState.mode == ST_Override::FIXED)
+		ov["mode"] = (int)overrideState.overrideMode;
+		ov["remainSec"] = overrideState.active ?
+			(int32_t)(overrideState.until_sec - (millis() / 1000UL)) : 0;
+		if (overrideState.overrideMode == EN_CT10_OVERRIDE_FIXED)
 			ov["fixedPercent"] = overrideState.fixedPercent;
-		else if (overrideState.mode == ST_Override::PRESET) {
+		else if (overrideState.overrideMode == EN_CT10_OVERRIDE_PRESET) {
 			ov["preset"] = overrideState.preset;
 			ov["adjIntensity"] = overrideState.adjIntensity;
 			ov["adjVariability"] = overrideState.adjVariability;
 		}
 
 		JsonObject sch = o["schedule"].to<JsonObject>();
-		sch["currentIndex"] = curSchedule;
-		sch["segmentIndex"] = curSegment;
+		sch["currentSchedule"] = curSchedule;
+		sch["currentSegment"] = curSegment;
 		sch["onPhase"] = segOnPhase;
 	}
 
 private:
-	CL_S10_Simulation*  _sim = nullptr;
-	CL_P10_PWM*         _pwm = nullptr;
-	CL_M10_MotionLogic* _motion = nullptr;
+	CL_S10_Simulation* sim = nullptr;
+	CL_P10_PWM* pwm = nullptr;
+	CL_M10_MotionLogic* motion = nullptr;
 
 	// ==================================================
 	// Continuous
 	// ==================================================
 	void _tickContinuous() {
-		if (!_sim) return;
+		if (!sim) return;
 		if (_isMotionGateActive()) {
-			_pwm->P10_setDutyPercent(0.0f);
+			pwm->P10_setDutyPercent(0.0f);
 			return;
 		}
-		if (!_sim->S10_active) _applyContinuousPreset();
+		if (!sim->S10_active) _applyContinuousPreset();
 	}
 
 	void _applyContinuousPreset() {
-		if (!_sim || !g_A10_config_root.control) return;
-
-		auto& c = *g_A10_config_root.control;
-		if (c.Continuous.wind.enabled) {
+		if (!sim || !g_A10_config_root.control) return;
+		auto& v_ctl = *g_A10_config_root.control;
+		if (v_ctl.Continuous.wind.enabled) {
 			_setSimFromContinuous();
-			_sim->S10_applyPreset(c.Continuous.wind.preset);
-			if (!_sim->S10_active) _sim->S10_begin(*_pwm);
+			sim->S10_applyPreset(v_ctl.Continuous.wind.preset);
+			if (!sim->S10_active) sim->S10_begin(*pwm);
 		} else {
-			_sim->S10_stop();
-			_pwm->P10_setDutyPercent(0.0f);
+			sim->S10_stop();
+			pwm->P10_setDutyPercent(0.0f);
 		}
 	}
 
@@ -254,84 +264,84 @@ private:
 	// ==================================================
 	void _tickSchedule() {
 		if (!g_A10_config_root.control) return;
-		const auto& ctl = *g_A10_config_root.control;
-		int idx = _findActiveSchedule(ctl);
-		if (idx < 0) {
-			_sim->S10_stop(); _pwm->P10_setDutyPercent(0.0f);
+		const auto& v_ctl = *g_A10_config_root.control;
+		int v_idx = _findActiveSchedule(v_ctl);
+		if (v_idx < 0) {
+			sim->S10_stop(); pwm->P10_setDutyPercent(0.0f);
 			curSchedule = -1; curSegment = -1;
 			return;
 		}
 
-		if (curSchedule != idx) {
-			curSchedule = idx; curSegment = -1;
+		if (curSchedule != v_idx) {
+			curSchedule = v_idx; curSegment = -1;
 			segOnPhase = false; segPhaseStartMs = 0;
-			CL_D10_Logger::log(EN_L10_LOG_INFO, "CT10 Schedule #%d active", idx);
+			CL_D10_Logger::log(EN_L10_LOG_INFO, "CT10 Schedule #%d active", v_idx);
 		}
 
-		if (_isMotionGateActiveForSchedule(ctl.schedules[idx])) {
-			_pwm->P10_setDutyPercent(0.0f);
+		if (_isMotionGateActiveForSchedule(v_ctl.schedules[v_idx])) {
+			pwm->P10_setDutyPercent(0.0f);
 			return;
 		}
 
-		_applyScheduleSegment(ctl.schedules[idx]);
+		_applyScheduleSegment(v_ctl.schedules[v_idx]);
 	}
 
-	void _applyScheduleSegment(const decltype((*g_A10_config_root.control).schedules[0])& sch) {
-		if (sch.segments.size() == 0) {
-			_sim->S10_stop(); _pwm->P10_setDutyPercent(0.0f); return;
+	void _applyScheduleSegment(const decltype((*g_A10_config_root.control).schedules[0])& p_sch) {
+		if (p_sch.segments.size() == 0) {
+			sim->S10_stop(); pwm->P10_setDutyPercent(0.0f); return;
 		}
 
 		if (curSegment < 0) {
 			curSegment = 0; segOnPhase = true;
 			segPhaseStartMs = millis();
-			_applySegmentOn(sch.segments[curSegment], sch);
+			_applySegmentOn(p_sch.segments[curSegment], p_sch);
 			return;
 		}
 
-		const auto& seg = sch.segments[curSegment];
-		uint32_t onMs  = (uint32_t)max(1, seg.on_minutes) * 60000UL;
-		uint32_t offMs = (uint32_t)max(0, seg.off_minutes) * 60000UL;
+		const auto& v_seg = p_sch.segments[curSegment];
+		uint32_t v_onMs  = (uint32_t)max(1, v_seg.on_minutes) * 60000UL;
+		uint32_t v_offMs = (uint32_t)max(0, v_seg.off_minutes) * 60000UL;
 
 		if (segOnPhase) {
-			if (millis() - segPhaseStartMs >= onMs) {
+			if (millis() - segPhaseStartMs >= v_onMs) {
 				segOnPhase = false; segPhaseStartMs = millis();
-				_applySegmentOff(seg);
+				_applySegmentOff(v_seg);
 			}
 		} else {
-			if (millis() - segPhaseStartMs >= offMs) {
-				curSegment = (curSegment + 1) % (int)sch.segments.size();
+			if (millis() - segPhaseStartMs >= v_offMs) {
+				curSegment = (curSegment + 1) % (int)p_sch.segments.size();
 				segOnPhase = true; segPhaseStartMs = millis();
-				_applySegmentOn(sch.segments[curSegment], sch);
+				_applySegmentOn(p_sch.segments[curSegment], p_sch);
 			}
 		}
 	}
 
-	void _applySegmentOn(const decltype((*g_A10_config_root.control).schedules[0].segments[0])& seg,
-	                     const decltype((*g_A10_config_root.control).schedules[0])& sch) {
-		if (seg.mode == String("fixed")) {
-			_sim->S10_stop();
-			_pwm->P10_setDutyPercent(constrain(seg.fixed_speed, 0.0f, 100.0f));
+	void _applySegmentOn(const decltype((*g_A10_config_root.control).schedules[0].segments[0])& p_seg,
+	                     const decltype((*g_A10_config_root.control).schedules[0])& p_sch) {
+		if (p_seg.mode == String("fixed")) {
+			sim->S10_stop();
+			pwm->P10_setDutyPercent(constrain(p_seg.fixed_speed, 0.0f, 100.0f));
 		} else {
-			_setSimFromSchedule(seg, sch);
-			_sim->S10_applyPreset(seg.preset_name);
-			if (!_sim->S10_active) _sim->S10_begin(*_pwm);
+			_setSimFromSchedule(p_seg, p_sch);
+			sim->S10_applyPreset(p_seg.preset_name);
+			if (!sim->S10_active) sim->S10_begin(*pwm);
 		}
 	}
 
-	void _applySegmentOff(const decltype((*g_A10_config_root.control).schedules[0].segments[0])& /*seg*/) {
-		_sim->S10_stop();
-		_pwm->P10_setDutyPercent(0.0f);
+	void _applySegmentOff(const decltype((*g_A10_config_root.control).schedules[0].segments[0])& /*p_seg*/) {
+		sim->S10_stop();
+		pwm->P10_setDutyPercent(0.0f);
 	}
 
 	// ==================================================
 	// Override
 	// ==================================================
 	void _applyOverride() {
-		if (!_pwm || !_sim || !overrideState.active) return;
-		if (overrideState.mode == ST_Override::FIXED) {
-			_sim->S10_stop();
-			_pwm->P10_setDutyPercent(constrain(overrideState.fixedPercent, 0.0f, 100.0f));
-		} else if (overrideState.mode == ST_Override::PRESET) {
+		if (!pwm || !sim || !overrideState.active) return;
+		if (overrideState.overrideMode == EN_CT10_OVERRIDE_FIXED) {
+			sim->S10_stop();
+			pwm->P10_setDutyPercent(constrain(overrideState.fixedPercent, 0.0f, 100.0f));
+		} else if (overrideState.overrideMode == EN_CT10_OVERRIDE_PRESET) {
 			_applyPresetWithAdjust(overrideState.preset,
 				overrideState.adjIntensity, overrideState.adjVariability);
 		}
@@ -341,50 +351,50 @@ private:
 	// 내부 설정 반영
 	// ==================================================
 	void _setSimFromContinuous() {
-		auto& w = g_A10_config_root.control->Continuous.wind;
-		auto* s = g_A10_config_root.sim;
-		s->wind_intensity = w.wind_intensity;
-		s->gust_frequency = w.gust_frequency;
-		s->wind_variability = w.wind_variability;
-		s->fan_limit = w.fan_limit;
-		s->min_fan = w.min_fan;
-		strlcpy(s->preset, w.preset, sizeof(s->preset));
+		auto& v_w = g_A10_config_root.control->Continuous.wind;
+		auto* v_s = g_A10_config_root.sim;
+		v_s->wind_intensity = v_w.wind_intensity;
+		v_s->gust_frequency = v_w.gust_frequency;
+		v_s->wind_variability = v_w.wind_variability;
+		v_s->fan_limit = v_w.fan_limit;
+		v_s->min_fan = v_w.min_fan;
+		strlcpy(v_s->preset, v_w.preset, sizeof(v_s->preset));
 	}
 
-	void _setSimFromSchedule(const decltype((*g_A10_config_root.control).schedules[0].segments[0])& seg,
-	                         const decltype((*g_A10_config_root.control).schedules[0])& /*sch*/) {
-		int adjInt = 0, adjVar = 0;
-		if (seg.preset_adjust.valid) {
-			adjInt = seg.preset_adjust.intensity;
-			adjVar = seg.preset_adjust.variability;
+	void _setSimFromSchedule(const decltype((*g_A10_config_root.control).schedules[0].segments[0])& p_seg,
+	                         const decltype((*g_A10_config_root.control).schedules[0])& /*p_sch*/) {
+		int v_adjInt = 0, v_adjVar = 0;
+		if (p_seg.preset_adjust.valid) {
+			v_adjInt = p_seg.preset_adjust.intensity;
+			v_adjVar = p_seg.preset_adjust.variability;
 		}
-		_applyPresetWithAdjust(seg.preset_name, adjInt, adjVar);
+		_applyPresetWithAdjust(p_seg.preset_name, v_adjInt, v_adjVar);
 	}
 
-	void _applyPresetWithAdjust(const char* preset, int adjInt, int adjVar) {
+	void _applyPresetWithAdjust(const char* p_preset, int p_adjInt, int p_adjVar) {
 		if (!g_A10_config_root.sim) return;
-		auto* s = g_A10_config_root.sim;
-		strlcpy(s->preset, preset ? preset : "OCEAN", sizeof(s->preset));
-		s->wind_intensity = constrain(s->wind_intensity + adjInt, 0.0f, 100.0f);
-		s->wind_variability = constrain(s->wind_variability + adjVar, 0.0f, 100.0f);
-		_sim->S10_applyPreset(s->preset);
-		if (!_sim->S10_active) _sim->S10_begin(*_pwm);
+		auto* v_s = g_A10_config_root.sim;
+		strlcpy(v_s->preset, p_preset ? p_preset : "OCEAN", sizeof(v_s->preset));
+		v_s->wind_intensity = constrain(v_s->wind_intensity + p_adjInt, 0.0f, 100.0f);
+		v_s->wind_variability = constrain(v_s->wind_variability + p_adjVar, 0.0f, 100.0f);
+		sim->S10_applyPreset(v_s->preset);
+		if (!sim->S10_active) sim->S10_begin(*pwm);
 	}
 
 	// ==================================================
 	// 모션 게이팅
 	// ==================================================
 	bool _isMotionGateActive() {
-		if (!_motion || !g_A10_config_root.control) return false;
-		const auto& m = g_A10_config_root.control->Continuous.motion;
-		if (!m.pir.enabled && !m.ble.enabled) return false;
+		if (!motion || !g_A10_config_root.control) return false;
+		const auto& v_m = g_A10_config_root.control->Continuous.motion;
+		if (!v_m.pir.enabled && !v_m.ble.enabled) return false;
 		extern bool M10_motionDetected();
 		return !M10_motionDetected();
 	}
 
-	bool _isMotionGateActiveForSchedule(const decltype((*g_A10_config_root.control).schedules[0])& sch) {
-		if (!_motion) return false;
-		if (!sch.motion.pir.enabled && !sch.motion.ble.enabled) return false;
+	bool _isMotionGateActiveForSchedule(const decltype((*g_A10_config_root.control).schedules[0])& p_sch) {
+		if (!motion) return false;
+		if (!p_sch.motion.pir.enabled && !p_sch.motion.ble.enabled) return false;
 		extern bool M10_motionDetected();
 		return !M10_motionDetected();
 	}
@@ -397,33 +407,34 @@ private:
 		else { curSchedule = -1; curSegment = -1; _tickSchedule(); }
 	}
 
-	int _findActiveSchedule(const decltype((*g_A10_config_root.control).schedules)& arr) {
-		if (arr.size() == 0) return -1;
-		time_t t = time(nullptr);
-		struct tm* tmv = localtime(&t);
-		if (!tmv) return -1;
-		int wday = tmv->tm_wday;
-		int nowMin = tmv->tm_hour * 60 + tmv->tm_min;
+	int _findActiveSchedule(const decltype((*g_A10_config_root.control).schedules)& p_arr) {
+		if (p_arr.size() == 0) return -1;
+		time_t v_t = time(nullptr);
+		struct tm* v_tm = localtime(&v_t);
+		if (!v_tm) return -1;
+		int v_wday = v_tm->tm_wday;
+		int v_nowMin = v_tm->tm_hour * 60 + v_tm->tm_min;
 
-		for (size_t i=0;i<arr.size();++i) {
-			const auto& s = arr[i];
-			if (!s.enabled) continue;
-			if (s.days.size()==7 && s.days[wday]==0) continue;
-			int st=_parseHHMM(s.start_time); int ed=_parseHHMM(s.end_time);
-			if (st<0||ed<0) continue;
-			if (st<=nowMin && nowMin<ed) return (int)i;
-			if (ed<st && (nowMin>=st || nowMin<ed)) return (int)i;
+		for (size_t i=0;i<p_arr.size();++i) {
+			const auto& v_s = p_arr[i];
+			if (!v_s.enabled) continue;
+			if (v_s.days.size()==7 && v_s.days[v_wday]==0) continue;
+			int v_st=_parseHHMM(v_s.start_time);
+			int v_ed=_parseHHMM(v_s.end_time);
+			if (v_st<0||v_ed<0) continue;
+			if (v_st<=v_nowMin && v_nowMin<v_ed) return (int)i;
+			if (v_ed<v_st && (v_nowMin>=v_st || v_nowMin<v_ed)) return (int)i;
 		}
 		return -1;
 	}
 
-	static int _parseHHMM(const String& hhmm) {
-		int c = hhmm.indexOf(':');
-		if (c<0) return -1;
-		int h=hhmm.substring(0,c).toInt();
-		int m=hhmm.substring(c+1).toInt();
-		if (h<0||h>23||m<0||m>59) return -1;
-		return h*60+m;
+	static int _parseHHMM(const String& p_hhmm) {
+		int v_c = p_hhmm.indexOf(':');
+		if (v_c<0) return -1;
+		int v_h=p_hhmm.substring(0,v_c).toInt();
+		int v_m=p_hhmm.substring(v_c+1).toInt();
+		if (v_h<0||v_h>23||v_m<0||v_m>59) return -1;
+		return v_h*60+v_m;
 	}
 
 	uint8_t _getRunMode() const {
