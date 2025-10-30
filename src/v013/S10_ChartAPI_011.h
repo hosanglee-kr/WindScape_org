@@ -27,8 +27,8 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <deque>
-#include "A10_Const_010.h"
-#include "S10_Simulation_010.h" // s_chartBuffer / ST_S10_ChartEntry 사용
+#include "A10_Const_011.h"
+#include "S10_Simulation_011.h" // s_chartBuffer / ST_S10_ChartEntry 사용
 
 class CL_S10_ChartAPI {
 public:

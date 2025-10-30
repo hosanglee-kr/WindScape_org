@@ -32,13 +32,13 @@
 #include <WiFi.h>
 #include <WiFiMulti.h>
 
-#include "A10_Const_010.h"
-#include "C10_ConfigManager_010.h"
-#include "D10_Logger_010.h"
-#include "M10_WiFiManager_010.h"
-#include "S10_Simulation_010.h"
-#include "P10_PWM_ctrl_010.h"
-#include "W10_WebAPI_010.h"
+#include "A10_Const_011.h"
+#include "C10_ConfigManager_011.h"
+#include "D10_Logger_011.h"
+#include "M10_WiFiManager_011.h"
+#include "S10_Simulation_011.h"
+#include "P10_PWM_ctrl_011.h"
+#include "W10_WebAPI_011.h"
 
 // ======================================================
 // Smart Nature Wind 메인 시스템 클래스
@@ -61,7 +61,7 @@ public:
 		}
 
 		// ② 설정파일 로드 (없으면 기본 생성)
-		CL_C10_ConfigManager::loadAll(g_A10_config_root);
+		CL_C10_ConfigManager::loadAllConfigs(g_A10_config_root);
         /*
 		if (!CL_C10_ConfigManager::loadAll(g_A10_config_root)){
 			// if (!CL_C10_ConfigManager::C10_loadAll()) {

@@ -26,7 +26,7 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>     // v7: JsonDocument만 사용
-#include "D10_Logger_010.h"
+#include "D10_Logger_011.h"
 
 class CL_P10_PWM {
 public:
