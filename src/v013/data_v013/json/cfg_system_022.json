@@ -25,7 +25,8 @@
 		"pir": {
 			"enabled": true,
 			"pin": 13,
-			"debounce_sec": 5
+			"debounce_sec": 5,
+			"hold_sec": 120 
 		},
 		"tempHum": {
 			"enabled": true,
