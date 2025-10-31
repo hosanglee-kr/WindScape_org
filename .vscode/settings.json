@@ -15,5 +15,8 @@
     "editor.tabSize": 4,
 
     //"editor.fontWeight": "400",
-    "editor.fontSize": 14 // Regular
+    "editor.fontSize": 14,
+    "files.associations": {
+        "*.old": "cpp"
+    } // Regular
 }

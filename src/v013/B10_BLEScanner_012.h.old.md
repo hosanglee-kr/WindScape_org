@@ -48,10 +48,15 @@
 #include "C10_ConfigManager_011.h"
 #include "D10_Logger_011.h"
 
+// ===== (옵션) NimBLE 사용 설정 =====
+// #ifndef G_B10_USE_NIMBLE
+// 	#define G_B10_USE_NIMBLE 1
+// #endif
 
-
-#include <NimBLEDevice.h>
-#include <NimBLEAdvertisedDevice.h>
+#if G_B10_USE_NIMBLE
+	#include <NimBLEDevice.h>
+	#include <NimBLEAdvertisedDevice.h>
+#endif
 
 // ===== 기본 상수 =====
 #define G_B10_MAX_TRUSTED_DEV			10
@@ -63,9 +68,6 @@
 #define G_B10_DEFAULT_EXIT_DELAY_S		12
 #define G_B10_DEFAULT_SCAN_ITVL_S		5
 #define G_B10_STACK_RESTART_MIN			90	// NimBLE 안정성: 90분마다 재기동
-
-static const char G_B10_HEX_CHARS[] = "0123456789ABCDEF";
-
 
 // ===== 데이터 타입 =====
 typedef struct {
@@ -115,14 +117,19 @@ typedef struct {
 // ====================================================================
 // 메인 클래스
 // ====================================================================
-class CL_B10_BLEScanner : public NimBLEScanCallbacks { 		// NimBLEAdvertisedDeviceCallbacks{
+class CL_B10_BLEScanner
+#if G_B10_USE_NIMBLE
+	: public NimBLEScanCallbacks 		//NimBLEAdvertisedDeviceCallbacks
+#endif
+{
    public:
 	// ===== 수명주기 =====
 	void begin() {
 		_loadConfig();
 		
-
-		_initNimBLE();
+		#if G_B10_USE_NIMBLE
+			_initNimBLE();
+		#endif
 
 		_resetRuntime();
 
@@ -135,7 +142,9 @@ class CL_B10_BLEScanner : public NimBLEScanCallbacks { 		// NimBLEAdvertisedDevi
 	void tick() {
 		_maybeRestartStack();
 
-		_tickScanScheduler();
+		#if G_B10_USE_NIMBLE
+			_tickScanScheduler();
+		#endif
 
 		_tickPresenceFSM();
 	}
@@ -222,16 +231,17 @@ class CL_B10_BLEScanner : public NimBLEScanCallbacks { 		// NimBLEAdvertisedDevi
 		_resetRuntime();
 	}
 
-	// 스캐너 강제 재기동
-	void restartStackNow() {
-		_stopScan();
-		NimBLEDevice::deinit(true);
-		delay(50);
-		_initNimBLE();
-		_global.lastStackRestartMs = millis();
-		CL_D10_Logger::log(EN_L10_LOG_INFO, "[BLE] stack restarted (manual)");
-	}
-
+	#if G_B10_USE_NIMBLE
+		// 스캐너 강제 재기동
+		void restartStackNow() {
+			_stopScan();
+			NimBLEDevice::deinit(true);
+			delay(50);
+			_initNimBLE();
+			_global.lastStackRestartMs = millis();
+			CL_D10_Logger::log(EN_L10_LOG_INFO, "[BLE] stack restarted (manual)");
+		}
+	#endif
 
    private:
 	// ===== 설정 로드 =====
@@ -301,13 +311,14 @@ class CL_B10_BLEScanner : public NimBLEScanCallbacks { 		// NimBLEAdvertisedDevi
 		_global.stateSinceMs	   = millis();
 		_global.lastStackRestartMs = millis();
 
-
-		_lastScanKickMs = 0;
+		#if G_B10_USE_NIMBLE
+			_lastScanKickMs = 0;
+		#endif
 
 	}
 
 	// ===== NimBLE 영역 =====
-
+#if G_B10_USE_NIMBLE
 	void _initNimBLE() {
 		NimBLEDevice::init("NW_Scanner");
 		NimBLEDevice::setPower(ESP_PWR_LVL_P9);	 // 최대 TX 파워(스캔 감도 향상)
@@ -318,10 +329,7 @@ class CL_B10_BLEScanner : public NimBLEScanCallbacks { 		// NimBLEAdvertisedDevi
 	void _startPassiveScan() {
 		NimBLEScan* v_s = NimBLEDevice::getScan();
 	
-		v_s->setScanCallbacks(this);
-		// v_s->setScanCallbacks(&scanCallbacks);
-
-		//v_s->setCallbacks(this);
+		v_s->setCallbacks(this);
 		
 		// NimBLE 라이브러리에서 setDuplicateFilter(true)는 필터를 는 것(중복 배제)을 의미합니다.
         v_s->setDuplicateFilter(true); // 중복 필터 켜기 (대부분의 경우 권장)
@@ -356,7 +364,7 @@ class CL_B10_BLEScanner : public NimBLEScanCallbacks { 		// NimBLEAdvertisedDevi
 		}
 	}
 
-	void onResult(const NimBLEAdvertisedDevice* p_adv) override {
+	void onResult(const NimBLEAdvertisedDevice* p_adv) override
 	// void onResult(NimBLEAdvertisedDevice* p_adv) override {
 		// 이름/MAC/제조사 데이터 추출
 		const char* v_name		   = p_adv->haveName() ? p_adv->getName().c_str() : "";
@@ -370,7 +378,7 @@ class CL_B10_BLEScanner : public NimBLEScanCallbacks { 		// NimBLEAdvertisedDevi
 		}
 		_consumeAdv(v_name, v_mac, v_rssi, v_manufHex, (unsigned long)millis());
 	}
-
+#endif
 
 	// ===== 공통: 광고 소비 → 화이트리스트 매칭/평균/히스테리시스/지속카운트 =====
 	void _consumeAdv(const char* p_name, const char* p_mac, int p_rssi, const char* p_manufHex, unsigned long p_nowMs) {
@@ -470,11 +478,13 @@ class CL_B10_BLEScanner : public NimBLEScanCallbacks { 		// NimBLEAdvertisedDevi
 
 	// ===== 스택 리스타트(장시간 안정) =====
 	void _maybeRestartStack() {
-		unsigned long v_now	 = millis();
-		unsigned long v_span = (unsigned long)G_B10_STACK_RESTART_MIN * 60UL * 1000UL;
-		if (v_now - _global.lastStackRestartMs >= v_span) {
-			restartStackNow();
-		}
+		#if G_B10_USE_NIMBLE
+			unsigned long v_now	 = millis();
+			unsigned long v_span = (unsigned long)G_B10_STACK_RESTART_MIN * 60UL * 1000UL;
+			if (v_now - _global.lastStackRestartMs >= v_span) {
+				restartStackNow();
+			}
+		#endif
 	}
 
 	// ===== 매칭/유틸 =====
@@ -553,36 +563,26 @@ class CL_B10_BLEScanner : public NimBLEScanCallbacks { 		// NimBLEAdvertisedDevi
 	}
 
 	static void _binToHex(const uint8_t* p_bin, uint8_t p_len, char* p_out, size_t p_outLen) {
-        
-        size_t   v_pos = 0;
-        for (uint8_t v_i = 0; v_i < p_len && v_pos + 2 < p_outLen; ++v_i) {
-            // ✅ 수정: 전역 상수 G_B10_HEX_CHARS 사용
-            p_out[v_pos++] = G_B10_HEX_CHARS[(p_bin[v_i] >> 4) & 0xF];
-            p_out[v_pos++] = G_B10_HEX_CHARS[p_bin[v_i] & 0xF];
-        }
-        if (v_pos < p_outLen)
-            p_out[v_pos] = 0;
-    }
-
-	// static void _binToHex(const uint8_t* p_bin, uint8_t p_len, char* p_out, size_t p_outLen) {
-	// 	static const char* HEX	 = "0123456789ABCDEF";
-	// 	size_t			   v_pos = 0;
-	// 	for (uint8_t v_i = 0; v_i < p_len && v_pos + 2 < p_outLen; ++v_i) {
-	// 		p_out[v_pos++] = HEX[(p_bin[v_i] >> 4) & 0xF];
-	// 		p_out[v_pos++] = HEX[p_bin[v_i] & 0xF];
-	// 	}
-	// 	if (v_pos < p_outLen)
-	// 		p_out[v_pos] = 0;
-	// }
+		static const char* HEX	 = "0123456789ABCDEF";
+		size_t			   v_pos = 0;
+		for (uint8_t v_i = 0; v_i < p_len && v_pos + 2 < p_outLen; ++v_i) {
+			p_out[v_pos++] = HEX[(p_bin[v_i] >> 4) & 0xF];
+			p_out[v_pos++] = HEX[p_bin[v_i] & 0xF];
+		}
+		if (v_pos < p_outLen)
+			p_out[v_pos] = 0;
+	}
 
    private:
-		// 설정/상태
-		ST_B10_TrustedDev_t	 	_trusted[G_B10_MAX_TRUSTED_DEV];
-		uint8_t				 	_trustedCount = 0;
-		ST_B10_RssiCfg_t	 	_rssiCfg;
-		ST_B10_RuntimeDev_t	 	_rt[G_B10_MAX_TRUSTED_DEV];
-		ST_B10_GlobalState_t 	_global;
-		uint16_t			 	_scanIntervalSec = G_B10_DEFAULT_SCAN_ITVL_S;
+	// 설정/상태
+	ST_B10_TrustedDev_t	 _trusted[G_B10_MAX_TRUSTED_DEV];
+	uint8_t				 _trustedCount = 0;
+	ST_B10_RssiCfg_t	 _rssiCfg;
+	ST_B10_RuntimeDev_t	 _rt[G_B10_MAX_TRUSTED_DEV];
+	ST_B10_GlobalState_t _global;
+	uint16_t			 _scanIntervalSec = G_B10_DEFAULT_SCAN_ITVL_S;
 
-		unsigned long 			_lastScanKickMs = 0;
+	#if G_B10_USE_NIMBLE
+		unsigned long _lastScanKickMs = 0;
+	#endif
 };

@@ -54,9 +54,10 @@
 
 #include "A10_Const_011.h"
 #include "C10_ConfigManager_011.h"
-#include "D10_Logger_010.h"
+#include "D10_Logger_011.h"
 
 #include <NimBLEDevice.h>   // NimBLE-Arduino
+#include <NimBLEAdvertisedDevice.h>
 
 // ======================================================
 // 기본 상수 (디폴트 정책)

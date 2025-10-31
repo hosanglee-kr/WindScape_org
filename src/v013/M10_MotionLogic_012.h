@@ -203,18 +203,18 @@ private:
 	// -----------------------------------------------------------------
 	void _applyConfigFromJson() {
 		// ----- 시스템 cfg: hw.pir / hw.ble -----
-		if (g_A10_config_root.core.hw.pir.enabled) {
+		if (g_A10_config_root.system.hw.pir.enabled) {
 			_pir.enabled      = true;
-			_pir.pin          = g_A10_config_root.core.hw.pir.pin;
-			_pir.debounce_sec = (g_A10_config_root.core.hw.pir.debounce_sec>0)
-			                    ? g_A10_config_root.core.hw.pir.debounce_sec
+			_pir.pin          = g_A10_config_root.system.hw.pir.pin;
+			_pir.debounce_sec = (g_A10_config_root.system.hw.pir.debounce_sec>0)
+			                    ? g_A10_config_root.system.hw.pir.debounce_sec
 			                    : G_M10_DEFAULT_PIR_DEBOUNCE;
 			// PIR hold는 control에서 주는 경우가 많아 기본값 유지. 필요 시 CT10에서 setPirHold 사용.
 		} else {
 			_pir.enabled = false;
 		}
 
-		if (g_A10_config_root.core.hw.ble.enabled) {
+		if (g_A10_config_root.system.hw.ble.enabled) {
 			_ble.enabled = true;
 			// scan_interval은 스캐너 측(별도)에서 사용, 본 모듈은 aging만 수행
 		} else {
