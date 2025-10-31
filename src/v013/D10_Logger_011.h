@@ -29,7 +29,7 @@
 #include <ArduinoJson.h>
 #include <deque>
 #include <vector>
-#include "A10_Const_011.h"
+#include "A10_Const_012.h"
 
 // ======================================================
 // ENUM - 로그 레벨
