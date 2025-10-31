@@ -82,8 +82,8 @@ PIR 센서나 BLE 근접센서를 이용해 “사람이 근처에 있는지”�
 #include <ArduinoJson.h>
 #include <ctime>
 
-#include "A10_Const_011.h"
-#include "C10_ConfigManager_011.h"
+#include "A10_Const_012.h"
+#include "C10_ConfigManager_012.h"
 #include "D10_Logger_011.h"
 #include "P10_PWM_ctrl_011.h"
 #include "S10_Simulation_011.h"
