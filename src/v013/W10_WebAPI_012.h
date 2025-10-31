@@ -50,11 +50,11 @@
 #include <Update.h>
 
 #include "A10_Const_012.h"
-#include "C10_ConfigManager_013.h"
+#include "C10_ConfigManager_012.h"
 #include "D10_Logger_011.h"
 #include "M10_WiFiManager_012.h"
-#include "M10_MotionLogic_012.h"
-#include "CT10_ControlManager_012.h"
+#include "M10_MotionLogic_013.h"
+#include "CT10_ControlManager_013.h"
 #include "S10_Simulation_012.h"
 #include "P10_PWM_ctrl_012.h"
 
