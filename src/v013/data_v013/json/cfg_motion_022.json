@@ -1,23 +1,36 @@
-"motion": {
-  "pir": {
-    "hold_sec": 60,          
-    "debounce_sec": 1       
-  },
-  "ble": {
-    "rssi_on": -65,
-    "rssi_off": -75,
-    "avg_count": 8,
-    "persist_count": 5,
-    "exit_delay_sec": 12,
-    "devices": [
-      {
-        "alias": "MyPhone",
-        "name": "iPhone",
-        "mac": "AA:BB:CC:11:22:33",
-        "manuf_prefix": "4C0002",
-        "prefix_len": 3,
-        "enabled": true
-      }
-    ]
-  }
+{
+	"motion": {
+		"pir": {
+			"enabled": true,
+			"hold_sec": 120
+		},
+		"ble": {
+			"enabled": true,
+			"trusted_devices": [
+				{
+					"alias": "MyPhone",
+					"name": "iPhone15",
+					"mac": "AA:BB:CC:11:22:33",
+					"manuf_prefix": "4C0002",
+					"prefix_len": 3,
+					"enabled": true
+				},
+				{
+					"alias": "SmartWatch",
+					"name": "AppleWatch",
+					"mac": "",
+					"manuf_prefix": "4C0002",
+					"prefix_len": 2,
+					"enabled": true
+				}
+			],
+			"rssi": {
+				"on": -65,
+				"off": -75,
+				"avg_count": 8,
+				"persist_count": 5,
+				"exit_delay_sec": 12
+			}
+		}
+	}
 }
