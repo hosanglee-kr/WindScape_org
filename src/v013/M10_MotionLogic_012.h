@@ -37,7 +37,7 @@
 
 
 
-#pragma once
+
 /*
  * ------------------------------------------------------
  * 소스명 : M10_MotionManager_013.h
@@ -80,302 +80,249 @@
  * ------------------------------------------------------
  */
 
+
+
+
+/*
+ * ------------------------------------------------------
+ * 소스명 : M10_MotionLogic_012.h
+ * 모듈약어 : M10
+ * 모듈명 : Smart Nature Wind Motion Logic (PIR + BLE)
+ * ------------------------------------------------------
+ * 기능 요약:
+ *  - PIR 디지털 입력 기반 모션 검출 (디바운스 + Hold 유지)
+ *  - BLE 근접(B10) 기반 모션 검출 (Exit Delay/TTL 활용)
+ *  - Unified Motion Present 상태 계산(PIR OR BLE)
+ *  - Feed 모드(테스트 시 PIR/ BLE 강제 입력)
+ *  - cfg_system_022 & cfg_motion_022 기반 파라미터 적용
+ * ------------------------------------------------------
+ * 구현 규칙:
+ *  - ArduinoJson v7, JsonDocument 단일
+ *  - memset + strlcpy 안전 초기화
+ *  - 외부 스캐너/BLE 모듈 주입 방식 (B10)
+ *  - 단일 헤더 구성(CPP분리 없음)
+ * ------------------------------------------------------
+ * 인터페이스:
+ *  - void begin()
+ *  - void tick()
+ *  - bool M10_isMotionPresent()
+ *  - void setBLE(CL_B10_BLEScanner*)
+ *  - void feedPIR(bool), feedBLE(bool)
+ * ------------------------------------------------------
+ */
+
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <cstring>
+
 #include "A10_Const_011.h"
 #include "C10_ConfigManager_011.h"
 #include "D10_Logger_011.h"
+#include "B10_BLEScanner_012.h"
 
-// ---------------------------------------------------------------------
-// 기본 상수(컨피그 누락 시 안전 디폴트)
-// ---------------------------------------------------------------------
-#define G_M10_MAX_BLE_DEV            8
-#define G_M10_DEFAULT_PIR_HOLD_S     120U
-#define G_M10_DEFAULT_PIR_DEBOUNCE_S 5U
-#define G_M10_DEFAULT_BLE_HOLD_S     120U
+// ------------------------------------------------------
+// 기본 상수
+// ------------------------------------------------------
+#define G_M10_DEFAULT_PIR_DEBOUNCE_MS  (300)      // ms
+#define G_M10_DEFAULT_PIR_HOLD_SEC     (60)
+#define G_M10_DEFAULT_TTL_SEC          (12)       // BLE/ PIR 통합 유지
 
-// ---------------------------------------------------------------------
-// PIR / BLE 상태 구조체
-// ---------------------------------------------------------------------
+// ------------------------------------------------------
+// 런타임 상태 구조체
+// ------------------------------------------------------
 typedef struct {
-	bool          enabled         = false;
-	uint8_t       pin             = 255;   // 255 = 미사용
-	uint16_t      debounce_sec    = G_M10_DEFAULT_PIR_DEBOUNCE_S;
-	uint16_t      hold_sec        = G_M10_DEFAULT_PIR_HOLD_S;
-	bool          active          = false; // hold 윈도 내 활성
-	bool          _debounceArmed  = false;
-	unsigned long _lastEdgeMs     = 0;
-	unsigned long lastDetectMs    = 0;
-} ST_M10_PIRState_t;
+	bool          pirEnabled     = false;
+	uint8_t       pirPin         = 255;
+	uint32_t      pirDebounce_ms = G_M10_DEFAULT_PIR_DEBOUNCE_MS;
+	uint32_t      pirHold_sec    = G_M10_DEFAULT_PIR_HOLD_SEC;
 
-typedef struct {
-	char          mac[18]   = {0};   // "AA:BB:CC:11:22:33"
-	char          alias[16] = {0};
-	bool          enabled   = true;
-	int           lastRSSI  = -127;  // 최근 RSSI (참고용, 판정은 B10이 수행)
-	unsigned long lastSeenMs= 0;     // 마지막 탐지 시각(millis)
-	bool          active    = false; // hold 윈도 내 "최근 감지됨"
-} ST_M10_BLEDevice_t;
+	bool          bleEnabled     = false;
 
-typedef struct {
-	bool          enabled       = false;
-	uint16_t      hold_sec      = G_M10_DEFAULT_BLE_HOLD_S; // 최근 탐지 유지 시간
-	// NOTE: rssi_threshold는 참조 필드로만 유지(직접 사용 X; B10에서 사용)
-	int           rssi_threshold= -70;
-	uint8_t       device_count  = 0;
-	ST_M10_BLEDevice_t devices[G_M10_MAX_BLE_DEV];
-} ST_M10_BLEState_t;
+	bool          pirActive      = false;
+	bool          bleActive      = false;
+	bool          motionActive   = false;
 
-// ---------------------------------------------------------------------
-// 모션 매니저 (저수준 입력 집계 + hold 유지 담당)
-// ---------------------------------------------------------------------
-class CL_M10_MotionManager {
+	unsigned long lastPirMs      = 0;
+	unsigned long lastMotionMs   = 0;
+
+	// feed override
+	bool          feedPIRActive  = false;
+	bool          feedBLEActive  = false;
+	bool          feedMode       = false;
+} ST_M10_Runtime_t;
+
+
+// ------------------------------------------------------
+// CL_M10_MotionLogic
+// ------------------------------------------------------
+class CL_M10_MotionLogic {
 public:
-	// ===== 생명주기 =====
+	// ==================================================
+	// Public API
+	// ==================================================
 	void begin() {
-		_applyConfigFromJson();
-		if (_pir.enabled && _pir.pin != 255) {
-			pinMode(_pir.pin, INPUT);
+		memset(&_rt, 0, sizeof(_rt));
+
+		// Load config
+		if (g_A10_config_root.system.hw.pir.enabled) {
+			_rt.pirEnabled = true;
+			_rt.pirPin = g_A10_config_root.system.hw.pir.pin;
+			_rt.pirDebounce_ms = g_A10_config_root.system.hw.pir.debounce_sec * 1000UL;
+			_rt.pirHold_sec = g_A10_config_root.system.hw.pir.hold_sec;
 		}
+		if (g_A10_config_root.system.hw.ble.enabled) {
+			_rt.bleEnabled = true;
+		}
+
+		if (_rt.pirEnabled && _rt.pirPin != 255) {
+			pinMode(_rt.pirPin, INPUT);
+		}
+
+		_rt.lastPirMs = 0;
+		_rt.lastMotionMs = 0;
+		_rt.pirActive = false;
+		_rt.bleActive = false;
+		_rt.motionActive = false;
+		_rt.feedMode = false;
+
 		CL_D10_Logger::log(EN_L10_LOG_INFO,
-		                   "[MOTION] begin() ok (PIR:%d, pin:%u, BLE:%d, dev:%u, hold_pir:%us, hold_ble:%us)",
-		                   _pir.enabled, _pir.pin, _ble.enabled, _ble.device_count,
-		                   _pir.hold_sec, _ble.hold_sec);
+			"[M10] begin PIR=%d pin=%u BLE=%d",
+			_rt.pirEnabled, _rt.pirPin, _rt.bleEnabled
+		);
 	}
 
-	// 주기 실행
+	void setBLE(CL_B10_BLEScanner* p_scanner) {
+		_ble = p_scanner;
+	}
+
 	void tick() {
-		_tickPir();
-		_tickBleHold();
+		_tickPIR();
+		_tickBLE();
+		_updateUnifiedState();
 	}
 
-	// ===== 외부 이벤트(BLE 스캐너 결과 피드) =====
-	/**
-	 * @brief 외부 BLE 스캐너에서 탐지 결과 피드 (판정은 B10이 수행)
-	 * @param p_mac  "AA:BB:..." 대소문자·콜론 포맷 허용(정규화됨)
-	 * @param p_rssi RSSI(dBm), 평균/퍼시스턴스/임계는 B10에서 계산
-	 */
-	void feedBLE(const char* p_mac, int p_rssi) {
-		if (!_ble.enabled || !p_mac) return;
-
-		char v_mac[18] = {0};
-		_normalizeMac(p_mac, v_mac, sizeof(v_mac));
-
-		for (uint8_t v_i = 0; v_i < _ble.device_count; ++v_i) {
-			auto &v_d = _ble.devices[v_i];
-			if (!v_d.enabled) continue;
-			if (_macEqual(v_d.mac, v_mac)) {
-				v_d.lastRSSI   = p_rssi;           // 참고용
-				v_d.lastSeenMs = millis();          // 최근 본 시각
-				v_d.active     = true;              // hold 윈도 동안 "최근 감지됨"
-				return;
-			}
-		}
+	bool M10_isMotionPresent() const {
+		return _rt.motionActive;
 	}
 
-	// ===== 상태 질의 =====
-	/** @brief PIR 또는 BLE 중 하나라도 hold 내 "활성"이면 true */
-	bool isActive() const {
-		if (_pir.active) return true;
-		if (_ble.enabled) {
-			for (uint8_t v_i = 0; v_i < _ble.device_count; ++v_i) {
-				if (_ble.devices[v_i].enabled && _ble.devices[v_i].active) return true;
-			}
-		}
-		return false;
+	// ==================================================
+	// Feed 모드 (테스트용)
+	// ==================================================
+	void feedPIR(bool p_state) {
+		_rt.feedMode = true;
+		_rt.feedPIRActive = p_state;
+		if (p_state) _rt.lastPirMs = millis();
 	}
 
-	// ===== JSON 직렬화 =====
+	void feedBLE(bool p_state) {
+		_rt.feedMode = true;
+		_rt.feedBLEActive = p_state;
+		if (p_state) _rt.lastMotionMs = millis();
+	}
+
+	// ==================================================
+	// JSON 상태 출력
+	// ==================================================
 	void toJson(JsonDocument& p_doc) const {
 		JsonObject o = p_doc["motion"].to<JsonObject>();
-		o["active"] = isActive();
-
-		// PIR
-		JsonObject jp = o["pir"].to<JsonObject>();
-		jp["enabled"]     = _pir.enabled;
-		jp["active"]      = _pir.active;
-		jp["pin"]         = _pir.pin;
-		jp["debounce_s"]  = _pir.debounce_sec;
-		jp["hold_s"]      = _pir.hold_sec;
-		jp["last_ms"]     = _pir.lastDetectMs;
-
-		// BLE
-		JsonObject jb = o["ble"].to<JsonObject>();
-		jb["enabled"]       = _ble.enabled;
-		jb["hold_s"]        = _ble.hold_sec;
-		jb["rssi_threshold"]= _ble.rssi_threshold; // 참고용(직접 사용 X)
-
-		bool v_bleActive = false;
-		for (uint8_t v_i=0; v_i<_ble.device_count; ++v_i) {
-			if (_ble.devices[v_i].enabled && _ble.devices[v_i].active) { v_bleActive = true; break; }
-		}
-		jb["active"] = v_bleActive;
-
-		JsonArray arr = jb["devices"].to<JsonArray>();
-		for (uint8_t v_i = 0; v_i < _ble.device_count; ++v_i) {
-			const auto &d = _ble.devices[v_i];
-			JsonObject jd = arr.add<JsonObject>();
-			jd["alias"]     = d.alias;
-			jd["mac"]       = d.mac;
-			jd["enabled"]   = d.enabled;
-			jd["rssi"]      = d.lastRSSI;
-			jd["active"]    = d.active;
-			jd["last_ms"]   = d.lastSeenMs;
-		}
-	}
-
-	// ===== 런타임 파라미터 조정(CT10에서 상황별 덮어쓰기) =====
-	void setPirHold(uint16_t p_holdSec)   { _pir.hold_sec = (p_holdSec>0)?p_holdSec:G_M10_DEFAULT_PIR_HOLD_S; }
-	void setPirDebounce(uint16_t p_sec)   { _pir.debounce_sec = (p_sec>0)?p_sec:G_M10_DEFAULT_PIR_DEBOUNCE_S; }
-	void setBleHold(uint16_t p_holdSec)   { _ble.hold_sec = (p_holdSec>0)?p_holdSec:G_M10_DEFAULT_BLE_HOLD_S; }
-	// NOTE: rssi_threshold는 B10에서만 사용 (여기서는 저장만)
-	void setBleRefThreshold(int p_th)     { _ble.rssi_threshold = p_th; }
-
-	// 설정 재적용(시스템/모션 JSON 변경 시)
-	void reloadConfig() {
-		_applyConfigFromJson();
-		if (_pir.enabled && _pir.pin != 255) pinMode(_pir.pin, INPUT);
+		o["pir"] = _rt.pirActive;
+		o["ble"] = _rt.bleActive;
+		o["motion"] = _rt.motionActive;
+		o["last_ms"] = _rt.lastMotionMs;
+		o["feed"] = _rt.feedMode;
 	}
 
 private:
-	// -----------------------------------------------------------------
-	// 내부: 설정 반영
-	// -----------------------------------------------------------------
-	void _applyConfigFromJson() {
-		// ----- 시스템 cfg: hw.pir / hw.ble -----
-		if (g_A10_config_root.system.hw.pir.enabled) {
-			_pir.enabled      = true;
-			_pir.pin          = g_A10_config_root.system.hw.pir.pin;
-			_pir.debounce_sec = (g_A10_config_root.system.hw.pir.debounce_sec>0)
-			                    ? g_A10_config_root.system.hw.pir.debounce_sec
-			                    : G_M10_DEFAULT_PIR_DEBOUNCE_S;
-			// hold_sec은 기본값 유지(운영 모드에 따라 CT10에서 덮어쓰기)
-		} else {
-			_pir.enabled = false;
-			_pir.pin     = 255;
-		}
+	// ==================================================
+	// 내부 상태
+	// ==================================================
+	ST_M10_Runtime_t  _rt;
+	CL_B10_BLEScanner* _ble = nullptr;
 
-		_ble.enabled = g_A10_config_root.system.hw.ble.enabled;
-		// scan_interval은 스캐너(B10)에서 사용, 본 모듈은 hold만 관리
-		_ble.rssi_threshold = -70; // 참고용 기본값(직접 사용 X)
+	// ==================================================
+	// PIR 처리
+	// ==================================================
+	void _tickPIR() {
+		if (!_rt.pirEnabled || _rt.pirPin == 255) return;
 
-		// ----- 모션 cfg: devices[] -----
-		_ble.device_count = 0;
-		memset(_ble.devices, 0, sizeof(_ble.devices));
-
-		if (g_A10_config_root.motion) {
-			const auto &v_m = *g_A10_config_root.motion;
-			if (v_m.ble.device_count > 0) {
-				for (uint8_t v_i=0; v_i< v_m.ble.device_count && _ble.device_count < G_M10_MAX_BLE_DEV; ++v_i) {
-					auto &dst = _ble.devices[_ble.device_count++];
-					strlcpy(dst.mac,   v_m.ble.devices[v_i].mac,   sizeof(dst.mac));
-					_toUpperHexMac(dst.mac);
-					strlcpy(dst.alias, v_m.ble.devices[v_i].alias, sizeof(dst.alias));
-					dst.enabled    = v_m.ble.devices[v_i].enabled;
-					dst.lastRSSI   = -127;
-					dst.lastSeenMs = 0;
-					dst.active     = false;
-				}
+		if (_rt.feedMode) {
+			if (_rt.feedPIRActive) {
+				_rt.pirActive = true;
+				_rt.lastPirMs = millis();
 			}
+			return;
 		}
 
-		// 상태 초기화
-		_pir.active = false;
-		_pir._debounceArmed = false;
-		_pir._lastEdgeMs = 0;
-		_pir.lastDetectMs = 0;
-		for (uint8_t v_i=0; v_i<_ble.device_count; ++v_i) {
-			_ble.devices[v_i].active = false;
-			_ble.devices[v_i].lastSeenMs = 0;
-			_ble.devices[v_i].lastRSSI = -127;
-		}
-	}
-
-	// -----------------------------------------------------------------
-	// 내부: PIR 처리 (디바운스 + hold)
-	// -----------------------------------------------------------------
-	void _tickPir() {
-		if (!_pir.enabled || _pir.pin==255) { _pir.active = false; return; }
-
+		int v_in = digitalRead(_rt.pirPin);
 		unsigned long v_now = millis();
-		int v_in = digitalRead(_pir.pin);
 
-		// 엣지 감지 → 디바운스 윈도 시작
 		if (v_in == HIGH) {
-			if (!_pir._debounceArmed) {
-				_pir._debounceArmed = true;
-				_pir._lastEdgeMs = v_now;
-			} else {
-				// 디바운스 경과 시 유효 감지 확정
-				if ((v_now - _pir._lastEdgeMs) >= (_pir.debounce_sec * 1000UL)) {
-					_pir.lastDetectMs = v_now;
-					_pir.active = true;
-				}
+			if ((v_now - _rt.lastPirMs) >= _rt.pirDebounce_ms) {
+				_rt.pirActive = true;
+				_rt.lastPirMs = v_now;
 			}
-		}
-
-		// hold 만료
-		if (_pir.active) {
-			unsigned long v_holdMs = (_pir.hold_sec>0 ? _pir.hold_sec : G_M10_DEFAULT_PIR_HOLD_S) * 1000UL;
-			if ((v_now - _pir.lastDetectMs) > v_holdMs) {
-				_pir.active = false;
-				_pir._debounceArmed = false;
-				CL_D10_Logger::log(EN_L10_LOG_INFO, "[MOTION] PIR hold expired");
+		} else {
+			// hold logic
+			if (_rt.pirActive && (v_now - _rt.lastPirMs) > (_rt.pirHold_sec * 1000UL)) {
+				_rt.pirActive = false;
 			}
 		}
 	}
 
-	// -----------------------------------------------------------------
-	// 내부: BLE hold 처리 (최근 본 시각 기반)
-	// -----------------------------------------------------------------
-	void _tickBleHold() {
-		if (!_ble.enabled) return;
+	// ==================================================
+	// BLE 존재 여부
+	// ==================================================
+	void _tickBLE() {
+		if (!_rt.bleEnabled) {
+			_rt.bleActive = false;
+			return;
+		}
 
+		if (_rt.feedMode) {
+			_rt.bleActive = _rt.feedBLEActive;
+			return;
+		}
+
+		if (!_ble) {
+			_rt.bleActive = false;
+			return;
+		}
+
+		_rt.bleActive = _ble->isAnyPresent();
+		if (_rt.bleActive) {
+			_rt.lastMotionMs = millis();
+		}
+	}
+
+	// ==================================================
+	// PIR OR BLE → Unified motion
+	// ==================================================
+	void _updateUnifiedState() {
 		unsigned long v_now = millis();
-		unsigned long v_holdMs = (_ble.hold_sec>0 ? _ble.hold_sec : G_M10_DEFAULT_BLE_HOLD_S) * 1000UL;
+		bool v_any = (_rt.pirActive || _rt.bleActive);
 
-		for (uint8_t v_i=0; v_i<_ble.device_count; ++v_i) {
-			auto &v_d = _ble.devices[v_i];
-			if (!v_d.enabled) { v_d.active = false; continue; }
+		if (v_any) {
+			_rt.motionActive = true;
+			_rt.lastMotionMs = v_now;
+			return;
+		}
 
-			bool v_recent = (v_now - v_d.lastSeenMs) <= v_holdMs;
-			// ⚠️ RSSI 임계/평균/퍼시스턴스 판정은 B10에서 수행
-			if (v_recent) {
-				v_d.active = true;
-			} else {
-				if (v_d.active) {
-					CL_D10_Logger::log(EN_L10_LOG_INFO,
-						"[MOTION] BLE '%s' hold expired (lastSeen=%lu ms ago)",
-						v_d.alias, (unsigned long)(v_now - v_d.lastSeenMs));
-				}
-				v_d.active = false;
-			}
+		// TTL 유지
+		uint32_t v_ttl = G_M10_DEFAULT_TTL_SEC * 1000UL;
+		if ((v_now - _rt.lastMotionMs) <= v_ttl) {
+			_rt.motionActive = true;
+		} else {
+			_rt.motionActive = false;
 		}
 	}
-
-	// -----------------------------------------------------------------
-	// 내부: MAC 유틸
-	// -----------------------------------------------------------------
-	static void _normalizeMac(const char* p_src, char* p_dst, size_t p_dstLen) {
-		strlcpy(p_dst, p_src, p_dstLen); // 원형 복사
-		_toUpperHexMac(p_dst);
-	}
-
-	static void _toUpperHexMac(char* p_mac) {
-		for (size_t v_i=0; p_mac[v_i]; ++v_i) {
-			char c = p_mac[v_i];
-			if (c >= 'a' && c <= 'f') p_mac[v_i] = (char)(c - 32);
-			else p_mac[v_i] = (char)toupper((unsigned char)c);
-		}
-	}
-
-	static bool _macEqual(const char* a, const char* b) {
-		// 콜론 포함 그대로 비교(대문자화 전제, 17자)
-		return (strncmp(a, b, 17) == 0);
-	}
-
-private:
-	ST_M10_PIRState_t _pir;
-	ST_M10_BLEState_t _ble;
 };
+
+//
+// 외부 사용 함수 wrapper (CT10 expects)
+//
+static CL_M10_MotionLogic* g_M10_instance = nullptr;
+
+inline void M10_setInstance(CL_M10_MotionLogic* p_i) { g_M10_instance = p_i; }
+inline bool M10_motionDetected() {
+	return (g_M10_instance) ? g_M10_instance->M10_isMotionPresent() : false;
+}
