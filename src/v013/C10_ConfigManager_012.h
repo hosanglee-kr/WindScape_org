@@ -281,6 +281,161 @@ public:
         return ioSaveJson(A10_Const::CFG_MOTION_FILE, A10_Const::CFG_MOTION_FILE_BAK, d);
     }
 
+
+static bool loadControlConfig(ST_A10_ControlConfig& c) {
+    JsonDocument doc;
+    if (!ioLoadJson(A10_Const::CFG_CONTROL_FILE, doc)) return false;
+
+    JsonObjectConst root = doc["control"];
+
+    // runMode
+    c.runMode = root["runMode"] | 0;
+    strlcpy(c.runModeDesc, root["runModeDesc"] | "0=Continuous Mode, 1=Schedule Mode", sizeof(c.runModeDesc));
+
+    // Continuous.wind
+    JsonObjectConst w = root["Continuous"]["wind"];
+    c.Continuous.wind.enabled = w["enabled"] | true;
+
+    strlcpy(c.Continuous.wind.preset, w["preset"] | "COUNTRY_BREEZE", sizeof(c.Continuous.wind.preset));
+    c.Continuous.wind.wind_intensity             = w["wind_intensity"]             | 70.0f;
+    c.Continuous.wind.gust_frequency             = w["gust_frequency"]             | 45.0f;
+    c.Continuous.wind.wind_variability           = w["wind_variability"]           | 50.0f;
+    c.Continuous.wind.fan_limit                  = w["fan_limit"]                  | 90.0f;
+    c.Continuous.wind.min_fan                    = w["min_fan"]                    | 10.0f;
+    c.Continuous.wind.turbulence_length_scale    = w["turbulence_length_scale"]    | 40.0f;
+    c.Continuous.wind.turbulence_intensity_sigma = w["turbulence_intensity_sigma"] | 0.5f;
+    c.Continuous.wind.thermal_bubble_strength    = w["thermal_bubble_strength"]    | 2.0f;
+    c.Continuous.wind.thermal_bubble_radius      = w["thermal_bubble_radius"]      | 18.0f;
+
+    // Continuous.motion
+    JsonObjectConst cm = root["Continuous"]["motion"];
+    c.Continuous.motion.pir.enabled        = cm["pir"]["enabled"]        | true;
+    c.Continuous.motion.pir.hold_sec       = cm["pir"]["hold_sec"]       | 120;
+    c.Continuous.motion.ble.enabled        = cm["ble"]["enabled"]        | true;
+    c.Continuous.motion.ble.rssi_threshold = cm["ble"]["rssi_threshold"] | -70;
+    c.Continuous.motion.ble.hold_sec       = cm["ble"]["hold_sec"]       | 120;
+
+    // schedules
+    c.schedule_count = 0;
+    if (root["schedules"].is<JsonArrayConst>()) {
+        JsonArrayConst arr = root["schedules"].as<JsonArrayConst>();
+        for (JsonObjectConst js : arr) {
+            if (c.schedule_count >= A10_Const::MAX_SCHEDULES) break;
+            auto& s = c.schedules[c.schedule_count++];
+
+            s.schNo   = js["schNo"] | 0;
+            strlcpy(s.schName, js["schName"] | "", sizeof(s.schName));
+            s.enabled = js["enabled"] | true;
+
+            // days
+            memset(s.days, 1, sizeof(s.days));
+            if (js["days"].is<JsonArrayConst>()) {
+                JsonArrayConst d = js["days"].as<JsonArrayConst>();
+                for (uint8_t i = 0; i < 7 && i < d.size(); i++)
+                    s.days[i] = d[i] | 1;
+            }
+
+            strlcpy(s.start_time, js["start_time"] | "08:00", sizeof(s.start_time));
+            strlcpy(s.end_time,   js["end_time"]   | "12:00", sizeof(s.end_time));
+
+            // segments
+            s.seg_count = 0;
+            if (js["segments"].is<JsonArrayConst>()) {
+                JsonArrayConst segs = js["segments"].as<JsonArrayConst>();
+                for (JsonObjectConst jseg : segs) {
+                    if (s.seg_count >= A10_Const::MAX_SEGMENTS_PER_SCHEDULE) break;
+
+                    auto& sg = s.segments[s.seg_count++];
+                    sg.segNo       = jseg["segNo"]       | 0;
+                    sg.on_minutes  = jseg["on_minutes"]  | 10;
+                    sg.off_minutes = jseg["off_minutes"] | 5;
+                    strlcpy(sg.mode, jseg["mode"] | "preset", sizeof(sg.mode));
+                    strlcpy(sg.preset_name, jseg["preset_name"] | "COUNTRY_BREEZE", sizeof(sg.preset_name));
+
+                    sg.preset_adjust.intensity   = jseg["preset_adjust"]["intensity"]   | 0;
+                    sg.preset_adjust.variability = jseg["preset_adjust"]["variability"] | 0;
+                    sg.preset_adjust.valid       = true;
+
+                    sg.fixed_speed = jseg["fixed_speed"] | 0.0f;
+                }
+            }
+
+            // schedule.motion override
+            s.motion.pir.enabled        = js["motion"]["pir"]["enabled"]        | true;
+            s.motion.pir.hold_sec       = js["motion"]["pir"]["hold_sec"]       | 120;
+            s.motion.ble.enabled        = js["motion"]["ble"]["enabled"]        | true;
+            s.motion.ble.rssi_threshold = js["motion"]["ble"]["rssi_threshold"] | -70;
+            s.motion.ble.hold_sec       = js["motion"]["ble"]["hold_sec"]       | 120;
+        }
+    }
+
+    return true;
+}
+
+
+static bool saveControlConfig(const ST_A10_ControlConfig& c) {
+    JsonDocument doc;
+    JsonObject root = doc["control"];
+
+    root["runMode"]     = c.runMode;
+    root["runModeDesc"] = c.runModeDesc;
+
+    // Continuous.wind
+    root["Continuous"]["wind"]["enabled"]                    = c.Continuous.wind.enabled;
+    root["Continuous"]["wind"]["preset"]                     = c.Continuous.wind.preset;
+    root["Continuous"]["wind"]["wind_intensity"]             = c.Continuous.wind.wind_intensity;
+    root["Continuous"]["wind"]["gust_frequency"]             = c.Continuous.wind.gust_frequency;
+    root["Continuous"]["wind"]["wind_variability"]           = c.Continuous.wind.wind_variability;
+    root["Continuous"]["wind"]["fan_limit"]                  = c.Continuous.wind.fan_limit;
+    root["Continuous"]["wind"]["min_fan"]                    = c.Continuous.wind.min_fan;
+    root["Continuous"]["wind"]["turbulence_length_scale"]    = c.Continuous.wind.turbulence_length_scale;
+    root["Continuous"]["wind"]["turbulence_intensity_sigma"] = c.Continuous.wind.turbulence_intensity_sigma;
+    root["Continuous"]["wind"]["thermal_bubble_strength"]    = c.Continuous.wind.thermal_bubble_strength;
+    root["Continuous"]["wind"]["thermal_bubble_radius"]      = c.Continuous.wind.thermal_bubble_radius;
+
+    // Continuous.motion
+    root["Continuous"]["motion"]["pir"]["enabled"]        = c.Continuous.motion.pir.enabled;
+    root["Continuous"]["motion"]["pir"]["hold_sec"]       = c.Continuous.motion.pir.hold_sec;
+    root["Continuous"]["motion"]["ble"]["enabled"]        = c.Continuous.motion.ble.enabled;
+    root["Continuous"]["motion"]["ble"]["rssi_threshold"] = c.Continuous.motion.ble.rssi_threshold;
+    root["Continuous"]["motion"]["ble"]["hold_sec"]       = c.Continuous.motion.ble.hold_sec;
+
+    // schedules
+    for (uint8_t i = 0; i < c.schedule_count; i++) {
+        const auto& s = c.schedules[i];
+
+        root["schedules"][i]["schNo"]    = s.schNo;
+        root["schedules"][i]["schName"]  = s.schName;
+        root["schedules"][i]["enabled"]  = s.enabled;
+
+        for (uint8_t d = 0; d < 7; d++)
+            root["schedules"][i]["days"][d] = s.days[d];
+
+        root["schedules"][i]["start_time"] = s.start_time;
+        root["schedules"][i]["end_time"]   = s.end_time;
+
+        for (uint8_t k = 0; k < s.seg_count; k++) {
+            const auto& seg = s.segments[k];
+            root["schedules"][i]["segments"][k]["segNo"]       = seg.segNo;
+            root["schedules"][i]["segments"][k]["on_minutes"]  = seg.on_minutes;
+            root["schedules"][i]["segments"][k]["off_minutes"] = seg.off_minutes;
+            root["schedules"][i]["segments"][k]["mode"]        = seg.mode;
+            root["schedules"][i]["segments"][k]["preset_name"] = seg.preset_name;
+            root["schedules"][i]["segments"][k]["preset_adjust"]["intensity"]   = seg.preset_adjust.intensity;
+            root["schedules"][i]["segments"][k]["preset_adjust"]["variability"] = seg.preset_adjust.variability;
+            root["schedules"][i]["segments"][k]["fixed_speed"] = seg.fixed_speed;
+        }
+
+        root["schedules"][i]["motion"]["pir"]["enabled"]        = s.motion.pir.enabled;
+        root["schedules"][i]["motion"]["pir"]["hold_sec"]       = s.motion.pir.hold_sec;
+        root["schedules"][i]["motion"]["ble"]["enabled"]        = s.motion.ble.enabled;
+        root["schedules"][i]["motion"]["ble"]["rssi_threshold"] = s.motion.ble.rssi_threshold;
+        root["schedules"][i]["motion"]["ble"]["hold_sec"]       = s.motion.ble.hold_sec;
+    }
+
+    return ioSaveJson(A10_Const::CFG_CONTROL_FILE, A10_Const::CFG_CONTROL_FILE_BAK, doc);
+}
+
     /* =====================================================
      * Control Config (same as previous version — unchanged)
      * ===================================================== */
