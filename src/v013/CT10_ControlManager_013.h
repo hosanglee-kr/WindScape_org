@@ -436,8 +436,8 @@ private:
 		return h*60+m;
 	}
 
-	uint8_t _getRunMode() const {
+	T_A10_control_runMode_t _getRunMode() const {
 		if (!g_A10_config_root.control) return EN_A10_CONTROL_RUN_CONTINUE;
-		return (uint8_t)g_A10_config_root.control->runMode;
+		return g_A10_config_root.control->runMode;
 	}
 };
