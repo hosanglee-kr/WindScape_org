@@ -91,7 +91,7 @@ typedef enum : uint8_t {
 typedef enum : uint8_t {
 	EN_A10_CONTROL_RUN_CONTINUE	= 0,
 	EN_A10_CONTROL_RUN_SCHEDULE = 1,
-} EN_A10_CONTROL_RUNMODE_t;
+} T_A10_control_runMode_t;
 
 // 바람 단계(참고용)
 typedef enum : uint8_t {
@@ -295,7 +295,7 @@ typedef struct {
 
 // 메인 Control 설정
 typedef struct {
-	EN_A10_CONTROL_RUNMODE_t runMode;  // 0=Continuous / 1=Schedule
+	T_A10_control_runMode_t runMode;  // 0=Continuous / 1=Schedule
 	char	runModeDesc[64];
 
 	struct {
