@@ -89,7 +89,7 @@ typedef struct {
 class CL_CT10_ControlManager {
 public:
 	bool			active			= false;
-	uint8_t 		runMode 		= 0;
+	T_A10_control_runMode_t 		runMode 		= EN_A10_CONTROL_RUN_CONTINUE;
 
 	int			  	curSchedule	  	= -1;
 	int			  	curSegment	  	= -1;
@@ -116,10 +116,12 @@ public:
 			return;
 		}
 
-		if (runMode == 0) _applyContinuousPreset();
+		if (runMode == EN_A10_CONTROL_RUN_CONTINUE) _applyContinuousPreset();
 	}
 
-	void setMotion(CL_M10_MotionLogic* p_motion) { motion = p_motion; }
+	void setMotion(CL_M10_MotionLogic* p_motion) { 
+		motion = p_motion; 
+	}
 
 	// --------------------------------------------------
 	// 주기 호출
@@ -143,8 +145,11 @@ public:
 		}
 
 		runMode = _getRunMode();
-		if (runMode == 0) _tickContinuous();
-		else              _tickSchedule();
+		if (runMode == EN_A10_CONTROL_RUN_CONTINUE) {
+			_tickContinuous();
+		} else {
+			_tickSchedule();
+		}
 	}
 
 	// --------------------------------------------------
@@ -389,7 +394,7 @@ private:
 	// Helper
 	// --------------------------------------------------
 	void _reapplyMode() {
-		if (runMode==0) {
+		if (runMode == EN_A10_CONTROL_RUN_CONTINUE) {
 			_applyContinuousPreset();
 		} else {
 			curSchedule=-1;
@@ -432,7 +437,7 @@ private:
 	}
 
 	uint8_t _getRunMode() const {
-		if (!g_A10_config_root.control) return 0;
+		if (!g_A10_config_root.control) return EN_A10_CONTROL_RUN_CONTINUE;
 		return (uint8_t)g_A10_config_root.control->runMode;
 	}
 };
