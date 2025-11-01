@@ -87,6 +87,12 @@ typedef enum : uint8_t {
 } EN_A10_WIFI_MODE_t;
 
 
+// 0=Continuous / 1=Schedule
+typedef enum : uint8_t {
+	EN_A10_CONTROL_RUN_CONTINUE	= 0,
+	EN_A10_CONTROL_RUN_SCHEDULE = 1,
+} EN_A10_CONTROL_RUNMODE_t;
+
 // 바람 단계(참고용)
 typedef enum : uint8_t {
     EN_A10_WEATHER_PHASE_CALM = 0,
@@ -285,9 +291,11 @@ typedef struct {
 	} motion;
 } ST_A10_ScheduleItem;
 
+
+
 // 메인 Control 설정
 typedef struct {
-	uint8_t runMode;  // 0=Continuous / 1=Schedule
+	EN_A10_CONTROL_RUNMODE_t runMode;  // 0=Continuous / 1=Schedule
 	char	runModeDesc[64];
 
 	struct {
@@ -422,9 +430,10 @@ inline void A10_resetMotionDefault(ST_A10_MotionConfig& m) {
 	// d.prefix_len = 3; d.enabled = true;
 }
 
+
 inline void A10_resetControlDefault(ST_A10_ControlConfig& c) {
 	memset(&c, 0, sizeof(c));
-	c.runMode = 0;
+	c.runMode = EN_A10_CONTROL_RUN_CONTINUE;
 	strlcpy(c.runModeDesc, "0=Continuous Mode, 1=Schedule Mode", sizeof(c.runModeDesc));
 
 	c.Continuous.wind.enabled = true;
