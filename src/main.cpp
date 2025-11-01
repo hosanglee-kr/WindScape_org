@@ -15,7 +15,8 @@
 // #include "v012/WS10_Main_010.h"
 
 // 메인 컨트롤러 인스턴스
-CL_WS10_WindScapeSimulator g_WS10;
+CL_WS10_WindScapeSystem g_WS10;
+//CL_WS10_WindScapeSimulator g_WS10;
 
 void setup() {
 	Serial.begin(115200);
@@ -34,7 +35,7 @@ void setup() {
 	// ------------------------------------------------------
 	// 2️⃣ 시스템 초기화 (FS / Wi-Fi / PWM / WebAPI / Sim)
 	// ------------------------------------------------------
-	g_WS10.WS10_init();
+	g_WS10.init();
 
 	Serial.println();
 	Serial.println("[BOOT] Initialization complete");
@@ -51,7 +52,7 @@ void loop() {
 	// ------------------------------------------------------
 	// 3️⃣ Simulation Tick Loop
 	// ------------------------------------------------------
-	g_WS10.WS10_run();
+	g_WS10.run();
 
 	// 로그나 Wi-Fi 상태를 주기적으로 출력하고 싶다면:
 	// static unsigned long lastPrint = 0;

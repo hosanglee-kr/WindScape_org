@@ -129,7 +129,7 @@ public:
 	// ==================================================
 	// 초기화
 	// ==================================================
-	void S10_begin(CL_P10_PWM& p_pwm, bool p_applyPreset=true) {
+	void begin(CL_P10_PWM& p_pwm, bool p_applyPreset=true) {
 		_p_pwmCtrl = &p_pwm;
 		if (p_applyPreset) {
 			_S10_applyPresetFromConfig();
@@ -140,7 +140,7 @@ public:
 	// --------------------------------------------------
 	// 바람 시뮬레이션 중단 (CT10 게이트 때 호출)
 	// --------------------------------------------------
-	inline void S10_stop() {
+	inline void stop() {
 		S10_active = false;
 		S10_phase  = EN_A10_WEATHER_PHASE_CALM;
 		S10_targetWindSpeed   = 0.0f;
@@ -151,7 +151,7 @@ public:
 	// ==================================================
 	// tick
 	// ==================================================
-	void S10_tick() {
+	void tick() {
 		if (!S10_active) return;
 		if (!g_A10_config_root.sim) return;
 

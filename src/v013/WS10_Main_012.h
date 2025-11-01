@@ -69,7 +69,7 @@ public:
 	// ==================================================
 	// System Init
 	// ==================================================
-	void WS10_init() {
+	void init() {
 		_initFS();
 		_initConfig();
 		_initWiFi();
@@ -86,11 +86,11 @@ public:
 	// ==================================================
 	// Main Loop Tick
 	// ==================================================
-	void WS10_run() {
-		_bleScanner.B10_tick();
-		_motion.M10_tick();
-		_control.CT10_tick();
-		_sim.S10_tick();
+	void run() {
+		_bleScanner.tick();
+		_motion.tick();
+		_control.tick();
+		_sim.tick();
 		delay(20);
 	}
 
@@ -157,7 +157,7 @@ private:
 	// ==================================================
 	void _initWiFi() {
 		if (g_A10_config_root.wifi &&
-			CL_M10_WiFiManager::M10_init(*g_A10_config_root.wifi, _wifiMulti)) {
+			CL_M10_WiFiManager::init(*g_A10_config_root.wifi, g_A10_config_root.system, _wifiMulti)) {
 
 			CL_D10_Logger::log(EN_L10_LOG_INFO,"[WS10] Wi-Fi OK");
 		} else {
@@ -169,7 +169,7 @@ private:
 	// PWM
 	// ==================================================
 	void _initPWM() {
-		auto &v_cfg=g_A10_config_root.core.hw.fan_pwm;
+		auto &v_cfg=g_A10_config_root.system.hw.fan_pwm;
 		_pwm.P10_init(v_cfg.pin, v_cfg.channel, v_cfg.freq, v_cfg.res);
 
 		CL_D10_Logger::log(EN_L10_LOG_INFO,
@@ -181,7 +181,7 @@ private:
 	// Motion & BLE Logic
 	// ==================================================
 	void _initMotionAndBLE() {
-		_bleScanner.B10_begin();
+		_bleScanner.begin();
 		_motion.begin();
 		_motion.setBLE(&_bleScanner);
 
@@ -192,7 +192,7 @@ private:
 	// Control Manager (CT10)
 	// ==================================================
 	void _initControl() {
-		_control.CT10_begin(&_sim,&_pwm,&_motion);
+		_control.begin(&_sim, &_pwm, &_motion);
 		CL_D10_Logger::log(EN_L10_LOG_INFO,"[WS10] Control manager ready");
 	}
 
@@ -208,7 +208,7 @@ private:
 	// Simulation
 	// ==================================================
 	void _initSim() {
-		_sim.S10_begin(_pwm);
+		_sim.begin(_pwm);
 
 		const char* v_preset =
 			(g_A10_config_root.sim)

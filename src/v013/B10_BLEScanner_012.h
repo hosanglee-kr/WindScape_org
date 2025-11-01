@@ -254,37 +254,37 @@ class CL_B10_BLEScanner : public NimBLEScanCallbacks { 		// NimBLEAdvertisedDevi
 		// motion.trusted_devices[], motion.rssi{...}
 		if (g_A10_config_root.motion) {
 			// trusted_devices
-			for (uint8_t v_i = 0; v_i < g_A10_config_root.motion->ble.device_count && _trustedCount < G_B10_MAX_TRUSTED_DEV; ++v_i) {
+			for (uint8_t v_i = 0; v_i < g_A10_config_root.motion->ble.trusted_count && _trustedCount < G_B10_MAX_TRUSTED_DEV; ++v_i) {
 				ST_B10_TrustedDev_t& t = _trusted[_trustedCount++];
 				memset(&t, 0, sizeof(t));
-				strlcpy(t.alias, g_A10_config_root.motion->ble.devices[v_i].alias, sizeof(t.alias));
+				strlcpy(t.alias, g_A10_config_root.motion->ble.trusted_devices[v_i].alias, sizeof(t.alias));
 				// 확장 키(name/mac/manuf_prefix/prefix_len)는 cfg_motion_022 확장안 기준(없어도 ok)
-				if (g_A10_config_root.motion->ble.devices[v_i].name[0]) {
-					strlcpy(t.name, g_A10_config_root.motion->ble.devices[v_i].name, sizeof(t.name));
+				if (g_A10_config_root.motion->ble.trusted_devices[v_i].name[0]) {
+					strlcpy(t.name, g_A10_config_root.motion->ble.trusted_devices[v_i].name, sizeof(t.name));
 				}
-				if (g_A10_config_root.motion->ble.devices[v_i].mac[0]) {
-					_toUpperHexMac(g_A10_config_root.motion->ble.devices[v_i].mac);
-					strlcpy(t.mac, g_A10_config_root.motion->ble.devices[v_i].mac, sizeof(t.mac));
+				if (g_A10_config_root.motion->ble.trusted_devices[v_i].mac[0]) {
+					_toUpperHexMac(g_A10_config_root.motion->ble.trusted_devices[v_i].mac);
+					strlcpy(t.mac, g_A10_config_root.motion->ble.trusted_devices[v_i].mac, sizeof(t.mac));
 				}
-				if (g_A10_config_root.motion->ble.devices[v_i].manuf_prefix[0]) {
-					_toUpperHex(g_A10_config_root.motion->ble.devices[v_i].manuf_prefix);
-					strlcpy(t.manuf_prefix, g_A10_config_root.motion->ble.devices[v_i].manuf_prefix, sizeof(t.manuf_prefix));
+				if (g_A10_config_root.motion->ble.trusted_devices[v_i].manuf_prefix[0]) {
+					_toUpperHex(g_A10_config_root.motion->ble.trusted_devices[v_i].manuf_prefix);
+					strlcpy(t.manuf_prefix, g_A10_config_root.motion->ble.trusted_devices[v_i].manuf_prefix, sizeof(t.manuf_prefix));
 				}
-				t.prefix_len = g_A10_config_root.motion->ble.devices[v_i].prefix_len;
-				t.enabled	 = g_A10_config_root.motion->ble.devices[v_i].enabled;
+				t.prefix_len = g_A10_config_root.motion->ble.trusted_devices[v_i].prefix_len;
+				t.enabled	 = g_A10_config_root.motion->ble.trusted_devices[v_i].enabled;
 			}
 
 			// rssi 설정 블록(신규 JSON 스펙)
-			if (g_A10_config_root.motion->ble.rssi_on)
-				_rssiCfg.on = g_A10_config_root.motion->ble.rssi_on;
-			if (g_A10_config_root.motion->ble.rssi_off)
-				_rssiCfg.off = g_A10_config_root.motion->ble.rssi_off;
-			if (g_A10_config_root.motion->ble.avg_count)
-				_rssiCfg.avg_count = g_A10_config_root.motion->ble.avg_count;
-			if (g_A10_config_root.motion->ble.persist_count)
-				_rssiCfg.persist_count = g_A10_config_root.motion->ble.persist_count;
-			if (g_A10_config_root.motion->ble.exit_delay_sec)
-				_rssiCfg.exit_delay_sec = g_A10_config_root.motion->ble.exit_delay_sec;
+			if (g_A10_config_root.motion->ble.rssi.on)
+				_rssiCfg.on = g_A10_config_root.motion->ble.rssi.on;
+			if (g_A10_config_root.motion->ble.rssi.off)
+				_rssiCfg.off = g_A10_config_root.motion->ble.rssi.off;
+			if (g_A10_config_root.motion->ble.rssi.avg_count)
+				_rssiCfg.avg_count = g_A10_config_root.motion->ble.rssi.avg_count;
+			if (g_A10_config_root.motion->ble.rssi.persist_count)
+				_rssiCfg.persist_count = g_A10_config_root.motion->ble.rssi.persist_count;
+			if (g_A10_config_root.motion->ble.rssi.exit_delay_sec)
+				_rssiCfg.exit_delay_sec = g_A10_config_root.motion->ble.rssi.exit_delay_sec;
 		}
 
 		// 히스테리시스 보정: on > off 되도록 강제

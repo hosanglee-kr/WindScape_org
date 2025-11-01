@@ -225,7 +225,7 @@ private:
 
 		if (_motionGateActive()) {
 			pwm->P10_setDutyPercent(0.0f);
-			sim->S10_stop();
+			sim->stop();
 			return;
 		}
 
@@ -237,7 +237,7 @@ private:
 
 		auto& v_w = g_A10_config_root.control->Continuous.wind;
 		if (!v_w.enabled) {
-			sim->S10_stop();
+			sim->stop();
 			pwm->P10_setDutyPercent(0.0f);
 			return;
 		}
@@ -246,7 +246,7 @@ private:
 						   v_w.min_fan, v_w.fan_limit, v_w.preset);
 
 		sim->S10_applyPreset(v_w.preset);
-		if (!sim->S10_active) sim->S10_begin(*pwm);
+		if (!sim->S10_active) sim->begin(*pwm);
 	}
 
 	// --------------------------------------------------
@@ -257,7 +257,7 @@ private:
 
 		int v_idx = _findActiveSchedule(g_A10_config_root.control->schedules);
 		if (v_idx < 0) {
-			sim->S10_stop();
+			sim->stop();
 			pwm->P10_setDutyPercent(0.0f);
 			curSchedule = -1;
 			curSegment  = -1;
@@ -273,7 +273,7 @@ private:
 		}
 
 		if (_motionGateActiveForSchedule(g_A10_config_root.control->schedules[v_idx])) {
-			sim->S10_stop();
+			sim->stop();
 			pwm->P10_setDutyPercent(0.0f);
 			return;
 		}
@@ -281,9 +281,10 @@ private:
 		_applyScheduleSegment(g_A10_config_root.control->schedules[v_idx]);
 	}
 
-	void _applyScheduleSegment(const auto& p_sch) {
-		if (p_sch.segments.size()==0) {
-			sim->S10_stop();
+	void _applyScheduleSegment(const ST_A10_ScheduleItem& p_sch) {		
+		if (p_sch.seg_count==0) {
+		//if (p_sch.segments.size()==0) {
+			sim->stop();
 			pwm->P10_setDutyPercent(0.0f);
 			return;
 		}
@@ -308,7 +309,9 @@ private:
 			}
 		} else {
 			if (millis()-segPhaseStartMs >= v_offMs) {
-				curSegment=(curSegment+1) % (int)p_sch.segments.size();
+				
+				curSegment=(curSegment+1) % (int)p_sch.seg_count;
+				//curSegment=(curSegment+1) % (int)p_sch.segments.size();
 				segOnPhase=true;
 				segPhaseStartMs=millis();
 				_applySegmentOn(p_sch.segments[curSegment],p_sch);
@@ -318,7 +321,7 @@ private:
 
 	void _applySegmentOn(const auto& p_seg, const auto&) {
 		if (p_seg.mode == "fixed") {
-			sim->S10_stop();
+			sim->stop();
 			pwm->P10_setDutyPercent(constrain(p_seg.fixed_speed,0.0f,100.0f));
 		} else {
 			int v_adjInt = p_seg.preset_adjust.valid ? p_seg.preset_adjust.intensity   : 0;
@@ -328,7 +331,7 @@ private:
 	}
 
 	void _applySegmentOff() {
-		sim->S10_stop();
+		sim->stop();
 		pwm->P10_setDutyPercent(0.0f);
 	}
 
@@ -339,7 +342,7 @@ private:
 		if (!pwm||!sim||!overrideState.active) return;
 
 		if (overrideState.overrideMode==EN_CT10_OVERRIDE_FIXED) {
-			sim->S10_stop();
+			sim->stop();
 			pwm->P10_setDutyPercent(constrain(overrideState.fixedPercent,0.0f,100.0f));
 			return;
 		}
@@ -363,7 +366,7 @@ private:
 
 		sim->S10_setParams(v_int, v_var, v_s->gust_frequency, v_s->min_fan, v_s->fan_limit, v_s->preset);
 		sim->S10_applyPreset(v_s->preset);
-		if (!sim->S10_active) sim->S10_begin(*pwm);
+		if (!sim->S10_active) sim->begin(*pwm);
 	}
 
 	// --------------------------------------------------
@@ -395,7 +398,7 @@ private:
 		}
 	}
 
-	int _findActiveSchedule(const auto& p_arr) {
+	int _findActiveSchedule(const ST_A10_ScheduleItem& p_arr) {
 		if (p_arr.size()==0) return -1;
 
 		time_t v_t = time(nullptr);

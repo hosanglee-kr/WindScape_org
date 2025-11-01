@@ -112,7 +112,7 @@ public:
 
 		_lastDutyPct = v_pct;
 
-		CL_D10_Logger::log(EN_L10_LOG_TRACE,
+		CL_D10_Logger::log(EN_L10_LOG_DEBUG,
 		                   "[P10] Duty %.2f%% -> raw %lu",
 		                   v_pct, (unsigned long)v_duty);
 	}

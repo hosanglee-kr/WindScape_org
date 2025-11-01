@@ -12,7 +12,7 @@
  *  - 네트워크 스캔(JSON)
  *  - 이벤트 로그 및 연결 상태 조회
  *  - cfg_wifi_022.json 기반 (ST_A10_WifiConfig)
- *  - NTP 시간 동기화 지원 (p_cfg.time)
+ *  - NTP 시간 동기화 지원 (p_cfg_wifi.time)
  * ------------------------------------------------------
  * 구현 규칙:
  * ------------------------------------------------------
@@ -94,10 +94,18 @@ public:
 	// ==================================================
 	// Init Wi-Fi & Apply Mode
 	// ==================================================
-	static bool M10_init(const ST_A10_WifiConfig& p_cfg,
+
+	
+    static bool init(const ST_A10_WifiConfig& p_cfg_wifi,
+						ST_A10_SystemConfig& p_cfg_system,
 	                     WiFiMulti& p_multi,
 	                     uint8_t p_apChannel = 1,
 	                     uint8_t p_staMaxTries = 15) {
+
+	// static bool init(const ST_A10_WifiConfig& p_cfg_wifi,
+	//                      WiFiMulti& p_multi,
+	//                      uint8_t p_apChannel = 1,
+	//                      uint8_t p_staMaxTries = 15) {
 		M10_attachWiFiEvents();
 
 		WiFi.persistent(false);
@@ -109,29 +117,29 @@ public:
 		         (uint16_t)(esp_random() & 0xFFFF));
 		WiFi.setHostname(v_hostname);
 
-		switch (p_cfg.wifiMode) {
+		switch (p_cfg_wifi.wifiMode) {
 			case EN_A10_WIFI_MODE_AP:
 				WiFi.mode(WIFI_AP);
-				return M10_startAP(p_cfg, p_apChannel);
+				return M10_startAP(p_cfg_wifi, p_apChannel);
 
 			case EN_A10_WIFI_MODE_STA: {
 				WiFi.mode(WIFI_STA);
-				bool v_ok = M10_startSTA(p_cfg, p_multi, p_staMaxTries);
+				bool v_ok = M10_startSTA(p_cfg_wifi, p_multi, p_staMaxTries);
 				if (!v_ok) {
 					CL_D10_Logger::log(EN_L10_LOG_WARN, "[WiFi] STA fail → AP fallback");
 					WiFi.mode(WIFI_AP);
-					return M10_startAP(p_cfg, p_apChannel);
+					return M10_startAP(p_cfg_wifi, p_apChannel);
 				}
-				M10_syncTimeIfNeeded(p_cfg);
+				M10_syncTimeIfNeeded(p_cfg_wifi, p_cfg_system);
 				return true;
 			}
 
 			default:
 			case EN_A10_WIFI_MODE_AP_STA: {
 				WiFi.mode(WIFI_AP_STA);
-				M10_startAP(p_cfg, p_apChannel);
-				bool v_ok = M10_startSTA(p_cfg, p_multi, p_staMaxTries);
-				if (v_ok) M10_syncTimeIfNeeded(p_cfg);
+				M10_startAP(p_cfg_wifi, p_apChannel);
+				bool v_ok = M10_startSTA(p_cfg_wifi, p_multi, p_staMaxTries);
+				if (v_ok) M10_syncTimeIfNeeded(p_cfg_wifi, p_cfg_system);
 				return v_ok;
 			}
 		}
@@ -140,9 +148,9 @@ public:
 	// ==================================================
 	// Start AP
 	// ==================================================
-	static bool M10_startAP(const ST_A10_WifiConfig& p_cfg, uint8_t p_channel) {
-		char v_pass[G_A10_WIFI_PWD_LEN + 1];
-		strlcpy(v_pass, p_cfg.ap.password, sizeof(v_pass));
+	static bool M10_startAP(const ST_A10_WifiConfig& p_cfg_wifi, uint8_t p_channel) {
+		char v_pass[A10_Const::LEN_PASS + 1];
+		strlcpy(v_pass, p_cfg_wifi.ap.password, sizeof(v_pass));
 
 		if (strlen(v_pass) < 8) {
 			uint32_t v_r = esp_random();
@@ -153,7 +161,7 @@ public:
 		WiFi.softAPdisconnect(true);
 		WiFi.disconnect(true, true);
 
-		bool v_ok = WiFi.softAP(p_cfg.ap.ssid, v_pass, p_channel, false, 4);
+		bool v_ok = WiFi.softAP(p_cfg_wifi.ap.ssid, v_pass, p_channel, false, 4);
 		CL_D10_Logger::log(v_ok ? EN_L10_LOG_INFO : EN_L10_LOG_ERROR,
 		                   v_ok ? "[WiFi] AP started (%s)" : "[WiFi] AP start ERR",
 		                   WiFi.softAPIP().toString().c_str());
@@ -163,20 +171,20 @@ public:
 	// ==================================================
 	// Start STA
 	// ==================================================
-	static bool M10_startSTA(const ST_A10_WifiConfig& p_cfg,
+	static bool M10_startSTA(const ST_A10_WifiConfig& p_cfg_wifi,
 	                         WiFiMulti& p_multi,
 	                         uint8_t p_maxTries) {
 		s_staConnected  = false;
 		s_lastStaStatus = WL_IDLE_STATUS;
 
-		if (p_cfg.sta_count == 0) {
+		if (p_cfg_wifi.sta_count == 0) {
 			CL_D10_Logger::log(EN_L10_LOG_WARN, "[WiFi] No STA networks");
 			return false;
 		}
 
-		for (uint8_t v_i = 0; v_i < p_cfg.sta_count; v_i++) {
-			p_multi.addAP(p_cfg.sta[v_i].ssid, p_cfg.sta[v_i].pass);
-			CL_D10_Logger::log(EN_L10_LOG_INFO, "[WiFi] STA candidate: %s", p_cfg.sta[v_i].ssid);
+		for (uint8_t v_i = 0; v_i < p_cfg_wifi.sta_count; v_i++) {
+			p_multi.addAP(p_cfg_wifi.sta[v_i].ssid, p_cfg_wifi.sta[v_i].pass);
+			CL_D10_Logger::log(EN_L10_LOG_INFO, "[WiFi] STA candidate: %s", p_cfg_wifi.sta[v_i].ssid);
 		}
 
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "[WiFi] STA connecting...");
@@ -208,14 +216,15 @@ public:
 	// ==================================================
 	// NTP Sync
 	// ==================================================
-	static void M10_syncTimeIfNeeded(const ST_A10_WifiConfig& p_cfg) {
+	static void M10_syncTimeIfNeeded(const ST_A10_WifiConfig& p_cfg_wifi, ST_A10_SystemConfig& p_cfg_system) {
 		if (s_timeSynced) return;
 
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "[NTP] Sync start: %s",
-		                   p_cfg.time.ntp_server);
+							p_cfg_system.time.ntp_server);
+		                   
 
-		configTime(0, 0, p_cfg.time.ntp_server);
-		setenv("TZ", p_cfg.time.timezone, 1);
+		configTime(0, 0, p_cfg_system.time.ntp_server);
+		setenv("TZ", p_cfg_system.time.timezone, 1);
 		tzset();
 
 		uint32_t v_start = millis();

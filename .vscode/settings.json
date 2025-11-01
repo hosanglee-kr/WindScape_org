@@ -17,6 +17,14 @@
     //"editor.fontWeight": "400",
     "editor.fontSize": 14,
     "files.associations": {
-        "*.old": "cpp"
+        "*.old": "cpp",
+        "typeinfo": "cpp",
+        "deque": "cpp",
+        "array": "cpp",
+        "bitset": "cpp",
+        "string_view": "cpp",
+        "initializer_list": "cpp",
+        "regex": "cpp",
+        "utility": "cpp"
     } // Regular
 }

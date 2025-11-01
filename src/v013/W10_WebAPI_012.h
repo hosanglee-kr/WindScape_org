@@ -282,7 +282,7 @@ private:
 		bool changed=CL_C10_ConfigManager::patchFromJson(g_A10_config_root,v,wifiChanged);
 		if(changed) CL_C10_ConfigManager::saveAll(g_A10_config_root);
 		if(wifiChanged && g_A10_config_root.wifi){
-			CL_M10_WiFiManager::M10_init(*g_A10_config_root.wifi,*s_multi);
+			CL_M10_WiFiManager::init(*g_A10_config_root.wifi,*s_multi);
 		}
 		if(g_A10_config_root.control && s_sim){
 			s_sim->S10_applyPreset(g_A10_config_root.control->sim.preset);
@@ -334,7 +334,7 @@ private:
 
 	// ---- /api/sim/stop ----
 	static void _api_sim_stop(AsyncWebServerRequest*r){
-		s_sim->S10_stop();
+		s_sim->stop();
 		s_ct->setFanEnable(false);
 		_sendText(r,"{\"sim\":\"stopped\"}");
 	}
