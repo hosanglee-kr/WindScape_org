@@ -298,8 +298,8 @@ private:
 		}
 
 		const auto& v_seg = p_sch.segments[curSegment];
-		uint32_t v_onMs  = max(1, v_seg.on_minutes)*60000UL;
-		uint32_t v_offMs = max(0, v_seg.off_minutes)*60000UL;
+		uint32_t v_onMs  = max((unit16_t)1, v_seg.on_minutes)*60000UL;
+		uint32_t v_offMs = max((uint16_t)0, v_seg.off_minutes)*60000UL;
 
 		if (segOnPhase) {
 			if (millis()-segPhaseStartMs >= v_onMs) {
