@@ -192,7 +192,7 @@ private:
 	// Control Manager (CT10)
 	// ==================================================
 	void _initControl() {
-		_control.begin(&_sim, &_pwm, &_motion);
+		_control.begin(&_sim, &_pwm);
 		CL_D10_Logger::log(EN_L10_LOG_INFO,"[WS10] Control manager ready");
 	}
 
