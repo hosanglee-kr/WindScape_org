@@ -101,11 +101,21 @@ public:
 			_rt.pirEnabled     = true;
 			_rt.pirPin         = g_A10_config_root.system.hw.pir.pin;
 			_rt.pirDebounce_ms = g_A10_config_root.system.hw.pir.debounce_sec * 1000UL;
-			_rt.pirHold_sec    = g_A10_config_root.system.hw.pir.hold_sec;
 		}
+		// PIR hold time: motion config 우선, 없으면 default
+        if (g_A10_config_root.motion && g_A10_config_root.motion->pir.enabled) {
+            _rt.pirHold_sec = g_A10_config_root.motion->pir.hold_sec;
+        } else {
+           _rt.pirHold_sec = G_M10_DEFAULT_PIR_HOLD_SEC; // fallback
+        }
+		
 		if (g_A10_config_root.system.hw.ble.enabled) {
 			_rt.bleEnabled = true;
 		}
+
+		if (g_A10_config_root.motion && g_A10_config_root.motion->ble.enabled) {
+           _rt.bleEnabled = true;
+        }
 
 		if (_rt.pirEnabled && _rt.pirPin != 255) {
 			pinMode(_rt.pirPin, INPUT);
