@@ -289,7 +289,8 @@ static bool loadControlConfig(ST_A10_ControlConfig& c) {
     JsonObjectConst root = doc["control"];
 
     // runMode
-    c.runMode = root["runMode"] | 0;
+    c.runMode = static_cast<T_A10_control_runMode_t>(root["runMode"] | 0); 
+    // c.runMode = root["runMode"] | 0;
     strlcpy(c.runModeDesc, root["runModeDesc"] | "0=Continuous Mode, 1=Schedule Mode", sizeof(c.runModeDesc));
 
     // Continuous.wind
