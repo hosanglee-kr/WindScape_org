@@ -340,7 +340,7 @@ inline float A10_getRandom01() {
 	return static_cast<float>(esp_random()) / static_cast<float>(UINT32_MAX);
 }
 inline float A10_randRange(float a, float b) {
-	return a + A10_rand01() * (b - a);
+	return a + A10_getRandom01() * (b - a);
 }
 inline const char* A10_getPresetName(uint8_t p_index) {
     if (p_index >= EN_A10_PRESET_COUNT) return "UNKNOWN";
