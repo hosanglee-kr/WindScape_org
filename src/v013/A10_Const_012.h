@@ -336,13 +336,21 @@ inline ST_A10_ConfigRoot g_A10_config_root;
 // ======================================================
 // 유틸 함수
 // ======================================================
-inline float A10_rand01() {
+inline float A10_getRandom01() {
 	return static_cast<float>(esp_random()) / static_cast<float>(UINT32_MAX);
 }
 inline float A10_randRange(float a, float b) {
 	return a + A10_rand01() * (b - a);
 }
-
+inline const char* A10_getPresetName(uint8_t p_index) {
+    if (p_index >= EN_A10_PRESET_COUNT) return "UNKNOWN";
+    return g_A10_PRESET_MODE_NAMES_Arr[p_index];
+}
+inline int8_t A10_getPresetIndex(const char* p_name) {
+    for (uint8_t v_i = 0; v_i < EN_A10_PRESET_COUNT; ++v_i)
+        if (strcasecmp(p_name, g_A10_PRESET_MODE_NAMES_Arr[v_i]) == 0) return static_cast<int8_t>(v_i);
+    return -1;
+}
 // ======================================================
 // 기본값 초기화 함수
 // ======================================================
