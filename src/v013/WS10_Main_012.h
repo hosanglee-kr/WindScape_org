@@ -200,7 +200,8 @@ private:
 	// Web API
 	// ==================================================
 	void _initWeb() {
-		CL_W10_WebAPI::W10_init(_webServer, _sim, _wifiMulti, _pwm);
+		CL_W10_WebAPI::W10_init(_webServer, _sim, _ct, _motion, _wifiMulti, _pwm);
+		// CL_W10_WebAPI::W10_init(_webServer, _sim, _wifiMulti, _pwm);
 		CL_D10_Logger::log(EN_L10_LOG_INFO,"[WS10] Web API ready");
 	}
 
