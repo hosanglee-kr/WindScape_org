@@ -1,11 +1,12 @@
 {
   "windProfile": {
-    "version": "023",
+    "version": "024",
     "json_file": "cfg_dft_windProfile_024.json",
+
     "presets": [
       {
         "name": "Country Breeze",
-        "code": "COUNTRY",
+        "code": "COUNTRY_BREEZE",
         "base": {
           "wind_intensity": 55,
           "gust_frequency": 30,
@@ -13,8 +14,8 @@
           "fan_limit": 90,
           "min_fan": 10,
           "turbulence_length_scale": 38,
-          "turbulence_intensity_sigma": 0.4,
-          "thermal_bubble_strength": 1.8,
+          "turbulence_intensity_sigma": 0.40,
+          "thermal_bubble_strength": 1.80,
           "thermal_bubble_radius": 16
         }
       },
@@ -29,7 +30,7 @@
           "min_fan": 10,
           "turbulence_length_scale": 35,
           "turbulence_intensity_sigma": 0.48,
-          "thermal_bubble_strength": 1.9,
+          "thermal_bubble_strength": 1.90,
           "thermal_bubble_radius": 18
         }
       },
@@ -44,7 +45,7 @@
           "min_fan": 12,
           "turbulence_length_scale": 42,
           "turbulence_intensity_sigma": 0.55,
-          "thermal_bubble_strength": 2.2,
+          "thermal_bubble_strength": 2.20,
           "thermal_bubble_radius": 20
         }
       },
@@ -59,7 +60,7 @@
           "min_fan": 14,
           "turbulence_length_scale": 45,
           "turbulence_intensity_sigma": 0.65,
-          "thermal_bubble_strength": 2.5,
+          "thermal_bubble_strength": 2.50,
           "thermal_bubble_radius": 20
         }
       },
@@ -74,7 +75,7 @@
           "min_fan": 20,
           "turbulence_length_scale": 50,
           "turbulence_intensity_sigma": 0.70,
-          "thermal_bubble_strength": 2.1,
+          "thermal_bubble_strength": 2.10,
           "thermal_bubble_radius": 25
         }
       },
@@ -89,7 +90,7 @@
           "min_fan": 12,
           "turbulence_length_scale": 40,
           "turbulence_intensity_sigma": 0.50,
-          "thermal_bubble_strength": 2.3,
+          "thermal_bubble_strength": 2.30,
           "thermal_bubble_radius": 17
         }
       },
@@ -104,7 +105,7 @@
           "min_fan": 8,
           "turbulence_length_scale": 34,
           "turbulence_intensity_sigma": 0.35,
-          "thermal_bubble_strength": 1.5,
+          "thermal_bubble_strength": 1.50,
           "thermal_bubble_radius": 14
         }
       },
@@ -119,7 +120,7 @@
           "min_fan": 10,
           "turbulence_length_scale": 36,
           "turbulence_intensity_sigma": 0.55,
-          "thermal_bubble_strength": 2.0,
+          "thermal_bubble_strength": 2.00,
           "thermal_bubble_radius": 16
         }
       },
@@ -134,7 +135,7 @@
           "min_fan": 15,
           "turbulence_length_scale": 45,
           "turbulence_intensity_sigma": 0.60,
-          "thermal_bubble_strength": 2.4,
+          "thermal_bubble_strength": 2.40,
           "thermal_bubble_radius": 22
         }
       },
@@ -149,11 +150,12 @@
           "min_fan": 8,
           "turbulence_length_scale": 30,
           "turbulence_intensity_sigma": 0.30,
-          "thermal_bubble_strength": 1.2,
+          "thermal_bubble_strength": 1.20,
           "thermal_bubble_radius": 10
         }
       }
     ],
+
     "styles": [
       {
         "name": "Active",
@@ -208,4 +210,3 @@
     ]
   }
 }
-
