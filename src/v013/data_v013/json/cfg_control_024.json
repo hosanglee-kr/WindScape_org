@@ -7,14 +7,8 @@
     "Continuous": {
       "wind": {
         "enabled": true,
-        "preset": { 
-          "name": "Country Breeze",
-          "code": "COUNTRY_BREEZE"
-        },
-        "style": {
-          "name": "Balance",
-          "code": "BALANCE"
-        },
+        "presetCode": "COUNTRY_BREEZE",
+        "styleCode": "BALANCE",
         "adjust": {
           "wind_intensity": 70.0,
           "gust_frequency": 45.0,
@@ -50,8 +44,8 @@
             "off_minutes": 10,
             "mode": "preset",
 
-            "preset": { "name": "Harbor Breeze", "code": "HARBOR_BREEZE" },
-            "style":  { "name": "Balance", "code": "BALANCE" },
+            "presetCode": "HARBOR_BREEZE",
+            "styleCode": "BALANCE",
 
             "adjust": {
               "intensity": 10,
@@ -88,8 +82,8 @@
             "off_minutes": 15,
             "mode": "preset",
 
-            "preset": { "name": "Country Breeze", "code": "COUNTRY_BREEZE" },
-            "style":  { "name": "Relax", "code": "RELAX" },
+            "presetCode": "COUNTRY_BREEZE",
+            "styleCode": "RELAX",
 
             "adjust": {
               "intensity": 10,
