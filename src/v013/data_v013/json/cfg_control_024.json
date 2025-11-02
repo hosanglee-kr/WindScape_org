@@ -1,6 +1,8 @@
 {
   "control": {
-    "runMode": 0,                  // 0=Continuous, 1=Schedule
+    "jsonFile":"cfg_control_024.json",
+    "runMode": 0,
+    "runModeDesc": "0=Continuous Mode, 1=Schedule Mode",
 
     "Continuous": {
       "wind": {
