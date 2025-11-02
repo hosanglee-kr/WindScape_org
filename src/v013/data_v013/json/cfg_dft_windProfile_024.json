@@ -1,9 +1,11 @@
 {
   "windProfile": {
     "version": "023",
+    "json_file": "cfg_dft_windProfile_024.json",
     "presets": [
       {
-        "name": "COUNTRY_BREEZE",
+        "name": "Country Breeze",
+        "code": "COUNTRY",
         "base": {
           "wind_intensity": 55,
           "gust_frequency": 30,
@@ -17,21 +19,8 @@
         }
       },
       {
-        "name": "OCEAN",
-        "base": {
-          "wind_intensity": 70,
-          "gust_frequency": 50,
-          "wind_variability": 55,
-          "fan_limit": 95,
-          "min_fan": 12,
-          "turbulence_length_scale": 42,
-          "turbulence_intensity_sigma": 0.55,
-          "thermal_bubble_strength": 2.2,
-          "thermal_bubble_radius": 20
-        }
-      },
-      {
-        "name": "MEDITERRANEAN",
+        "name": "Mediterranean",
+        "code": "MEDITERRANEAN",
         "base": {
           "wind_intensity": 65,
           "gust_frequency": 38,
@@ -45,39 +34,26 @@
         }
       },
       {
-        "name": "FOREST_CANOPY",
+        "name": "Ocean",
+        "code": "OCEAN",
         "base": {
-          "wind_intensity": 40,
-          "gust_frequency": 25,
-          "wind_variability": 30,
-          "fan_limit": 85,
-          "min_fan": 8,
-          "turbulence_length_scale": 34,
-          "turbulence_intensity_sigma": 0.35,
-          "thermal_bubble_strength": 1.5,
-          "thermal_bubble_radius": 14
+          "wind_intensity": 70,
+          "gust_frequency": 50,
+          "wind_variability": 55,
+          "fan_limit": 95,
+          "min_fan": 12,
+          "turbulence_length_scale": 42,
+          "turbulence_intensity_sigma": 0.55,
+          "thermal_bubble_strength": 2.2,
+          "thermal_bubble_radius": 20
         }
       },
       {
-        "name": "TROPICAL_RAIN",
+        "name": "Mountain",
+        "code": "MOUNTAIN",
         "base": {
           "wind_intensity": 80,
-          "gust_frequency": 60,
-          "wind_variability": 65,
-          "fan_limit": 98,
-          "min_fan": 15,
-          "turbulence_length_scale": 45,
-          "turbulence_intensity_sigma": 0.60,
-          "thermal_bubble_strength": 2.4,
-          "thermal_bubble_radius": 22
-        }
-      },
-      
-      {
-        "name": "MOUNTAIN",
-        "base": {
-          "wind_intensity": 80, 
-          "gust_frequency": 55, 
+          "gust_frequency": 55,
           "wind_variability": 65,
           "fan_limit": 96,
           "min_fan": 14,
@@ -88,10 +64,11 @@
         }
       },
       {
-        "name": "PLAINS",
+        "name": "Plains",
+        "code": "PLAINS",
         "base": {
-          "wind_intensity": 85, 
-          "gust_frequency": 70, 
+          "wind_intensity": 85,
+          "gust_frequency": 70,
           "wind_variability": 75,
           "fan_limit": 100,
           "min_fan": 20,
@@ -102,7 +79,8 @@
         }
       },
       {
-        "name": "HARBOR_BREEZE",
+        "name": "Harbor Breeze",
+        "code": "HARBOR_BREEZE",
         "base": {
           "wind_intensity": 68,
           "gust_frequency": 45,
@@ -116,7 +94,23 @@
         }
       },
       {
-        "name": "URBAN_SUNSET",
+        "name": "Forest Canopy",
+        "code": "FOREST_CANOPY",
+        "base": {
+          "wind_intensity": 40,
+          "gust_frequency": 25,
+          "wind_variability": 30,
+          "fan_limit": 85,
+          "min_fan": 8,
+          "turbulence_length_scale": 34,
+          "turbulence_intensity_sigma": 0.35,
+          "thermal_bubble_strength": 1.5,
+          "thermal_bubble_radius": 14
+        }
+      },
+      {
+        "name": "Urban Sunset",
+        "code": "URBAN_SUNSET",
         "base": {
           "wind_intensity": 60,
           "gust_frequency": 50,
@@ -130,7 +124,23 @@
         }
       },
       {
-        "name": "DESERT_NIGHT",
+        "name": "Tropical Rain",
+        "code": "TROPICAL_RAIN",
+        "base": {
+          "wind_intensity": 80,
+          "gust_frequency": 60,
+          "wind_variability": 65,
+          "fan_limit": 98,
+          "min_fan": 15,
+          "turbulence_length_scale": 45,
+          "turbulence_intensity_sigma": 0.60,
+          "thermal_bubble_strength": 2.4,
+          "thermal_bubble_radius": 22
+        }
+      },
+      {
+        "name": "Desert Night",
+        "code": "DESERT_NIGHT",
         "base": {
           "wind_intensity": 45,
           "gust_frequency": 20,
@@ -144,37 +154,58 @@
         }
       }
     ],
-    "styles": {
-      "ACTIVE": {
-        "intensity_factor": 1.25,
-        "variability_factor": 1.20,
-        "gust_factor": 1.30,
-        "thermal_factor": 1.10
+    "styles": [
+      {
+        "name": "Active",
+        "code": "ACTIVE",
+        "factors": {
+          "intensity_factor": 1.25,
+          "variability_factor": 1.20,
+          "gust_factor": 1.30,
+          "thermal_factor": 1.10
+        }
       },
-      "FOCUS": {
-        "intensity_factor": 1.05,
-        "variability_factor": 0.80,
-        "gust_factor": 0.85,
-        "thermal_factor": 0.90
+      {
+        "name": "Focus",
+        "code": "FOCUS",
+        "factors": {
+          "intensity_factor": 1.05,
+          "variability_factor": 0.80,
+          "gust_factor": 0.85,
+          "thermal_factor": 0.90
+        }
       },
-      "BALANCE": {
-        "intensity_factor": 1.00,
-        "variability_factor": 1.00,
-        "gust_factor": 1.00,
-        "thermal_factor": 1.00
+      {
+        "name": "Balance",
+        "code": "BALANCE",
+        "factors": {
+          "intensity_factor": 1.00,
+          "variability_factor": 1.00,
+          "gust_factor": 1.00,
+          "thermal_factor": 1.00
+        }
       },
-      "RELAX": {
-        "intensity_factor": 0.80,
-        "variability_factor": 0.85,
-        "gust_factor": 0.70,
-        "thermal_factor": 1.10
+      {
+        "name": "Relax",
+        "code": "RELAX",
+        "factors": {
+          "intensity_factor": 0.80,
+          "variability_factor": 0.85,
+          "gust_factor": 0.70,
+          "thermal_factor": 1.10
+        }
       },
-      "SLEEP": {
-        "intensity_factor": 0.65,
-        "variability_factor": 0.60,
-        "gust_factor": 0.40,
-        "thermal_factor": 0.90
+      {
+        "name": "Sleep",
+        "code": "SLEEP",
+        "factors": {
+          "intensity_factor": 0.65,
+          "variability_factor": 0.60,
+          "gust_factor": 0.40,
+          "thermal_factor": 0.90
+        }
       }
-    }
+    ]
   }
 }
+
