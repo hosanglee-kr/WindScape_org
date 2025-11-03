@@ -51,8 +51,8 @@
             "styleCode": "BALANCE",
 
             "adjust": {
-              "intensity": 10,
-              "variability": 5
+              "wind_intensity": 10,
+              "wind_variability": 5
             }
           },
           {
@@ -89,8 +89,8 @@
             "presetCode": "COUNTRY_BREEZE",
             "styleCode": "RELAX",
             "adjust": {
-              "intensity": 10,
-              "variability": 5
+              "wind_intensity": 10,
+              "wind_variability": 5
             }
           }
         ],
@@ -115,8 +115,8 @@
             "presetCode": "COUNTRY_BREEZE",
             "styleCode": "RELAX",
             "adjust": {
-              "intensity": 10,
-              "variability": 5
+              "wind_intensity": 10,
+              "wind_variability": 5
             }
           }
         ],
