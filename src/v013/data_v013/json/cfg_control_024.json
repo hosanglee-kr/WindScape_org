@@ -20,6 +20,10 @@
           "thermal_bubble_strength": 2.0,
           "thermal_bubble_radius": 18.0
         }
+      }, 
+      "timer": {
+        "enabled": true,              
+        "duration_minutes": 120       
       },
 
       "motion": {
