@@ -1,0 +1,40 @@
+{
+  "userProfiles": {
+    "version": "024",
+    "maxProfiles": 10,
+
+    "profiles": [
+      {
+        "profileId": 1,
+        "name": "수면모드",
+        "enabled": true,
+        "segments": [
+          {
+            "segNo": 10,
+            "on_minutes": 30,
+            "off_minutes": 0,
+            "mode": "preset",
+            "presetCode": "OCEAN",
+            "styleCode": "SLEEP",
+            "adjust": {
+              "wind_intensity": -10,
+              "wind_variability": -20
+            }
+          },
+          {
+            "segNo": 20,
+            "on_minutes": 120,
+            "off_minutes": 0,
+            "mode": "preset",
+            "presetCode": "FOREST_CANOPY",
+            "styleCode": "SLEEP",
+            "adjust": {
+              "wind_intensity": -20,
+              "wind_variability": -30
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
