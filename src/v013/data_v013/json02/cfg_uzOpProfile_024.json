@@ -1,8 +1,7 @@
 {
   "userProfiles": {
     "version": "024",
-    "maxProfiles": 10,
-
+    "json_file": "cfg_uzOpProfile_024.json",
     "profiles": [
       {
         "profileId": 1,
