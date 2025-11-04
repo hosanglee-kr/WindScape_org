@@ -41,11 +41,10 @@
             "fixed_speed": 55.0
           }  
         ],
-        "timer": {
-            "enabled": true,              
-            "duration_minutes": 120       
+        "autoOffTimer": {
+           "enabled": true,
+           "minutes": 120
         },
-
         "motion": {
             "pir": { "enabled": true, "hold_sec": 120 },
             "ble": { "enabled": true, "rssi_threshold": -70, "hold_sec": 120 }
