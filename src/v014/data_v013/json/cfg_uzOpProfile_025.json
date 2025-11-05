@@ -1,7 +1,7 @@
 {
   "userProfiles": {
-    "version": "024",
-    "jsonFile": "cfg_uzOpProfile_025_final.json", // 파일명 수정
+    "version": "025",
+    "jsonFile": "cfg_uzOpProfile_025_final.json",
 
     "profiles": [
       {
@@ -9,7 +9,6 @@
         "name": "수면모드",
         "enabled": true,
         "repeatSegments": true,
-
         "segments": [
           {
             "segNo": 10,
@@ -37,33 +36,22 @@
             "fixed_speed": 45.0
           }
         ],
-
-        "autoOff": { 
-          "timer":{
-              "enabled": true, 
-              "minutes": 240 
-          },
-          "offTime":{
-              "enabled": true, 
-               "time" : "05:00" 
-          }, 
-          "offTemp":{
-              "enabled": true, 
-               "temp" : 26.0    
-          } 
+        "autoOff": {
+          "timer": { "enabled": true, "minutes": 240 },
+          "offTime": { "enabled": true, "time": "05:00" },
+          "offTemp": { "enabled": true, "temp": 26.0 }
         },
-
         "motion": {
           "pir": { "enabled": false },
           "ble": { "enabled": false }
         }
       },
+
       {
         "profileNo": 2,
         "name": "집중모드",
         "enabled": true,
         "repeatSegments": true,
-
         "segments": [
           {
             "segNo": 10,
@@ -75,11 +63,11 @@
             "adjust": { "wind_intensity": 5, "wind_variability": -10 }
           }
         ],
-
-        "autoOff": { 
-          "timer": { "enabled": true, "minutes": 180 }
+        "autoOff": {
+          "timer": { "enabled": true, "minutes": 180 },
+          "offTime": { "enabled": false },
+          "offTemp": { "enabled": false }
         },
-
         "motion": {
           "pir": { "enabled": true, "hold_sec": 300 },
           "ble": { "enabled": true, "rssi_threshold": -72, "hold_sec": 300 }
@@ -91,60 +79,60 @@
         "name": "휴식모드",
         "enabled": true,
         "repeatSegments": true,
-
         "segments": [
           {
             "segNo": 10,
             "on_minutes": 45,
             "off_minutes": 15,
             "mode": "PRESET",
-            "presetCode": "HARBOR_BREEZE", 
+            "presetCode": "HARBOR_BREEZE",
             "styleCode": "RELAX",
             "adjust": { "wind_intensity": -5, "wind_variability": -5 }
           }
         ],
-
-        "autoOff": { 
-          "timer": { "enabled": false, "minutes": 0 }
+        "autoOff": {
+          "timer": { "enabled": false, "minutes": 0 },
+          "offTime": { "enabled": false },
+          "offTemp": { "enabled": false }
         },
-
         "motion": {
           "pir": { "enabled": true, "hold_sec": 180 },
           "ble": { "enabled": true, "rssi_threshold": -70, "hold_sec": 180 }
         }
       },
+
       {
         "profileNo": 4,
         "name": "환기모드",
         "enabled": true,
         "repeatSegments": true,
-
         "segments": [
           {
             "segNo": 10,
             "on_minutes": 20,
             "off_minutes": 5,
             "mode": "PRESET",
-            "presetCode": "PLAINS", 
-            "styleCode": "BALANCE"
+            "presetCode": "PLAINS",
+            "styleCode": "BALANCE",
+            "adjust": { "wind_intensity": 0, "wind_variability": 0 }
           }
         ],
-
-        "autoOff": { 
-          "timer": { "enabled": false, "minutes": 0 }
+        "autoOff": {
+          "timer": { "enabled": false, "minutes": 0 },
+          "offTime": { "enabled": false },
+          "offTemp": { "enabled": false }
         },
-
         "motion": {
           "pir": { "enabled": false },
           "ble": { "enabled": false }
         }
       },
+
       {
         "profileNo": 5,
         "name": "활동모드",
         "enabled": true,
         "repeatSegments": true,
-
         "segments": [
           {
             "segNo": 10,
@@ -156,14 +144,31 @@
             "adjust": { "wind_intensity": 10, "gust_frequency": 10 }
           }
         ],
-
-        "autoOff": { 
-          "timer": { "enabled": false, "minutes": 0 }
+        "autoOff": {
+          "timer": { "enabled": false, "minutes": 0 },
+          "offTime": { "enabled": false },
+          "offTemp": { "enabled": false }
         },
-
         "motion": {
           "pir": { "enabled": true, "hold_sec": 150 },
           "ble": { "enabled": true, "rssi_threshold": -68, "hold_sec": 150 }
+        }
+      },
+
+      {
+        "profileNo": 6,
+        "name": "사용자 정의",
+        "enabled": false,
+        "repeatSegments": false,
+        "segments": [],
+        "autoOff": {
+          "timer": { "enabled": false, "minutes": 0 },
+          "offTime": { "enabled": false },
+          "offTemp": { "enabled": false }
+        },
+        "motion": {
+          "pir": { "enabled": false },
+          "ble": { "enabled": false }
         }
       }
     ]
