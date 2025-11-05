@@ -38,7 +38,20 @@
           }
         ],
 
-        "autoOffTimer": { "enabled": true, "minutes": 240 },
+        "autoOff": { 
+          "timer" :{
+              "enabled": true, 
+              "minutes": 240 
+          },
+          "offTime":{
+              "enable": true,
+               "Time" : "05:00"
+          }, 
+          "offTemp":{
+              "enable": true,
+               "temp" : "26"
+          }, 
+        },
 
         "motion": {
           "pir": { "enabled": false },
