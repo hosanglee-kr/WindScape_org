@@ -4,8 +4,6 @@
     "jsonFile": "cfg_uzOpProfile_025.json",
 
     "profiles": [
-
-      /* 💤 수면 모드 */
       {
         "profileId": 1,
         "name": "수면모드",
@@ -47,8 +45,6 @@
           "ble": { "enabled": false }
         }
       },
-
-      /* 🧑‍💻 집중 모드 */
       {
         "profileId": 2,
         "name": "집중모드",
@@ -75,7 +71,6 @@
         }
       },
 
-      /* 🧘‍♂️ 휴식 모드 */
       {
         "profileId": 3,
         "name": "휴식모드",
@@ -101,8 +96,6 @@
           "ble": { "enabled": true, "rssi_threshold": -70, "hold_sec": 180 }
         }
       },
-
-      /* 🌬️ 환기 모드 */
       {
         "profileId": 4,
         "name": "환기모드",
