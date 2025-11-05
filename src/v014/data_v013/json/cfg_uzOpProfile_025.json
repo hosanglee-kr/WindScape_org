@@ -1,11 +1,11 @@
 {
   "userProfiles": {
     "version": "024",
-    "jsonFile": "cfg_uzOpProfile_025.json",
+    "jsonFile": "cfg_uzOpProfile_025_final.json", // 파일명 수정
 
     "profiles": [
       {
-        "profileId": 1,
+        "profileNo": 1,
         "name": "수면모드",
         "enabled": true,
         "repeatSegments": true,
@@ -39,18 +39,18 @@
         ],
 
         "autoOff": { 
-          "timer" :{
+          "timer":{
               "enabled": true, 
               "minutes": 240 
           },
           "offTime":{
-              "enable": true,
-               "Time" : "05:00"
+              "enabled": true, 
+               "time" : "05:00" 
           }, 
           "offTemp":{
-              "enable": true,
-               "temp" : "26"
-          }, 
+              "enabled": true, 
+               "temp" : 26.0    
+          } 
         },
 
         "motion": {
@@ -59,7 +59,7 @@
         }
       },
       {
-        "profileId": 2,
+        "profileNo": 2,
         "name": "집중모드",
         "enabled": true,
         "repeatSegments": true,
@@ -76,7 +76,9 @@
           }
         ],
 
-        "autoOffTimer": { "enabled": true, "minutes": 180 },
+        "autoOff": { 
+          "timer": { "enabled": true, "minutes": 180 }
+        },
 
         "motion": {
           "pir": { "enabled": true, "hold_sec": 300 },
@@ -85,7 +87,7 @@
       },
 
       {
-        "profileId": 3,
+        "profileNo": 3,
         "name": "휴식모드",
         "enabled": true,
         "repeatSegments": true,
@@ -96,13 +98,15 @@
             "on_minutes": 45,
             "off_minutes": 15,
             "mode": "PRESET",
-            "presetCode": "HARBOUR_BREEZE",
+            "presetCode": "HARBOR_BREEZE", 
             "styleCode": "RELAX",
             "adjust": { "wind_intensity": -5, "wind_variability": -5 }
           }
         ],
 
-        "autoOffTimer": { "enabled": false, "minutes": 0 },
+        "autoOff": { 
+          "timer": { "enabled": false, "minutes": 0 }
+        },
 
         "motion": {
           "pir": { "enabled": true, "hold_sec": 180 },
@@ -110,7 +114,7 @@
         }
       },
       {
-        "profileId": 4,
+        "profileNo": 4,
         "name": "환기모드",
         "enabled": true,
         "repeatSegments": true,
@@ -121,22 +125,22 @@
             "on_minutes": 20,
             "off_minutes": 5,
             "mode": "PRESET",
-            "presetCode": "PLAIN",
+            "presetCode": "PLAINS", 
             "styleCode": "BALANCE"
           }
         ],
 
-        "autoOffTimer": { "enabled": false, "minutes": 0 },
+        "autoOff": { 
+          "timer": { "enabled": false, "minutes": 0 }
+        },
 
         "motion": {
           "pir": { "enabled": false },
           "ble": { "enabled": false }
         }
       },
-
-      /* ⚽ 활동 모드 */
       {
-        "profileId": 5,
+        "profileNo": 5,
         "name": "활동모드",
         "enabled": true,
         "repeatSegments": true,
@@ -153,7 +157,9 @@
           }
         ],
 
-        "autoOffTimer": { "enabled": false, "minutes": 0 },
+        "autoOff": { 
+          "timer": { "enabled": false, "minutes": 0 }
+        },
 
         "motion": {
           "pir": { "enabled": true, "hold_sec": 150 },
