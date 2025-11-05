@@ -1,5 +1,6 @@
 {
 	"motion": {
+		"jsonFile": "cfg_motion_025.json",
 		"pir": {
 			"enabled": true,
 			"hold_sec": 120
