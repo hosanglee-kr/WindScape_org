@@ -311,11 +311,11 @@ inline void A10_safe_strlcpy(char* dst, const char* src, size_t n) {
 }
 
 // windDict 탐색
-int16_t A10_findPresetIndexByCode(const ST_A10_WindProfileDict_t& dict, const char* code);
-int16_t A10_findStyleIndexByCode(const ST_A10_WindProfileDict_t& dict, const char* code);
+int16_t C10_findPresetIndexByCode(const ST_A10_WindProfileDict_t& dict, const char* code);
+int16_t C10_findStyleIndexByCode(const ST_A10_WindProfileDict_t& dict, const char* code);
 
 // 해석 유틸: preset × style × adjust → ResolvedWind
-bool A10_resolveWindParams(const ST_A10_WindProfileDict_t& dict,
+bool C10_resolveWindParams(const ST_A10_WindProfileDict_t& dict,
 						   const char*					   presetCode,
 						   const char*					   styleCode,
 						   const ST_A10_AdjustDelta_t*	   adj,
