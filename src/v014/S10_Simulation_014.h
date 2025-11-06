@@ -595,23 +595,26 @@ private:
 	// PWM 반영
 	// --------------------------------------------------
 	void _applyFan(float p_pct) {
-		if (!_p_pwm) return;
+    if (!_p_pwm) {
+        CL_D10_Logger::log(EN_L10_LOG_WARN, "[S10] PWM not attached, skip applyFan()");
+        return;
+    }
 
-		float v_req   = p_pct/100.0f;
-		float v_limit = S10_fanLimitPct/100.0f;
-		float v_minf  = S10_minFanPct/100.0f;
-		float v_inten = S10_userIntensity/100.0f;
+    float v_req   = p_pct / 100.0f;
+    float v_limit = S10_fanLimitPct / 100.0f;
+    float v_minf  = S10_minFanPct / 100.0f;
+    float v_inten = S10_userIntensity / 100.0f;
 
-		if (!S10_fanPowerEnabled || v_inten <= 0.01f) {
-			_p_pwm->P10_setDutyPercent(0.0f);
-			return;
-		}
+    if (!S10_fanPowerEnabled || v_inten <= 0.01f) {
+        _p_pwm->P10_setDutyPercent(0.0f);
+        return;
+    }
 
-		if (S10_active) v_req *= v_inten;
-		v_req = fmaxf(v_minf, fminf(v_limit, v_req));
+    if (S10_active) v_req *= v_inten;
+    v_req = fmaxf(v_minf, fminf(v_limit, v_req));
 
-		_p_pwm->P10_setDutyPercent(v_req * 100.0f);
-	}
+    _p_pwm->P10_setDutyPercent(v_req * 100.0f);
+    }
 };
 
 // ------------------------------------------------------
