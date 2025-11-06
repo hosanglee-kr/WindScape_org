@@ -320,3 +320,26 @@ bool C10_resolveWindParams(const ST_A10_WindProfileDict_t& dict,
 						   const char*					   styleCode,
 						   const ST_A10_AdjustDelta_t*	   adj,
 						   ST_A10_ResolvedWind_t&		   outResolved);
+
+
+// ------------------------------------------------------
+// [보완] 랜덤 및 프리셋 유틸 (S10, C10 등 공용)
+// ------------------------------------------------------
+
+inline float A10_getRandom01() {
+    return (float)esp_random() / (float)UINT32_MAX;
+}
+
+inline float A10_randRange(float p_min, float p_max) {
+    return p_min + (A10_getRandom01() * (p_max - p_min));
+}
+
+// 프리셋 코드 → 인덱스 매핑 (S10용)
+inline int8_t A10_getPresetIndexByCode(const char* code) {
+    if (!code) return -1;
+    for (int8_t i = 0; i < EN_A10_PRESET_MAX; i++) {
+        if (strcasecmp(code, g_A10_PRESET_CODES[i]) == 0)
+            return i;
+    }
+    return -1;
+}
