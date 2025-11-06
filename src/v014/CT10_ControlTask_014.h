@@ -46,7 +46,7 @@
 #include "C10_ConfigManager_014.h"  // Schedules / UserProfiles 로더 + C10_resolveWindParams()
 #include "D10_Logger_011.h"
 #include "P10_PWM_ctrl_012.h"
-#include "S10_Simulation_012.h"
+#include "S10_Simulation_014.h"
 
 // 선택적: 모션 로직 전방 선언
 class CL_M10_MotionLogic;
