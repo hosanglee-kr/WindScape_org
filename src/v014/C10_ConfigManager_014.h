@@ -83,7 +83,7 @@ static bool C10_writeJsonFile(const char* path, const JsonDocument& doc, const c
 /* ======================================================
  * windDict 탐색 구현
  * ====================================================== */
-int16_t A10_findPresetIndexByCode(const ST_A10_WindProfileDict_t& dict, const char* code) {
+int16_t C10_findPresetIndexByCode(const ST_A10_WindProfileDict_t& dict, const char* code) {
 	if (!code)
 		return -1;
 	for (uint8_t i = 0; i < dict.preset_count; i++) {
@@ -92,7 +92,7 @@ int16_t A10_findPresetIndexByCode(const ST_A10_WindProfileDict_t& dict, const ch
 	}
 	return -1;
 }
-int16_t A10_findStyleIndexByCode(const ST_A10_WindProfileDict_t& dict, const char* code) {
+int16_t C10_findStyleIndexByCode(const ST_A10_WindProfileDict_t& dict, const char* code) {
 	if (!code)
 		return -1;
 	for (uint8_t i = 0; i < dict.style_count; i++) {
@@ -105,15 +105,15 @@ int16_t A10_findStyleIndexByCode(const ST_A10_WindProfileDict_t& dict, const cha
 /* ======================================================
  * preset × style × adjust → ResolvedWind 구현
  * ====================================================== */
-bool A10_resolveWindParams(const ST_A10_WindProfileDict_t& dict,
+bool C10_resolveWindParams(const ST_A10_WindProfileDict_t& dict,
 						   const char*					   presetCode,
 						   const char*					   styleCode,
 						   const ST_A10_AdjustDelta_t*	   adj,
 						   ST_A10_ResolvedWind_t&		   outResolved) {
-	int16_t pi = A10_findPresetIndexByCode(dict, presetCode);
+	int16_t pi = C10_findPresetIndexByCode(dict, presetCode);
 	if (pi < 0)
 		return false;
-	int16_t si = A10_findStyleIndexByCode(dict, styleCode);
+	int16_t si = C10_findStyleIndexByCode(dict, styleCode);
 	if (si < 0)
 		return false;
 
