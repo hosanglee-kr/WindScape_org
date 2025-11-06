@@ -280,4 +280,240 @@ public:
       dst.autoOff.offTemp.temp    = js["autoOffTimer"]["offTemp"]["temp"] | 0.0f;
 
       // motion
-      dst.motion.pir.enabled      = js["motion
+      dst.motion.pir.enabled      = js["motion"]["pir"]["enabled"] | false;
+      dst.motion.pir.hold_sec     = js["motion"]["pir"]["hold_sec"] | 0;
+      dst.motion.ble.enabled      = js["motion"]["ble"]["enabled"] | false;
+      dst.motion.ble.rssi_threshold = js["motion"]["ble"]["rssi_threshold"] | -70;
+      dst.motion.ble.hold_sec     = js["motion"]["ble"]["hold_sec"] | 0;
+    }
+    return true;
+  }
+
+  // UserProfiles 로드
+  static bool loadUserProfiles() {
+    JsonDocument d;
+    if (!C10_readJsonFile(A10_Const::USER_PROFILES_FILE, d)) return false;
+
+    auto root = d["userProfiles"];
+    if (!root.is<JsonObjectConst>()) { g_A10_config_root.userProfiles.count=0; return true; }
+
+    g_A10_config_root.userProfiles.count = 0;
+    if (root["profiles"].is<JsonArrayConst>()) {
+      for (JsonObjectConst jp : root["profiles"].as<JsonArrayConst>()) {
+        if (g_A10_config_root.userProfiles.count >= A10_Const::MAX_USER_PROFILES) break;
+        auto& it = g_A10_config_root.userProfiles.items[g_A10_config_root.userProfiles.count++];
+
+        it.profileNo     = jp["profileNo"] | 0;
+        A10_safe_strlcpy(it.name, jp["name"] | "", sizeof(it.name));
+        it.enabled       = jp["enabled"] | true;
+        it.repeatSegments= jp["repeatSegments"] | true;
+
+        // segments
+        it.seg_count = 0;
+        if (jp["segments"].is<JsonArrayConst>()) {
+          for (JsonObjectConst js : jp["segments"].as<JsonArrayConst>()) {
+            if (it.seg_count >= A10_Const::MAX_SEGMENTS_PER_PROFILE) break;
+            auto& sg = it.segments[it.seg_count++];
+
+            sg.segNo       = js["segNo"] | 0;
+            sg.on_minutes  = js["on_minutes"] | 0;
+            sg.off_minutes = js["off_minutes"] | 0;
+
+            const char* mode = js["mode"] | "PRESET";
+            sg.mode = (strcmp(mode,"FIXED")==0) ? EN_A10_SEG_MODE_FIXED : EN_A10_SEG_MODE_PRESET;
+
+            if (sg.mode == EN_A10_SEG_MODE_PRESET) {
+              A10_safe_strlcpy(sg.presetCode, js["presetCode"] | "OCEAN", sizeof(sg.presetCode));
+              A10_safe_strlcpy(sg.styleCode,  js["styleCode"]  | "BALANCE", sizeof(sg.styleCode));
+              sg.adjust.wind_intensity             = js["adjust"]["wind_intensity"] | 0.0f;
+              sg.adjust.wind_variability           = js["adjust"]["wind_variability"] | 0.0f;
+              sg.adjust.gust_frequency             = js["adjust"]["gust_frequency"] | 0.0f;
+              sg.adjust.fan_limit                  = js["adjust"]["fan_limit"] | 0.0f;
+              sg.adjust.min_fan                    = js["adjust"]["min_fan"] | 0.0f;
+              sg.adjust.turbulence_length_scale    = js["adjust"]["turbulence_length_scale"] | 0.0f;
+              sg.adjust.turbulence_intensity_sigma = js["adjust"]["turbulence_intensity_sigma"] | 0.0f;
+            } else {
+              sg.fixed_speed = js["fixed_speed"] | 0.0f;
+            }
+          }
+        }
+
+        // autoOff
+        it.autoOff.timer.enabled   = jp["autoOff"]["timer"]["enabled"] | false;
+        it.autoOff.timer.minutes   = jp["autoOff"]["timer"]["minutes"] | 0;
+        it.autoOff.offTime.enabled = jp["autoOff"]["offTime"]["enabled"] | false;
+        A10_safe_strlcpy(it.autoOff.offTime.time, jp["autoOff"]["offTime"]["time"] | "", sizeof(it.autoOff.offTime.time));
+        it.autoOff.offTemp.enabled = jp["autoOff"]["offTemp"]["enabled"] | false;
+        it.autoOff.offTemp.temp    = jp["autoOff"]["offTemp"]["temp"] | 0.0f;
+
+        // motion
+        it.motion.pir.enabled      = jp["motion"]["pir"]["enabled"] | false;
+        it.motion.pir.hold_sec     = jp["motion"]["pir"]["hold_sec"] | 0;
+        it.motion.ble.enabled      = jp["motion"]["ble"]["enabled"] | false;
+        it.motion.ble.rssi_threshold = jp["motion"]["ble"]["rssi_threshold"] | -70;
+        it.motion.ble.hold_sec     = jp["motion"]["ble"]["hold_sec"] | 0;
+      }
+    }
+    return true;
+  }
+
+  /* -----------------------------------------------
+   * NVS 도움 유틸 (상태 반영)
+   *  - 모드/프로파일/세그먼트/프리셋/스타일 상태만 저장
+   *  - Dirty → 5분 주기 lazy save (N10 내부 tick 필요)
+   * ----------------------------------------------- */
+  static void nvsSetRunMode(uint8_t mode) {
+    g_N10_nvs.setRunMode(mode);
+  }
+  static void nvsSetActiveProfile(uint8_t profileNo) {
+    g_N10_nvs.setActiveProfile(profileNo);
+  }
+  static void nvsSetActiveSegment(uint8_t segNo) {
+    g_N10_nvs.setActiveSegment(segNo);
+  }
+  static void nvsSetCodes(const char* presetCode, const char* styleCode) {
+    g_N10_nvs.setPresetCode(presetCode ? presetCode : "");
+    g_N10_nvs.setStyleCode(styleCode ? styleCode : "");
+  }
+
+  /* -----------------------------------------------
+   * 세그먼트 → 해석 파라미터로 변환
+   *  - PRESET일 때만 유효한 파라미터 반환(true)
+   *  - FIXED는 false 리턴(상위에서 고정속도 처리)
+   * ----------------------------------------------- */
+  static bool resolveFromScheduleSegment(const ST_A10_ScheduleSegment_t& seg,
+                                         ST_A10_ResolvedWind_t& out) {
+    if (seg.mode != EN_A10_SEG_MODE_PRESET) return false;
+    return A10_resolveWindParams(g_A10_config_root.windDict,
+                                 seg.presetCode, seg.styleCode,
+                                 &seg.adjust, out);
+  }
+
+  static bool resolveFromUserProfileSegment(const ST_A10_UserProfileSegment_t& seg,
+                                            ST_A10_ResolvedWind_t& out) {
+    if (seg.mode != EN_A10_SEG_MODE_PRESET) return false;
+    return A10_resolveWindParams(g_A10_config_root.windDict,
+                                 seg.presetCode, seg.styleCode,
+                                 &seg.adjust, out);
+  }
+
+  /* -----------------------------------------------
+   * (선택) JSON 저장기 (툴/웹에서 수정 반영 시)
+   * ----------------------------------------------- */
+  static bool saveSchedulesJson(const ST_A10_SchedulesRoot_t& src) {
+    JsonDocument d;
+    JsonArray arr = d["schedules"].to<JsonArray>();
+    for (uint8_t i=0;i<src.count;i++) {
+      const auto& it = src.items[i];
+      JsonObject o = arr.add<JsonObject>();
+      o["schNo"]   = it.schNo;
+      o["name"]    = it.name;
+      o["enabled"] = it.enabled;
+
+      // period
+      o["period"]["enabled"] = it.period.enabled;
+      if (it.period.enabled) {
+        JsonArray days = o["period"]["days"].to<JsonArray>();
+        for (uint8_t k=0;k<7;k++) days.add(it.period.days[k]);
+        o["period"]["start_time"] = it.period.start_time;
+        o["period"]["end_time"]   = it.period.end_time;
+      }
+
+      // segments
+      JsonArray segs = o["segments"].to<JsonArray>();
+      for (uint8_t s=0;s<it.seg_count;s++) {
+        const auto& sg = it.segments[s];
+        JsonObject js = segs.add<JsonObject>();
+        js["segNo"]       = sg.segNo;
+        js["on_minutes"]  = sg.on_minutes;
+        js["off_minutes"] = sg.off_minutes;
+        js["mode"]        = (sg.mode==EN_A10_SEG_MODE_FIXED)?"FIXED":"PRESET";
+        if (sg.mode==EN_A10_SEG_MODE_PRESET) {
+          js["presetCode"] = sg.presetCode;
+          js["styleCode"]  = sg.styleCode;
+          js["adjust"]["wind_intensity"]             = sg.adjust.wind_intensity;
+          js["adjust"]["wind_variability"]           = sg.adjust.wind_variability;
+          js["adjust"]["gust_frequency"]             = sg.adjust.gust_frequency;
+          js["adjust"]["fan_limit"]                  = sg.adjust.fan_limit;
+          js["adjust"]["min_fan"]                    = sg.adjust.min_fan;
+          js["adjust"]["turbulence_length_scale"]    = sg.adjust.turbulence_length_scale;
+          js["adjust"]["turbulence_intensity_sigma"] = sg.adjust.turbulence_intensity_sigma;
+        } else {
+          js["fixed_speed"] = sg.fixed_speed;
+        }
+      }
+
+      // autoOffTimer 통합 구조
+      o["autoOffTimer"]["timer"]["enabled"] = src.items[i].autoOff.timer.enabled;
+      o["autoOffTimer"]["timer"]["minutes"] = src.items[i].autoOff.timer.minutes;
+      o["autoOffTimer"]["offTime"]["enabled"]= src.items[i].autoOff.offTime.enabled;
+      o["autoOffTimer"]["offTime"]["time"]   = src.items[i].autoOff.offTime.time;
+      o["autoOffTimer"]["offTemp"]["enabled"]= src.items[i].autoOff.offTemp.enabled;
+      o["autoOffTimer"]["offTemp"]["temp"]   = src.items[i].autoOff.offTemp.temp;
+
+      // motion
+      o["motion"]["pir"]["enabled"]  = it.motion.pir.enabled;
+      o["motion"]["pir"]["hold_sec"] = it.motion.pir.hold_sec;
+      o["motion"]["ble"]["enabled"]  = it.motion.ble.enabled;
+      o["motion"]["ble"]["rssi_threshold"] = it.motion.ble.rssi_threshold;
+      o["motion"]["ble"]["hold_sec"] = it.motion.ble.hold_sec;
+    }
+    return C10_writeJsonFile(A10_Const::SCHEDULES_FILE, d, A10_Const::SCHEDULES_FILE_BAK);
+  }
+
+  static bool saveUserProfilesJson(const ST_A10_UserProfilesRoot_t& src) {
+    JsonDocument d;
+    JsonObject root = d["userProfiles"].to<JsonObject>();
+    JsonArray arr = root["profiles"].to<JsonArray>();
+
+    for (uint8_t i=0;i<src.count;i++) {
+      const auto& it = src.items[i];
+      JsonObject o = arr.add<JsonObject>();
+      o["profileNo"]     = it.profileNo;
+      o["name"]          = it.name;
+      o["enabled"]       = it.enabled;
+      o["repeatSegments"]= it.repeatSegments;
+
+      JsonArray segs = o["segments"].to<JsonArray>();
+      for (uint8_t s=0;s<it.seg_count;s++) {
+        const auto& sg = it.segments[s];
+        JsonObject js = segs.add<JsonObject>();
+        js["segNo"]       = sg.segNo;
+        js["on_minutes"]  = sg.on_minutes;
+        js["off_minutes"] = sg.off_minutes;
+        js["mode"]        = (sg.mode==EN_A10_SEG_MODE_FIXED)?"FIXED":"PRESET";
+
+        if (sg.mode==EN_A10_SEG_MODE_PRESET) {
+          js["presetCode"] = sg.presetCode;
+          js["styleCode"]  = sg.styleCode;
+          js["adjust"]["wind_intensity"]             = sg.adjust.wind_intensity;
+          js["adjust"]["wind_variability"]           = sg.adjust.wind_variability;
+          js["adjust"]["gust_frequency"]             = sg.adjust.gust_frequency;
+          js["adjust"]["fan_limit"]                  = sg.adjust.fan_limit;
+          js["adjust"]["min_fan"]                    = sg.adjust.min_fan;
+          js["adjust"]["turbulence_length_scale"]    = sg.adjust.turbulence_length_scale;
+          js["adjust"]["turbulence_intensity_sigma"] = sg.adjust.turbulence_intensity_sigma;
+        } else {
+          js["fixed_speed"] = sg.fixed_speed;
+        }
+      }
+
+      // autoOff
+      o["autoOff"]["timer"]["enabled"] = it.autoOff.timer.enabled;
+      o["autoOff"]["timer"]["minutes"] = it.autoOff.timer.minutes;
+      o["autoOff"]["offTime"]["enabled"]= it.autoOff.offTime.enabled;
+      o["autoOff"]["offTime"]["time"]   = it.autoOff.offTime.time;
+      o["autoOff"]["offTemp"]["enabled"]= it.autoOff.offTemp.enabled;
+      o["autoOff"]["offTemp"]["temp"]   = it.autoOff.offTemp.temp;
+
+      // motion
+      o["motion"]["pir"]["enabled"]  = it.motion.pir.enabled;
+      o["motion"]["pir"]["hold_sec"] = it.motion.pir.hold_sec;
+      o["motion"]["ble"]["enabled"]  = it.motion.ble.enabled;
+      o["motion"]["ble"]["rssi_threshold"] = it.motion.ble.rssi_threshold;
+      o["motion"]["ble"]["hold_sec"] = it.motion.ble.hold_sec;
+    }
+
+    return C10_writeJsonFile(A10_Const::USER_PROFILES_FILE, d, A10_Const::USER_PROFILES_FILE_BAK);
+  }
+};
