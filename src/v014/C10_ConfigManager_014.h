@@ -416,7 +416,7 @@ class CL_C10_ConfigManager {
 										   ST_A10_ResolvedWind_t&		   out) {
 		if (seg.mode != EN_A10_SEG_MODE_PRESET)
 			return false;
-		return A10_resolveWindParams(g_A10_config_root.windDict,
+		return C10_resolveWindParams(g_A10_config_root.windDict,
 									 seg.presetCode, seg.styleCode,
 									 &seg.adjust, out);
 	}
@@ -425,7 +425,7 @@ class CL_C10_ConfigManager {
 											  ST_A10_ResolvedWind_t&			 out) {
 		if (seg.mode != EN_A10_SEG_MODE_PRESET)
 			return false;
-		return A10_resolveWindParams(g_A10_config_root.windDict,
+		return C10_resolveWindParams(g_A10_config_root.windDict,
 									 seg.presetCode, seg.styleCode,
 									 &seg.adjust, out);
 	}
