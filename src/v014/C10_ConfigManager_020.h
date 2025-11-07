@@ -753,42 +753,55 @@ static void C10_toJson_Schedules(const ST_A10_ScheduleConfig& p, JsonDocument& d
 	// =====================================================
 	// All-in-One 초기 로드
 	// =====================================================
-	static void C10_loadAll(ST_A10_ConfigRoot& p_root) {
-		A10_resetToDefault(p_root);
+	// ---------------------------------------------------
+// ✅ 변경됨 : bool 반환, 전체 로드 결과 전달
+// ---------------------------------------------------
+static bool C10_loadAll(ST_A10_ConfigRoot& p_root) {
+    bool v_ok = true;
+    A10_resetToDefault(p_root);
 
-		C10_loadSystemConfig(p_root.system);
+    if (!C10_loadSystemConfig(p_root.system)) {
+        CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] System load failed");
+        v_ok = false;
+    }
 
-		p_root.wifi = new ST_A10_WifiConfig();
-		if (!C10_loadWifiConfig(*p_root.wifi)) {
-			A10_resetWifiDefault(*p_root.wifi);
-			C10_saveWifiConfig(*p_root.wifi);
-		}
+    p_root.wifi = new ST_A10_WifiConfig();
+    if (!C10_loadWifiConfig(*p_root.wifi)) {
+        A10_resetWifiDefault(*p_root.wifi);
+        C10_saveWifiConfig(*p_root.wifi);
+        v_ok = false;
+    }
 
-		p_root.motion = new ST_A10_MotionConfig();
-		if (!C10_loadMotionConfig(*p_root.motion)) {
-			A10_resetMotionDefault(*p_root.motion);
-			C10_saveMotionConfig(*p_root.motion);
-		}
+    p_root.motion = new ST_A10_MotionConfig();
+    if (!C10_loadMotionConfig(*p_root.motion)) {
+        A10_resetMotionDefault(*p_root.motion);
+        C10_saveMotionConfig(*p_root.motion);
+        v_ok = false;
+    }
 
-		p_root.windDict = new ST_A10_WindProfileDict_t();
-		if (!C10_loadWindProfileDict(*p_root.windDict)) {
-			A10_resetWindProfileDictDefault(*p_root.windDict);
-		}
+    p_root.windDict = new ST_A10_WindProfileDict_t();
+    if (!C10_loadWindProfileDict(*p_root.windDict)) {
+        A10_resetWindProfileDictDefault(*p_root.windDict);
+        v_ok = false;
+    }
 
-		p_root.schedules = new ST_A10_ScheduleConfig();
-		if (!C10_loadSchedules(*p_root.schedules)) {
-			A10_resetSchedulesDefault(*p_root.schedules);
-			C10_saveSchedules(*p_root.schedules);
-		}
+    p_root.schedules = new ST_A10_ScheduleConfig();
+    if (!C10_loadSchedules(*p_root.schedules)) {
+        A10_resetSchedulesDefault(*p_root.schedules);
+        C10_saveSchedules(*p_root.schedules);
+        v_ok = false;
+    }
 
-		p_root.userProfiles = new ST_A10_UserProfileConfig_t();
-		if (!C10_loadUserProfiles(*p_root.userProfiles)) {
-			A10_resetUserProfilesDefault(*p_root.userProfiles);
-			C10_saveUserProfiles(*p_root.userProfiles);
-		}
+    p_root.userProfiles = new ST_A10_UserProfileConfig_t();
+    if (!C10_loadUserProfiles(*p_root.userProfiles)) {
+        A10_resetUserProfilesDefault(*p_root.userProfiles);
+        C10_saveUserProfiles(*p_root.userProfiles);
+        v_ok = false;
+    }
 
-		CL_D10_Logger::log(EN_L10_LOG_INFO,"[C10] All configs loaded");
-	}
+    CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] All configs loaded (result=%d)", v_ok);
+    return v_ok;
+}
 
 	static void C10_saveAll(const ST_A10_ConfigRoot& p_root) {
 		C10_saveSystemConfig(p_root.system);
@@ -798,6 +811,16 @@ static void C10_toJson_Schedules(const ST_A10_ScheduleConfig& p, JsonDocument& d
 		if (p_root.userProfiles) C10_saveUserProfiles(*p_root.userProfiles);
 		// windProfile는 보통 고정/펌웨어 내장이라 save 생략 또는 필요 시 추가
 	}
+
+static void C10_toJson_All(const ST_A10_ConfigRoot& p, JsonDocument& d) {
+    C10_toJson_System(p.system, d);
+    if (p.wifi)         C10_toJson_Wifi(*p.wifi, d);
+    if (p.motion)       C10_toJson_Motion(*p.motion, d);
+    if (p.schedules)    C10_toJson_Schedules(*p.schedules, d);
+    if (p.userProfiles) C10_toJson_UserProfiles(*p.userProfiles, d);
+}
+
+
 };
 
 inline ST_A10_ConfigRoot g_A10_config_root;
