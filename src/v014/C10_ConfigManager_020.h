@@ -894,6 +894,35 @@ static bool C10_loadAll(ST_A10_ConfigRoot& p_root) {
     return v_ok;
 }
 
+// =====================================================
+// 메모리 해제 (동적 섹션 정리)
+// =====================================================
+static void C10_freeAll(ST_A10_ConfigRoot& p_root) {
+    if (p_root.wifi) {
+        delete p_root.wifi;
+        p_root.wifi = nullptr;
+    }
+    if (p_root.motion) {
+        delete p_root.motion;
+        p_root.motion = nullptr;
+    }
+    if (p_root.windDict) {
+        delete p_root.windDict;
+        p_root.windDict = nullptr;
+    }
+    if (p_root.schedules) {
+        delete p_root.schedules;
+        p_root.schedules = nullptr;
+    }
+    if (p_root.userProfiles) {
+        delete p_root.userProfiles;
+        p_root.userProfiles = nullptr;
+    }
+
+    CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] All config objects freed");
+}
+
+
 	static void C10_saveAll(const ST_A10_ConfigRoot& p_root) {
 		C10_saveSystemConfig(p_root.system);
 		if (p_root.wifi)         C10_saveWifiConfig(*p_root.wifi);
@@ -903,12 +932,36 @@ static bool C10_loadAll(ST_A10_ConfigRoot& p_root) {
 		// windProfile는 보통 고정/펌웨어 내장이라 save 생략 또는 필요 시 추가
 	}
 
-static void C10_toJson_All(const ST_A10_ConfigRoot& p, JsonDocument& d) {
-    C10_toJson_System(p.system, d);
-    if (p.wifi)         C10_toJson_Wifi(*p.wifi, d);
-    if (p.motion)       C10_toJson_Motion(*p.motion, d);
-    if (p.schedules)    C10_toJson_Schedules(*p.schedules, d);
-    if (p.userProfiles) C10_toJson_UserProfiles(*p.userProfiles, d);
+// =====================================================
+// All Config → JSON Export (선택적 섹션 포함)
+// -----------------------------------------------------
+//  - 모든 섹션 기본 출력
+//  - 특정 섹션만 내보내려면 include* 인자 조합
+// =====================================================
+static void C10_toJson_All(
+    const ST_A10_ConfigRoot& p,
+    JsonDocument& d,
+    bool includeSystem       = true,
+    bool includeWifi         = true,
+    bool includeMotion       = true,
+    bool includeSchedules    = true,
+    bool includeUserProfiles = true
+) {
+    if (includeSystem)       C10_toJson_System(p.system, d);
+    if (includeWifi && p.wifi)
+        C10_toJson_Wifi(*p.wifi, d);
+    if (includeMotion && p.motion)
+        C10_toJson_Motion(*p.motion, d);
+    if (includeSchedules && p.schedules)
+        C10_toJson_Schedules(*p.schedules, d);
+    if (includeUserProfiles && p.userProfiles)
+        C10_toJson_UserProfiles(*p.userProfiles, d);
+
+    CL_D10_Logger::log(
+        EN_L10_LOG_DEBUG,
+        "[C10] Config export → JSON (sys=%d wifi=%d motion=%d sch=%d up=%d)",
+        includeSystem, includeWifi, includeMotion, includeSchedules, includeUserProfiles
+    );
 }
 
 
