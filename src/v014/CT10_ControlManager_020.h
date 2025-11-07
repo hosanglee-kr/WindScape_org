@@ -452,6 +452,16 @@ public:
 // --------------------------------------------------
 void toChartJson(JsonDocument& p_doc) {
     sim.toChartJson(p_doc);
+    p_doc["control"]["pwmDuty"] = pwm ? pwm->P10_getDutyPercent() : 0.0f;
+}
+
+void toSummaryJson(JsonDocument& p_doc) {
+    JsonObject s = p_doc["summary"].to<JsonObject>();
+    s["active"] = active;
+    s["source"] = (int)runSource;
+    s["pwmDuty"] = pwm ? pwm->P10_getDutyPercent() : 0.0f;
+    s["overrideActive"] = overrideState.active;
+    s["phase"] = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)sim.phase];
 }
 
 private:
