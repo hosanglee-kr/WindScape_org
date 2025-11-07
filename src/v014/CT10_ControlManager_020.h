@@ -257,6 +257,7 @@ public:
                 CL_D10_Logger::log(EN_L10_LOG_INFO,
                                    "[CT10] Start UserProfile #%u (%s)",
                                    (unsigned)p_profileNo, v_p.name);
+				_broadcastState();
                 return true;
             }
         }
@@ -269,6 +270,7 @@ public:
             curProfileIndex  = -1;
             profileSegRt.index = -1;
             sim.stop();
+			_broadcastState();
             CL_D10_Logger::log(EN_L10_LOG_INFO, "[CT10] UserProfile stopped");
         }
     }
@@ -290,6 +292,7 @@ public:
             overrideState.endMs = 0; // 타임아웃 없음
         }
 
+		_broadcastState();
         CL_D10_Logger::log(EN_L10_LOG_INFO,
                            "[CT10] Override FIXED %.1f%% (sec=%lu)",
                            p_percent, (unsigned long)p_seconds);
@@ -318,6 +321,7 @@ public:
             return;
         }
         applyManual(v_resolved, p_seconds);
+		_broadcastState();
     }
 
     // 3) ResolvedWind 직접 수동 적용 (W10 API와 연동)
@@ -357,6 +361,7 @@ public:
         if (!overrideState.active) return;
         memset(&overrideState, 0, sizeof(overrideState));
         CL_D10_Logger::log(EN_L10_LOG_INFO, "[CT10] Override cleared");
+		_broadcastState();
     }
 
     // --------------------------------------------------
