@@ -789,57 +789,57 @@ static void C10_toJson_UserProfiles(const ST_A10_UserProfileConfig_t& p, JsonDoc
 		return -1;
 	}
 
-	static bool C10_resolveWindParams(const ST_A10_WindProfileDict_t& p_dict,
-									  const char* p_presetCode,
-									  const char* p_styleCode,
-									  const ST_A10_AdjustDelta_t* p_adj,
-									  ST_A10_ResolvedWind_t& p_out) {
-		int16_t v_pi = C10_findPresetIndexByCode(p_dict, p_presetCode);
-		if (v_pi < 0) return false;
+	static bool C10_resolveWindParams(
+    const ST_A10_WindProfileDict_t& p_dict,
+    const char* p_presetCode,
+    const char* p_styleCode,
+    const ST_A10_AdjustDelta_t* p_adj,
+    ST_A10_ResolvedWind_t& p_out
+) {
+    int16_t v_pi = C10_findPresetIndexByCode(p_dict, p_presetCode);
+    if (v_pi < 0) return false;
 
-		const ST_A10_WindPresetDef_t& v_p = p_dict.presets[v_pi];
-		float v_int   = v_p.base.wind_intensity;
-		float v_var   = v_p.base.wind_variability;
-		float v_gust  = v_p.base.gust_frequency;
-		float v_fl    = v_p.base.fan_limit;
-		float v_min   = v_p.base.min_fan;
-		float v_tL    = v_p.base.turbulence_length_scale;
-		float v_tS    = v_p.base.turbulence_intensity_sigma;
-		float v_thB   = v_p.base.thermal_bubble_strength;
-		float v_thR   = v_p.base.thermal_bubble_radius;
+    const ST_A10_WindPresetDef_t& v_p = p_dict.presets[v_pi];
+    float v_int  = v_p.base.wind_intensity;
+    float v_var  = v_p.base.wind_variability;
+    float v_gust = v_p.base.gust_frequency;
+    float v_fl   = v_p.base.fan_limit;
+    float v_min  = v_p.base.min_fan;
+    float v_tL   = v_p.base.turbulence_length_scale;
+    float v_tS   = v_p.base.turbulence_intensity_sigma;
+    float v_thB  = v_p.base.thermal_bubble_strength;
+    float v_thR  = v_p.base.thermal_bubble_radius;
 
-		if (p_styleCode && p_styleCode[0]) {
-			int16_t v_si = C10_findStyleIndexByCode(p_dict, p_styleCode);
-			if (v_si >= 0) {
-				const ST_A10_WindStyleDef_t& v_s = p_dict.styles[v_si];
-				v_int  *= v_s.factor.intensity_factor;
-				v_var  *= v_s.factor.variability_factor;
-				v_gust *= v_s.factor.gust_factor;
-				// thermal_factor는 strength에 반영
-				v_thB  *= v_s.factor.thermal_factor;
-			}
-		}
+    if (p_styleCode && p_styleCode[0]) {
+        int16_t v_si = C10_findStyleIndexByCode(p_dict, p_styleCode);
+        if (v_si >= 0) {
+            const ST_A10_WindStyleDef_t& v_s = p_dict.styles[v_si];
+            v_int  *= v_s.factor.intensity_factor;
+            v_var  *= v_s.factor.variability_factor;
+            v_gust *= v_s.factor.gust_factor;
+            v_thB  *= v_s.factor.thermal_factor;  // Thermal strength scaling
+        }
+    }
 
-		if (p_adj) {
-			v_int  += p_adj->wind_intensity;
-			v_var  += p_adj->wind_variability;
-			v_gust += p_adj->gust_frequency;
-			v_fl   += p_adj->fan_limit;
-			v_min  += p_adj->min_fan;
-		}
+    if (p_adj) {
+        v_int  += p_adj->wind_intensity;
+        v_var  += p_adj->wind_variability;
+        v_gust += p_adj->gust_frequency;
+        v_fl   += p_adj->fan_limit;
+        v_min  += p_adj->min_fan;
+    }
 
-		p_out.wind_intensity             = constrain(v_int,  0.0f, 100.0f);
-		p_out.wind_variability           = constrain(v_var,  0.0f, 100.0f);
-		p_out.gust_frequency             = constrain(v_gust, 0.0f, 100.0f);
-		p_out.fan_limit                  = constrain(v_fl,   0.0f, 100.0f);
-		p_out.min_fan                    = constrain(v_min,  0.0f, 100.0f);
-		p_out.turbulence_length_scale    = max(1.0f, v_tL);
-		p_out.turbulence_intensity_sigma = max(0.0f, v_tS);
-		p_out.thermal_bubble_strength    = max(0.1f, v_thB);
-		p_out.thermal_bubble_radius      = max(1.0f, v_thR);
-
-		return true;
-	}
+    p_out.wind_intensity             = constrain(v_int,  0.0f, 100.0f);
+    p_out.wind_variability           = constrain(v_var,  0.0f, 100.0f);
+    p_out.gust_frequency             = constrain(v_gust, 0.0f, 100.0f);
+    p_out.fan_limit                  = constrain(v_fl,   0.0f, 100.0f);
+    p_out.min_fan                    = constrain(v_min,  0.0f, 100.0f);
+    p_out.turbulence_length_scale    = max(1.0f, v_tL);
+    p_out.turbulence_intensity_sigma = max(0.0f, v_tS);
+    p_out.thermal_bubble_strength    = max(0.1f, v_thB);
+    p_out.thermal_bubble_radius      = max(1.0f, v_thR);
+    return true;
+}
 
 	// =====================================================
 	// All-in-One 초기 로드
