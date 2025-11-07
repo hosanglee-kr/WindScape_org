@@ -144,12 +144,14 @@ public:
 	}
 
 	void stop() {
-		active          = false;
-		phase           = EN_A10_WEATHER_PHASE_CALM;
-		targetWindSpeed = 0.0f;
-		currentWindSpeed= 0.0f;
-		if (_pwm) _pwm->P10_setDutyPercent(0.0f);
-	}
+      active           = false;
+      phase            = EN_A10_WEATHER_PHASE_CALM;
+      targetWindSpeed  = 0.0f;
+      currentWindSpeed = 0.0f;
+      if (_pwm) {
+          _pwm->P10_setDutyPercent(0.0f);
+      }
+    }
 
 	void resetDefaults() {
 		active          = false;
@@ -243,23 +245,26 @@ public:
 		applyFan(v_pwmPct);
 
 		// 차트 샘플링 (1Hz, 최근 120개 유지)
-		if (millis() - s_lastChartLogMs > 1000UL) {
-			if (s_chartBuffer.size() >= 120) {
-				s_chartBuffer.pop_front();
-			}
-			ST_ChartEntry v_e;
-			v_e.timestamp        = millis();
-			v_e.wind_speed       = currentWindSpeed;
-			v_e.pwm_duty         = _pwm ? _pwm->P10_getDutyPercent() : 0.0f;
-			v_e.intensity        = userIntensity;
-			v_e.variability      = userVariability;
-			v_e.turbulence_sigma = turbSigma;
-			v_e.preset_index     = (uint8_t)A10_getPresetIndexByCode(presetCode);
-			v_e.gust_active      = gustActive;
-			v_e.thermal_active   = thermalActive;
-			s_chartBuffer.push_back(v_e);
-			s_lastChartLogMs = millis();
-		}
+		// 차트 샘플링 (1Hz, 최근 120개 유지)
+if (millis() - s_lastChartLogMs > 1000UL) {
+    if (s_chartBuffer.size() >= 120) {
+        s_chartBuffer.pop_front();
+    }
+
+    ST_ChartEntry v_e{};
+    v_e.timestamp        = millis();
+    v_e.wind_speed       = currentWindSpeed;
+    v_e.pwm_duty         = _pwm ? _pwm->P10_getDutyPercent() : 0.0f; // 안전 처리 ✅
+    v_e.intensity        = userIntensity;
+    v_e.variability      = userVariability;
+    v_e.turbulence_sigma = turbSigma;
+    v_e.preset_index     = (uint8_t)A10_getPresetIndexByCode(presetCode);
+    v_e.gust_active      = gustActive;
+    v_e.thermal_active   = thermalActive;
+    s_chartBuffer.push_back(v_e);
+
+    s_lastChartLogMs = millis();
+}
 	}
 
 	// ==================================================
@@ -306,45 +311,62 @@ public:
 	// JSON Export
 	// ==================================================
 	void toJson(JsonDocument& p_doc) {
-		JsonObject o = p_doc["sim"].to<JsonObject>();
-		o["active"]      = active;
-		o["phase"]       = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
-		o["wind"]        = currentWindSpeed;
-		o["target"]      = targetWindSpeed;
-		o["gustActive"]  = gustActive;
-		o["thermalActive"]= thermalActive;
-		o["pwm"]         = _pwm ? _pwm->P10_getDutyPercent() : 0.0f;
+    JsonObject o = p_doc["sim"].to<JsonObject>();
+    o["active"]        = active;
+    o["phase"]         = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
+    o["wind"]          = currentWindSpeed;
+    o["target"]        = targetWindSpeed;
+    o["gustActive"]    = gustActive;
+    o["thermalActive"] = thermalActive;
+    o["pwmDuty"]       = _pwm ? _pwm->P10_getDutyPercent() : 0.0f;  // 변경됨 ✅
 
-		o["presetCode"]  = presetCode;
-		o["styleCode"]   = styleCode;
-		o["intensity"]   = userIntensity;
-		o["variability"] = userVariability;
-		o["gustFreq"]    = userGustFreq;
-		o["fan_limit"]   = fanLimitPct;
-		o["min_fan"]     = minFanPct;
+    o["presetCode"]    = presetCode;
+    o["styleCode"]     = styleCode;
+    o["intensity"]     = userIntensity;
+    o["variability"]   = userVariability;
+    o["gustFreq"]      = userGustFreq;
+    o["fan_limit"]     = fanLimitPct;
+    o["min_fan"]       = minFanPct;
 
-		o["turbulence_sigma"] = turbSigma;
-		o["turbulence_len"]   = turbLenScale;
-		o["thermal_strength"] = thermalStrength;
-		o["thermal_radius"]   = thermalRadius;
-	}
+    o["turbulence_sigma"] = turbSigma;
+    o["turbulence_len"]   = turbLenScale;
+    o["thermal_strength"] = thermalStrength;
+    o["thermal_radius"]   = thermalRadius;
+}
 
 	void toChartJson(JsonDocument& p_doc) {
-		JsonArray arr = p_doc["chart"].to<JsonArray>();
-		for (size_t v_i = 0; v_i < s_chartBuffer.size(); v_i++) {
-			const ST_ChartEntry& e = s_chartBuffer[v_i];
-			JsonObject jo = arr.add<JsonObject>();
-			jo["t"]  = e.timestamp;
-			jo["w"]  = e.wind_speed;
-			jo["p"]  = e.pwm_duty;
-			jo["i"]  = e.intensity;
-			jo["v"]  = e.variability;
-			jo["ts"] = e.turbulence_sigma;
-			jo["pi"] = e.preset_index;
-			jo["g"]  = e.gust_active;
-			jo["h"]  = e.thermal_active;
-		}
-	}
+    // 비활성 상태에서도 최소 1개 데이터 유지
+    if (!active && s_chartBuffer.empty()) {
+        ST_ChartEntry v_e{};
+        v_e.timestamp  = millis();
+        v_e.wind_speed = 0.0f;
+        v_e.pwm_duty   = 0.0f;
+        v_e.intensity  = 0.0f;
+        v_e.variability = 0.0f;
+        v_e.turbulence_sigma = 0.0f;
+        v_e.preset_index = 0;
+        v_e.gust_active = false;
+        v_e.thermal_active = false;
+        s_chartBuffer.push_back(v_e);
+    }
+
+    // 루트키 "sim.chart"로 변경 ✅
+    JsonArray arr = p_doc["sim"]["chart"].to<JsonArray>();
+
+    for (size_t v_i = 0; v_i < s_chartBuffer.size(); v_i++) {
+        const ST_ChartEntry& e = s_chartBuffer[v_i];
+        JsonObject jo = arr.add<JsonObject>();
+        jo["t"]  = e.timestamp / 1000UL;   // 초 단위 변환 ✅
+        jo["w"]  = e.wind_speed;
+        jo["p"]  = e.pwm_duty;
+        jo["i"]  = e.intensity;
+        jo["v"]  = e.variability;
+        jo["ts"] = e.turbulence_sigma;
+        jo["pi"] = e.preset_index;
+        jo["g"]  = e.gust_active;
+        jo["h"]  = e.thermal_active;
+    }
+}
 
 private:
 	CL_P10_PWM* _pwm = nullptr;
@@ -355,27 +377,27 @@ private:
 
 	// PWM 적용 (min/max/intensity 반영)
 	void applyFan(float p_pct) {
-		if (!_pwm) return;
+    if (!_pwm) return;  // null 보호 추가 ✅
 
-		float v_req   = p_pct / 100.0f;
-		float v_limit = fanLimitPct / 100.0f;
-		float v_min   = minFanPct   / 100.0f;
-		float v_int   = userIntensity / 100.0f;
+    float v_req   = p_pct / 100.0f;
+    float v_limit = fanLimitPct / 100.0f;
+    float v_min   = minFanPct   / 100.0f;
+    float v_int   = userIntensity / 100.0f;
 
-		if (!fanPowerEnabled || v_int <= 0.01f) {
-			_pwm->P10_setDutyPercent(0.0f);
-			return;
-		}
+    if (!fanPowerEnabled || v_int <= 0.01f) {
+        _pwm->P10_setDutyPercent(0.0f);
+        return;
+    }
 
-		if (active) {
-			v_req *= v_int;
-		}
+    if (active) {
+        v_req *= v_int;
+    }
 
-		if (v_req < v_min)  v_req = v_min;
-		if (v_req > v_limit) v_req = v_limit;
+    if (v_req < v_min)  v_req = v_min;
+    if (v_req > v_limit) v_req = v_limit;
 
-		_pwm->P10_setDutyPercent(v_req * 100.0f);
-	}
+    _pwm->P10_setDutyPercent(v_req * 100.0f);
+}
 
 	// presetCode에 따라 기본 스펙 셋업
 	void applyPresetCore(const char* p_code) {
