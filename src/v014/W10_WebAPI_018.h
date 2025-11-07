@@ -44,15 +44,15 @@
 #include <ESPAsyncWebServer.h>
 
 #include "A10_Const_014.h"
-#include "C10_ConfigManager_014.h"
-#include "CT10_ControlManager_016.h"
-#include "S10_Simulation_014.h"
+#include "C10_ConfigManager_020.h"
+#include "CT10_ControlManager_018.h"
+#include "S10_Simulation_017.h"
 #include "M10_MotionLogic_014.h"
 #include "P10_PWM_ctrl_014.h"
-#include "N10_NvsManager_014.h"
-#include "D10_Logger_011.h"
+#include "N10_NvsManager_016.h"
+#include "D10_Logger_014.h"
 
-class CL_W10_WebAPI_018 {
+class CL_W10_WebAPI {
 public:
 	// Web 초기화
 	static void begin(AsyncWebServer& p_server) {
@@ -118,7 +118,7 @@ private:
 			CL_CT10_ControlManager::toJson(doc); // 반드시 CT10에 toJson(JsonDocument&) 구현
 
 			// S10 상태
-			CL_S10_Simulation_014::toJson(doc);  // sim → doc["sim"] 섹션 채우는 함수
+			CL_S10_Simulation::toJson(doc);  // sim → doc["sim"] 섹션 채우는 함수
 
 			// Motion 상태
 			auto motionState = M10_MotionLogic_014::getState();
@@ -210,7 +210,7 @@ private:
 					request->send(500, "application/json", "{\"error\":\"save failed\"}");
 					return;
 				}
-				N10_NvsManager_014::markDirty("schedules", true);
+				CL_N10_NvsManager::markDirty("schedules", true);
 				request->send(200, "application/json", "{\"result\":\"ok\"}");
 			}
 		);
@@ -249,7 +249,7 @@ private:
 					request->send(500, "application/json", "{\"error\":\"save failed\"}");
 					return;
 				}
-				N10_NvsManager_014::markDirty("userProfiles", true);
+				CL_N10_NvsManager::markDirty("userProfiles", true);
 				request->send(200, "application/json", "{\"result\":\"ok\"}");
 			}
 		);
@@ -261,7 +261,7 @@ private:
 				return;
 			}
 			int id = request->getParam("id", true)->value().toInt();
-			if (!CL_CT10_ControlManager_016::setActiveUserProfile(id)) {
+			if (!CL_CT10_ControlManager::setActiveUserProfile(id)) {
 				request->send(400, "application/json", "{\"error\":\"invalid profile\"}");
 				return;
 			}
@@ -282,9 +282,9 @@ private:
 				}
 				String m = request->getParam("mode", true)->value();
 				if (m == "schedule") {
-					CL_CT10_ControlManager_016::setMode(false);
+					CL_CT10_ControlManager::setMode(false);
 				} else if (m == "profile") {
-					CL_CT10_ControlManager_016::setMode(true);
+					CL_CT10_ControlManager::setMode(true);
 				} else {
 					request->send(400, "application/json", "{\"error\":\"invalid mode\"}");
 					return;
@@ -306,7 +306,7 @@ private:
 				w.valid = true;
 				w.fixedMode = true;
 				w.fixedSpeed = sp;
-				CL_CT10_ControlManager_016::applyManual(w);
+				CL_CT10_ControlManager::applyManual(w);
 				request->send(200, "application/json", "{\"result\":\"ok\"}");
 			}
 		);
@@ -350,7 +350,7 @@ private:
 					request->send(400,"application/json","{\"error\":\"resolve failed\"}");
 					return;
 				}
-				CL_CT10_ControlManager_016::applyManual(w);
+				CL_CT10_ControlManager::applyManual(w);
 				request->send(200,"application/json","{\"result\":\"ok\"}");
 			}
 		);
@@ -358,7 +358,7 @@ private:
 		// override clear
 		server->on("/api/control/override/clear", HTTP_POST,
 			[](AsyncWebServerRequest* request) {
-				CL_CT10_ControlManager_016::clearManual();
+				CL_CT10_ControlManager::clearManual();
 				request->send(200,"application/json","{\"result\":\"ok\"}");
 			}
 		);
@@ -369,7 +369,7 @@ private:
 		// Chart 데이터 조회
 		server->on("/api/sim/chart", HTTP_GET, [](AsyncWebServerRequest* request) {
 			JsonDocument doc;
-			CL_S10_Simulation_014::toChartJson(doc);
+			CL_S10_Simulation::toChartJson(doc);
 			sendJson(request, doc);
 		});
 	}
@@ -386,8 +386,8 @@ private:
 	// Config 전체 재로드 (개발/장애 대응용)
 	static void routeReload() {
 		server->on("/api/reload", HTTP_POST, [](AsyncWebServerRequest* request) {
-			bool ok = CL_CT10_ControlManager_016::begin()
-				&& CL_C10_ConfigManager_014::reloadAll();
+			bool ok = CL_CT10_ControlManager::begin()
+				&& CL_CT10_ControlManager::reloadAll();
 			if (!ok) {
 				request->send(500,"application/json","{\"error\":\"reload failed\"}");
 				return;
@@ -400,4 +400,4 @@ private:
 // ------------------------------------------------------
 // 정적 멤버 정의
 // ------------------------------------------------------
-AsyncWebServer* CL_W10_WebAPI_018::server = nullptr;
+AsyncWebServer* CL_W10_WebAPI::server = nullptr;

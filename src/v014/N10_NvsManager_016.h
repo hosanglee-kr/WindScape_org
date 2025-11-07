@@ -82,7 +82,7 @@
 #include <string.h>
 
 #include "A10_Const_014.h"
-#include "D10_Logger_011.h"
+#include "D10_Logger_014.h"
 
 // ------------------------------------------------------
 // N10 런타임 상태 구조체

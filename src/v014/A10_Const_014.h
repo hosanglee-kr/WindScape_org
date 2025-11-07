@@ -47,16 +47,43 @@
  * 경로/파일 이름 (최신 스펙)
  * ====================================================== */
 namespace A10_Const {
+
+	// 펌웨어/파일버전
+	constexpr char FW_VERSION[] = "SC10_FW_1.0.0";
+
+
 	// JSON config files (최신 합의안)
-	constexpr char 		SCHEDULES_FILE[]			= "/json/cfg_schedules_024.json";
-	constexpr char 		USER_PROFILES_FILE[] 		= "/json/cfg_uzOpProfile_025_final.json";
-	// Wind Profile 사전 (preset/style 기본값 + 계수)
-	constexpr char 		WIND_PROFILE_FILE[] 		= "/json/cfg_dft_windProfile_024.json";
+	#define G_A10_CFG_JSON_FILE_VER "025"
+
+	constexpr char CFG_SYSTEM_FILE[] 			= "/json/cfg_system_" G_A10_CFG_JSON_FILE_VER ".json";
+	constexpr char CFG_WIFI_FILE[]	 			= "/json/cfg_wifi_" G_A10_CFG_JSON_FILE_VER ".json";
+	constexpr char CFG_MOTION_FILE[] 			= "/json/cfg_motion_" G_A10_CFG_JSON_FILE_VER ".json";
+	constexpr char CFG_SCHEDULES_FILE[]			= "/json/cfg_schedules_" G_A10_CFG_JSON_FILE_VER ".json";
+	constexpr char CFG_USER_PROFILES_FILE[] 	= "/json/cfg_uzOpProfile_" G_A10_CFG_JSON_FILE_VER ".json";
+	constexpr char CFG_WIND_PROFILE_FILE[]		= "/json/cfg_dft_windProfile_" G_A10_CFG_JSON_FILE_VER ".json";
 
 	// 백업 파일
-	constexpr char 		SCHEDULES_FILE_BAK[]		= "/json/cfg_schedules_024.bak";
-	constexpr char 		USER_PROFILES_FILE_BAK[] 	= "/json/cfg_uzOpProfile_025_final.bak";
-	constexpr char 		WIND_PROFILE_FILE_BAK[]		= "/json/cfg_dft_windProfile_024.bak";
+	constexpr char CFG_SYSTEM_FILE_BAK[]		= "/json/cfg_system_" G_A10_CFG_JSON_FILE_VER ".json.bak";
+	constexpr char CFG_WIFI_FILE_BAK[]			= "/json/cfg_wifi_" G_A10_CFG_JSON_FILE_VER ".json.bak";
+	constexpr char CFG_MOTION_FILE_BAK[]		= "/json/cfg_motion_" G_A10_CFG_JSON_FILE_VER ".json.bak";
+	constexpr char CFG_SCHEDULES_FILE_BAK[]		= "/json/cfg_schedules_" G_A10_CFG_JSON_FILE_VER ".json.bak";
+	constexpr char CFG_USER_PROFILES_FILE_BAK[] = "/json/cfg_uzOpProfile" G_A10_CFG_JSON_FILE_VER ".json.bak";
+	constexpr char CFG_WIND_PROFILE_FILE_BAK[]	= "/json/cfg_dft_windProfile" G_A10_CFG_JSON_FILE_VER ".json.bak";
+
+	// 문자열 및 배열 길이 정의
+	constexpr uint8_t LEN_NAME	 = 64;
+	constexpr uint8_t LEN_PATH	 = 128;
+	constexpr uint8_t LEN_SSID	 = 32;
+	constexpr uint8_t LEN_PASS	 = 32;
+	constexpr uint8_t LEN_PRESET = 32;
+	constexpr uint8_t LEN_ALIAS	 = 32;
+	constexpr uint8_t LEN_TIME	 = 8;
+	constexpr uint8_t LEN_LEVEL	 = 16;
+
+	// 배열 개수
+	constexpr uint8_t MAX_BLE_DEVICES			= 8;
+	constexpr uint8_t MAX_STA_NETWORKS			= 5;
+
 
 	// 배열 개수 제한
 	constexpr uint8_t 	MAX_SCHEDULES				= 8;
@@ -67,7 +94,185 @@ namespace A10_Const {
 	// 문자열 길이 제한
 	constexpr size_t 	MAX_NAME_LEN 				= 32;
 	constexpr size_t 	MAX_CODE_LEN 				= 24;
+
+
 }  // namespace A10_Const
+
+
+// ======================================================
+// ENUM 정의
+// ======================================================
+typedef enum : uint8_t {
+	EN_A10_WIFI_MODE_AP		= 0,
+	EN_A10_WIFI_MODE_STA	= 1,
+	EN_A10_WIFI_MODE_AP_STA = 2
+} EN_A10_WIFI_MODE_t;
+
+
+// 0=Continuous / 1=Schedule
+typedef enum : uint8_t {
+	EN_A10_CONTROL_RUN_CONTINUE	= 0,
+	EN_A10_CONTROL_RUN_SCHEDULE = 1,
+} T_A10_control_runMode_t;
+
+// 바람 단계(참고용)
+typedef enum : uint8_t {
+    EN_A10_WEATHER_PHASE_CALM = 0,
+    EN_A10_WEATHER_PHASE_NORMAL,
+    EN_A10_WEATHER_PHASE_STRONG,
+    EN_A10_WEATHER_PHASE_COUNT
+} T_A10_WindPhase_t;
+
+static const char* g_A10_WEATHER_PHASE_NAMES_Arr[] = {
+    "CALM", "NORMAL", "STRONG"
+};
+
+// 프리셋 (레거시/참고용: 신규 sim은 문자열 preset 사용)
+typedef enum : uint8_t {
+    EN_A10_PRESET_OFF               = 0,
+    EN_A10_PRESET_COUNTRY           = 1,
+    EN_A10_PRESET_MEDITERRANEAN     = 2,
+    EN_A10_PRESET_OCEAN             = 3,
+    EN_A10_PRESET_MOUNTAIN          = 4,
+    EN_A10_PRESET_PLAINS            = 5,
+    EN_A10_PRESET_HARBOR_BREEZE     = 6,
+    EN_A10_PRESET_FOREST_CANOPY     = 7,
+    EN_A10_PRESET_URBAN_SUNSET      = 8,
+    EN_A10_PRESET_TROPICAL_RAIN     = 9,
+    EN_A10_PRESET_DESERT_NIGHT      = 10,
+    EN_A10_PRESET_COUNT
+} T_A10_PresetMode_t;
+
+static const char* g_A10_PRESET_MODE_NAMES_Arr[] = {
+    "OFF",
+    "COUNTRY",
+    "MEDITERRANEAN",
+    "OCEAN",
+    "MOUNTAIN",
+    "PLAINS",
+    "HARBOR_BREEZE",
+    "FOREST_CANOPY",
+    "URBAN_SUNSET",
+    "TROPICAL_RAIN",
+    "DESERT_NIGHT"
+};
+
+
+// ======================================================
+// 구조체 정의
+// ======================================================
+
+// ------------------------------------------------------
+// SYSTEM 설정 (cfg_system_022.json)
+// ------------------------------------------------------
+typedef struct {
+	struct {
+		char version[A10_Const::LEN_NAME];
+		char device_name[A10_Const::LEN_NAME];
+		char last_update[A10_Const::LEN_NAME];
+	} meta;
+
+	struct {
+		struct {
+			char html[A10_Const::LEN_PATH];
+			char css[A10_Const::LEN_PATH];
+			char js[A10_Const::LEN_PATH];
+		} web;
+		struct {
+			char	 level[A10_Const::LEN_LEVEL];
+			uint16_t max_entries;
+		} logging;
+	} system;
+
+	struct {
+		struct {
+			int16_t	 pin;
+			uint8_t	 channel;
+			uint32_t freq;
+			uint8_t	 res;
+		} fan_pwm;
+		struct {
+			bool	 enabled;
+			int16_t	 pin;
+			uint16_t debounce_sec;
+			
+		} pir;
+		struct {
+			bool	 enabled;
+			char	 type[16];
+			int16_t	 pin;
+			uint16_t interval_sec;
+		} tempHum;
+		struct {
+			bool	 enabled;
+			uint16_t scan_interval;
+		} ble;
+	} hw;
+
+	struct {
+		char api_key[64];
+	} security;
+	struct {
+		char	 ntp_server[64];
+		char	 timezone[32];
+		uint16_t sync_interval_min;
+	} time;
+} ST_A10_SystemConfig;
+
+// ------------------------------------------------------
+// WIFI 설정 (cfg_wifi_022.json)
+// ------------------------------------------------------
+typedef struct {
+	EN_A10_WIFI_MODE_t wifiMode;
+	char			   wifiModeDesc[48];
+	struct {
+		char ssid[A10_Const::LEN_SSID];
+		char password[A10_Const::LEN_PASS];
+	} ap;
+	struct {
+		char ssid[A10_Const::LEN_SSID];
+		char pass[A10_Const::LEN_PASS];
+	} sta[A10_Const::MAX_STA_NETWORKS];
+	uint8_t sta_count;
+} ST_A10_WifiConfig;
+
+
+// ------------------------------------------------------
+// MOTION 설정 (cfg_motion_022.json)
+//  - JSON 스키마(최종 확정)
+//    motion.pir.enabled, motion.pir.hold_sec
+//    motion.ble.enabled, motion.ble.trusted_devices[], motion.ble.rssi{on,off,avg_count,persist_count,exit_delay_sec}
+// ------------------------------------------------------
+typedef struct {
+	char	alias[A10_Const::LEN_ALIAS];  // "MyPhone"
+	char	name[A10_Const::LEN_NAME];	  // "iPhone15" 등
+	char	mac[20];					  // "AA:BB:CC:11:22:33" 또는 ""(랜덤화시)
+	char	manuf_prefix[9];			  // "4C0002" (최대 8 chars + NUL)
+	uint8_t prefix_len;					  // 바이트 단위(예: 3 → "4C0002" 3바이트)
+	bool	enabled;					  // 디바이스 화이트리스트 on/off
+} ST_A10_BLETrustedDevice;
+
+typedef struct {
+	bool enabled;  // 전체 motion 기능 마스터 스위치(옵션)
+	struct {	   // motion.pir
+		bool	 enabled;
+		uint16_t hold_sec;
+	} pir;
+	struct {  // motion.ble
+		bool enabled;
+		// motion.ble.trusted_devices[]
+		ST_A10_BLETrustedDevice trusted_devices[A10_Const::MAX_BLE_DEVICES];
+		uint8_t					trusted_count;
+		// motion.ble.rssi { on/off/avg_count/persist_count/exit_delay_sec }
+		struct {
+			int16_t	 on;			  // RSSI ON Threshold
+			int16_t	 off;			  // RSSI OFF Threshold
+			uint8_t	 avg_count;		  // 이동 평균 샘플 수
+			uint8_t	 persist_count;	  // 상태 전이 연속 조건
+			uint16_t exit_delay_sec;  // Presence→Idle 지연
+		} rssi;
+	} ble;
+} ST_A10_MotionConfig;
 
 /* ======================================================
  * Enum/Code: Segment Mode
@@ -337,7 +542,7 @@ inline float A10_randRange(float p_min, float p_max) {
 // 프리셋 코드 → 인덱스 매핑 (S10용)
 inline int8_t A10_getPresetIndexByCode(const char* code) {
     if (!code) return -1;
-    for (int8_t i = 0; i < EN_A10_PRESET_MAX; i++) {
+    for (int8_t i = 0; i < EN_A10_PRESET_COUNT; i++) {
         if (strcasecmp(code, g_A10_PRESET_CODES[i]) == 0)
             return i;
     }

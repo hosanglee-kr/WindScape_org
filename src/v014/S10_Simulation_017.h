@@ -48,8 +48,8 @@
 
 #include "A10_Const_014.h"
 #include "C10_ConfigManager_020.h"
-#include "D10_Logger_011.h"
-#include "P10_PWM_ctrl_016.h"
+#include "D10_Logger_014.h"
+#include "P10_PWM_ctrl_014.h"
 
 // ======================================================
 // CL_S10_Simulation
@@ -308,7 +308,7 @@ public:
 	void toJson(JsonDocument& p_doc) {
 		JsonObject o = p_doc["sim"].to<JsonObject>();
 		o["active"]      = active;
-		o["phase"]       = g_A10_WEATHER_PHASE_NAMES_ARR[(uint8_t)phase];
+		o["phase"]       = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
 		o["wind"]        = currentWindSpeed;
 		o["target"]      = targetWindSpeed;
 		o["gustActive"]  = gustActive;

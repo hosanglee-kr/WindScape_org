@@ -47,7 +47,7 @@
 #include <string.h>
 
 #include "A10_Const_014.h"
-#include "D10_Logger_011.h"
+#include "D10_Logger_014.h"
 
 class CL_C10_ConfigManager {
 public:
@@ -348,7 +348,7 @@ static void C10_toJson_Motion(const ST_A10_MotionConfig& p, JsonDocument& d) {
 	// =====================================================
 	static bool C10_loadWindProfileDict(ST_A10_WindProfileDict_t& p_dict) {
 		JsonDocument d;
-		if (!C10_ioLoadJson(A10_Const::CFG_WINDPROFILE_FILE, d)) {
+		if (!C10_ioLoadJson(A10_Const::WIND_PROFILE_FILE, d)) {
 			A10_resetWindProfileDictDefault(p_dict);
 			return false;
 		}
@@ -600,7 +600,7 @@ static void C10_toJson_Schedules(const ST_A10_ScheduleConfig& p, JsonDocument& d
 	// =====================================================
 	static bool C10_loadUserProfiles(ST_A10_UserProfileConfig_t& p_cfg) {
 		JsonDocument d;
-		if (!C10_ioLoadJson(A10_Const::CFG_USERPROFILE_FILE, d)) {
+		if (!C10_ioLoadJson(A10_Const::CFG_USER_PROFILES_FILE, d)) {
 			A10_resetUserProfilesDefault(p_cfg);
 			return false;
 		}
@@ -711,7 +711,7 @@ static void C10_toJson_Schedules(const ST_A10_ScheduleConfig& p, JsonDocument& d
 			jp["motion"]["ble"]["rssi_threshold"] = up.motion.ble.rssi_threshold;
 			jp["motion"]["ble"]["hold_sec"]       = up.motion.ble.hold_sec;
 		}
-		return C10_ioSaveJson(A10_Const::CFG_USERPROFILE_FILE, A10_Const::CFG_USERPROFILE_FILE_BAK, d);
+		return C10_ioSaveJson(A10_Const::CFG_USER_PROFILES_FILE, A10_Const::CFG_USER_PROFILES_FILE_BAK, d);
 	}
 
 static void C10_toJson_UserProfiles(const ST_A10_UserProfileConfig_t& p, JsonDocument& d) {
