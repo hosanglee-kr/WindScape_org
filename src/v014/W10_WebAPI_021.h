@@ -79,13 +79,59 @@ public:
 
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WebAPI initialized");
 	}
+    // broadcastState 
+    static void broadcastState(JsonDocument& p_doc, bool p_diffOnly = false) {
+        if (!s_wsServerState) return;
+
+        String v_msg;
+        if (p_diffOnly) {
+            // 향후 diff 계산 로직 추가 가능 (현재는 전체 송신)
+        }
+        serializeJson(p_doc, v_msg);
+
+        for (auto c : s_wsServerState->getClients()) {
+            if (c && c->canSend()) c->text(v_msg);
+        }
+
+        CL_D10_Logger::log(EN_L10_LOG_DEBUG,
+                           "[W10] broadcastState() sent to %d clients",
+                           s_wsServerState->count());
+    }
+
+    // 시뮬레이션 차트용 브로드캐스트
+    static void broadcastChart(JsonDocument& p_doc) {
+        if (!s_wsServerChart) return;
+
+        String v_msg;
+        serializeJson(p_doc, v_msg);
+
+        for (auto c : s_wsServerChart->getClients()) {
+            if (c && c->canSend()) c->text(v_msg);
+        }
+
+        CL_D10_Logger::log(EN_L10_LOG_DEBUG,
+                           "[W10] broadcastChart() sent to %d clients",
+                           s_wsServerChart->count());
+    }
+
+    // 기존 broadcastLog() 그대로 유지
+    static void broadcastLog(const char* p_msg) {
+        if (!s_wsServerLog) return;
+        for (auto c : s_wsServerLog->getClients()) {
+            if (c && c->canSend()) c->text(p_msg);
+        }
+    }
 
 private:
 	static AsyncWebServer*        s_server;
 	static CL_CT10_ControlManager* s_control;
 
-    static AsyncWebSocket s_wsLogs;
-    static AsyncWebSocket s_wsState;
+    static AsyncWebSocket* s_wsServerState;
+    static AsyncWebSocket* s_wsServerLog;
+    static AsyncWebSocket* s_wsServerChart;
+
+    // static AsyncWebSocket* s_wsLogs;
+    // static AsyncWebSocket* s_wsState;
 
 	// --------------------------------------------------
 	// 공통 유틸
@@ -772,13 +818,6 @@ static void routeWebSocket() {
     s_server->addHandler(&s_wsState);
 }
 
-static void broadcastState(const JsonDocument& p_doc) {
-    if (!s_wsState.count()) return;
-    String v_json;
-    serializeJson(p_doc, v_json);
-    s_wsState.textAll(v_json);
-}
-
 
 };
 
@@ -789,6 +828,13 @@ AsyncWebServer*        CL_W10_WebAPI::s_server  = nullptr;
 CL_CT10_ControlManager* CL_W10_WebAPI::s_control = nullptr;
 
 
-AsyncWebSocket CL_W10_WebAPI::s_wsLogs  = AsyncWebSocket("/ws/logs");
-AsyncWebSocket CL_W10_WebAPI::s_wsState = AsyncWebSocket("/ws/state");
+// ------------------------------------------------------
+// 정적 멤버 정의
+// ------------------------------------------------------
+inline AsyncWebSocket* CL_W10_WebAPI::s_wsServerState = nullptr;
+inline AsyncWebSocket* CL_W10_WebAPI::s_wsServerLog   = nullptr;
+inline AsyncWebSocket* CL_W10_WebAPI::s_wsServerChart = nullptr;
+
+// AsyncWebSocket CL_W10_WebAPI::s_wsLogs  = AsyncWebSocket("/ws/logs");
+// AsyncWebSocket CL_W10_WebAPI::s_wsState = AsyncWebSocket("/ws/state");
 
