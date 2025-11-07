@@ -170,6 +170,38 @@ public:
 		return C10_ioSaveJson(A10_Const::CFG_SYSTEM_FILE, A10_Const::CFG_SYSTEM_FILE_BAK, v);
 	}
 
+static void C10_toJson_System(const ST_A10_SystemConfig& p, JsonDocument& d) {
+    d["meta"]["version"]     = p.meta.version;
+    d["meta"]["device_name"] = p.meta.device_name;
+    d["meta"]["last_update"] = p.meta.last_update;
+
+    d["system"]["web"]["html"] = p.system.web.html;
+    d["system"]["web"]["css"]  = p.system.web.css;
+    d["system"]["web"]["js"]   = p.system.web.js;
+
+    d["system"]["logging"]["level"]       = p.system.logging.level;
+    d["system"]["logging"]["max_entries"] = p.system.logging.max_entries;
+
+    d["hw"]["fan_pwm"]["pin"]     = p.hw.fan_pwm.pin;
+    d["hw"]["fan_pwm"]["channel"] = p.hw.fan_pwm.channel;
+    d["hw"]["fan_pwm"]["freq"]    = p.hw.fan_pwm.freq;
+    d["hw"]["fan_pwm"]["res"]     = p.hw.fan_pwm.res;
+
+    d["hw"]["pir"]["enabled"]      = p.hw.pir.enabled;
+    d["hw"]["pir"]["pin"]          = p.hw.pir.pin;
+    d["hw"]["pir"]["debounce_sec"] = p.hw.pir.debounce_sec;
+
+    d["hw"]["ble"]["enabled"]       = p.hw.ble.enabled;
+    d["hw"]["ble"]["scan_interval"] = p.hw.ble.scan_interval;
+
+    d["security"]["api_key"] = p.security.api_key;
+
+    d["time"]["ntp_server"]        = p.time.ntp_server;
+    d["time"]["timezone"]          = p.time.timezone;
+    d["time"]["sync_interval_min"] = p.time.sync_interval_min;
+}
+
+
 	static bool C10_loadWifiConfig(ST_A10_WifiConfig& p) {
 		JsonDocument d;
 		if (!C10_ioLoadJson(A10_Const::CFG_WIFI_FILE, d)) {
@@ -209,6 +241,20 @@ public:
 		}
 		return C10_ioSaveJson(A10_Const::CFG_WIFI_FILE, A10_Const::CFG_WIFI_FILE_BAK, d);
 	}
+
+static void C10_toJson_Wifi(const ST_A10_WifiConfig& p, JsonDocument& d) {
+    d["wifi"]["wifiMode"]     = p.wifiMode;
+    d["wifi"]["wifiModeDesc"] = p.wifiModeDesc;
+    d["wifi"]["ap"]["ssid"]   = p.ap.ssid;
+    d["wifi"]["ap"]["password"] = p.ap.password;
+
+    for (uint8_t i=0; i<p.sta_count; i++) {
+        d["wifi"]["sta"][i]["ssid"] = p.sta[i].ssid;
+        d["wifi"]["sta"][i]["pass"] = p.sta[i].pass;
+    }
+}
+
+
 
 	static bool C10_loadMotionConfig(ST_A10_MotionConfig& p) {
 		JsonDocument d;
@@ -270,6 +316,32 @@ public:
 		}
 		return C10_ioSaveJson(A10_Const::CFG_MOTION_FILE, A10_Const::CFG_MOTION_FILE_BAK, d);
 	}
+
+
+static void C10_toJson_Motion(const ST_A10_MotionConfig& p, JsonDocument& d) {
+    d["motion"]["enabled"] = p.enabled;
+    d["motion"]["pir"]["enabled"]  = p.pir.enabled;
+    d["motion"]["pir"]["hold_sec"] = p.pir.hold_sec;
+    d["motion"]["ble"]["enabled"]  = p.ble.enabled;
+
+    d["motion"]["ble"]["rssi"]["on"]             = p.ble.rssi.on;
+    d["motion"]["ble"]["rssi"]["off"]            = p.ble.rssi.off;
+    d["motion"]["ble"]["rssi"]["avg_count"]      = p.ble.rssi.avg_count;
+    d["motion"]["ble"]["rssi"]["persist_count"]  = p.ble.rssi.persist_count;
+    d["motion"]["ble"]["rssi"]["exit_delay_sec"] = p.ble.rssi.exit_delay_sec;
+
+    for (uint8_t i=0; i<p.ble.trusted_count; i++) {
+        const ST_A10_BLETrustedDevice& v_d = p.ble.trusted_devices[i];
+        JsonObject v_td = d["motion"]["ble"]["trusted_devices"][i];
+        v_td["alias"] = v_d.alias;
+        v_td["name"]  = v_d.name;
+        v_td["mac"]   = v_d.mac;
+        v_td["manuf_prefix"] = v_d.manuf_prefix;
+        v_td["prefix_len"]   = v_d.prefix_len;
+        v_td["enabled"]      = v_d.enabled;
+    }
+}
+
 
 	// =====================================================
 	// WindProfile Dict (cfg_default_windProfile_023.json)
@@ -460,6 +532,31 @@ public:
 		}
 		return C10_ioSaveJson(A10_Const::CFG_SCHEDULES_FILE, A10_Const::CFG_SCHEDULES_FILE_BAK, d);
 	}
+
+static void C10_toJson_Schedules(const ST_A10_ScheduleConfig& p, JsonDocument& d) {
+    for (uint8_t i=0; i<p.count; i++) {
+        const ST_A10_ScheduleItem_t& s = p.items[i];
+        JsonObject js = d["schedules"][i];
+        js["schNo"]   = s.schNo;
+        js["name"]    = s.name;
+        js["enabled"] = s.enabled;
+
+        js["period"]["enabled"] = s.period.enabled;
+        js["period"]["start_time"] = s.period.start_time;
+        js["period"]["end_time"]   = s.period.end_time;
+
+        for (uint8_t k=0; k<s.segCount; k++) {
+            const ST_A10_OpSegment_t& sg = s.segments[k];
+            JsonObject jseg = js["segments"][k];
+            jseg["segNo"] = sg.segNo;
+            jseg["mode"]  = sg.mode;
+            jseg["presetCode"] = sg.presetCode;
+            jseg["styleCode"]  = sg.styleCode;
+            jseg["fixed_speed"]= sg.fixed_speed;
+        }
+    }
+}
+
 
 	// =====================================================
 	// UserProfiles (cfg_uzOpProfile_025_final.json)
