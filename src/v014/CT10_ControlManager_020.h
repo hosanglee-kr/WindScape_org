@@ -52,7 +52,11 @@
 #include "P10_PWM_ctrl_014.h"
 #include "D10_Logger_014.h"
 #include "M10_MotionLogic_015.h"
-#include "W10_WebAPI_022.h"
+
+
+#include "M10_MotionLogic_015.h"
+// forward declaration으로 순환참조 방지
+class CL_W10_WebAPI;
 
 // ------------------------------------------------------
 // 런타임 상태 구조체
@@ -405,6 +409,11 @@ public:
 
         // 4) 아무 것도 없으면 정지
         if (sim.active) sim.stop();
+
+		// ✅ 상태 변화 감지 시 WebSocket 실시간 푸시
+        if (v_stateChanged) {
+            _broadcastState();
+        }
     }
 
     // --------------------------------------------------
