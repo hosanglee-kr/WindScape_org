@@ -52,6 +52,7 @@
 #include "P10_PWM_ctrl_014.h"
 #include "D10_Logger_014.h"
 #include "M10_MotionLogic_015.h"
+#include "W10_WebAPI_022.h"
 
 // ------------------------------------------------------
 // 런타임 상태 구조체
@@ -828,6 +829,15 @@ private:
 	    }
 	    return false;
     }
+
+     // --------------------------------------------------
+// 상태 변경 시 WebSocket 브로드캐스트 헬퍼
+// --------------------------------------------------
+static void _broadcastState() {
+	JsonDocument v_doc;
+	toJson(v_doc);               // 현재 상태 직렬화
+	CL_W10_WebAPI::broadcastState(v_doc);  // WS 전체 클라이언트로 푸시
+}
 
 };
 
