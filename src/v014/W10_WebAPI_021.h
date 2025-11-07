@@ -75,8 +75,6 @@ public:
 		routeReload();
 		routeWebSocket();   // ✅ 추가
 
-        CL_D10_Logger::attachWebSocket(&s_wsLogs);  // ✅ logger 연결
-
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WebAPI initialized");
 	}
     // broadcastState 
@@ -785,29 +783,24 @@ private:
 		);
 	}
 
+static AsyncWebSocket s_wsLogs("/ws/logs");
+static AsyncWebSocket s_wsState("/ws/state");
+static AsyncWebSocket s_wsChart("/ws/chart");
+
 static void routeWebSocket() {
-    // 1️⃣ 로그 스트리밍 WebSocket
-    s_wsLogs.setAuthentication(nullptr, nullptr);
-    s_wsLogs.onEvent([](AsyncWebSocket *server, AsyncWebSocketClient *client,
-                        AwsEventType type, void *arg, uint8_t *data, size_t len) {
-        if (type == WS_EVT_CONNECT) {
-            CL_D10_Logger::log(EN_L10_LOG_INFO,
-                "[W10] WS /logs connected (id=%u)", client->id());
-        } else if (type == WS_EVT_DISCONNECT) {
-            CL_D10_Logger::log(EN_L10_LOG_INFO,
-                "[W10] WS /logs disconnected (id=%u)", client->id());
-        }
+    // 로그 WS
+    s_wsLogs.onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client,
+                        AwsEventType type, void*, uint8_t*, size_t) {
+        if (type == WS_EVT_CONNECT)
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WS /logs connected (id=%u)", client->id());
     });
     s_server->addHandler(&s_wsLogs);
 
-    // 2️⃣ 상태 스트리밍 WebSocket
-    s_wsState.setAuthentication(nullptr, nullptr);
-    s_wsState.onEvent([](AsyncWebSocket *server, AsyncWebSocketClient *client,
-                         AwsEventType type, void *arg, uint8_t *data, size_t len) {
+    // 상태 WS
+    s_wsState.onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client,
+                         AwsEventType type, void*, uint8_t*, size_t) {
         if (type == WS_EVT_CONNECT) {
-            CL_D10_Logger::log(EN_L10_LOG_INFO,
-                "[W10] WS /state connected (id=%u)", client->id());
-            // 연결 시 즉시 현재 상태 푸시
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WS /state connected (id=%u)", client->id());
             JsonDocument v_doc;
             if (s_control) s_control->toJson(v_doc);
             String v_json;
@@ -816,6 +809,21 @@ static void routeWebSocket() {
         }
     });
     s_server->addHandler(&s_wsState);
+
+    // 시뮬레이션 차트 WS
+    s_wsChart.onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client,
+                         AwsEventType type, void*, uint8_t*, size_t) {
+        if (type == WS_EVT_CONNECT)
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WS /chart connected (id=%u)", client->id());
+    });
+    s_server->addHandler(&s_wsChart);
+
+    // 포인터 연결 (브로드캐스트 대상)
+    s_wsServerLog   = &s_wsLogs;
+    s_wsServerState = &s_wsState;
+    s_wsServerChart = &s_wsChart;
+
+    CL_D10_Logger::attachWebSocket(s_wsServerLog);
 }
 
 
