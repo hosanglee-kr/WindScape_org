@@ -657,23 +657,36 @@ private:
 	//      (CT10.toJson 내부에서 sim 상태는 이미 제공)
 	// --------------------------------------------------
 	static void routeSimulation() {
-		s_server->on("/api/sim/chart", HTTP_GET,
-			[](AsyncWebServerRequest* p_request) {
-				if (!checkApiKey(p_request)) {
-					p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
-					return;
-				}
-				if (!s_control) {
-					p_request->send(500, "application/json", "{\"error\":\"control not ready\"}");
-					return;
-				}
-				JsonDocument v_doc;
-				// CT10이 보유한 sim 인스턴스의 chart export 지원 가정
-				s_control->toChartJson(v_doc); // 필요하다면 CT10에 구현
-				sendJson(p_request, v_doc);
-			}
-		);
-	}
+	// 기존 chart 라우트 유지
+	s_server->on("/api/sim/chart", HTTP_GET, [](AsyncWebServerRequest* p_request) {
+		if (!checkApiKey(p_request)) {
+			p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+			return;
+		}
+		if (!s_control) {
+			p_request->send(500, "application/json", "{\"error\":\"control not ready\"}");
+			return;
+		}
+		JsonDocument v_doc;
+		s_control->toChartJson(v_doc);
+		sendJson(p_request, v_doc);
+	});
+
+	// ✅ 신규 추가: /api/sim/status
+	s_server->on("/api/sim/status", HTTP_GET, [](AsyncWebServerRequest* p_request) {
+		if (!checkApiKey(p_request)) {
+			p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+			return;
+		}
+		if (!s_control) {
+			p_request->send(500, "application/json", "{\"error\":\"control not ready\"}");
+			return;
+		}
+		JsonDocument v_doc;
+		s_control->toSummaryJson(v_doc);  // CT10의 새 함수 호출 ✅
+		sendJson(p_request, v_doc);
+	});
+}
 
 	// --------------------------------------------------
 	// 11. /api/logs
