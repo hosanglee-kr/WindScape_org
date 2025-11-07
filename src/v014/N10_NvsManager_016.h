@@ -82,6 +82,7 @@
 #include <string.h>
 
 #include "A10_Const_014.h"
+#include "C10_ConfigManager_020.h"
 #include "D10_Logger_014.h"
 
 // ------------------------------------------------------
@@ -112,9 +113,14 @@ typedef struct {
 // Dirty Flag 구조체
 // ------------------------------------------------------
 typedef struct {
-	bool runtime;   // 런타임 상태 변경 여부
+    bool runtime;       // 런타임 상태 변경 여부 (기존 N10 전용)
+    bool schedules;     // 스케줄 JSON 변경
+    bool userProfiles;  // 유저 프로파일 JSON 변경
+    bool motion;        // 모션 설정 JSON 변경
+    bool system;        // 시스템 설정 JSON 변경
+    bool wifi;          // WiFi 설정 JSON 변경
+    bool windDict;      // WindProfile Dict 변경
 } ST_N10_DirtyFlags_t;
-
 
 // ------------------------------------------------------
 // N10 NVS Manager
@@ -173,6 +179,19 @@ public:
 		s_prefs.end();
 		s_initialized = false;
 	}
+// --------------------------------------------------
+    // 공용 Dirty Flag / Flush API
+    //  - W10 / C10 / 기타 모듈에서 설정 변경 시 호출
+    //  - p_key: "runtime","schedules","userProfiles",
+    //           "motion","system","wifi","windDict"
+    // --------------------------------------------------
+    static void markDirty(const char* p_key, bool p_flag);
+
+    // Dirty 항목들을 최소 주기 기준으로 Flush
+    //  - runtime : NVS(Runtime)
+    //  - 나머지  : C10_ConfigManager 저장 함수 호출
+    static void flushIfNeeded();
+
 
 	// --------------------------------------------------
 	// 현재 런타임 상태 가져오기 (복사)
@@ -328,6 +347,8 @@ private:
 	static ST_N10_DirtyFlags_t  s_dirty;
 	static uint32_t          s_lastSaveMs;
 
+
+
 	// --------------------------------------------------
 	// 내부: NVS에서 초기 상태 로드
 	// --------------------------------------------------
@@ -399,6 +420,69 @@ private:
 
 		CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[N10] Runtime flushed to NVS");
 	}
+
+void CL_N10_NvsManager::flushIfNeeded() {
+    if (!s_initialized) {
+        return;
+    }
+
+    uint32_t v_now = millis();
+    if (v_now - s_lastSaveMs < G_N10_SAVE_INTERVAL_MS) {
+        return;
+    }
+
+    bool v_saved = false;
+
+    // 1) Runtime 상태 (기존 N10_flush 활용)
+    if (s_dirty.runtime) {
+        N10_flush(false);
+        v_saved = true;
+    }
+
+    // 2) Config JSON 계열 (C10_ConfigManager에 위임)
+
+    if (s_dirty.schedules && g_A10_config_root.schedules) {
+        s_dirty.schedules = false;
+        CL_C10_ConfigManager::saveSchedules();
+        v_saved = true;
+    }
+
+    if (s_dirty.userProfiles && g_A10_config_root.userProfiles) {
+        s_dirty.userProfiles = false;
+        CL_C10_ConfigManager::saveUserProfiles();
+        v_saved = true;
+    }
+
+    if (s_dirty.motion && g_A10_config_root.motion) {
+        s_dirty.motion = false;
+        CL_C10_ConfigManager::saveMotion();
+        v_saved = true;
+    }
+
+    if (s_dirty.system && g_A10_config_root.system) {
+        s_dirty.system = false;
+        CL_C10_ConfigManager::saveSystem();
+        v_saved = true;
+    }
+
+    if (s_dirty.wifi && g_A10_config_root.wifi) {
+        s_dirty.wifi = false;
+        CL_C10_ConfigManager::saveWifi();
+        v_saved = true;
+    }
+
+    if (s_dirty.windDict && g_A10_config_root.windDict) {
+        s_dirty.windDict = false;
+        // 필요 시 windDict 저장 함수 구현/호출
+        v_saved = true;
+    }
+
+    if (v_saved) {
+        s_lastSaveMs = v_now;
+        CL_D10_Logger::log(EN_L10_LOG_INFO, "[N10] Dirty flushed (runtime/config)");
+    }
+}
+
 };
 
 
@@ -408,6 +492,30 @@ private:
 Preferences         CL_N10_NvsManager::s_prefs;
 bool                CL_N10_NvsManager::s_initialized = false;
 ST_N10_RuntimeState_t CL_N10_NvsManager::s_state;
-ST_N10_DirtyFlags_t  CL_N10_NvsManager::s_dirty = { false };
+ST_N10_DirtyFlags_t  CL_N10_NvsManager::s_dirty = {
+    false, // runtime
+    false, // schedules
+    false, // userProfiles
+    false, // motion
+    false, // system
+    false, // wifi
+    false  // windDict
+};
 uint32_t            CL_N10_NvsManager::s_lastSaveMs = 0;
+
+
+void CL_N10_NvsManager::markDirty(const char* p_key, bool p_flag) {
+    if (!p_key || !p_key[0]) {
+        return;
+    }
+
+    if      (strcasecmp(p_key, "runtime")      == 0) s_dirty.runtime      = p_flag;
+    else if (strcasecmp(p_key, "schedules")    == 0) s_dirty.schedules    = p_flag;
+    else if (strcasecmp(p_key, "userProfiles") == 0) s_dirty.userProfiles = p_flag;
+    else if (strcasecmp(p_key, "motion")       == 0) s_dirty.motion       = p_flag;
+    else if (strcasecmp(p_key, "system")       == 0) s_dirty.system       = p_flag;
+    else if (strcasecmp(p_key, "wifi")         == 0) s_dirty.wifi         = p_flag;
+    else if (strcasecmp(p_key, "windDict")     == 0) s_dirty.windDict     = p_flag;
+}
+
 
