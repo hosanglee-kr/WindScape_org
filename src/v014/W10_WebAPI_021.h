@@ -154,6 +154,12 @@ private:
 				}
 				JsonDocument v_doc;
 				s_control->toJson(v_doc); // control + sim + autoOff + override 포함
+
+				// Motion 상태 직렬화 추가
+            	if (s_motion) {
+		            s_motion->toJson(doc);
+	            }
+				
 				sendJson(p_request, v_doc);
 			}
 		);
