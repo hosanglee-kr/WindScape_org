@@ -51,7 +51,7 @@
 #include "S10_Simulation_017.h"
 #include "P10_PWM_ctrl_014.h"
 #include "D10_Logger_014.h"
-#include "M10_MotionLogic_014.h"
+#include "M10_MotionLogic_015.h"
 
 // ------------------------------------------------------
 // 런타임 상태 구조체
@@ -817,19 +817,17 @@ private:
     }
 
     bool _isMotionBlocked(const ST_A10_MotionBinding_t& p_motionCfg) {
-        if (!motion) return false;
+  	    if (!motion) return false; // 연결 안됨
+	    if (!p_motionCfg.pir.enabled && !p_motionCfg.ble.enabled) return false;
 
-        bool v_needPir = p_motionCfg.pir.enabled;
-        bool v_needBle = p_motionCfg.ble.enabled;
-
-        if (!v_needPir && !v_needBle) return false;
-
-        // CL_M10_MotionLogic::isPresenceActive() 구현에 따라 판정
-        if (!motion->isPresenceActive()) {
-            CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[CT10] Motion blocked (no presence)");
-            return true;
-        }
-        return false;
+	    // M10에서 실시간 활성여부 판단
+	    bool v_active = motion->isActive();
+	    if (!v_active) {
+		    CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[CT10] Motion blocked (no presence)");
+		    return true;
+	    }
+	    return false;
     }
+
 };
 
