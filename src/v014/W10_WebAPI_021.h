@@ -50,7 +50,7 @@
 #include "M10_MotionLogic_014.h"
 #include "P10_PWM_ctrl_014.h"
 #include "N10_NvsManager_016.h"
-#include "D10_Logger_014.h"
+#include "D10_Logger_015.h"
 
 class CL_W10_WebAPI {
 public:
@@ -73,6 +73,9 @@ public:
 		routeSimulation();
 		routeLogs();
 		routeReload();
+		routeWebSocket();   // ✅ 추가
+
+        CL_D10_Logger::attachWebSocket(&s_wsLogs);  // ✅ logger 연결
 
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WebAPI initialized");
 	}
@@ -80,6 +83,9 @@ public:
 private:
 	static AsyncWebServer*        s_server;
 	static CL_CT10_ControlManager* s_control;
+
+    static AsyncWebSocket s_wsLogs;
+    static AsyncWebSocket s_wsState;
 
 	// --------------------------------------------------
 	// 공통 유틸
@@ -732,6 +738,48 @@ private:
 			}
 		);
 	}
+
+static void routeWebSocket() {
+    // 1️⃣ 로그 스트리밍 WebSocket
+    s_wsLogs.setAuthentication(nullptr, nullptr);
+    s_wsLogs.onEvent([](AsyncWebSocket *server, AsyncWebSocketClient *client,
+                        AwsEventType type, void *arg, uint8_t *data, size_t len) {
+        if (type == WS_EVT_CONNECT) {
+            CL_D10_Logger::log(EN_L10_LOG_INFO,
+                "[W10] WS /logs connected (id=%u)", client->id());
+        } else if (type == WS_EVT_DISCONNECT) {
+            CL_D10_Logger::log(EN_L10_LOG_INFO,
+                "[W10] WS /logs disconnected (id=%u)", client->id());
+        }
+    });
+    s_server->addHandler(&s_wsLogs);
+
+    // 2️⃣ 상태 스트리밍 WebSocket
+    s_wsState.setAuthentication(nullptr, nullptr);
+    s_wsState.onEvent([](AsyncWebSocket *server, AsyncWebSocketClient *client,
+                         AwsEventType type, void *arg, uint8_t *data, size_t len) {
+        if (type == WS_EVT_CONNECT) {
+            CL_D10_Logger::log(EN_L10_LOG_INFO,
+                "[W10] WS /state connected (id=%u)", client->id());
+            // 연결 시 즉시 현재 상태 푸시
+            JsonDocument v_doc;
+            if (s_control) s_control->toJson(v_doc);
+            String v_json;
+            serializeJson(v_doc, v_json);
+            client->text(v_json);
+        }
+    });
+    s_server->addHandler(&s_wsState);
+}
+
+static void broadcastState(const JsonDocument& p_doc) {
+    if (!s_wsState.count()) return;
+    String v_json;
+    serializeJson(p_doc, v_json);
+    s_wsState.textAll(v_json);
+}
+
+
 };
 
 // ------------------------------------------------------
@@ -740,4 +788,7 @@ private:
 AsyncWebServer*        CL_W10_WebAPI::s_server  = nullptr;
 CL_CT10_ControlManager* CL_W10_WebAPI::s_control = nullptr;
 
+
+AsyncWebSocket CL_W10_WebAPI::s_wsLogs  = AsyncWebSocket("/ws/logs");
+AsyncWebSocket CL_W10_WebAPI::s_wsState = AsyncWebSocket("/ws/state");
 
