@@ -534,26 +534,63 @@ static void C10_toJson_Motion(const ST_A10_MotionConfig& p, JsonDocument& d) {
 	}
 
 static void C10_toJson_Schedules(const ST_A10_ScheduleConfig& p, JsonDocument& d) {
-    for (uint8_t i=0; i<p.count; i++) {
+    d["schedules_count"] = p.count;
+
+    for (uint8_t i = 0; i < p.count; i++) {
         const ST_A10_ScheduleItem_t& s = p.items[i];
         JsonObject js = d["schedules"][i];
+
         js["schNo"]   = s.schNo;
         js["name"]    = s.name;
         js["enabled"] = s.enabled;
 
+        // period
         js["period"]["enabled"] = s.period.enabled;
+        for (uint8_t d_i = 0; d_i < 7; d_i++) {
+            js["period"]["days"][d_i] = s.period.days[d_i];
+        }
         js["period"]["start_time"] = s.period.start_time;
         js["period"]["end_time"]   = s.period.end_time;
 
-        for (uint8_t k=0; k<s.segCount; k++) {
+        // segments
+        js["segCount"] = s.segCount;
+        for (uint8_t k = 0; k < s.segCount; k++) {
             const ST_A10_OpSegment_t& sg = s.segments[k];
             JsonObject jseg = js["segments"][k];
-            jseg["segNo"] = sg.segNo;
-            jseg["mode"]  = sg.mode;
-            jseg["presetCode"] = sg.presetCode;
-            jseg["styleCode"]  = sg.styleCode;
-            jseg["fixed_speed"]= sg.fixed_speed;
+
+            jseg["segNo"]       = sg.segNo;
+            jseg["on_minutes"]  = sg.on_minutes;
+            jseg["off_minutes"] = sg.off_minutes;
+            jseg["mode"]        = sg.mode;
+            jseg["presetCode"]  = sg.presetCode;
+            jseg["styleCode"]   = sg.styleCode;
+
+            // adjust
+            JsonObject adj = jseg["adjust"];
+            adj["wind_intensity"]   = sg.adjust.wind_intensity;
+            adj["wind_variability"] = sg.adjust.wind_variability;
+            adj["gust_frequency"]   = sg.adjust.gust_frequency;
+            adj["fan_limit"]        = sg.adjust.fan_limit;
+            adj["min_fan"]          = sg.adjust.min_fan;
+
+            jseg["fixed_speed"] = sg.fixed_speed;
         }
+
+        // autoOff
+        JsonObject ao = js["autoOff"];
+        ao["timer"]["enabled"] = s.autoOff.timer.enabled;
+        ao["timer"]["minutes"] = s.autoOff.timer.minutes;
+        ao["offTime"]["enabled"] = s.autoOff.offTime.enabled;
+        ao["offTime"]["time"]    = s.autoOff.offTime.time;
+        ao["offTemp"]["enabled"] = s.autoOff.offTemp.enabled;
+        ao["offTemp"]["temp"]    = s.autoOff.offTemp.temp;
+
+        // motion
+        js["motion"]["pir"]["enabled"]        = s.motion.pir.enabled;
+        js["motion"]["pir"]["hold_sec"]       = s.motion.pir.hold_sec;
+        js["motion"]["ble"]["enabled"]        = s.motion.ble.enabled;
+        js["motion"]["ble"]["rssi_threshold"] = s.motion.ble.rssi_threshold;
+        js["motion"]["ble"]["hold_sec"]       = s.motion.ble.hold_sec;
     }
 }
 
@@ -676,6 +713,60 @@ static void C10_toJson_Schedules(const ST_A10_ScheduleConfig& p, JsonDocument& d
 		}
 		return C10_ioSaveJson(A10_Const::CFG_USERPROFILE_FILE, A10_Const::CFG_USERPROFILE_FILE_BAK, d);
 	}
+
+static void C10_toJson_UserProfiles(const ST_A10_UserProfileConfig_t& p, JsonDocument& d) {
+    d["userProfiles"]["count"] = p.count;
+
+    for (uint8_t i = 0; i < p.count; i++) {
+        const ST_A10_UserProfile_t& up = p.items[i];
+        JsonObject jp = d["userProfiles"]["profiles"][i];
+
+        jp["profileNo"]      = up.profileNo;
+        jp["name"]           = up.name;
+        jp["enabled"]        = up.enabled;
+        jp["repeatSegments"] = up.repeatSegments;
+        jp["segCount"]       = up.segCount;
+
+        // segments
+        for (uint8_t k = 0; k < up.segCount; k++) {
+            const ST_A10_OpSegment_t& sg = up.segments[k];
+            JsonObject jseg = jp["segments"][k];
+
+            jseg["segNo"]       = sg.segNo;
+            jseg["on_minutes"]  = sg.on_minutes;
+            jseg["off_minutes"] = sg.off_minutes;
+            jseg["mode"]        = sg.mode;
+            jseg["presetCode"]  = sg.presetCode;
+            jseg["styleCode"]   = sg.styleCode;
+
+            // adjust
+            JsonObject adj = jseg["adjust"];
+            adj["wind_intensity"]   = sg.adjust.wind_intensity;
+            adj["wind_variability"] = sg.adjust.wind_variability;
+            adj["gust_frequency"]   = sg.adjust.gust_frequency;
+            adj["fan_limit"]        = sg.adjust.fan_limit;
+            adj["min_fan"]          = sg.adjust.min_fan;
+
+            jseg["fixed_speed"] = sg.fixed_speed;
+        }
+
+        // autoOff
+        JsonObject ao = jp["autoOff"];
+        ao["timer"]["enabled"]  = up.autoOff.timer.enabled;
+        ao["timer"]["minutes"]  = up.autoOff.timer.minutes;
+        ao["offTime"]["enabled"]= up.autoOff.offTime.enabled;
+        ao["offTime"]["time"]   = up.autoOff.offTime.time;
+        ao["offTemp"]["enabled"]= up.autoOff.offTemp.enabled;
+        ao["offTemp"]["temp"]   = up.autoOff.offTemp.temp;
+
+        // motion
+        jp["motion"]["pir"]["enabled"]        = up.motion.pir.enabled;
+        jp["motion"]["pir"]["hold_sec"]       = up.motion.pir.hold_sec;
+        jp["motion"]["ble"]["enabled"]        = up.motion.ble.enabled;
+        jp["motion"]["ble"]["rssi_threshold"] = up.motion.ble.rssi_threshold;
+        jp["motion"]["ble"]["hold_sec"]       = up.motion.ble.hold_sec;
+    }
+}
 
 	// =====================================================
 	// Wind 해석 유틸 (CT10, S10에서 사용)
