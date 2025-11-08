@@ -187,6 +187,18 @@ public:
 		return (_state.initialized) ? ledcRead(_state.channel) : 0;
 	}
 
+// --------------------------------------------------
+	// 호환용 래퍼 (기존 P10_ 접두사 멤버 이름 유지)
+	//  - CT10 / S10 등 기존 코드와의 연동용
+	// --------------------------------------------------
+	void     P10_begin(const ST_A10_SystemConfig& p_cfg)      { begin(p_cfg); }
+	void     P10_setEnabled(bool p_enabled)                   { setEnabled(p_enabled); }
+	bool     P10_isEnabled() const                            { return isEnabled(); }
+	bool     P10_isInitialized() const                        { return isInitialized(); }
+	void     P10_setDutyPercent(float p_percent)              { setDutyPercent(p_percent); }
+	float    P10_getDutyPercent() const                       { return getDutyPercent(); }
+	uint32_t P10_getRawDuty() const                           { return getRawDuty(); }
+
 private:
 	ST_P10_PWMState_t _state;
 
