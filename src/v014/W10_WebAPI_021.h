@@ -73,10 +73,90 @@ public:
 		routeSimulation();
 		routeLogs();
 		routeReload();
+		// ✅ 추가된 라우트 등록
+        routeControlSummary();
+        routeSimState();
+		
 		routeWebSocket();   // ✅ 추가
+
+
 
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WebAPI initialized");
 	}
+
+// --------------------------------------------------
+// ✅ 신규 추가: /api/control/summary
+//      - CT10 상태 간략 요약 (phase, pwm, override 등)
+// --------------------------------------------------
+static void routeControlSummary() {
+    s_server->on("/api/control/summary", HTTP_GET,
+        [](AsyncWebServerRequest* p_request) {
+            if (!checkApiKey(p_request)) {
+                p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+                return;
+            }
+            if (!s_control) {
+                p_request->send(500, "application/json", "{\"error\":\"control not ready\"}");
+                return;
+            }
+            JsonDocument v_doc;
+            s_control->toSummaryJson(v_doc);   // ✅ CT10의 새 함수 사용
+            sendJson(p_request, v_doc);
+        }
+    );
+}
+
+// --------------------------------------------------
+// ✅ 신규 추가: /api/sim/state
+//      - 실시간 시뮬레이션 상태(phase, wind, pwm 등)
+// --------------------------------------------------
+static void routeSimState() {
+    s_server->on("/api/sim/state", HTTP_GET,
+        [](AsyncWebServerRequest* p_request) {
+            if (!checkApiKey(p_request)) {
+                p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+                return;
+            }
+            if (!s_control) {
+                p_request->send(500, "application/json", "{\"error\":\"control not ready\"}");
+                return;
+            }
+            JsonDocument v_doc;
+            s_control->sim.toJson(v_doc);   // ✅ S10 직렬화 그대로
+            sendJson(p_request, v_doc);
+        }
+    );
+}
+
+// ✅ 개선된 broadcastState
+static void broadcastState(JsonDocument& p_doc, bool p_diffOnly = false) {
+    if (!s_wsServerState) return;
+    String v_msg;
+    serializeJson(p_doc, v_msg);
+
+    for (auto c : s_wsServerState->getClients()) {
+        if (c && c->canSend()) c->text(v_msg);
+    }
+    CL_D10_Logger::log(EN_L10_LOG_DEBUG,
+                       "[W10] broadcastState() → %d clients",
+                       s_wsServerState->count());
+}
+
+// ✅ 개선된 broadcastChart
+static void broadcastChart(JsonDocument& p_doc) {
+    if (!s_wsServerChart) return;
+    String v_msg;
+    serializeJson(p_doc, v_msg);
+
+    for (auto c : s_wsServerChart->getClients()) {
+        if (c && c->canSend()) c->text(v_msg);
+    }
+    CL_D10_Logger::log(EN_L10_LOG_DEBUG,
+                       "[W10] broadcastChart() → %d clients",
+                       s_wsServerChart->count());
+}
+
+/*
     // broadcastState 
     static void broadcastState(JsonDocument& p_doc, bool p_diffOnly = false) {
         if (!s_wsServerState) return;
@@ -111,6 +191,8 @@ public:
                            "[W10] broadcastChart() sent to %d clients",
                            s_wsServerChart->count());
     }
+
+*/
 
     // 기존 broadcastLog() 그대로 유지
     static void broadcastLog(const char* p_msg) {
