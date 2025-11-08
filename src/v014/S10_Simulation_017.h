@@ -51,6 +51,10 @@
 #include "D10_Logger_014.h"
 #include "P10_PWM_ctrl_014.h"
 
+
+// ✅ 전방 선언으로 순환참조 방지
+class CL_W10_WebAPI;
+
 // ======================================================
 // CL_S10_Simulation
 //  - 헤더 전용, 전체 알고리즘 포함
@@ -211,6 +215,14 @@ public:
 		lastUpdateMs = v_now;
 
 		updatePhase();
+		// ✅ phase 변화 감지 시 broadcastChart() 호출
+        if (phase != v_prev) {
+            JsonDocument v_doc;
+            toChartJson(v_doc);
+            CL_W10_WebAPI::broadcastChart(v_doc);  // 전방 선언으로 해결됨
+        }
+
+
 		calcTurb(v_dt);
 		calcThermalEnvelope();
 		updateGust();
