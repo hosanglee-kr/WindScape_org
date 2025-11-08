@@ -129,16 +129,27 @@ static void routeSimState() {
 }
 
 // ✅ 개선된 broadcastState
+// ✅ 개선된 broadcastState (diffOnly 기능 추가)
 static void broadcastState(JsonDocument& p_doc, bool p_diffOnly = false) {
     if (!s_wsServerState) return;
+
+    static String s_lastStateJson;   // 이전 상태 스냅샷 보존
     String v_msg;
     serializeJson(p_doc, v_msg);
+
+    if (p_diffOnly && v_msg == s_lastStateJson) {
+        // 동일하면 송신 생략
+        CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[W10] broadcastState() skip (no diff)");
+        return;
+    }
+    s_lastStateJson = v_msg; // 스냅샷 갱신
 
     for (auto c : s_wsServerState->getClients()) {
         if (c && c->canSend()) c->text(v_msg);
     }
     CL_D10_Logger::log(EN_L10_LOG_DEBUG,
-                       "[W10] broadcastState() → %d clients",
+                       "[W10] broadcastState(diffOnly=%d) → %d clients",
+                       p_diffOnly ? 1 : 0,
                        s_wsServerState->count());
 }
 
