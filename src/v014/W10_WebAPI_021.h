@@ -110,6 +110,7 @@ static void routeControlSummary() {
 // ✅ 신규 추가: /api/sim/state
 //      - 실시간 시뮬레이션 상태(phase, wind, pwm 등)
 // --------------------------------------------------
+// ✅ 통합 버전: /api/sim/state (status 제거)
 static void routeSimState() {
     s_server->on("/api/sim/state", HTTP_GET,
         [](AsyncWebServerRequest* p_request) {
@@ -121,8 +122,12 @@ static void routeSimState() {
                 p_request->send(500, "application/json", "{\"error\":\"control not ready\"}");
                 return;
             }
+
             JsonDocument v_doc;
-            s_control->sim.toJson(v_doc);   // ✅ S10 직렬화 그대로
+            // 시뮬레이션 상태 + 요약 통합
+            s_control->sim.toJson(v_doc);
+            s_control->toSummaryJson(v_doc);
+
             sendJson(p_request, v_doc);
         }
     );
@@ -822,20 +827,6 @@ private:
 		sendJson(p_request, v_doc);
 	});
 
-	// ✅ 신규 추가: /api/sim/status
-	s_server->on("/api/sim/status", HTTP_GET, [](AsyncWebServerRequest* p_request) {
-		if (!checkApiKey(p_request)) {
-			p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
-			return;
-		}
-		if (!s_control) {
-			p_request->send(500, "application/json", "{\"error\":\"control not ready\"}");
-			return;
-		}
-		JsonDocument v_doc;
-		s_control->toSummaryJson(v_doc);  // CT10의 새 함수 호출 ✅
-		sendJson(p_request, v_doc);
-	});
 }
 
 	// --------------------------------------------------
