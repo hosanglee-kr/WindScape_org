@@ -214,14 +214,15 @@ public:
 		float v_dt = (v_now - lastUpdateMs) / 1000.0f;
 		lastUpdateMs = v_now;
 
-		updatePhase();
-		// ✅ phase 변화 감지 시 broadcastChart() 호출
-        if (phase != v_prev) {
+		T_A10_WindPhase_t v_prevPhase = phase;
+        updatePhase();   // 내부 전환
+        
+        // ✅ Phase 변동 시 WebSocket 차트 브로드캐스트
+        if (phase != v_prevPhase) {
             JsonDocument v_doc;
             toChartJson(v_doc);
-            CL_W10_WebAPI::broadcastChart(v_doc);  // 전방 선언으로 해결됨
+            CL_W10_WebAPI::broadcastChart(v_doc);
         }
-
 
 		calcTurb(v_dt);
 		calcThermalEnvelope();
