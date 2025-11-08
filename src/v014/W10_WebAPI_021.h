@@ -206,9 +206,10 @@ private:
 				s_control->toJson(v_doc); // control + sim + autoOff + override 포함
 
 				// Motion 상태 직렬화 추가
-            	if (s_motion) {
-		            s_motion->toJson(doc);
-	            }
+                if (g_A10_config_root.motion) {
+                    JsonObject v_motion = v_doc["motion"].to<JsonObject>();
+                    CL_C10_ConfigManager::C10_toJson_Motion(*g_A10_config_root.motion, v_motion);
+                }
 				
 				sendJson(p_request, v_doc);
 			}
@@ -835,10 +836,6 @@ static void routeWebSocket() {
 AsyncWebServer*        CL_W10_WebAPI::s_server  = nullptr;
 CL_CT10_ControlManager* CL_W10_WebAPI::s_control = nullptr;
 
-
-// ------------------------------------------------------
-// 정적 멤버 정의
-// ------------------------------------------------------
 inline AsyncWebSocket* CL_W10_WebAPI::s_wsServerState = nullptr;
 inline AsyncWebSocket* CL_W10_WebAPI::s_wsServerLog   = nullptr;
 inline AsyncWebSocket* CL_W10_WebAPI::s_wsServerChart = nullptr;
