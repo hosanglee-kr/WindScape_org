@@ -143,6 +143,22 @@ typedef enum : uint8_t {
     EN_A10_PRESET_COUNT
 } T_A10_PresetMode_t;
 
+
+// 프리셋 코드 배열 정의 (문자열 상수)
+static const char* g_A10_PRESET_CODES[] = {
+    "OFF",
+    "COUNTRY",
+    "MEDITERRANEAN",
+    "OCEAN",
+    "MOUNTAIN",
+    "PLAINS",
+    "HARBOR_BREEZE",
+    "FOREST_CANOPY",
+    "URBAN_SUNSET",
+    "TROPICAL_RAIN",
+    "DESERT_NIGHT"
+};
+
 static const char* g_A10_PRESET_MODE_NAMES_Arr[] = {
     "OFF",
     "COUNTRY",
