@@ -404,6 +404,11 @@ public:
 
         if (_tickSchedule()) {
             sim.tick();
+
+            // ✅ 시뮬레이션 차트 데이터 실시간 푸시 추가
+            JsonDocument v_doc;
+            toChartJson(v_doc);
+            CL_W10_WebAPI::broadcastChart(v_doc);
             return;
         }
 
@@ -515,6 +520,11 @@ private:
         if (!overrideState.resolvedApplied) {
             sim.applyResolvedWind(overrideState.resolved);
             overrideState.resolvedApplied = true;
+
+			// ✅ override 적용 직후 차트 갱신
+            JsonDocument v_doc;
+            toChartJson(v_doc);
+            CL_W10_WebAPI::broadcastChart(v_doc);	
         }
 
         return true;
@@ -681,8 +691,13 @@ private:
                         p_seg.styleCode,
                         &p_seg.adjust,
                         v_res);
-        if (v_ok && v_res.valid) {
+		if (v_ok && v_res.valid) {
             sim.applyResolvedWind(v_res);
+
+            // ✅ Segment 변경 시 상태 브로드캐스트 (Web UI 즉시 반영)
+            JsonDocument v_doc;
+            toJson(v_doc);
+            CL_W10_WebAPI::broadcastState(v_doc);
         } else {
             CL_D10_Logger::log(EN_L10_LOG_WARN,
                                "[CT10] Segment resolve failed (mode=%s,preset=%s,style=%s)",
