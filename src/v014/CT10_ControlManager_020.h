@@ -422,11 +422,7 @@ public:
     }
 }
 
-            
-
-    // --------------------------------------------------
-    // JSON 상태 Export
-    // --------------------------------------------------
+    // JSON 전체 상태 (control + override + autoOff + sim)
     void toJson(JsonDocument& p_doc) {
         JsonObject v_o = p_doc["control"].to<JsonObject>();
         v_o["active"]         = active;
@@ -435,26 +431,20 @@ public:
         v_o["scheduleIdx"]    = curScheduleIndex;
         v_o["profileIdx"]     = curProfileIndex;
 
+        // override
         JsonObject v_ov = v_o["override"].to<JsonObject>();
-        v_ov["active"]   = overrideState.active;
-        v_ov["useFixed"] = overrideState.useFixed;
-
-        if (overrideState.active) {
-            unsigned long v_now = millis();
-            uint32_t v_remainSec = 0;
-            if (overrideState.endMs != 0 && overrideState.endMs > v_now) {
-                v_remainSec = (overrideState.endMs - v_now) / 1000UL;
-            }
-            v_ov["remainSec"] = v_remainSec;
-
-            if (overrideState.useFixed) {
-                v_ov["fixedPercent"] = overrideState.fixedPercent;
-            } else {
-                v_ov["presetCode"] = overrideState.resolved.presetCode;
-                v_ov["styleCode"]  = overrideState.resolved.styleCode;
-            }
+        v_ov["active"]      = overrideState.active;
+        v_ov["useFixed"]    = overrideState.useFixed;
+        v_ov["resolved"]    = (!overrideState.useFixed && overrideState.active);
+        v_ov["remainSec"]   = _calcOverrideRemainSec();
+        if (overrideState.useFixed && overrideState.active) {
+            v_ov["fixedPercent"] = overrideState.fixedPercent;
+        } else if (overrideState.active && overrideState.resolved.valid) {
+            v_ov["presetCode"] = overrideState.resolved.presetCode;
+            v_ov["styleCode"]  = overrideState.resolved.styleCode;
         }
 
+        // autoOff
         JsonObject v_ao = v_o["autoOff"].to<JsonObject>();
         v_ao["timerArmed"]     = autoOffRt.timerArmed;
         v_ao["timerMinutes"]   = autoOffRt.timerMinutes;
@@ -463,94 +453,90 @@ public:
         v_ao["offTempEnabled"] = autoOffRt.offTempEnabled;
         v_ao["offTemp"]        = autoOffRt.offTemp;
 
-        if (pwm) {
-            v_o["pwmDuty"] = pwm->P10_getDutyPercent();
-        }
+        // pwm
+        v_o["pwmDuty"] = pwm ? pwm->P10_getDutyPercent() : 0.0f;
 
-        // S10 상태 추가 (sim → doc["sim"] 섹션 사용)
+        // sim 상태 포함
         sim.toJson(p_doc);
+
+        // 상태 직렬화 이후 dirty 플래그는 외부에서 consume
     }
 
-void toMetricsJson(JsonDocument& p_doc) {
-    JsonObject v_m = p_doc["metrics"].to<JsonObject>();
-
-    // ------------------------
-    // 기본 상태
-    // ------------------------
-    v_m["active"]          = active;
-    v_m["useProfileMode"]  = useProfileMode;
-    v_m["scheduleIdx"]     = curScheduleIndex;
-    v_m["profileIdx"]      = curProfileIndex;
-
-    const char* v_src = "NONE";
-    if (runSource == EN_CT10_RUN_SCHEDULE) v_src = "SCHEDULE";
-    else if (runSource == EN_CT10_RUN_USER_PROFILE) v_src = "USER_PROFILE";
-    v_m["runSource"] = v_src;
-
-    // ------------------------
-    // override
-    // ------------------------
-    JsonObject v_ov = v_m["override"].to<JsonObject>();
-    v_ov["enabled"] = overrideState.active;
-    if (overrideState.active) {
-        if (overrideState.useFixed) {
-            v_ov["type"]         = "FIXED";
-            v_ov["fixedPercent"] = overrideState.fixedPercent;
-        } else {
-            v_ov["type"]       = "RESOLVED";
-            v_ov["presetCode"] = overrideState.resolved.presetCode;
-            v_ov["styleCode"]  = overrideState.resolved.styleCode;
-        }
-    } else {
-        v_ov["type"] = "NONE";
+    // 요약 상태: 가벼운 폴링/심플 UI용
+    void toSummaryJson(JsonDocument& p_doc) {
+        JsonObject v_s = p_doc["summary"].to<JsonObject>();
+        v_s["active"]         = active;
+        v_s["runSource"]      = (int)runSource;
+        v_s["useProfileMode"] = useProfileMode;
+        v_s["scheduleIdx"]    = curScheduleIndex;
+        v_s["profileIdx"]     = curProfileIndex;
+        v_s["overrideActive"] = overrideState.active;
+        v_s["pwmDuty"]        = pwm ? pwm->P10_getDutyPercent() : 0.0f;
+        v_s["phase"]          = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)sim.phase];
     }
 
-    // ------------------------
-    // pwm
-    // ------------------------
-    JsonObject v_pwm = v_m["pwm"].to<JsonObject>();
-    v_pwm["dutyPercent"]   = pwm ? pwm->P10_getDutyPercent() : 0.0f;
-    v_pwm["targetPercent"] = sim.targetWindSpeed; // 목표 풍속→출력 대응
-    v_pwm["fanRPM"]        = 0; // 추후 센서 연동 시
+    // 메트릭 전용: /api/metrics, /ws/metrics 용
+    void toMetricsJson(JsonDocument& p_doc) {
+        JsonObject v_m = p_doc["metrics"].to<JsonObject>();
 
-    // ------------------------
-    // sim
-    // ------------------------
-    JsonObject v_sim = v_m["sim"].to<JsonObject>();
-    v_sim["active"]        = sim.active;
-    v_sim["phase"]         = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)sim.phase];
-    v_sim["phaseCode"]     = (uint8_t)sim.phase;
-    v_sim["windSpeed"]     = sim.currentWindSpeed;
-    v_sim["targetWind"]    = sim.targetWindSpeed;
-    v_sim["gustActive"]    = sim.gustActive;
-    v_sim["thermalActive"] = sim.thermalActive;
-    v_sim["turbulenceSigma"] = sim.turbSigma;
-    v_sim["thermalStrength"] = sim.thermalStrength;
+        v_m["active"]         = active;
+        v_m["runSource"]      = (int)runSource;
+        v_m["useProfileMode"] = useProfileMode;
+        v_m["scheduleIdx"]    = curScheduleIndex;
+        v_m["profileIdx"]     = curProfileIndex;
 
-    // ------------------------
-    // autoOff
-    // ------------------------
-    JsonObject v_ao = v_m["autoOff"].to<JsonObject>();
-    bool v_enabled = autoOffRt.timerArmed || autoOffRt.offTimeEnabled || autoOffRt.offTempEnabled;
-    v_ao["enabled"] = v_enabled;
+        v_m["overrideActive"] = overrideState.active;
+        v_m["overrideFixed"]  = overrideState.useFixed;
+        v_m["overrideRemain"] = _calcOverrideRemainSec();
 
-    uint32_t v_remainSec = 0;
-    if (autoOffRt.timerArmed && autoOffRt.timerMinutes > 0) {
-        unsigned long v_now = millis();
-        uint32_t v_elapsedMin = (v_now - autoOffRt.timerStartMs) / 60000UL;
-        if (v_elapsedMin < autoOffRt.timerMinutes)
-            v_remainSec = (autoOffRt.timerMinutes - v_elapsedMin) * 60UL;
+        v_m["pwmDuty"]        = pwm ? pwm->P10_getDutyPercent() : 0.0f;
+
+        // sim 메트릭
+        v_m["simActive"]      = sim.active;
+        v_m["simPhase"]       = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)sim.phase];
+        v_m["simWind"]        = sim.currentWindSpeed;
+        v_m["simTarget"]      = sim.targetWindSpeed;
+        v_m["simGust"]        = sim.gustActive;
+        v_m["simThermal"]     = sim.thermalActive;
+
+        // AutoOff 메트릭
+        v_m["autoOffTimerArmed"]   = autoOffRt.timerArmed;
+        v_m["autoOffTimerMinutes"] = autoOffRt.timerMinutes;
+        v_m["autoOffOffTime"]      = autoOffRt.offTimeEnabled ? autoOffRt.offTimeMinutes : 0;
+        v_m["autoOffOffTemp"]      = autoOffRt.offTempEnabled ? autoOffRt.offTemp : 0.0f;
     }
-    v_ao["remainSec"]    = v_remainSec;
-    v_ao["configuredMin"] = autoOffRt.timerMinutes;
 
-    // ------------------------
-    // system
-    // ------------------------
-    JsonObject v_sys = v_m["system"].to<JsonObject>();
-    v_sys["uptimeSec"] = (uint32_t)(millis() / 1000UL);
-    v_sys["fwVersion"] = A10_Const::FW_VERSION;
-}
+    // --------------------------------------------------
+    // Dirty 플래그 관리 (W10 diffOnly 연동용)
+    // --------------------------------------------------
+    void markDirty(const char* p_section = nullptr) {
+        // section 분기 필요 시 확장 가능
+        (void)p_section;
+        _dirtyState   = true;
+        _dirtyMetrics = true;
+        _dirtyChart   = true;
+    }
+
+    bool consumeDirtyState() {
+        bool v = _dirtyState;
+        _dirtyState = false;
+        return v;
+    }
+
+    bool consumeDirtyMetrics() {
+        bool v = _dirtyMetrics;
+        _dirtyMetrics = false;
+        return v;
+    }
+
+    bool consumeDirtyChart() {
+        bool v = _dirtyChart;
+        _dirtyChart = false;
+        return v;
+    }
+
+
+
 
 // --------------------------------------------------
 // W10 연동용 : 시뮬레이션 차트 데이터 Export
@@ -570,31 +556,7 @@ void toChartJson(JsonDocument& p_doc) {
     v_chart["override"]  = overrideState.active ? (overrideState.useFixed ? "fixed" : "resolved") : "none";
 }
 
-// --------------------------------------------------
-// 시스템 전체 요약 상태 Export (phase, pwm, override 등)
-// --------------------------------------------------
-void toSummaryJson(JsonDocument& p_doc) {
-    JsonObject v_sum = p_doc["summary"].to<JsonObject>();
 
-    v_sum["active"]          = active;
-    v_sum["useProfileMode"]  = useProfileMode;
-    v_sum["runSource"]       = (int)runSource;
-    v_sum["scheduleIdx"]     = curScheduleIndex;
-    v_sum["profileIdx"]      = curProfileIndex;
-
-    v_sum["pwmDuty"]         = pwm ? pwm->P10_getDutyPercent() : 0.0f;
-    v_sum["phase"]           = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)sim.phase];
-    v_sum["simActive"]       = sim.active;
-    v_sum["overrideActive"]  = overrideState.active;
-    v_sum["overrideType"]    = overrideState.active ? (overrideState.useFixed ? "fixed" : "resolved") : "none";
-
-    // AutoOff 요약
-    v_sum["autoOffArmed"]    = autoOffRt.timerArmed || autoOffRt.offTimeEnabled || autoOffRt.offTempEnabled;
-    v_sum["autoOffRemainMin"] =
-        (autoOffRt.timerArmed && autoOffRt.timerMinutes > 0)
-            ? (int)((autoOffRt.timerMinutes * 60UL - ((millis() - autoOffRt.timerStartMs) / 1000UL)) / 60UL)
-            : 0;
-}
 
 private:
     // ==================================================
