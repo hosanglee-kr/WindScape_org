@@ -559,6 +559,18 @@ void toChartJson(JsonDocument& p_doc) {
 
 
 private:
+
+    bool _dirtyState  = false;
+    bool _dirtyMetrics = false;
+    bool _dirtyChart   = false;
+
+    uint32_t _calcOverrideRemainSec() const {
+        if (!overrideState.active || overrideState.endMs == 0) return 0;
+        unsigned long v_now = millis();
+        if (overrideState.endMs <= v_now) return 0;
+        return (uint32_t)((overrideState.endMs - v_now) / 1000UL);
+    }
+
     // ==================================================
     // Override 처리
     // ==================================================
