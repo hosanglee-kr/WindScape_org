@@ -284,23 +284,23 @@ public:
     // --------------------------------------------------
     // 1) 고정 PWM 비율로 일정 시간 또는 무한 Override
     void startOverrideFixed(float p_percent, uint32_t p_seconds) {
-        memset(&overrideState, 0, sizeof(overrideState));
-        overrideState.active       = true;
-        overrideState.useFixed     = true;
-        overrideState.resolvedApplied = false;
-        overrideState.fixedPercent = constrain(p_percent, 0.0f, 100.0f);
+    memset(&overrideState, 0, sizeof(overrideState));
+    overrideState.active       = true;
+    overrideState.useFixed     = true;
+    overrideState.fixedPercent = constrain(p_percent, 0.0f, 100.0f);
 
-        if (p_seconds > 0) {
-            overrideState.endMs = millis() + (p_seconds * 1000UL);
-        } else {
-            overrideState.endMs = 0; // 타임아웃 없음
-        }
+    if (p_seconds > 0)
+        overrideState.endMs = millis() + (p_seconds * 1000UL);
+    else
+        overrideState.endMs = 0;
 
-		_broadcastState();
-        CL_D10_Logger::log(EN_L10_LOG_INFO,
-                           "[CT10] Override FIXED %.1f%% (sec=%lu)",
-                           p_percent, (unsigned long)p_seconds);
-    }
+    _broadcastState(true);
+    _maybeBroadcastMetrics();
+
+    CL_D10_Logger::log(EN_L10_LOG_INFO,
+                       "[CT10] Override FIXED %.1f%% (sec=%lu)",
+                       p_percent, (unsigned long)p_seconds);
+}
 
     // 2) preset+style+adjust → ResolvedWind 해석 후 Override 시작
     void startOverridePreset(const char* p_presetCode,
@@ -372,55 +372,54 @@ public:
     // Tick 루프
     // --------------------------------------------------
     void tick() {
-        if (!active || !pwm) return;
+    if (!active || !pwm) return;
 
-        unsigned long v_now = millis();
-        if (v_now - lastTickMs < 40UL) return;
-        lastTickMs = v_now;
+    unsigned long v_now = millis();
+    if (v_now - lastTickMs < 40UL) return;
+    lastTickMs = v_now;
 
-        // 1) Override 최우선
-        if (_tickOverride()) {
-            sim.tick();
-            _maybeBroadcastMetrics();
-           return;
-        }
+    if (_tickOverride()) {
+        sim.tick();
+        _maybeBroadcastMetrics();
+        return;
+    }
 
-        // 2) 모드에 따른 운전 분기
-        if (useProfileMode) {
-            // Profile 전용 모드: Schedule은 무시
-            if (runSource == EN_CT10_RUN_USER_PROFILE && _tickUserProfile()) {
-                sim.tick();
-                return;
-            }
-            // 활성 profile 없으면 정지
-            if (sim.active) sim.stop();
-            return;
-        }
-
-        // 3) 일반 모드: UserProfile(요청 시) → Schedule
+    if (useProfileMode) {
         if (runSource == EN_CT10_RUN_USER_PROFILE && _tickUserProfile()) {
             sim.tick();
+            _maybeBroadcastMetrics();
             return;
         }
-
-        if (_tickSchedule()) {
-            sim.tick();
-
-            // ✅ 시뮬레이션 차트 데이터 실시간 푸시 추가
-            JsonDocument v_doc;
-            toChartJson(v_doc);
-            CL_W10_WebAPI::broadcastChart(v_doc);
-            return;
+        if (sim.active) {
+            sim.stop();
+            _maybeBroadcastMetrics();
         }
-
-        // 4) 아무 것도 없으면 정지
-        if (sim.active) sim.stop();
-
-		// ✅ 상태 변화 감지 시 WebSocket 실시간 푸시
-        if (v_stateChanged) {
-            _broadcastState();
-        }
+        return;
     }
+
+    if (runSource == EN_CT10_RUN_USER_PROFILE && _tickUserProfile()) {
+        sim.tick();
+        _maybeBroadcastMetrics();
+        return;
+    }
+
+    if (_tickSchedule()) {
+        sim.tick();
+
+        JsonDocument v_doc;
+        toChartJson(v_doc);
+        CL_W10_WebAPI::broadcastChart(v_doc, true);  // diffOnly 적용
+        _maybeBroadcastMetrics();
+        return;
+    }
+
+    if (sim.active) {
+        sim.stop();
+        _maybeBroadcastMetrics();
+    }
+}
+
+            
 
     // --------------------------------------------------
     // JSON 상태 Export
@@ -487,21 +486,49 @@ void toMetricsJson(JsonDocument& p_doc) {
     v_m["simGust"]         = sim.gustActive;
     v_m["simThermal"]      = sim.thermalActive;
 }
-    // --------------------------------------------------
+
+// --------------------------------------------------
 // W10 연동용 : 시뮬레이션 차트 데이터 Export
 // --------------------------------------------------
 void toChartJson(JsonDocument& p_doc) {
+    // 1️⃣ S10 모듈이 보유한 차트 상태 직렬화
     sim.toChartJson(p_doc);
-    p_doc["control"]["pwmDuty"] = pwm ? pwm->P10_getDutyPercent() : 0.0f;
+
+    // 2️⃣ 제어 매니저 레벨 정보 추가
+    JsonObject v_chart = p_doc["chart"].to<JsonObject>();
+    v_chart["pwmDuty"]   = pwm ? pwm->P10_getDutyPercent() : 0.0f;
+    v_chart["active"]    = active;
+    v_chart["runSource"] = (int)runSource;
+    v_chart["phase"]     = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)sim.phase];
+
+    // 3️⃣ override 상태 포함
+    v_chart["override"]  = overrideState.active ? (overrideState.useFixed ? "fixed" : "resolved") : "none";
 }
 
+// --------------------------------------------------
+// 시스템 전체 요약 상태 Export (phase, pwm, override 등)
+// --------------------------------------------------
 void toSummaryJson(JsonDocument& p_doc) {
-    JsonObject s = p_doc["summary"].to<JsonObject>();
-    s["active"] = active;
-    s["source"] = (int)runSource;
-    s["pwmDuty"] = pwm ? pwm->P10_getDutyPercent() : 0.0f;
-    s["overrideActive"] = overrideState.active;
-    s["phase"] = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)sim.phase];
+    JsonObject v_sum = p_doc["summary"].to<JsonObject>();
+
+    v_sum["active"]          = active;
+    v_sum["useProfileMode"]  = useProfileMode;
+    v_sum["runSource"]       = (int)runSource;
+    v_sum["scheduleIdx"]     = curScheduleIndex;
+    v_sum["profileIdx"]      = curProfileIndex;
+
+    v_sum["pwmDuty"]         = pwm ? pwm->P10_getDutyPercent() : 0.0f;
+    v_sum["phase"]           = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)sim.phase];
+    v_sum["simActive"]       = sim.active;
+    v_sum["overrideActive"]  = overrideState.active;
+    v_sum["overrideType"]    = overrideState.active ? (overrideState.useFixed ? "fixed" : "resolved") : "none";
+
+    // AutoOff 요약
+    v_sum["autoOffArmed"]    = autoOffRt.timerArmed || autoOffRt.offTimeEnabled || autoOffRt.offTempEnabled;
+    v_sum["autoOffRemainMin"] =
+        (autoOffRt.timerArmed && autoOffRt.timerMinutes > 0)
+            ? (int)((autoOffRt.timerMinutes * 60UL - ((millis() - autoOffRt.timerStartMs) / 1000UL)) / 60UL)
+            : 0;
 }
 
 private:
