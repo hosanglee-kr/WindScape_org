@@ -133,21 +133,43 @@ static void routeSimState() {
     );
 }
 
-// ✅ 개선된 broadcastState
-// ✅ 개선된 broadcastState (diffOnly 기능 추가)
+
+// --------------------------------------------------
+// ✅ /api/metrics : Control + Simulation 메트릭스 조회
+// --------------------------------------------------
+static void routeMetrics() {
+    s_server->on("/api/metrics", HTTP_GET,
+        [](AsyncWebServerRequest* p_request) {
+            if (!checkApiKey(p_request)) {
+                p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+                return;
+            }
+            if (!s_control) {
+                p_request->send(500, "application/json", "{\"error\":\"control not ready\"}");
+                return;
+            }
+            JsonDocument v_doc;
+            s_control->toMetricsJson(v_doc);
+            sendJson(p_request, v_doc);
+        }
+    );
+}
+
+
+// ✅ 개선된 broadcastState (diffOnly 비교 적용)
 static void broadcastState(JsonDocument& p_doc, bool p_diffOnly = false) {
     if (!s_wsServerState) return;
 
-    static String s_lastStateJson;   // 이전 상태 스냅샷 보존
+    static String s_lastStateJson;  // 이전 상태 스냅샷
     String v_msg;
     serializeJson(p_doc, v_msg);
 
+    // diffOnly 모드일 때 동일 데이터는 송신 생략
     if (p_diffOnly && v_msg == s_lastStateJson) {
-        // 동일하면 송신 생략
         CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[W10] broadcastState() skip (no diff)");
         return;
     }
-    s_lastStateJson = v_msg; // 스냅샷 갱신
+    s_lastStateJson = v_msg;
 
     for (auto c : s_wsServerState->getClients()) {
         if (c && c->canSend()) c->text(v_msg);
@@ -157,6 +179,30 @@ static void broadcastState(JsonDocument& p_doc, bool p_diffOnly = false) {
                        p_diffOnly ? 1 : 0,
                        s_wsServerState->count());
 }
+
+// ✅ 신규 추가: Metrics 전송용 WebSocket 브로드캐스트
+static void broadcastMetrics(JsonDocument& p_doc, bool p_diffOnly = false) {
+    if (!s_wsServerMetrics) return;
+
+    static String s_lastMetricsJson;  // 이전 메트릭 상태
+    String v_msg;
+    serializeJson(p_doc, v_msg);
+
+    if (p_diffOnly && v_msg == s_lastMetricsJson) {
+        CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[W10] broadcastMetrics() skip (no diff)");
+        return;
+    }
+    s_lastMetricsJson = v_msg;
+
+    for (auto c : s_wsServerMetrics->getClients()) {
+        if (c && c->canSend()) c->text(v_msg);
+    }
+    CL_D10_Logger::log(EN_L10_LOG_DEBUG,
+                       "[W10] broadcastMetrics(diffOnly=%d) → %d clients",
+                       p_diffOnly ? 1 : 0,
+                       s_wsServerMetrics->count());
+}
+
 
 // ✅ 개선된 broadcastChart
 static void broadcastChart(JsonDocument& p_doc) {
