@@ -70,16 +70,15 @@ public:
 		routeSchedules();
 		routeUserProfiles();
 		routeControl();
-		routeSimulation();
+		routeSimulation();     // /api/sim/chart
+        routeSimState();       // /api/sim/state
+        routeControlSummary(); // /api/control/summary
+        routeMetrics();        // ✅ /api/metrics 추가
+
 		routeLogs();
 		routeReload();
-		// ✅ 추가된 라우트 등록
-        routeControlSummary();
-        routeSimState();
 		
 		routeWebSocket();   // ✅ 추가
-
-
 
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WebAPI initialized");
 	}
@@ -204,57 +203,21 @@ static void broadcastMetrics(JsonDocument& p_doc, bool p_diffOnly = false) {
 }
 
 
-// ✅ 개선된 broadcastChart
-static void broadcastChart(JsonDocument& p_doc) {
+/// ✅ 개선된 broadcastChart(diffOnly 지원)
+static void broadcastChart(JsonDocument& p_doc, bool p_diffOnly = false) {
     if (!s_wsServerChart) return;
+
+    static String s_lastChartJson;
     String v_msg;
     serializeJson(p_doc, v_msg);
+
+    if (p_diffOnly && v_msg == s_lastChartJson) return;
+    s_lastChartJson = v_msg;
 
     for (auto c : s_wsServerChart->getClients()) {
         if (c && c->canSend()) c->text(v_msg);
     }
-    CL_D10_Logger::log(EN_L10_LOG_DEBUG,
-                       "[W10] broadcastChart() → %d clients",
-                       s_wsServerChart->count());
 }
-
-/*
-    // broadcastState 
-    static void broadcastState(JsonDocument& p_doc, bool p_diffOnly = false) {
-        if (!s_wsServerState) return;
-
-        String v_msg;
-        if (p_diffOnly) {
-            // 향후 diff 계산 로직 추가 가능 (현재는 전체 송신)
-        }
-        serializeJson(p_doc, v_msg);
-
-        for (auto c : s_wsServerState->getClients()) {
-            if (c && c->canSend()) c->text(v_msg);
-        }
-
-        CL_D10_Logger::log(EN_L10_LOG_DEBUG,
-                           "[W10] broadcastState() sent to %d clients",
-                           s_wsServerState->count());
-    }
-
-    // 시뮬레이션 차트용 브로드캐스트
-    static void broadcastChart(JsonDocument& p_doc) {
-        if (!s_wsServerChart) return;
-
-        String v_msg;
-        serializeJson(p_doc, v_msg);
-
-        for (auto c : s_wsServerChart->getClients()) {
-            if (c && c->canSend()) c->text(v_msg);
-        }
-
-        CL_D10_Logger::log(EN_L10_LOG_DEBUG,
-                           "[W10] broadcastChart() sent to %d clients",
-                           s_wsServerChart->count());
-    }
-
-*/
 
     // 기존 broadcastLog() 그대로 유지
     static void broadcastLog(const char* p_msg) {
@@ -987,9 +950,10 @@ static void routeWebSocket() {
 AsyncWebServer*        CL_W10_WebAPI::s_server  = nullptr;
 CL_CT10_ControlManager* CL_W10_WebAPI::s_control = nullptr;
 
-inline AsyncWebSocket* CL_W10_WebAPI::s_wsServerState = nullptr;
-inline AsyncWebSocket* CL_W10_WebAPI::s_wsServerLog   = nullptr;
-inline AsyncWebSocket* CL_W10_WebAPI::s_wsServerChart = nullptr;
+inline AsyncWebSocket* CL_W10_WebAPI::s_wsServerState   = nullptr;
+inline AsyncWebSocket* CL_W10_WebAPI::s_wsServerLog     = nullptr;
+inline AsyncWebSocket* CL_W10_WebAPI::s_wsServerChart   = nullptr;
+inline AsyncWebSocket* CL_W10_WebAPI::s_wsServerMetrics = nullptr;  // ✅ 추가
 
 // AsyncWebSocket CL_W10_WebAPI::s_wsLogs  = AsyncWebSocket("/ws/logs");
 // AsyncWebSocket CL_W10_WebAPI::s_wsState = AsyncWebSocket("/ws/state");
