@@ -234,6 +234,7 @@ private:
     static AsyncWebSocket* s_wsServerState;
     static AsyncWebSocket* s_wsServerLog;
     static AsyncWebSocket* s_wsServerChart;
+    static AsyncWebSocket* s_wsServerMetrics;
 
     // static AsyncWebSocket* s_wsLogs;
     // static AsyncWebSocket* s_wsState;
