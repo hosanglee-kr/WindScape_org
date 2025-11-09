@@ -147,8 +147,11 @@ static void routeMetrics() {
                 p_request->send(500, "application/json", "{\"error\":\"control not ready\"}");
                 return;
             }
+
             JsonDocument v_doc;
-            s_control->toMetricsJson(v_doc);
+            JsonObject v_metrics = v_doc["metrics"].to<JsonObject>();
+            s_control->toMetricsJson(v_metrics);  // ✅ metrics root object에 직접 채움
+
             sendJson(p_request, v_doc);
         }
     );
