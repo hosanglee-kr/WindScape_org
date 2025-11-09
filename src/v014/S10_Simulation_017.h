@@ -121,6 +121,12 @@ public:
 	float          windMomentum        = 0.0f;
 	unsigned long  lastUpdateMs        = 0;
 
+    // 최근 풍속 샘플 저장 (차트/메트릭용)
+    static const uint8_t HISTORY_SIZE = 60;
+    float    history[HISTORY_SIZE];
+    uint8_t  historyIndex = 0;
+    uint8_t  historyCount = 0;
+
 	// 차트 버퍼 (최근 120 샘플, 1Hz 기준)
 	struct ST_ChartEntry {
 		unsigned long timestamp;
@@ -143,7 +149,11 @@ public:
 	void begin(CL_P10_PWM& p_pwm) {
 		_pwm = &p_pwm;
 		resetDefaults();
+		memset(history, 0, sizeof(history));
+        historyIndex = 0;
+        historyCount = 0;
 		(void)esp_random(); // 랜덤 시드/지터 유도
+		
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "[S10] begin()");
 	}
 
@@ -256,6 +266,8 @@ public:
 		v_pwmPct += thermalContribution * 5.0f;
 
 		applyFan(v_pwmPct);
+
+		_pushHistory(currentWindSpeed);
 
 		// 차트 샘플링 (1Hz, 최근 120개 유지)
 		// 차트 샘플링 (1Hz, 최근 120개 유지)
