@@ -914,12 +914,16 @@ private:
 		);
 	}
 
+
+
+    // ✅ metrics 전용 WebSocket 추가
 static AsyncWebSocket s_wsLogs("/ws/logs");
 static AsyncWebSocket s_wsState("/ws/state");
 static AsyncWebSocket s_wsChart("/ws/chart");
+static AsyncWebSocket s_wsMetrics("/ws/metrics");  // ✅ 신규
 
 static void routeWebSocket() {
-    // 로그 WS
+    // 기존 로그 WS
     s_wsLogs.onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client,
                         AwsEventType type, void*, uint8_t*, size_t) {
         if (type == WS_EVT_CONNECT)
@@ -941,7 +945,7 @@ static void routeWebSocket() {
     });
     s_server->addHandler(&s_wsState);
 
-    // 시뮬레이션 차트 WS
+    // 차트 WS
     s_wsChart.onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client,
                          AwsEventType type, void*, uint8_t*, size_t) {
         if (type == WS_EVT_CONNECT)
@@ -949,10 +953,27 @@ static void routeWebSocket() {
     });
     s_server->addHandler(&s_wsChart);
 
-    // 포인터 연결 (브로드캐스트 대상)
-    s_wsServerLog   = &s_wsLogs;
-    s_wsServerState = &s_wsState;
-    s_wsServerChart = &s_wsChart;
+    // ✅ 메트릭 WS
+    s_wsMetrics.onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client,
+                           AwsEventType type, void*, uint8_t*, size_t) {
+        if (type == WS_EVT_CONNECT) {
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WS /metrics connected (id=%u)", client->id());
+            if (s_control) {
+                JsonDocument v_doc;
+                s_control->toMetricsJson(v_doc);
+                String v_json;
+                serializeJson(v_doc, v_json);
+                client->text(v_json);
+            }
+        }
+    });
+    s_server->addHandler(&s_wsMetrics);
+
+    // ✅ 포인터 연결
+    s_wsServerLog     = &s_wsLogs;
+    s_wsServerState   = &s_wsState;
+    s_wsServerChart   = &s_wsChart;
+    s_wsServerMetrics = &s_wsMetrics;
 
     CL_D10_Logger::attachWebSocket(s_wsServerLog);
 }
