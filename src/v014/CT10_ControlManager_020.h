@@ -216,6 +216,8 @@ public:
         sim.begin(p_pwm);
         active = true;
 
+		lastMetricsPushMs = 0;  // ✅ 초기화 (재시작 후 즉시 Metrics push 허용)
+
         CL_D10_Logger::log(EN_L10_LOG_INFO, "[CT10] begin()");
     }
 
@@ -325,7 +327,8 @@ public:
             return;
         }
         applyManual(v_resolved, p_seconds);
-		_broadcastState();
+        _broadcastState(true);
+        _maybeBroadcastMetrics();  // ✅ override 시작 직후 metrics 즉시 반영
     }
 
     // 3) ResolvedWind 직접 수동 적용 (W10 API와 연동)
@@ -744,7 +747,7 @@ private:
             // ✅ Segment 변경 시 상태 브로드캐스트 (Web UI 즉시 반영)
             JsonDocument v_doc;
             toJson(v_doc);
-            CL_W10_WebAPI::broadcastState(v_doc);
+            CL_W10_WebAPI::broadcastState(v_doc, true);
         } else {
             CL_D10_Logger::log(EN_L10_LOG_WARN,
                                "[CT10] Segment resolve failed (mode=%s,preset=%s,style=%s)",
@@ -923,7 +926,7 @@ void _broadcastState(bool p_diffOnly) {
 // --------------------------------------------------
 void _maybeBroadcastMetrics() {
     unsigned long v_now = millis();
-    if (v_now - lastMetricsPushMs < 1000UL) return;
+    if (v_now - lastMetricsPushMs < 1500UL) return;
     lastMetricsPushMs = v_now;
 
     JsonDocument v_doc;
