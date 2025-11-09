@@ -473,21 +473,83 @@ public:
 
 void toMetricsJson(JsonDocument& p_doc) {
     JsonObject v_m = p_doc["metrics"].to<JsonObject>();
+
+    // ------------------------
+    // 기본 상태
+    // ------------------------
     v_m["active"]          = active;
-    v_m["runSource"]       = (int)runSource;
     v_m["useProfileMode"]  = useProfileMode;
     v_m["scheduleIdx"]     = curScheduleIndex;
     v_m["profileIdx"]      = curProfileIndex;
-    v_m["overrideActive"]  = overrideState.active;
-    v_m["overrideFixed"]   = overrideState.useFixed;
-    v_m["pwmDuty"]         = pwm ? pwm->P10_getDutyPercent() : 0.0f;
 
-    v_m["simActive"]       = sim.active;
-    v_m["simPhase"]        = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)sim.phase];
-    v_m["simWind"]         = sim.currentWindSpeed;
-    v_m["simTarget"]       = sim.targetWindSpeed;
-    v_m["simGust"]         = sim.gustActive;
-    v_m["simThermal"]      = sim.thermalActive;
+    const char* v_src = "NONE";
+    if (runSource == EN_CT10_RUN_SCHEDULE) v_src = "SCHEDULE";
+    else if (runSource == EN_CT10_RUN_USER_PROFILE) v_src = "USER_PROFILE";
+    v_m["runSource"] = v_src;
+
+    // ------------------------
+    // override
+    // ------------------------
+    JsonObject v_ov = v_m["override"].to<JsonObject>();
+    v_ov["enabled"] = overrideState.active;
+    if (overrideState.active) {
+        if (overrideState.useFixed) {
+            v_ov["type"]         = "FIXED";
+            v_ov["fixedPercent"] = overrideState.fixedPercent;
+        } else {
+            v_ov["type"]       = "RESOLVED";
+            v_ov["presetCode"] = overrideState.resolved.presetCode;
+            v_ov["styleCode"]  = overrideState.resolved.styleCode;
+        }
+    } else {
+        v_ov["type"] = "NONE";
+    }
+
+    // ------------------------
+    // pwm
+    // ------------------------
+    JsonObject v_pwm = v_m["pwm"].to<JsonObject>();
+    v_pwm["dutyPercent"]   = pwm ? pwm->P10_getDutyPercent() : 0.0f;
+    v_pwm["targetPercent"] = sim.targetWindSpeed; // 목표 풍속→출력 대응
+    v_pwm["fanRPM"]        = 0; // 추후 센서 연동 시
+
+    // ------------------------
+    // sim
+    // ------------------------
+    JsonObject v_sim = v_m["sim"].to<JsonObject>();
+    v_sim["active"]        = sim.active;
+    v_sim["phase"]         = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)sim.phase];
+    v_sim["phaseCode"]     = (uint8_t)sim.phase;
+    v_sim["windSpeed"]     = sim.currentWindSpeed;
+    v_sim["targetWind"]    = sim.targetWindSpeed;
+    v_sim["gustActive"]    = sim.gustActive;
+    v_sim["thermalActive"] = sim.thermalActive;
+    v_sim["turbulenceSigma"] = sim.turbSigma;
+    v_sim["thermalStrength"] = sim.thermalStrength;
+
+    // ------------------------
+    // autoOff
+    // ------------------------
+    JsonObject v_ao = v_m["autoOff"].to<JsonObject>();
+    bool v_enabled = autoOffRt.timerArmed || autoOffRt.offTimeEnabled || autoOffRt.offTempEnabled;
+    v_ao["enabled"] = v_enabled;
+
+    uint32_t v_remainSec = 0;
+    if (autoOffRt.timerArmed && autoOffRt.timerMinutes > 0) {
+        unsigned long v_now = millis();
+        uint32_t v_elapsedMin = (v_now - autoOffRt.timerStartMs) / 60000UL;
+        if (v_elapsedMin < autoOffRt.timerMinutes)
+            v_remainSec = (autoOffRt.timerMinutes - v_elapsedMin) * 60UL;
+    }
+    v_ao["remainSec"]    = v_remainSec;
+    v_ao["configuredMin"] = autoOffRt.timerMinutes;
+
+    // ------------------------
+    // system
+    // ------------------------
+    JsonObject v_sys = v_m["system"].to<JsonObject>();
+    v_sys["uptimeSec"] = (uint32_t)(millis() / 1000UL);
+    v_sys["fwVersion"] = A10_Const::FW_VERSION;
 }
 
 // --------------------------------------------------
