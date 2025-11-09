@@ -381,7 +381,8 @@ public:
         // 1) Override 최우선
         if (_tickOverride()) {
             sim.tick();
-            return;
+            _maybeBroadcastMetrics();
+           return;
         }
 
         // 2) 모드에 따른 운전 분기
@@ -467,6 +468,25 @@ public:
         // S10 상태 추가 (sim → doc["sim"] 섹션 사용)
         sim.toJson(p_doc);
     }
+
+void toMetricsJson(JsonDocument& p_doc) {
+    JsonObject v_m = p_doc["metrics"].to<JsonObject>();
+    v_m["active"]          = active;
+    v_m["runSource"]       = (int)runSource;
+    v_m["useProfileMode"]  = useProfileMode;
+    v_m["scheduleIdx"]     = curScheduleIndex;
+    v_m["profileIdx"]      = curProfileIndex;
+    v_m["overrideActive"]  = overrideState.active;
+    v_m["overrideFixed"]   = overrideState.useFixed;
+    v_m["pwmDuty"]         = pwm ? pwm->P10_getDutyPercent() : 0.0f;
+
+    v_m["simActive"]       = sim.active;
+    v_m["simPhase"]        = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)sim.phase];
+    v_m["simWind"]         = sim.currentWindSpeed;
+    v_m["simTarget"]       = sim.targetWindSpeed;
+    v_m["simGust"]         = sim.gustActive;
+    v_m["simThermal"]      = sim.thermalActive;
+}
     // --------------------------------------------------
 // W10 연동용 : 시뮬레이션 차트 데이터 Export
 // --------------------------------------------------
@@ -862,10 +882,26 @@ private:
      // --------------------------------------------------
 // 상태 변경 시 WebSocket 브로드캐스트 헬퍼
 // --------------------------------------------------
-static void _broadcastState() {
-	JsonDocument v_doc;
-	toJson(v_doc);               // 현재 상태 직렬화
-	CL_W10_WebAPI::broadcastState(v_doc);  // WS 전체 클라이언트로 푸시
+// --------------------------------------------------
+// 상태 변경 시 WebSocket 브로드캐스트 헬퍼
+// --------------------------------------------------
+void _broadcastState(bool p_diffOnly) {
+    JsonDocument v_doc;
+    toJson(v_doc);
+    CL_W10_WebAPI::broadcastState(v_doc, p_diffOnly);
+}
+
+// --------------------------------------------------
+// Metrics WebSocket 브로드캐스트 (주기 + diffOnly)
+// --------------------------------------------------
+void _maybeBroadcastMetrics() {
+    unsigned long v_now = millis();
+    if (v_now - lastMetricsPushMs < 1000UL) return;
+    lastMetricsPushMs = v_now;
+
+    JsonDocument v_doc;
+    toMetricsJson(v_doc);
+    CL_W10_WebAPI::broadcastMetrics(v_doc, true);
 }
 
 };
