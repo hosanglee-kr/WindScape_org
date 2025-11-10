@@ -531,16 +531,6 @@ inline void A10_safe_strlcpy(char* dst, const char* src, size_t n) {
 	strlcpy(dst, src, n);
 }
 
-// windDict 탐색
-int16_t findPresetIndexByCode(const ST_A10_WindProfileDict_t& dict, const char* code);
-int16_t findStyleIndexByCode(const ST_A10_WindProfileDict_t& dict, const char* code);
-
-// 해석 유틸: preset × style × adjust → ResolvedWind
-bool resolveWindParams(const ST_A10_WindProfileDict_t& dict,
-						   const char*					   presetCode,
-						   const char*					   styleCode,
-						   const ST_A10_AdjustDelta_t*	   adj,
-						   ST_A10_ResolvedWind_t&		   outResolved);
 
 
 // ------------------------------------------------------
@@ -555,6 +545,139 @@ inline float A10_randRange(float p_min, float p_max) {
     return p_min + (A10_getRandom01() * (p_max - p_min));
 }
 
+
+// ======================================================
+// Default 초기화 헬퍼
+//  - C10_ConfigManager.loadAll() 등에서 사용
+// ======================================================
+
+// System 기본값
+inline void A10_resetSystemDefault(ST_A10_SystemConfig& p_cfg) {
+    memset(&p_cfg, 0, sizeof(p_cfg));
+
+    A10_safe_strlcpy(p_cfg.meta.version,     A10_Const::FW_VERSION, sizeof(p_cfg.meta.version));
+    A10_safe_strlcpy(p_cfg.meta.device_name, "SmartNatureWind",     sizeof(p_cfg.meta.device_name));
+    A10_safe_strlcpy(p_cfg.meta.last_update, "",                    sizeof(p_cfg.meta.last_update));
+
+    A10_safe_strlcpy(p_cfg.system.web.html, "/html/main.html", sizeof(p_cfg.system.web.html));
+    A10_safe_strlcpy(p_cfg.system.web.css,  "/html/main.css",  sizeof(p_cfg.system.web.css));
+    A10_safe_strlcpy(p_cfg.system.web.js,   "/html/main.js",   sizeof(p_cfg.system.web.js));
+
+    A10_safe_strlcpy(p_cfg.system.logging.level, "INFO", sizeof(p_cfg.system.logging.level));
+    p_cfg.system.logging.max_entries = 300;
+
+    // HW: PWM
+    p_cfg.hw.fan_pwm.pin     = 6;
+    p_cfg.hw.fan_pwm.channel = 0;
+    p_cfg.hw.fan_pwm.freq    = 25000;
+    p_cfg.hw.fan_pwm.res     = 10;
+
+    // HW: PIR
+    p_cfg.hw.pir.enabled      = true;
+    p_cfg.hw.pir.pin          = 13;
+    p_cfg.hw.pir.debounce_sec = 5;
+
+    // HW: BLE
+    p_cfg.hw.ble.enabled       = true;
+    p_cfg.hw.ble.scan_interval = 5;
+
+    // Security
+    A10_safe_strlcpy(p_cfg.security.api_key, "", sizeof(p_cfg.security.api_key));
+
+    // Time
+    A10_safe_strlcpy(p_cfg.time.ntp_server, "pool.ntp.org", sizeof(p_cfg.time.ntp_server));
+    A10_safe_strlcpy(p_cfg.time.timezone,   "Asia/Seoul",   sizeof(p_cfg.time.timezone));
+    p_cfg.time.sync_interval_min = 60;
+}
+
+// WiFi 기본값
+inline void A10_resetWifiDefault(ST_A10_WifiConfig& p_cfg) {
+    memset(&p_cfg, 0, sizeof(p_cfg));
+
+    p_cfg.wifiMode = EN_A10_WIFI_MODE_AP_STA;
+    A10_safe_strlcpy(p_cfg.wifiModeDesc, "0=AP,1=STA,2=AP+STA", sizeof(p_cfg.wifiModeDesc));
+
+    A10_safe_strlcpy(p_cfg.ap.ssid,     "NatureWind", sizeof(p_cfg.ap.ssid));
+    A10_safe_strlcpy(p_cfg.ap.password, "2540",       sizeof(p_cfg.ap.password));
+
+    p_cfg.sta_count = 0; // STA 목록은 비워둠
+}
+
+// Motion 기본값
+inline void A10_resetMotionDefault(ST_A10_MotionConfig& p_cfg) {
+    memset(&p_cfg, 0, sizeof(p_cfg));
+
+    p_cfg.enabled      = true;
+
+    p_cfg.pir.enabled  = true;
+    p_cfg.pir.hold_sec = 120;
+
+    p_cfg.ble.enabled               = true;
+    p_cfg.ble.trusted_count         = 0;
+    p_cfg.ble.rssi.on               = -65;
+    p_cfg.ble.rssi.off              = -75;
+    p_cfg.ble.rssi.avg_count        = 8;
+    p_cfg.ble.rssi.persist_count    = 5;
+    p_cfg.ble.rssi.exit_delay_sec   = 12;
+}
+
+// WindProfile Dict 기본값
+inline void A10_resetWindProfileDictDefault(ST_A10_WindProfileDict_t& p_dict) {
+    memset(&p_dict, 0, sizeof(p_dict));
+
+    // 최소 기본 Preset: OCEAN 기준 하나만이라도 보장 (필요 시 확장)
+    p_dict.preset_count = 1;
+    A10_safe_strlcpy(p_dict.presets[0].code, "OCEAN", sizeof(p_dict.presets[0].code));
+    A10_safe_strlcpy(p_dict.presets[0].name, "Ocean Breeze", sizeof(p_dict.presets[0].name));
+    p_dict.presets[0].base.wind_intensity             = 70.0f;
+    p_dict.presets[0].base.wind_variability           = 50.0f;
+    p_dict.presets[0].base.gust_frequency             = 45.0f;
+    p_dict.presets[0].base.fan_limit                  = 90.0f;
+    p_dict.presets[0].base.min_fan                    = 10.0f;
+    p_dict.presets[0].base.turbulence_length_scale    = 40.0f;
+    p_dict.presets[0].base.turbulence_intensity_sigma = 0.5f;
+    p_dict.presets[0].base.thermal_bubble_strength    = 2.0f;
+    p_dict.presets[0].base.thermal_bubble_radius      = 18.0f;
+
+    // Style 기본 1개 (BALANCE)
+    p_dict.style_count = 1;
+    A10_safe_strlcpy(p_dict.styles[0].code, "BALANCE", sizeof(p_dict.styles[0].code));
+    A10_safe_strlcpy(p_dict.styles[0].name, "Balance", sizeof(p_dict.styles[0].name));
+    p_dict.styles[0].factors.intensity_factor   = 1.0f;
+    p_dict.styles[0].factors.variability_factor = 1.0f;
+    p_dict.styles[0].factors.gust_factor        = 1.0f;
+    p_dict.styles[0].factors.thermal_factor     = 1.0f;
+}
+
+// Schedules 기본값 (비움 + 구조 일관성 보장)
+inline void A10_resetSchedulesDefault(ST_A10_SchedulesRoot_t& p_cfg) {
+    memset(&p_cfg, 0, sizeof(p_cfg));
+    p_cfg.count = 0;
+    // 필요 시 여기서 기본 스케줄 1~2개 정의 가능
+}
+
+// UserProfiles 기본값 (비움 + 구조 일관성 보장)
+inline void A10_resetUserProfilesDefault(ST_A10_UserProfilesRoot_t& p_cfg) {
+    memset(&p_cfg, 0, sizeof(p_cfg));
+    p_cfg.count = 0;
+    // 필요 시 기본 프로파일 추가 가능
+}
+
+// ------------------------------------------------------
+// A10_resetToDefault
+//  - 전체 ConfigRoot 기본 초기화
+//  - C10_ConfigManager::loadAll() 진입 전 호출 가정
+// ------------------------------------------------------
+inline void A10_resetToDefault(ST_A10_ConfigRoot_t& p_root) {
+    // windDict / schedules / userProfiles 전체 클리어
+    A10_resetWindProfileDictDefault(p_root.windDict);
+    A10_resetSchedulesDefault(p_root.schedules);
+    A10_resetUserProfilesDefault(p_root.userProfiles);
+}
+
+
+
+
 // 프리셋 코드 → 인덱스 매핑 (S10용)
 inline int8_t A10_getPresetIndexByCode(const char* code) {
     if (!code) return -1;
@@ -564,3 +687,14 @@ inline int8_t A10_getPresetIndexByCode(const char* code) {
     }
     return -1;
 }
+
+// windDict 탐색
+int16_t findPresetIndexByCode(const ST_A10_WindProfileDict_t& dict, const char* code);
+int16_t findStyleIndexByCode(const ST_A10_WindProfileDict_t& dict, const char* code);
+
+// 해석 유틸: preset × style × adjust → ResolvedWind
+bool resolveWindParams(const ST_A10_WindProfileDict_t& dict,
+						   const char*					   presetCode,
+						   const char*					   styleCode,
+						   const ST_A10_AdjustDelta_t*	   adj,
+						   ST_A10_ResolvedWind_t&		   outResolved);
