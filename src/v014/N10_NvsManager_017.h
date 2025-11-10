@@ -83,7 +83,7 @@
 
 #include "A10_Const_014.h"
 #include "C10_ConfigManager_020.h"
-#include "D10_Logger_014.h"
+#include "D10_Logger_015.h"
 
 // ------------------------------------------------------
 // N10 런타임 상태 구조체
@@ -421,7 +421,7 @@ private:
 		CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[N10] Runtime flushed to NVS");
 	}
 
-void CL_N10_NvsManager::flushIfNeeded() {
+void flushIfNeeded() {
     if (!s_initialized) {
         return;
     }
@@ -483,6 +483,21 @@ void CL_N10_NvsManager::flushIfNeeded() {
     }
 }
 
+void markDirty(const char* p_key, bool p_flag) {
+    if (!p_key || !p_key[0]) {
+        return;
+    }
+
+    if      (strcasecmp(p_key, "runtime")      == 0) s_dirty.runtime      = p_flag;
+    else if (strcasecmp(p_key, "schedules")    == 0) s_dirty.schedules    = p_flag;
+    else if (strcasecmp(p_key, "userProfiles") == 0) s_dirty.userProfiles = p_flag;
+    else if (strcasecmp(p_key, "motion")       == 0) s_dirty.motion       = p_flag;
+    else if (strcasecmp(p_key, "system")       == 0) s_dirty.system       = p_flag;
+    else if (strcasecmp(p_key, "wifi")         == 0) s_dirty.wifi         = p_flag;
+    else if (strcasecmp(p_key, "windDict")     == 0) s_dirty.windDict     = p_flag;
+}
+
+
 };
 
 
@@ -504,17 +519,4 @@ ST_N10_DirtyFlags_t  CL_N10_NvsManager::s_dirty = {
 uint32_t            CL_N10_NvsManager::s_lastSaveMs = 0;
 
 
-void CL_N10_NvsManager::markDirty(const char* p_key, bool p_flag) {
-    if (!p_key || !p_key[0]) {
-        return;
-    }
-
-    if      (strcasecmp(p_key, "runtime")      == 0) s_dirty.runtime      = p_flag;
-    else if (strcasecmp(p_key, "schedules")    == 0) s_dirty.schedules    = p_flag;
-    else if (strcasecmp(p_key, "userProfiles") == 0) s_dirty.userProfiles = p_flag;
-    else if (strcasecmp(p_key, "motion")       == 0) s_dirty.motion       = p_flag;
-    else if (strcasecmp(p_key, "system")       == 0) s_dirty.system       = p_flag;
-    else if (strcasecmp(p_key, "wifi")         == 0) s_dirty.wifi         = p_flag;
-    else if (strcasecmp(p_key, "windDict")     == 0) s_dirty.windDict     = p_flag;
-}
 
