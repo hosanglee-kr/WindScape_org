@@ -124,7 +124,9 @@ static void routeSimState() {
 
             JsonDocument v_doc;
             // 시뮬레이션 상태 + 요약 통합
-            s_control->sim.toJson(v_doc);
+            JsonObject v_sim = v_doc["sim"].to<JsonObject>();
+            s_control->sim.toJson(v_sim);   // ✅ v019 구조 호환
+			
             s_control->toSummaryJson(v_doc);
 
             sendJson(p_request, v_doc);
@@ -151,6 +153,8 @@ static void routeMetrics() {
             JsonDocument v_doc;
             JsonObject v_metrics = v_doc["metrics"].to<JsonObject>();
             s_control->toMetricsJson(v_metrics);  // ✅ metrics root object에 직접 채움
+
+			CL_W10_WebAPI::broadcastMetrics(v_doc, true);   // ✅ diffOnly 메트릭 갱신 전송
 
             sendJson(p_request, v_doc);
         }
@@ -214,7 +218,10 @@ static void broadcastChart(JsonDocument& p_doc, bool p_diffOnly = false) {
     String v_msg;
     serializeJson(p_doc, v_msg);
 
-    if (p_diffOnly && v_msg == s_lastChartJson) return;
+    if (p_diffOnly && v_msg == s_lastChartJson) {
+        CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[W10] broadcastChart() skip (no diff)");  // ✅ 로그 추가
+        return;
+    }
     s_lastChartJson = v_msg;
 
     for (auto c : s_wsServerChart->getClients()) {
