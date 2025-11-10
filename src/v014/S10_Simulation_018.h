@@ -6,13 +6,17 @@
  * 모듈명 : Smart Nature Wind 풍속 시뮬레이션 Manager (v018, Full)
  * ------------------------------------------------------
  * 기능 요약:
- *  - 자연풍 기반 풍속 시뮬레이션 (Phase / 돌풍 / 난류 / 열기포 / 지터)
- *  - PWM 제어기(CL_P10_PWM) 연동
- *  - C10 해석 결과(ST_A10_ResolvedWind_t) 기반 동작
- *  - Schedules / UserProfiles 세그먼트에서 presetCode + styleCode + adjust
- *    -> C10_resolveWindParams -> applyResolvedWind(...) 연계
- *  - 최근 120초 Chart 버퍼 제공 (웹 UI 시각화용)
- * ------------------------------------------------------
+ *  - 자연풍 시뮬레이션 핵심 엔진 (Phase / 난류 / 돌풍 / 열기포 / 관성)
+ *  - PWM 제어기(CL_P10_PWM)와 연동하여 실시간 풍속을 PWM Duty로 변환
+ *  - C10 해석 결과(ST_A10_ResolvedWind_t) 기반 파라미터 적용
+ *  - PresetCode + StyleCode 기반 풍속 특성(범위·확률·스펙트럼) 자동 세팅
+ *  - Von Kármán 스펙트럼 난류 모델 + Phase별 풍속 재생성 로직
+ *  - 돌풍(Gust), 열기포(Thermal Bubble), 자연감 지터(Jitter) 확률적 발생
+ *  - 최근 60초 풍속 이력 순환 버퍼(history) 및 평균 캐시 관리
+ *  - 최근 120초 Chart 버퍼(1Hz 샘플링) 관리 및 JSON 직렬화 지원
+ *  - diffOnly 모드 지원 (WebSocket/REST 효율 전송)
+ *  - Phase 변화 또는 급격한 풍속 변화 시 실시간 WebSocket 브로드캐스트
+ *  - C10_ControlManager 및 W10_WebAPI와 완전 호환 구조 * ------------------------------------------------------
  * [구현 규칙]
  *  - 항상 소스 시작 주석 부분 체계 유지 및 내용 업데이트
  *  - 소스 시작 주석 부분 구현규칙, 코드네이밍규칙 내용 그대로 유지, 수정금지
