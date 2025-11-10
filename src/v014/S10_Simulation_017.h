@@ -121,11 +121,14 @@ public:
 	float          windMomentum        = 0.0f;
 	unsigned long  lastUpdateMs        = 0;
 
-    // 최근 풍속 샘플 저장 (차트/메트릭용)
-    static const uint8_t HISTORY_SIZE = 60;
-    float    history[HISTORY_SIZE];
-    uint8_t  historyIndex = 0;
-    uint8_t  historyCount = 0;
+    // --------------------------------------------------
+    // 최근 풍속 샘플 저장 (차트/메트릭 병렬 구조)
+    // --------------------------------------------------
+    static const uint8_t HISTORY_SIZE = 60;   // 1Hz 기준 60초
+    float    history[HISTORY_SIZE];           // 최근 풍속 값만 저장
+    uint8_t  historyIndex = 0;                // 순환 인덱스
+    uint8_t  historyCount = 0;                // 실제 저장 개수
+    float    avgWindCached = 0.0f;            // 최근 평균 캐시
 
 	// 차트 버퍼 (최근 120 샘플, 1Hz 기준)
 	struct ST_ChartEntry {
@@ -267,7 +270,9 @@ public:
 
 		applyFan(v_pwmPct);
 
-		_pushHistory(currentWindSpeed);
+		// ✅ 실시간 풍속 기록 (history[] 병렬 구조)
+		_pushWindSample(currentWindSpeed);
+
 
 		// 차트 샘플링 (1Hz, 최근 120개 유지)
 		// 차트 샘플링 (1Hz, 최근 120개 유지)
@@ -755,6 +760,28 @@ private:
 		windChangeRate = constrain(v_base * A10_randRange(0.7f, 1.7f),
 		                           0.04f, 0.5f);
 	}
+
+// --------------------------------------------------
+// ✅ 최근 풍속 이력 관리 (순환 버퍼 기반)
+// --------------------------------------------------
+void _pushWindSample(float p_speed) {
+    history[historyIndex] = p_speed;
+    historyIndex = (historyIndex + 1) % HISTORY_SIZE;
+    if (historyCount < HISTORY_SIZE) historyCount++;
+
+    // moving average 즉시 캐시 업데이트
+    float v_sum = 0.0f;
+    for (uint8_t i = 0; i < historyCount; i++) v_sum += history[i];
+    avgWindCached = v_sum / (float)historyCount;
+}
+
+// --------------------------------------------------
+// ✅ 캐시된 평균 풍속 반환 (O(1))
+// --------------------------------------------------
+float _getAvgWindFast() const {
+    return (historyCount > 0) ? avgWindCached : currentWindSpeed;
+}
+
 };
 
 // ------------------------------------------------------
