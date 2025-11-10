@@ -232,8 +232,14 @@ public:
         
         // ✅ Phase 변동 시 WebSocket 차트 브로드캐스트
         if (phase != v_prevPhase) {
+            float v_avg = getAvgWindFast();  // 병렬 history 기반 평균
             JsonDocument v_doc;
-            toChartJson(v_doc);
+            JsonObject o = v_doc["sim"].to<JsonObject>();
+            o["phase"]   = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
+            o["avgWind"] = v_avg;
+            o["target"]  = targetWindSpeed;
+            o["samples"] = historyCount;
+			
             CL_W10_WebAPI::broadcastChart(v_doc);
         }
 
