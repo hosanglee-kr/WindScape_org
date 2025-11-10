@@ -375,54 +375,59 @@ public:
     // Tick 루프
     // --------------------------------------------------
     void tick() {
-    if (!active || !pwm) return;
+        if (!active || !pwm) return;
 
-    unsigned long v_now = millis();
-    if (v_now - lastTickMs < 40UL) return;
-    lastTickMs = v_now;
+        unsigned long v_now = millis();
+        if (v_now - lastTickMs < 40UL) return;
+        lastTickMs = v_now;
 
-    if (_tickOverride()) {
-        sim.tick();
-        _maybeBroadcastMetrics();
-        return;
-    }
+        // 1) Override 우선 처리
+        if (_tickOverride()) {
+            sim.tick();
+            _maybeBroadcastMetrics();
+            return;
+        }
 
-    if (useProfileMode) {
+        // 2) Profile 전용 모드
+        if (useProfileMode) {
+            if (runSource == EN_CT10_RUN_USER_PROFILE && _tickUserProfile()) {
+                sim.tick();
+                _maybeBroadcastMetrics();
+            } else if (sim.active) {
+                sim.stop();
+                _maybeBroadcastMetrics();
+            }
+            return;
+        }
+
+        // 3) UserProfile 수동 실행 모드 (스케줄과 별개)
         if (runSource == EN_CT10_RUN_USER_PROFILE && _tickUserProfile()) {
             sim.tick();
             _maybeBroadcastMetrics();
             return;
         }
+
+        // 4) Schedule 기반 운전
+        if (_tickSchedule()) {
+            sim.tick();
+
+            // ✅ 시뮬레이터 차트 diffOnly 모드로 전송
+            JsonDocument v_doc;
+            toChartJson(v_doc, true);
+            CL_W10_WebAPI::broadcastChart(v_doc, true);
+
+            _maybeBroadcastMetrics();
+            return;
+        }
+
+        // 5) 그 외: 동작 중이면 정지
         if (sim.active) {
             sim.stop();
             _maybeBroadcastMetrics();
         }
-        return;
     }
 
-    if (runSource == EN_CT10_RUN_USER_PROFILE && _tickUserProfile()) {
-        sim.tick();
-        _maybeBroadcastMetrics();
-        return;
-    }
 
-    if (_tickSchedule()) {
-        sim.tick();
-
-        JsonDocument v_doc;
-        toChartJson(v_doc);
-        CL_W10_WebAPI::broadcastChart(v_doc, true);  // diffOnly 적용
-        _maybeBroadcastMetrics();
-        return;
-    }
-
-    if (sim.active) {
-        sim.stop();
-        _maybeBroadcastMetrics();
-    }
-}
-
-    // JSON 전체 상태 (control + override + autoOff + sim)
     void toJson(JsonDocument& p_doc) {
         JsonObject v_o = p_doc["control"].to<JsonObject>();
         v_o["active"]         = active;
@@ -456,10 +461,27 @@ public:
         // pwm
         v_o["pwmDuty"] = pwm ? pwm->P10_getDutyPercent() : 0.0f;
 
-        // sim 상태 포함
-        sim.toJson(p_doc);
+        // sim 상태 포함 (S10_018 시그니처: JsonObject& 인자)
+        JsonObject v_sim = p_doc["sim"].to<JsonObject>();
+        sim.toJson(v_sim);
+    }
 
-        // 상태 직렬화 이후 dirty 플래그는 외부에서 consume
+	// --------------------------------------------------
+    // 외부용: 시뮬레이션 차트 Export (S10에 위임 + 메타만 추가)
+    // --------------------------------------------------
+    void toChartJson(JsonDocument& p_doc, bool p_diffOnly = false) {
+        // 1) S10 차트 데이터 생성 ("sim.chart")
+        sim.toChartJson(p_doc, p_diffOnly);
+
+        // 2) CT10 메타 정보는 "sim.meta"에 병합
+        JsonObject v_meta = p_doc["sim"]["meta"].to<JsonObject>();
+        v_meta["pwmDuty"]   = pwm ? pwm->P10_getDutyPercent() : 0.0f;
+        v_meta["active"]    = active;
+        v_meta["runSource"] = (int)runSource;
+        v_meta["phase"]     = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)sim.phase];
+        v_meta["override"]  = overrideState.active
+                                ? (overrideState.useFixed ? "fixed" : "resolved")
+                                : "none";
     }
 
     // 요약 상태: 가벼운 폴링/심플 UI용
@@ -533,29 +555,8 @@ public:
         bool v = _dirtyChart;
         _dirtyChart = false;
         return v;
-    }
-
-
-
-
-// --------------------------------------------------
-// W10 연동용 : 시뮬레이션 차트 데이터 Export
-// --------------------------------------------------
-void toChartJson(JsonDocument& p_doc) {
-    // 1️⃣ S10 모듈이 보유한 차트 상태 직렬화
-    sim.toChartJson(p_doc);
-
-    // 2️⃣ 제어 매니저 레벨 정보 추가
-    JsonObject v_chart = p_doc["chart"].to<JsonObject>();
-    v_chart["pwmDuty"]   = pwm ? pwm->P10_getDutyPercent() : 0.0f;
-    v_chart["active"]    = active;
-    v_chart["runSource"] = (int)runSource;
-    v_chart["phase"]     = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)sim.phase];
-
-    // 3️⃣ override 상태 포함
-    v_chart["override"]  = overrideState.active ? (overrideState.useFixed ? "fixed" : "resolved") : "none";
-}
-
+    } 
+		
 
 
 private:
@@ -945,29 +946,25 @@ private:
 	    return false;
     }
 
-     // --------------------------------------------------
-// 상태 변경 시 WebSocket 브로드캐스트 헬퍼
-// --------------------------------------------------
-// --------------------------------------------------
-// 상태 변경 시 WebSocket 브로드캐스트 헬퍼
-// --------------------------------------------------
-void _broadcastState(bool p_diffOnly) {
-    JsonDocument v_doc;
-    toJson(v_doc);
-    CL_W10_WebAPI::broadcastState(v_doc, p_diffOnly);
-}
+    // 상태 변경 시 WebSocket 브로드캐스트 헬퍼
+    // --------------------------------------------------
+    void _broadcastState(bool p_diffOnly = true) {
+        JsonDocument v_doc;
+        toJson(v_doc);
+        CL_W10_WebAPI::broadcastState(v_doc, p_diffOnly);
+    }
 
-// --------------------------------------------------
-// Metrics WebSocket 브로드캐스트 (주기 + diffOnly)
-// --------------------------------------------------
-void _maybeBroadcastMetrics() {
-    unsigned long v_now = millis();
-    if (v_now - lastMetricsPushMs < 1500UL) return;
-    lastMetricsPushMs = v_now;
+    // --------------------------------------------------
+    // Metrics WebSocket 브로드캐스트 (주기 + diffOnly)
+    // --------------------------------------------------
+    void _maybeBroadcastMetrics() {
+        unsigned long v_now = millis();
+        if (v_now - lastMetricsPushMs < 1500UL) return;
+        lastMetricsPushMs = v_now;
 
-    JsonDocument v_doc;
-    toMetricsJson(v_doc);
-    CL_W10_WebAPI::broadcastMetrics(v_doc, true);
-}
+        JsonDocument v_doc;
+        toMetricsJson(v_doc);
+        CL_W10_WebAPI::broadcastMetrics(v_doc, true);
+    }
 
 };
