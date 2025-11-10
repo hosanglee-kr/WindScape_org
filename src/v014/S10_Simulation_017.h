@@ -340,6 +340,28 @@ if (millis() - s_lastChartLogMs > 1000UL) {
 	// ==================================================
 	// JSON Export
 	// ==================================================
+// ✅ 개선된 toJson — JsonObject 직접 전달 방식 (WebAPI 직렬화 대응)
+void toJson(JsonObject& p_obj) {              
+    p_obj["active"]        = active;              
+    p_obj["phase"]         = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];              
+    p_obj["windSpeed"]     = currentWindSpeed;              
+    p_obj["targetWind"]    = targetWindSpeed;              
+    p_obj["gustActive"]    = gustActive;              
+    p_obj["thermalActive"] = thermalActive;              
+    p_obj["pwmDuty"]       = _pwm ? _pwm->P10_getDutyPercent() : 0.0f;              
+    p_obj["presetCode"]    = presetCode;              
+    p_obj["styleCode"]     = styleCode;              
+    p_obj["intensity"]     = userIntensity;              
+    p_obj["variability"]   = userVariability;              
+    p_obj["gustFreq"]      = userGustFreq;              
+    p_obj["fan_limit"]     = fanLimitPct;              
+    p_obj["min_fan"]       = minFanPct;              
+    p_obj["turbSigma"]     = turbSigma;              
+    p_obj["turbScale"]     = turbLenScale;              
+    p_obj["thermalPower"]  = thermalStrength;              
+    p_obj["thermalRadius"] = thermalRadius;              
+}
+/*
 	void toJson(JsonDocument& p_doc) {
     JsonObject o = p_doc["sim"].to<JsonObject>();
     o["active"]        = active;
@@ -363,7 +385,7 @@ if (millis() - s_lastChartLogMs > 1000UL) {
     o["thermal_strength"] = thermalStrength;
     o["thermal_radius"]   = thermalRadius;
 }
-
+*/
 	void toChartJson(JsonDocument& p_doc) {
     // 비활성 상태에서도 최소 1개 데이터 유지
     if (!active && s_chartBuffer.empty()) {
