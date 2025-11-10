@@ -55,9 +55,15 @@ class CL_C10_ConfigManager {
 	// =====================================================
 	static bool ioLoadJson(const char* p_path, JsonDocument& p_doc) {
 		if (!LittleFS.exists(p_path)) {
-			CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Config not found: %s", p_path);
-			return false;
-		}
+            if (LittleFS.exists(p_bak)) {
+                LittleFS.rename(p_bak, p_path);
+                CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Restored from backup: %s", p_bak);
+            } else {
+                CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] Missing config & no backup: %s", p_path);
+                return false;
+            }
+        }
+		
 		File v_f = LittleFS.open(p_path, "r");
 		if (!v_f) {
 			CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] Open failed: %s", p_path);
@@ -847,58 +853,55 @@ class CL_C10_ConfigManager {
 		return true;
 	}
 
-	// =====================================================
-	// All-in-One 초기 로드
-	// =====================================================
-	// ---------------------------------------------------
-	// ✅ 변경됨 : bool 반환, 전체 로드 결과 전달
-	// ---------------------------------------------------
-	static bool loadAll(ST_A10_ConfigRoot& p_root) {
-		bool v_ok = true;
-		A10_resetToDefault(p_root);
+// ------------------------------------------------------
+// ✅ Lazy-Load 기반 전체 로드 (필요 섹션만 동적 로드)
+// ------------------------------------------------------
+static bool loadAll(ST_A10_ConfigRoot& p_root) {
+    bool v_ok = true;
+    A10_resetToDefault(p_root);
 
-		if (!loadSystemConfig(p_root.system)) {
-			CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] System load failed");
-			v_ok = false;
-		}
+    // 항상 System은 필수 로드
+    if (!loadSystemConfig(p_root.system)) v_ok = false;
 
-		p_root.wifi = new ST_A10_WifiConfig();
-		if (!loadWifiConfig(*p_root.wifi)) {
-			A10_resetWifiDefault(*p_root.wifi);
-			saveWifiConfig(*p_root.wifi);
-			v_ok = false;
-		}
+    // Lazy-Load 구조: 요청 시 동적 로드
+    loadLazySection("wifi", p_root);
+    loadLazySection("motion", p_root);
+    loadLazySection("schedules", p_root);
+    loadLazySection("userProfiles", p_root);
 
-		p_root.motion = new ST_A10_MotionConfig();
-		if (!loadMotionConfig(*p_root.motion)) {
-			A10_resetMotionDefault(*p_root.motion);
-			saveMotionConfig(*p_root.motion);
-			v_ok = false;
-		}
+    CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] Config loaded (lazy mode, result=%d)", v_ok);
+    return v_ok;
+}
 
-		p_root.windDict = new ST_A10_WindProfileDict_t();
-		if (!loadWindProfileDict(*p_root.windDict)) {
-			A10_resetWindProfileDictDefault(*p_root.windDict);
-			v_ok = false;
-		}
+// ------------------------------------------------------
+// ✅ Lazy 섹션 단위 로드 함수 추가
+// ------------------------------------------------------
+static bool loadLazySection(const char* p_section, ST_A10_ConfigRoot& p_root) {
+    if (strcmp(p_section, "wifi") == 0) {
+        if (!p_root.wifi) p_root.wifi = new ST_A10_WifiConfig();
+        return loadWifiConfig(*p_root.wifi);
+    }
+    if (strcmp(p_section, "motion") == 0) {
+        if (!p_root.motion) p_root.motion = new ST_A10_MotionConfig();
+        return loadMotionConfig(*p_root.motion);
+    }
+    if (strcmp(p_section, "schedules") == 0) {
+        if (!p_root.schedules) p_root.schedules = new ST_A10_ScheduleConfig();
+        return loadSchedules(*p_root.schedules);
+    }
+    if (strcmp(p_section, "userProfiles") == 0) {
+        if (!p_root.userProfiles) p_root.userProfiles = new ST_A10_UserProfileConfig_t();
+        return loadUserProfiles(*p_root.userProfiles);
+    }
+    return false;
+}
 
-		p_root.schedules = new ST_A10_ScheduleConfig();
-		if (!loadSchedules(*p_root.schedules)) {
-			A10_resetSchedulesDefault(*p_root.schedules);
-			saveSchedules(*p_root.schedules);
-			v_ok = false;
-		}
-
-		p_root.userProfiles = new ST_A10_UserProfileConfig_t();
-		if (!loadUserProfiles(*p_root.userProfiles)) {
-			A10_resetUserProfilesDefault(*p_root.userProfiles);
-			saveUserProfiles(*p_root.userProfiles);
-			v_ok = false;
-		}
-
-		CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] All configs loaded (result=%d)", v_ok);
-		return v_ok;
-	}
+static void freeLazySection(const char* p_section, ST_A10_ConfigRoot& p_root) {
+    if (strcmp(p_section, "wifi") == 0 && p_root.wifi) { delete p_root.wifi; p_root.wifi = nullptr; return; }
+    if (strcmp(p_section, "motion") == 0 && p_root.motion) { delete p_root.motion; p_root.motion = nullptr; return; }
+    if (strcmp(p_section, "schedules") == 0 && p_root.schedules) { delete p_root.schedules; p_root.schedules = nullptr; return; }
+    if (strcmp(p_section, "userProfiles") == 0 && p_root.userProfiles) { delete p_root.userProfiles; p_root.userProfiles = nullptr; return; }
+}
 
 	// =====================================================
 	// 메모리 해제 (동적 섹션 정리)
@@ -971,6 +974,62 @@ class CL_C10_ConfigManager {
 			"[C10] Config export → JSON (sys=%d wifi=%d motion=%d sch=%d up=%d)",
 			includeSystem, includeWifi, includeMotion, includeSchedules, includeUserProfiles);
 	}
+
+// ------------------------------------------------------
+// ✅ PATCH 기반 JSON 부분 업데이트
+// ------------------------------------------------------
+static bool patchConfigFromJson(const char* p_section, const JsonDocument& p_patch) {
+    if (strcmp(p_section, "system") == 0) {
+        ST_A10_SystemConfig cfg;
+        if (!loadSystemConfig(cfg)) return false;
+        JsonObjectConst j = p_patch["system"];
+        if (j.contains("logging")) {
+            strlcpy(cfg.system.logging.level, j["logging"]["level"] | cfg.system.logging.level,
+                    sizeof(cfg.system.logging.level));
+        }
+        if (j.contains("security")) {
+            strlcpy(cfg.security.api_key, j["security"]["api_key"] | cfg.security.api_key,
+                    sizeof(cfg.security.api_key));
+        }
+        return saveSystemConfig(cfg);
+    }
+
+    if (strcmp(p_section, "wifi") == 0) {
+        ST_A10_WifiConfig cfg;
+        if (!loadWifiConfig(cfg)) return false;
+        JsonObjectConst j = p_patch["wifi"];
+        if (j.contains("ap")) {
+            strlcpy(cfg.ap.ssid, j["ap"]["ssid"] | cfg.ap.ssid, sizeof(cfg.ap.ssid));
+            strlcpy(cfg.ap.password, j["ap"]["password"] | cfg.ap.password, sizeof(cfg.ap.password));
+        }
+        return saveWifiConfig(cfg);
+    }
+
+    // motion, schedules, userProfiles 동일 패턴
+    return false;
+}
+
+// ------------------------------------------------------
+// ✅ Factory Reset (cfg_default_022.json 기반 복구)
+// ------------------------------------------------------
+static bool factoryResetFromDefault() {
+    JsonDocument v_def;
+    if (!ioLoadJson(A10_Const::CFG_DEFAULT_FILE, v_def)) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] Default file missing: %s", A10_Const::CFG_DEFAULT_FILE);
+        return false;
+    }
+    // 섹션별 저장
+    ioSaveJson(A10_Const::CFG_SYSTEM_FILE, A10_Const::CFG_SYSTEM_FILE_BAK, v_def["system"]);
+    ioSaveJson(A10_Const::CFG_WIFI_FILE, A10_Const::CFG_WIFI_FILE_BAK, v_def["wifi"]);
+    ioSaveJson(A10_Const::CFG_MOTION_FILE, A10_Const::CFG_MOTION_FILE_BAK, v_def["motion"]);
+    ioSaveJson(A10_Const::CFG_SCHEDULES_FILE, A10_Const::CFG_SCHEDULES_FILE_BAK, v_def["schedules"]);
+    ioSaveJson(A10_Const::CFG_USER_PROFILES_FILE, A10_Const::CFG_USER_PROFILES_FILE_BAK, v_def["userProfiles"]);
+
+    CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] Factory reset completed (default_022.json)");
+    return true;
+}
+
+
 };
 
 inline ST_A10_ConfigRoot g_A10_config_root;
