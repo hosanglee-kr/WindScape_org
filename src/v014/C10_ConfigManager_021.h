@@ -6,14 +6,13 @@
  * 모듈명 : Smart Nature Wind Configuration Manager
  * ------------------------------------------------------
  * 기능 요약:
- *  - 시스템 전체 설정 파일 관리
- *    - System / WiFi / Motion
- *    - WindProfile (Preset + Style 사전)
- *    - Schedules
- *    - UserProfiles
- *  - JSON 파일 <-> 구조체 매핑 (ArduinoJson v7 전용)
- *  - Lazy-Load 및 안전 기본값 초기화
- *  - 공통 Wind 해석 유틸 제공
+ *  - Smart Nature Wind 전체 설정(JSON 기반) 관리 매니저
+ *  - 설정 파일 단위 분리 관리 (system / wifi / motion / control)
+ *  - 구조체 ↔ JSON 직렬화 및 역직렬화 (ArduinoJson v7 전용)
+ *  - 파일 백업(.bak) / 복구 / 공장초기화(factoryResetFromDefault) 지원
+ *  - PATCH 기반 부분 업데이트(patchConfigFromJson) 지원
+ *  - Lazy-Load 하이브리드 구성 (필요 섹션만 동적 로드)
+ *  - Wi-Fi 재초기화 판단(p_needWifiReinit) 및 상태 관리
  * ------------------------------------------------------
  * [구현 규칙]
  *  - 항상 소스 시작 주석 체계 유지
