@@ -386,6 +386,32 @@ void toJson(JsonObject& p_obj) {
     o["thermal_radius"]   = thermalRadius;
 }
 */
+// ==================================================
+// 차트 데이터 JSON Export (/api/sim/chart)
+// ==================================================
+void toChartJson(JsonDocument& p_doc) {
+    // sim.chart 루트 생성
+    JsonArray arr = p_doc["sim"]["chart"].to<JsonArray>();
+    static unsigned long s_lastSample = 0;
+
+    // ✅ 10초 간격 샘플링 (WebSocket 전송 최적화)
+    if (millis() - s_lastSample < 10000UL) return;
+    s_lastSample = millis();
+
+    if (s_chartBuffer.empty()) return;
+
+    const ST_ChartEntry& e = s_chartBuffer.back();
+    JsonObject jo = arr.add<JsonObject>();
+    jo["ts"]      = e.timestamp / 1000UL;
+    jo["wind"]    = e.wind_speed;
+    jo["pwm"]     = e.pwm_duty;
+    jo["gust"]    = e.gust_active;
+    jo["thermal"] = e.thermal_active;
+    jo["phase"]   = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
+    jo["avgWind"] = _getAvgWindFast();   // ✅ 병렬 history 기반 평균풍속 포함
+    jo["samples"] = historyCount;
+}
+/*
 	void toChartJson(JsonDocument& p_doc) {
     // 비활성 상태에서도 최소 1개 데이터 유지
     if (!active && s_chartBuffer.empty()) {
@@ -419,6 +445,7 @@ void toJson(JsonObject& p_obj) {
         jo["h"]  = e.thermal_active;
     }
 }
+*/
 
 private:
 	CL_P10_PWM* _pwm = nullptr;
