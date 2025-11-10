@@ -194,7 +194,7 @@ public:
     // --------------------------------------------------
     void toJson(JsonDocument& p_doc) const {
         JsonObject v_o = p_doc["motion"].to<JsonObject>();
-        v_o["active"]     = _state.active;
+        v_o["active"]     = isActive();
         v_o["pirActive"]  = _state.pirActive;
         v_o["bleActive"]  = _state.bleActive;
         v_o["pirHold"]    = _pir.hold_sec;
@@ -228,8 +228,16 @@ public:
     // --------------------------------------------------
     // 외부에서 활성여부 확인
     // --------------------------------------------------
-    bool isActive() const {
-        return _state.active;
+    bool isActive() {
+        unsigned long v_now = millis();
+        // hold_sec 로직은 외부 config 사용 (예: g_A10_config_root.motion)
+        uint32_t v_hold = 0;
+        if (g_A10_config_root.motion) {
+            v_hold = (uint32_t)g_A10_config_root.motion->pir.hold_sec;
+        }
+        if (pirActive || bleActive) return true;
+        if (v_hold > 0 && (v_now - lastActiveMs) < (v_hold * 1000UL)) return true;
+        return false;
     }
 
     // --------------------------------------------------
