@@ -947,7 +947,7 @@ class CL_C10_ConfigManager {
 	//  - 모든 섹션 기본 출력
 	//  - 특정 섹션만 내보내려면 include* 인자 조합
 	// =====================================================
-	static void C10_toJson_All(
+	static void toJson_All(
 		const ST_A10_ConfigRoot& p,
 		JsonDocument&			 d,
 		bool					 includeSystem		 = true,
