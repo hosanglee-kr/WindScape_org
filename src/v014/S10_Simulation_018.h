@@ -51,7 +51,7 @@
 #include <string.h>
 
 #include "A10_Const_014.h"
-#include "C10_ConfigManager_020.h"
+#include "C10_ConfigManager_021.h"
 #include "D10_Logger_014.h"
 #include "P10_PWM_ctrl_014.h"
 
@@ -248,7 +248,8 @@ void tick() {
         o["target"]  = targetWindSpeed;
         o["samples"] = historyCount;
         o["delta"]   = v_delta;
-        CL_W10_WebAPI::broadcastChart(v_doc);
+        CL_W10_WebAPI::broadcastChart(v_doc, true);         // ✅ diffOnly 모드
+        CL_CT10_ControlManager::instance().markDirty("chart"); // ✅ Dirty 표시
     }
 
     // ---- 내부 물리 계산 ----
@@ -284,7 +285,8 @@ void tick() {
     _updateWindHistory(currentWindSpeed);
 
     // ✅ 차트 샘플링 (1Hz)
-    if (millis() - s_lastChartLogMs > 1000UL) {
+    uint32_t v_interval = (gustActive || thermalActive) ? 500UL : 1000UL;
+    if (millis() - s_lastChartLogMs > v_interval) {
         if (s_chartBuffer.size() >= 120) s_chartBuffer.pop_front();
 
         ST_ChartEntry v_e{};
@@ -373,7 +375,15 @@ void toJson(JsonObject& p_obj) {
 // 차트 데이터 JSON Export (/api/sim/chart)
 // ==================================================
 void toChartJson(JsonDocument& p_doc, bool p_diffOnly = false) {
-    JsonArray arr = p_doc["sim"]["chart"].to<JsonArray>();
+    JsonArray  arr  = p_doc["sim"]["chart"].to<JsonArray>();
+	
+    JsonObject meta = p_doc["sim"]["meta"].to<JsonObject>();    // ✅ 추가
+    meta["phase"]   = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
+    meta["avgWind"] = _getAvgWindFast();
+    meta["gust"]    = gustActive;
+    meta["thermal"] = thermalActive;
+    meta["samples"] = historyCount;
+	
 
     // ✅ 10초 간격 전송 제한
     if (millis() - s_lastChartSampleMs < 10000UL) return;
