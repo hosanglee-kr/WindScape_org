@@ -200,7 +200,10 @@ public:
         v_o["pirHold"]    = _pir.hold_sec;
         v_o["bleHold"]    = _ble.hold_sec;
         v_o["bleRssi"]    = _ble.last_rssi;
-        v_o["lastChange"] = _state.lastChange_ms;
+        //v_o["lastChange"] = _state.lastChange_ms;
+        unsigned long v_now = millis();
+        uint32_t v_lastSec  = (lastActiveMs == 0) ? 0 : (uint32_t)((v_now - lastActiveMs) / 1000UL);
+        v_m["lastActiveSec"] = v_lastSec;
 
         // 남은 hold 시간 (초 단위)
         uint32_t v_now = millis();
