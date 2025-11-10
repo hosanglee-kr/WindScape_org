@@ -53,7 +53,7 @@
 #include "C10_ConfigManager_020.h"
 #include "S10_Simulation_018.h"
 #include "P10_PWM_ctrl_014.h"
-#include "D10_Logger_016.h"
+#include "D10_Logger_015.h"
 #include "M10_MotionLogic_016.h"
 
 
@@ -428,6 +428,37 @@ public:
             sim.stop();
             _maybeBroadcastMetrics();
         }
+
+// ✅ diffOnly 자동 브로드캐스트
+if (_dirtyState) {
+    JsonDocument v_doc;
+    toJson(v_doc);
+    CL_W10_WebAPI::broadcastState(v_doc, true);
+    _dirtyState = false;
+}
+
+if (_dirtyChart) {
+    JsonDocument v_doc;
+    toChartJson(v_doc);
+    CL_W10_WebAPI::broadcastChart(v_doc, true);
+    _dirtyChart = false;
+}
+
+if (_dirtyMetrics) {
+    JsonDocument v_doc;
+    toMetricsJson(v_doc);
+    CL_W10_WebAPI::broadcastMetrics(v_doc, true);
+    _dirtyMetrics = false;
+}
+
+if (_dirtySummary) {
+    JsonDocument v_doc;
+    toSummaryJson(v_doc);
+    CL_W10_WebAPI::broadcastState(v_doc, true);
+    _dirtySummary = false;
+}
+		
+		
     }
 
 
@@ -488,17 +519,17 @@ public:
     }
 
     // 요약 상태: 가벼운 폴링/심플 UI용
-    void toSummaryJson(JsonDocument& p_doc) {
-        JsonObject v_s = p_doc["summary"].to<JsonObject>();
-        v_s["active"]         = active;
-        v_s["runSource"]      = (int)runSource;
-        v_s["useProfileMode"] = useProfileMode;
-        v_s["scheduleIdx"]    = curScheduleIndex;
-        v_s["profileIdx"]     = curProfileIndex;
-        v_s["overrideActive"] = overrideState.active;
-        v_s["pwmDuty"]        = pwm ? pwm->P10_getDutyPercent() : 0.0f;
-        v_s["phase"]          = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)sim.phase];
-    }
+void toSummaryJson(JsonDocument& p_doc) {
+    JsonObject v_sum = p_doc["summary"].to<JsonObject>();
+    v_sum["phase"]        = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)sim.phase];
+    v_sum["wind"]         = sim.currentWindSpeed;
+    v_sum["target"]       = sim.targetWindSpeed;
+    v_sum["pwmDuty"]      = pwm ? pwm->P10_getDutyPercent() : 0.0f;
+    v_sum["override"]     = overrideState.active;
+    v_sum["useProfile"]   = useProfileMode;
+    v_sum["scheduleIdx"]  = curScheduleIndex;
+    v_sum["profileIdx"]   = curProfileIndex;
+}
 
     // 메트릭 전용: /api/metrics, /ws/metrics 용
     void toMetricsJson(JsonDocument& p_doc) {
@@ -534,12 +565,11 @@ public:
     // --------------------------------------------------
     // Dirty 플래그 관리 (W10 diffOnly 연동용)
     // --------------------------------------------------
-    void markDirty(const char* p_section = nullptr) {
-        // section 분기 필요 시 확장 가능
-        (void)p_section;
-        _dirtyState   = true;
-        _dirtyMetrics = true;
-        _dirtyChart   = true;
+    void markDirty(const char* p_key) {
+        if (strcmp(p_key, "state") == 0) _dirtyState = true;
+        else if (strcmp(p_key, "chart") == 0) _dirtyChart = true;
+        else if (strcmp(p_key, "metrics") == 0) _dirtyMetrics = true;
+        else if (strcmp(p_key, "summary") == 0) _dirtySummary = true; 
     }
 
     bool consumeDirtyState() {
@@ -567,6 +597,7 @@ private:
     bool _dirtyState  = false;
     bool _dirtyMetrics = false;
     bool _dirtyChart   = false;
+    bool _dirtySummary = false; 
 
     uint32_t _calcOverrideRemainSec() const {
         if (!overrideState.active || overrideState.endMs == 0) return 0;
