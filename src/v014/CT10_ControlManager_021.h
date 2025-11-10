@@ -11,7 +11,10 @@
  *  - PWM(P10) / Simulation(S10) 통합 제어
  *  - Motion (PIR / BLE) 및 AutoOff 조건 훅 제공
  *  - Web UI / 버튼에서 Profile 선택, Override 즉시 반영
- *  - JSON 상태 Export (control / override / autoOff / sim)
+ *  - JSON 상태 Export (control / override / autoOff / sim / metrics)
+ *  - diffOnly 감지 기반 실시간 WS 전송 (state / chart / metrics)
+ *  - Override 타임아웃 및 AutoOff 발생 시 자동 상태 브로드캐스트
+ *  - Dirty 플래그 기반 W10 diffOnly API 연동 지원
  *  - 정적 싱글톤 인터페이스 제공 (W10_WebAPI에서 직접 사용)
  * ------------------------------------------------------
  * [구현 규칙]
