@@ -99,7 +99,8 @@ class CL_W10_WebAPI {
 							 return;
 						 }
 						 JsonDocument v_doc;
-						 s_control->toSummaryJson(v_doc);  // ✅ CT10의 새 함수 사용
+						 s_control->toSummaryJson(v_doc);  // ✅ v022에서 공식 지원 함수
+						 s_control->toMetricsJson(v_doc);  // ✅ /api/metrics 연동 시 사용
 						 sendJson(p_request, v_doc);
 					 });
 	}
@@ -126,7 +127,8 @@ class CL_W10_WebAPI {
 						 JsonObject v_sim = v_doc["sim"].to<JsonObject>();
 						 s_control->sim.toJson(v_sim);	// ✅ v019 구조 호환
 
-						 s_control->toSummaryJson(v_doc);
+						 s_control->toSummaryJson(v_doc);  // ✅ v022에서 공식 지원 함수
+						 s_control->toMetricsJson(v_doc);  // ✅ /api/metrics 연동 시 사용
 
 						 sendJson(p_request, v_doc);
 					 });
@@ -151,7 +153,8 @@ class CL_W10_WebAPI {
 						 JsonObject	  v_metrics = v_doc["metrics"].to<JsonObject>();
 						 s_control->toMetricsJson(v_metrics);  // ✅ metrics root object에 직접 채움
 
-						 CL_W10_WebAPI::broadcastMetrics(v_doc, true);	// ✅ diffOnly 메트릭 갱신 전송
+						 CL_W10_WebAPI::broadcastMetrics(v_doc, true);
+						 CL_W10_WebAPI::broadcastChart(v_doc, true); 
 
 						 sendJson(p_request, v_doc);
 					 });
@@ -168,7 +171,7 @@ class CL_W10_WebAPI {
 
 		// diffOnly 모드일 때 동일 데이터는 송신 생략
 		if (p_diffOnly && v_msg == s_lastStateJson) {
-			CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[W10] broadcastState() skip (no diff)");
+			CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[W10] broadcastState() diffOnly skip (identical)");
 			return;
 		}
 		s_lastStateJson = v_msg;
@@ -229,15 +232,15 @@ class CL_W10_WebAPI {
 		}
 	}
 
-	// 기존 broadcastLog() 그대로 유지
-	static void broadcastLog(const char* p_msg) {
-		if (!s_wsServerLog)
-			return;
-		for (auto c : s_wsServerLog->getClients()) {
-			if (c && c->canSend())
-				c->text(p_msg);
-		}
-	}
+	// // 기존 broadcastLog() 그대로 유지
+	// static void broadcastLog(const char* p_msg) {
+	// 	if (!s_wsServerLog)
+	// 		return;
+	// 	for (auto c : s_wsServerLog->getClients()) {
+	// 		if (c && c->canSend())
+	// 			c->text(p_msg);
+	// 	}
+	// }
 
    private:
 	static AsyncWebServer*		   s_server;
@@ -291,20 +294,23 @@ class CL_W10_WebAPI {
 	static void routeVersion() {
 		s_server->on("/api/version", HTTP_GET,
 					 [](AsyncWebServerRequest* p_request) {
-						 if (!checkApiKey(p_request)) {
-							 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
-							 return;
-						 }
-						 JsonDocument v_doc;
-						 v_doc["module"]  = "SmartNatureWind";
-						 v_doc["api"]	  = "W10_WebAPI_v021";
-						 v_doc["fw"]	  = A10_Const::FW_VERSION;
-						 v_doc["config"]  = "C10_ConfigManager_020";
-						 v_doc["control"] = "CT10_ControlManager_020";
-						 v_doc["sim"]	  = "S10_Simulation_017";
-						 v_doc["nvs"]	  = "N10_NvsManager_016";
-						 v_doc["logger"]  = "D10_Logger_014";
-						 sendJson(p_request, v_doc);
+						if (!checkApiKey(p_request)) {
+							p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+							return;
+						}
+						JsonDocument v_doc;
+						v_doc["module"]  = "SmartNatureWind";
+						v_doc["fw"]	  = A10_Const::FW_VERSION;
+
+						v_doc["logger"]   = "D10_Logger_016";
+						v_doc["control"]  = "CT10_ControlManager_021";
+						v_doc["config"]  = "C10_ConfigManager_021";
+						v_doc["sim"]	  = "S10_Simulation_018";
+						v_doc["nvs"]	  = "N10_NvsManager_017";
+						v_doc["logger"]  = "D10_Logger_016";
+						v_doc["api"]      = "W10_WebAPI_022";
+
+						sendJson(p_request, v_doc);
 					 });
 	}
 
@@ -829,8 +835,11 @@ class CL_W10_WebAPI {
 							 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
 							 return;
 						 }
-						 String v_logs = CL_D10_Logger::getLogsJson();
-						 p_request->send(200, "application/json", v_logs);
+						 JsonDocument v_doc;
+						 CL_D10_Logger::getLogsAsJson(v_doc);  // ✅ v016 신규 함수 사용
+						 String v_json;
+						 serializeJson(v_doc, v_json);
+						 p_request->send(200, "application/json", v_json);
 					 });
 	}
 
@@ -857,10 +866,10 @@ class CL_W10_WebAPI {
 	}
 
 	// ✅ metrics 전용 WebSocket 추가
-	static AsyncWebSocket s_wsLogs("/ws/logs");
+	static AsyncWebSocket s_wsLogs("/ws/log");
 	static AsyncWebSocket s_wsState("/ws/state");
 	static AsyncWebSocket s_wsChart("/ws/chart");
-	static AsyncWebSocket s_wsMetrics("/ws/metrics");  // ✅ 신규
+	static AsyncWebSocket s_wsMetrics("/ws/metrics");
 
 	static void routeWebSocket() {
 		// 기존 로그 WS
@@ -916,7 +925,9 @@ class CL_W10_WebAPI {
 		s_wsServerChart	  = &s_wsChart;
 		s_wsServerMetrics = &s_wsMetrics;
 
-		CL_D10_Logger::attachWebSocket(s_wsServerLog);
+		// Logger WebSocket 연결
+		CL_D10_Logger::attachWebSocket(&s_wsLogs);   // ✅ v016에서는 포인터 직접 전달
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WebSocket routes initialized");
 	}
 };
 
