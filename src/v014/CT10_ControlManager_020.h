@@ -48,13 +48,12 @@
 
 #include "A10_Const_014.h"
 #include "C10_ConfigManager_020.h"
-#include "S10_Simulation_017.h"
+#include "S10_Simulation_018.h"
 #include "P10_PWM_ctrl_014.h"
 #include "D10_Logger_014.h"
 #include "M10_MotionLogic_015.h"
 
 
-#include "M10_MotionLogic_015.h"
 // forward declaration으로 순환참조 방지
 class CL_W10_WebAPI;
 
@@ -194,6 +193,7 @@ public:
     CL_S10_Simulation           sim;
 
     unsigned long               lastTickMs      = 0;
+    unsigned long               lastMetricsPushMs = 0;   // ✅ 메트릭 푸시 주기 관리
 
 public:
     // --------------------------------------------------
@@ -210,13 +210,13 @@ public:
         scheduleSegRt.index = -1;
         profileSegRt.index  = -1;
 
-        useProfileMode = false;
-        runSource      = EN_CT10_RUN_NONE;
+        useProfileMode      = false;
+        runSource           = EN_CT10_RUN_NONE;
+        lastTickMs          = 0;
+        lastMetricsPushMs   = 0;
 
         sim.begin(p_pwm);
         active = true;
-
-		lastMetricsPushMs = 0;  // ✅ 초기화 (재시작 후 즉시 Metrics push 허용)
 
         CL_D10_Logger::log(EN_L10_LOG_INFO, "[CT10] begin()");
     }
