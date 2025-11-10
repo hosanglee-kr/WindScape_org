@@ -45,9 +45,9 @@
 
 #include "A10_Const_014.h"
 #include "C10_ConfigManager_020.h"
-#include "CT10_ControlManager_020.h"
-#include "S10_Simulation_017.h"
-#include "M10_MotionLogic_014.h"
+#include "CT10_ControlManager_021.h"
+#include "S10_Simulation_018.h"
+#include "M10_MotionLogic_016.h"
 #include "P10_PWM_ctrl_014.h"
 #include "N10_NvsManager_016.h"
 #include "D10_Logger_015.h"
