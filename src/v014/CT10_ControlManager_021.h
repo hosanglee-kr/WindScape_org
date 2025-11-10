@@ -50,8 +50,8 @@
 #include "C10_ConfigManager_020.h"
 #include "S10_Simulation_018.h"
 #include "P10_PWM_ctrl_014.h"
-#include "D10_Logger_014.h"
-#include "M10_MotionLogic_015.h"
+#include "D10_Logger_016.h"
+#include "M10_MotionLogic_016.h"
 
 
 // forward declaration으로 순환참조 방지
