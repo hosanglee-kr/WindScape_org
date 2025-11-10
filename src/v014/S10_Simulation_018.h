@@ -145,6 +145,8 @@ public:
 	static std::deque<ST_ChartEntry> s_chartBuffer;
 	static unsigned long             s_lastChartLogMs;
 
+     static unsigned long s_lastChartSampleMs; 
+
 public:
 	// ==================================================
 	// 초기화 / 정지 / 리셋
@@ -214,94 +216,89 @@ public:
 	// ==================================================
 	// 메인 tick (CT10에서 주기 호출)
 	// ==================================================
-	void tick() {
-		if (!active) return;
+void tick() {
+    if (!active) return;
 
-		unsigned long v_now = millis();
-		static uint32_t s_jitterSeed = 0;
+    unsigned long v_now = millis();
+    static uint32_t s_jitterSeed = 0;
 
-		uint32_t v_interval = 40u + (s_jitterSeed % 60u); // 40~99ms 가변 샘플링
-		if (v_now - lastUpdateMs < v_interval) return;
-		s_jitterSeed = esp_random();
+    uint32_t v_interval = 40u + (s_jitterSeed % 60u);
+    if (v_now - lastUpdateMs < v_interval) return;
+    s_jitterSeed = esp_random();
 
-		float v_dt = (v_now - lastUpdateMs) / 1000.0f;
-		lastUpdateMs = v_now;
+    float v_dt = (v_now - lastUpdateMs) / 1000.0f;
+    lastUpdateMs = v_now;
 
-		T_A10_WindPhase_t v_prevPhase = phase;
-        updatePhase();   // 내부 전환
-        
-        // ✅ Phase 변동 시 WebSocket 차트 브로드캐스트
-        if (phase != v_prevPhase) {
-            float v_avg = getAvgWindFast();  // 병렬 history 기반 평균
-            JsonDocument v_doc;
-            JsonObject o = v_doc["sim"].to<JsonObject>();
-            o["phase"]   = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
-            o["avgWind"] = v_avg;
-            o["target"]  = targetWindSpeed;
-            o["samples"] = historyCount;
-			
-            CL_W10_WebAPI::broadcastChart(v_doc);
-        }
+    float v_prevWind = currentWindSpeed;
+    T_A10_WindPhase_t v_prevPhase = phase;
+    updatePhase();
 
-		calcTurb(v_dt);
-		calcThermalEnvelope();
-		updateGust();
-		updateThermal();
-
-		// 목표 풍속으로 점진 수렴 + 난류/관성 반영
-		float v_diff   = targetWindSpeed - currentWindSpeed;
-		float v_change = v_diff * windChangeRate * v_dt;
-		windMomentum   = windMomentum * 0.85f + v_change * 0.15f;
-		windMomentum   = constrain(windMomentum, -0.5f, 0.5f);
-
-		float v_new = currentWindSpeed + windMomentum + spectralEnergyBuf;
-		currentWindSpeed = constrain(v_new, 0.2f, 11.0f);
-
-		// target 재생성 빈도: 목표와 근접하면 잦게 변경
-		float v_th = 0.5f + (currentWindSpeed / 20.0f);
-		if (fabsf(v_diff) < v_th) {
-			if (A10_randRange(0.0f, 100.0f) < 30.0f) {
-				generateTarget();
-			}
-		} else {
-			if (A10_randRange(0.0f, 100.0f) < 6.0f) {
-				generateTarget();
-			}
-		}
-
-		// PWM 변환: 기본 스케일 + 돌풍 + 열기포
-		float v_pwmPct = currentWindSpeed * 10.0f + 10.0f; // 내부 스케일링
-		v_pwmPct *= gustIntensity;
-		v_pwmPct += thermalContribution * 5.0f;
-
-		applyFan(v_pwmPct);
-
-		// ✅ 실시간 풍속 기록 (history[] 병렬 구조)
-		_pushWindSample(currentWindSpeed);
-
-
-		// 차트 샘플링 (1Hz, 최근 120개 유지)
-		// 차트 샘플링 (1Hz, 최근 120개 유지)
-if (millis() - s_lastChartLogMs > 1000UL) {
-    if (s_chartBuffer.size() >= 120) {
-        s_chartBuffer.pop_front();
+    // ✅ Phase 변화 또는 급격한 풍속 변화 시 브로드캐스트
+    float v_delta = fabsf(currentWindSpeed - v_prevWind);
+    if (phase != v_prevPhase || v_delta > 2.0f) {
+        float v_avg = _getAvgWindFast();
+        JsonDocument v_doc;
+        JsonObject o = v_doc["sim"].to<JsonObject>();
+        o["phase"]   = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
+        o["avgWind"] = v_avg;
+        o["target"]  = targetWindSpeed;
+        o["samples"] = historyCount;
+        o["delta"]   = v_delta;
+        CL_W10_WebAPI::broadcastChart(v_doc);
     }
 
-    ST_ChartEntry v_e{};
-    v_e.timestamp        = millis();
-    v_e.wind_speed       = currentWindSpeed;
-    v_e.pwm_duty         = _pwm ? _pwm->P10_getDutyPercent() : 0.0f; // 안전 처리 ✅
-    v_e.intensity        = userIntensity;
-    v_e.variability      = userVariability;
-    v_e.turbulence_sigma = turbSigma;
-    v_e.preset_index     = (uint8_t)A10_getPresetIndexByCode(presetCode);
-    v_e.gust_active      = gustActive;
-    v_e.thermal_active   = thermalActive;
-    s_chartBuffer.push_back(v_e);
+    // ---- 내부 물리 계산 ----
+    calcTurb(v_dt);
+    calcThermalEnvelope();
+    updateGust();
+    updateThermal();
 
-    s_lastChartLogMs = millis();
-}
-	}
+    // 목표 풍속으로 점진 수렴 + 난류/관성 반영
+    float v_diff   = targetWindSpeed - currentWindSpeed;
+    float v_change = v_diff * windChangeRate * v_dt;
+    windMomentum   = windMomentum * 0.85f + v_change * 0.15f;
+    windMomentum   = constrain(windMomentum, -0.5f, 0.5f);
+
+    float v_new = currentWindSpeed + windMomentum + spectralEnergyBuf;
+    currentWindSpeed = constrain(v_new, 0.2f, 11.0f);
+
+    // 목표 풍속 재생성 주기
+    float v_th = 0.5f + (currentWindSpeed / 20.0f);
+    if (fabsf(v_diff) < v_th) {
+        if (A10_randRange(0.0f, 100.0f) < 30.0f) generateTarget();
+    } else {
+        if (A10_randRange(0.0f, 100.0f) < 6.0f) generateTarget();
+    }
+
+    // PWM 제어 반영
+    float v_pwmPct = currentWindSpeed * 10.0f + 10.0f;
+    v_pwmPct *= gustIntensity;
+    v_pwmPct += thermalContribution * 5.0f;
+    applyFan(v_pwmPct);
+
+    // ✅ 풍속 히스토리 갱신 (순환 버퍼)
+    _updateWindHistory(currentWindSpeed);
+
+    // ✅ 차트 샘플링 (1Hz)
+    if (millis() - s_lastChartLogMs > 1000UL) {
+        if (s_chartBuffer.size() >= 120) s_chartBuffer.pop_front();
+
+        ST_ChartEntry v_e{};
+        v_e.timestamp        = millis();
+        v_e.wind_speed       = currentWindSpeed;
+        v_e.pwm_duty         = _pwm ? _pwm->P10_getDutyPercent() : 0.0f;
+        v_e.intensity        = userIntensity;
+        v_e.variability      = userVariability;
+        v_e.turbulence_sigma = turbSigma;
+        v_e.preset_index     = (uint8_t)A10_getPresetIndexByCode(presetCode);
+        v_e.gust_active      = gustActive;
+        v_e.thermal_active   = thermalActive;
+        s_chartBuffer.push_back(v_e);
+
+        s_lastChartLogMs = millis();
+    }
+}	
+
 
 	// ==================================================
 	// 해석 결과 적용: C10_resolveWindParams → 여기 호출
@@ -367,91 +364,46 @@ void toJson(JsonObject& p_obj) {
     p_obj["thermalPower"]  = thermalStrength;              
     p_obj["thermalRadius"] = thermalRadius;              
 }
-/*
-	void toJson(JsonDocument& p_doc) {
-    JsonObject o = p_doc["sim"].to<JsonObject>();
-    o["active"]        = active;
-    o["phase"]         = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
-    o["wind"]          = currentWindSpeed;
-    o["target"]        = targetWindSpeed;
-    o["gustActive"]    = gustActive;
-    o["thermalActive"] = thermalActive;
-    o["pwmDuty"]       = _pwm ? _pwm->P10_getDutyPercent() : 0.0f;  // 변경됨 ✅
 
-    o["presetCode"]    = presetCode;
-    o["styleCode"]     = styleCode;
-    o["intensity"]     = userIntensity;
-    o["variability"]   = userVariability;
-    o["gustFreq"]      = userGustFreq;
-    o["fan_limit"]     = fanLimitPct;
-    o["min_fan"]       = minFanPct;
-
-    o["turbulence_sigma"] = turbSigma;
-    o["turbulence_len"]   = turbLenScale;
-    o["thermal_strength"] = thermalStrength;
-    o["thermal_radius"]   = thermalRadius;
-}
-*/
 // ==================================================
 // 차트 데이터 JSON Export (/api/sim/chart)
 // ==================================================
-void toChartJson(JsonDocument& p_doc) {
-    // sim.chart 루트 생성
+void toChartJson(JsonDocument& p_doc, bool p_diffOnly = false) {
     JsonArray arr = p_doc["sim"]["chart"].to<JsonArray>();
-    static unsigned long s_lastSample = 0;
 
-    // ✅ 10초 간격 샘플링 (WebSocket 전송 최적화)
-    if (millis() - s_lastSample < 10000UL) return;
-    s_lastSample = millis();
+    // ✅ 10초 간격 전송 제한
+    if (millis() - s_lastChartSampleMs < 10000UL) return;
+    s_lastChartSampleMs = millis();
 
     if (s_chartBuffer.empty()) return;
 
-    const ST_ChartEntry& e = s_chartBuffer.back();
-    JsonObject jo = arr.add<JsonObject>();
-    jo["ts"]      = e.timestamp / 1000UL;
-    jo["wind"]    = e.wind_speed;
-    jo["pwm"]     = e.pwm_duty;
-    jo["gust"]    = e.gust_active;
-    jo["thermal"] = e.thermal_active;
-    jo["phase"]   = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
-    jo["avgWind"] = _getAvgWindFast();   // ✅ 병렬 history 기반 평균풍속 포함
-    jo["samples"] = historyCount;
-}
-/*
-	void toChartJson(JsonDocument& p_doc) {
-    // 비활성 상태에서도 최소 1개 데이터 유지
-    if (!active && s_chartBuffer.empty()) {
-        ST_ChartEntry v_e{};
-        v_e.timestamp  = millis();
-        v_e.wind_speed = 0.0f;
-        v_e.pwm_duty   = 0.0f;
-        v_e.intensity  = 0.0f;
-        v_e.variability = 0.0f;
-        v_e.turbulence_sigma = 0.0f;
-        v_e.preset_index = 0;
-        v_e.gust_active = false;
-        v_e.thermal_active = false;
-        s_chartBuffer.push_back(v_e);
-    }
-
-    // 루트키 "sim.chart"로 변경 ✅
-    JsonArray arr = p_doc["sim"]["chart"].to<JsonArray>();
-
-    for (size_t v_i = 0; v_i < s_chartBuffer.size(); v_i++) {
-        const ST_ChartEntry& e = s_chartBuffer[v_i];
+    if (p_diffOnly) {
+        // 마지막 1개 샘플만 전송
+        const ST_ChartEntry& e = s_chartBuffer.back();
         JsonObject jo = arr.add<JsonObject>();
-        jo["t"]  = e.timestamp / 1000UL;   // 초 단위 변환 ✅
-        jo["w"]  = e.wind_speed;
-        jo["p"]  = e.pwm_duty;
-        jo["i"]  = e.intensity;
-        jo["v"]  = e.variability;
-        jo["ts"] = e.turbulence_sigma;
-        jo["pi"] = e.preset_index;
-        jo["g"]  = e.gust_active;
-        jo["h"]  = e.thermal_active;
+        jo["ts"]      = e.timestamp / 1000UL;
+        jo["wind"]    = e.wind_speed;
+        jo["pwm"]     = e.pwm_duty;
+        jo["gust"]    = e.gust_active;
+        jo["thermal"] = e.thermal_active;
+        jo["phase"]   = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
+        jo["avgWind"] = _getAvgWindFast();
+        jo["samples"] = historyCount;
+        return;
     }
+
+    // 전체 chartBuffer 전송 (기본)
+    for (const auto& e : s_chartBuffer) {
+        JsonObject jo = arr.add<JsonObject>();
+        jo["ts"]      = e.timestamp / 1000UL;
+        jo["wind"]    = e.wind_speed;
+        jo["pwm"]     = e.pwm_duty;
+        jo["gust"]    = e.gust_active;
+        jo["thermal"] = e.thermal_active;
+    }
+
+    p_doc["sim"]["chartCount"] = (int)s_chartBuffer.size();
 }
-*/
 
 private:
 	CL_P10_PWM* _pwm = nullptr;
@@ -819,16 +771,16 @@ private:
 // --------------------------------------------------
 // ✅ 최근 풍속 이력 관리 (순환 버퍼 기반)
 // --------------------------------------------------
-void _pushWindSample(float p_speed) {
+void _updateWindHistory(float p_speed) {
     history[historyIndex] = p_speed;
     historyIndex = (historyIndex + 1) % HISTORY_SIZE;
     if (historyCount < HISTORY_SIZE) historyCount++;
 
-    // moving average 즉시 캐시 업데이트
     float v_sum = 0.0f;
     for (uint8_t i = 0; i < historyCount; i++) v_sum += history[i];
     avgWindCached = v_sum / (float)historyCount;
 }
+
 
 // --------------------------------------------------
 // ✅ 캐시된 평균 풍속 반환 (O(1))
@@ -844,3 +796,4 @@ float _getAvgWindFast() const {
 // ------------------------------------------------------
 std::deque<CL_S10_Simulation::ST_ChartEntry> CL_S10_Simulation::s_chartBuffer;
 unsigned long CL_S10_Simulation::s_lastChartLogMs = 0;
+unsigned long CL_S10_Simulation::s_lastChartSampleMs = 0;
