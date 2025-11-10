@@ -43,38 +43,37 @@
 #include <string.h>
 
 #include "A10_Const_014.h"
-#include "D10_Logger_014.h"
+#include "D10_Logger_016.h"
 
 // ------------------------------------------------------
 // 내부 상태 구조체
 // ------------------------------------------------------
 typedef struct {
-	bool     initialized;
-	bool     enabled;
-	int16_t  pin;
-	uint8_t  channel;
+	bool	 initialized;
+	bool	 enabled;
+	int16_t	 pin;
+	uint8_t	 channel;
 	uint32_t freq;
-	uint8_t  resolutionBits;
-	uint32_t maxDuty;      // (1<<resolutionBits)-1
-	float    dutyPercent;  // 0.0 ~ 100.0
+	uint8_t	 resolutionBits;
+	uint32_t maxDuty;	   // (1<<resolutionBits)-1
+	float	 dutyPercent;  // 0.0 ~ 100.0
 } ST_P10_PWMState_t;
-
 
 // ------------------------------------------------------
 // CL_P10_PWM
 // ------------------------------------------------------
 class CL_P10_PWM {
-public:
+   public:
 	CL_P10_PWM() {
 		memset(&_state, 0, sizeof(_state));
-		_state.pin            = -1;
-		_state.channel        = 0;
-		_state.freq           = 0;
+		_state.pin			  = -1;
+		_state.channel		  = 0;
+		_state.freq			  = 0;
 		_state.resolutionBits = 0;
-		_state.maxDuty        = 0;
-		_state.dutyPercent    = 0.0f;
-		_state.initialized    = false;
-		_state.enabled        = false;
+		_state.maxDuty		  = 0;
+		_state.dutyPercent	  = 0.0f;
+		_state.initialized	  = false;
+		_state.enabled		  = false;
 	}
 
 	// ==================================================
@@ -83,17 +82,17 @@ public:
 	// ==================================================
 	void begin(const ST_A10_SystemConfig& p_cfg) {
 		memset(&_state, 0, sizeof(_state));
-		_state.pin            = p_cfg.hw.fan_pwm.pin;
-		_state.channel        = (uint8_t)p_cfg.hw.fan_pwm.channel;
-		_state.freq           = p_cfg.hw.fan_pwm.freq;
+		_state.pin			  = p_cfg.hw.fan_pwm.pin;
+		_state.channel		  = (uint8_t)p_cfg.hw.fan_pwm.channel;
+		_state.freq			  = p_cfg.hw.fan_pwm.freq;
 		_state.resolutionBits = (uint8_t)p_cfg.hw.fan_pwm.res;
-		_state.dutyPercent    = 0.0f;
-		_state.enabled        = true;
-		_state.initialized    = false;
+		_state.dutyPercent	  = 0.0f;
+		_state.enabled		  = true;
+		_state.initialized	  = false;
 
 		if (_state.pin < 0) {
 			CL_D10_Logger::log(EN_L10_LOG_ERROR,
-				"[P10] invalid fan pin=%d", (int)_state.pin);
+							   "[P10] invalid fan pin=%d", (int)_state.pin);
 			return;
 		}
 
@@ -101,11 +100,10 @@ public:
 		bool v_ok1 = ledcSetup(_state.channel, _state.freq, _state.resolutionBits);
 		if (!v_ok1) {
 			CL_D10_Logger::log(EN_L10_LOG_ERROR,
-				"[P10] ledcSetup failed ch=%u freq=%lu res=%u",
-				(unsigned)_state.channel,
-				(unsigned long)_state.freq,
-				(unsigned)_state.resolutionBits
-			);
+							   "[P10] ledcSetup failed ch=%u freq=%lu res=%u",
+							   (unsigned)_state.channel,
+							   (unsigned long)_state.freq,
+							   (unsigned)_state.resolutionBits);
 			return;
 		}
 		ledcAttachPin(_state.pin, _state.channel);
@@ -113,19 +111,18 @@ public:
 		if (_state.resolutionBits >= 1 && _state.resolutionBits <= 20) {
 			_state.maxDuty = (1UL << _state.resolutionBits) - 1UL;
 		} else {
-			_state.maxDuty = 1023; // fallback
+			_state.maxDuty = 1023;	// fallback
 		}
 
 		_setRawDuty(0);
 		_state.initialized = true;
 
 		CL_D10_Logger::log(EN_L10_LOG_INFO,
-			"[P10] begin pin=%d ch=%u freq=%lu res=%u",
-			(int)_state.pin,
-			(unsigned)_state.channel,
-			(unsigned long)_state.freq,
-			(unsigned)_state.resolutionBits
-		);
+						   "[P10] begin pin=%d ch=%u freq=%lu res=%u",
+						   (int)_state.pin,
+						   (unsigned)_state.channel,
+						   (unsigned long)_state.freq,
+						   (unsigned)_state.resolutionBits);
 	}
 
 	// ==================================================
@@ -133,7 +130,8 @@ public:
 	// ==================================================
 	void setEnabled(bool p_enabled) {
 		_state.enabled = p_enabled;
-		if (!_state.initialized) return;
+		if (!_state.initialized)
+			return;
 
 		if (!p_enabled) {
 			_state.dutyPercent = 0.0f;
@@ -153,7 +151,8 @@ public:
 	// 듀티 설정 (0.0 ~ 100.0)
 	// ==================================================
 	void setDutyPercent(float p_percent) {
-		if (!_state.initialized) return;
+		if (!_state.initialized)
+			return;
 
 		// enable=false 인 경우 항상 0%
 		if (!_state.enabled) {
@@ -162,17 +161,22 @@ public:
 			return;
 		}
 
-		if (p_percent < 0.0f)  p_percent = 0.0f;
-		if (p_percent > 100.0f) p_percent = 100.0f;
+		if (p_percent < 0.0f)
+			p_percent = 0.0f;
+		if (p_percent > 100.0f)
+			p_percent = 100.0f;
 		_state.dutyPercent = p_percent;
 
 		// 실제 레졸루션 스케일링
 		float v_ratio = p_percent / 100.0f;
-		if (v_ratio < 0.0f) v_ratio = 0.0f;
-		if (v_ratio > 1.0f) v_ratio = 1.0f;
+		if (v_ratio < 0.0f)
+			v_ratio = 0.0f;
+		if (v_ratio > 1.0f)
+			v_ratio = 1.0f;
 
 		uint32_t v_raw = (uint32_t)(v_ratio * (float)_state.maxDuty + 0.5f);
-		if (v_raw > _state.maxDuty) v_raw = _state.maxDuty;
+		if (v_raw > _state.maxDuty)
+			v_raw = _state.maxDuty;
 
 		_setRawDuty(v_raw);
 	}
@@ -187,24 +191,40 @@ public:
 		return (_state.initialized) ? ledcRead(_state.channel) : 0;
 	}
 
-// --------------------------------------------------
+	// --------------------------------------------------
 	// 호환용 래퍼 (기존 P10_ 접두사 멤버 이름 유지)
 	//  - CT10 / S10 등 기존 코드와의 연동용
 	// --------------------------------------------------
-	void     P10_begin(const ST_A10_SystemConfig& p_cfg)      { begin(p_cfg); }
-	void     P10_setEnabled(bool p_enabled)                   { setEnabled(p_enabled); }
-	bool     P10_isEnabled() const                            { return isEnabled(); }
-	bool     P10_isInitialized() const                        { return isInitialized(); }
-	void     P10_setDutyPercent(float p_percent)              { setDutyPercent(p_percent); }
-	float    P10_getDutyPercent() const                       { return getDutyPercent(); }
-	uint32_t P10_getRawDuty() const                           { return getRawDuty(); }
+	void P10_begin(const ST_A10_SystemConfig& p_cfg) {
+		begin(p_cfg);
+	}
+	void P10_setEnabled(bool p_enabled) {
+		setEnabled(p_enabled);
+	}
+	bool P10_isEnabled() const {
+		return isEnabled();
+	}
+	bool P10_isInitialized() const {
+		return isInitialized();
+	}
+	void P10_setDutyPercent(float p_percent) {
+		setDutyPercent(p_percent);
+	}
+	float P10_getDutyPercent() const {
+		return getDutyPercent();
+	}
+	uint32_t P10_getRawDuty() const {
+		return getRawDuty();
+	}
 
-private:
+   private:
 	ST_P10_PWMState_t _state;
 
 	void _setRawDuty(uint32_t p_raw) {
-		if (!_state.initialized) return;
-		if (p_raw > _state.maxDuty) p_raw = _state.maxDuty;
+		if (!_state.initialized)
+			return;
+		if (p_raw > _state.maxDuty)
+			p_raw = _state.maxDuty;
 		ledcWrite(_state.channel, p_raw);
 	}
 };

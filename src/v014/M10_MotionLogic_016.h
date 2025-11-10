@@ -43,32 +43,33 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <string.h>
-#include "D10_Logger_014.h"
+
+#include "D10_Logger_016.h"
 
 // ------------------------------------------------------
 // 구조체 정의
 // ------------------------------------------------------
 typedef struct {
-    bool     enabled;
-    uint32_t hold_sec;
-    uint32_t lastDetected_ms;
-    bool     active;
+	bool	 enabled;
+	uint32_t hold_sec;
+	uint32_t lastDetected_ms;
+	bool	 active;
 } ST_M10_PIR_t;
 
 typedef struct {
-    bool     enabled;
-    int16_t  rssi_threshold;
-    uint32_t hold_sec;
-    uint32_t lastDetected_ms;
-    bool     active;
-    int16_t  last_rssi;
+	bool	 enabled;
+	int16_t	 rssi_threshold;
+	uint32_t hold_sec;
+	uint32_t lastDetected_ms;
+	bool	 active;
+	int16_t	 last_rssi;
 } ST_M10_BLE_t;
 
 typedef struct {
-    bool        active;
-    bool        pirActive;
-    bool        bleActive;
-    uint32_t    lastChange_ms;
+	bool	 active;
+	bool	 pirActive;
+	bool	 bleActive;
+	uint32_t lastChange_ms;
 } ST_M10_MotionState_t;
 
 // 콜백 타입 (상태 변경 시 통지용)
@@ -79,182 +80,185 @@ typedef void (*T_M10_OnChangeCallback_t)(const ST_M10_MotionState_t& p_state);
 // CL_M10_MotionLogic
 // ------------------------------------------------------
 class CL_M10_MotionLogic {
-public:
-    CL_M10_MotionLogic() {
-        memset(&_pir, 0, sizeof(_pir));
-        memset(&_ble, 0, sizeof(_ble));
-        memset(&_state, 0, sizeof(_state));
-        _onChange = nullptr;
-    }
+   public:
+	CL_M10_MotionLogic() {
+		memset(&_pir, 0, sizeof(_pir));
+		memset(&_ble, 0, sizeof(_ble));
+		memset(&_state, 0, sizeof(_state));
+		_onChange = nullptr;
+	}
 
-    // --------------------------------------------------
-    // JSON 로드 초기화 (cfg_system_xxx.json)
-    // --------------------------------------------------
-    bool loadFromJson(JsonDocument& p_doc) {
-        if (!p_doc["motion"].is<JsonObjectConst>()) return false;
-        JsonObjectConst v_m = p_doc["motion"].as<JsonObjectConst>();
+	// --------------------------------------------------
+	// JSON 로드 초기화 (cfg_system_xxx.json)
+	// --------------------------------------------------
+	bool loadFromJson(JsonDocument& p_doc) {
+		if (!p_doc["motion"].is<JsonObjectConst>())
+			return false;
+		JsonObjectConst v_m = p_doc["motion"].as<JsonObjectConst>();
 
-        _pir.enabled        = v_m["pir"]["enabled"]          | false;
-        _pir.hold_sec       = v_m["pir"]["hold_sec"]         | 20;
+		_pir.enabled  = v_m["pir"]["enabled"] | false;
+		_pir.hold_sec = v_m["pir"]["hold_sec"] | 20;
 
-        _ble.enabled        = v_m["ble"]["enabled"]          | false;
-        _ble.rssi_threshold = v_m["ble"]["rssi_threshold"]   | -70;
-        _ble.hold_sec       = v_m["ble"]["hold_sec"]         | 15;
+		_ble.enabled		= v_m["ble"]["enabled"] | false;
+		_ble.rssi_threshold = v_m["ble"]["rssi_threshold"] | -70;
+		_ble.hold_sec		= v_m["ble"]["hold_sec"] | 15;
 
-        memset(&_pir.lastDetected_ms, 0, sizeof(_pir.lastDetected_ms));
-        _pir.active = false;
+		memset(&_pir.lastDetected_ms, 0, sizeof(_pir.lastDetected_ms));
+		_pir.active = false;
 
-        memset(&_ble.lastDetected_ms, 0, sizeof(_ble.lastDetected_ms));
-        _ble.active   = false;
-        _ble.last_rssi = 0;
+		memset(&_ble.lastDetected_ms, 0, sizeof(_ble.lastDetected_ms));
+		_ble.active	   = false;
+		_ble.last_rssi = 0;
 
-        memset(&_state, 0, sizeof(_state));
+		memset(&_state, 0, sizeof(_state));
 
-        CL_D10_Logger::log(EN_L10_LOG_INFO,
-                           "[M10] loadFromJson pir=%d hold=%lu ble=%d rssi=%d hold=%lu",
-                           (int)_pir.enabled, (unsigned long)_pir.hold_sec,
-                           (int)_ble.enabled, (int)_ble.rssi_threshold,
-                           (unsigned long)_ble.hold_sec);
-        return true;
-    }
+		CL_D10_Logger::log(EN_L10_LOG_INFO,
+						   "[M10] loadFromJson pir=%d hold=%lu ble=%d rssi=%d hold=%lu",
+						   (int)_pir.enabled, (unsigned long)_pir.hold_sec,
+						   (int)_ble.enabled, (int)_ble.rssi_threshold,
+						   (unsigned long)_ble.hold_sec);
+		return true;
+	}
 
-    // --------------------------------------------------
-    // PIR 감지 이벤트
-    // --------------------------------------------------
-    void notifyPIRDetected() {
-        if (!_pir.enabled) return;
-        _pir.lastDetected_ms = millis();
-        _pir.active = true;
-    }
+	// --------------------------------------------------
+	// PIR 감지 이벤트
+	// --------------------------------------------------
+	void notifyPIRDetected() {
+		if (!_pir.enabled)
+			return;
+		_pir.lastDetected_ms = millis();
+		_pir.active			 = true;
+	}
 
-    // --------------------------------------------------
-    // BLE RSSI 입력 갱신
-    // --------------------------------------------------
-    void updateBLE_RSSI(int16_t p_rssi) {
-        if (!_ble.enabled) return;
+	// --------------------------------------------------
+	// BLE RSSI 입력 갱신
+	// --------------------------------------------------
+	void updateBLE_RSSI(int16_t p_rssi) {
+		if (!_ble.enabled)
+			return;
 
-        _ble.last_rssi = p_rssi;
-        if (p_rssi >= _ble.rssi_threshold) {
-            _ble.lastDetected_ms = millis();
-            _ble.active = true;
-        }
-    }
+		_ble.last_rssi = p_rssi;
+		if (p_rssi >= _ble.rssi_threshold) {
+			_ble.lastDetected_ms = millis();
+			_ble.active			 = true;
+		}
+	}
 
-    // --------------------------------------------------
-    // tick 루프 (CT10에서 주기 호출)
-    // --------------------------------------------------
-    void tick() {
-        uint32_t v_now = millis();
+	// --------------------------------------------------
+	// tick 루프 (CT10에서 주기 호출)
+	// --------------------------------------------------
+	void tick() {
+		uint32_t v_now = millis();
 
-        // PIR timeout
-        if (_pir.enabled && _pir.active) {
-            uint32_t v_pirElapsed = v_now - _pir.lastDetected_ms;
-            if (v_pirElapsed > _pir.hold_sec * 1000UL) {
-                _pir.active = false;
-            }
-        }
+		// PIR timeout
+		if (_pir.enabled && _pir.active) {
+			uint32_t v_pirElapsed = v_now - _pir.lastDetected_ms;
+			if (v_pirElapsed > _pir.hold_sec * 1000UL) {
+				_pir.active = false;
+			}
+		}
 
-        // BLE timeout
-        if (_ble.enabled && _ble.active) {
-            uint32_t v_bleElapsed = v_now - _ble.lastDetected_ms;
-            if (v_bleElapsed > _ble.hold_sec * 1000UL) {
-                _ble.active = false;
-            }
-        }
+		// BLE timeout
+		if (_ble.enabled && _ble.active) {
+			uint32_t v_bleElapsed = v_now - _ble.lastDetected_ms;
+			if (v_bleElapsed > _ble.hold_sec * 1000UL) {
+				_ble.active = false;
+			}
+		}
 
-        // 상태 변화 감지
-        bool v_activeNew   = (_pir.active || _ble.active);
-        bool v_pirActive   = _pir.active;
-        bool v_bleActive   = _ble.active;
+		// 상태 변화 감지
+		bool v_activeNew = (_pir.active || _ble.active);
+		bool v_pirActive = _pir.active;
+		bool v_bleActive = _ble.active;
 
-        if (v_activeNew != _state.active ||
-            v_pirActive != _state.pirActive ||
-            v_bleActive != _state.bleActive) {
+		if (v_activeNew != _state.active ||
+			v_pirActive != _state.pirActive ||
+			v_bleActive != _state.bleActive) {
+			_state.active		 = v_activeNew;
+			_state.pirActive	 = v_pirActive;
+			_state.bleActive	 = v_bleActive;
+			_state.lastChange_ms = v_now;
 
-            _state.active       = v_activeNew;
-            _state.pirActive    = v_pirActive;
-            _state.bleActive    = v_bleActive;
-            _state.lastChange_ms = v_now;
+			CL_D10_Logger::log(EN_L10_LOG_DEBUG,
+							   "[M10] motionActive=%d (PIR=%d BLE=%d)",
+							   (int)_state.active,
+							   (int)_state.pirActive,
+							   (int)_state.bleActive);
 
-            CL_D10_Logger::log(EN_L10_LOG_DEBUG,
-                               "[M10] motionActive=%d (PIR=%d BLE=%d)",
-                               (int)_state.active,
-                               (int)_state.pirActive,
-                               (int)_state.bleActive);
+			// 외부 연동용 콜백 (CT10 등에서 diffOnly 푸시 활용)
+			if (_onChange) {
+				_onChange(_state);
+			}
+		}
+	}
 
-            // 외부 연동용 콜백 (CT10 등에서 diffOnly 푸시 활용)
-            if (_onChange) {
-                _onChange(_state);
-            }
-        }
-    }
+	// --------------------------------------------------
+	// 상태 직렬화
+	// --------------------------------------------------
+	void toJson(JsonDocument& p_doc) const {
+		JsonObject v_o	 = p_doc["motion"].to<JsonObject>();
+		v_o["active"]	 = isActive();
+		v_o["pirActive"] = _state.pirActive;
+		v_o["bleActive"] = _state.bleActive;
+		v_o["pirHold"]	 = _pir.hold_sec;
+		v_o["bleHold"]	 = _ble.hold_sec;
+		v_o["bleRssi"]	 = _ble.last_rssi;
+		// v_o["lastChange"] = _state.lastChange_ms;
+		unsigned long v_now		= millis();
+		uint32_t	  v_lastSec = (lastActiveMs == 0) ? 0 : (uint32_t)((v_now - lastActiveMs) / 1000UL);
+		v_m["lastActiveSec"]	= v_lastSec;
 
-    // --------------------------------------------------
-    // 상태 직렬화
-    // --------------------------------------------------
-    void toJson(JsonDocument& p_doc) const {
-        JsonObject v_o = p_doc["motion"].to<JsonObject>();
-        v_o["active"]     = isActive();
-        v_o["pirActive"]  = _state.pirActive;
-        v_o["bleActive"]  = _state.bleActive;
-        v_o["pirHold"]    = _pir.hold_sec;
-        v_o["bleHold"]    = _ble.hold_sec;
-        v_o["bleRssi"]    = _ble.last_rssi;
-        //v_o["lastChange"] = _state.lastChange_ms;
-        unsigned long v_now = millis();
-        uint32_t v_lastSec  = (lastActiveMs == 0) ? 0 : (uint32_t)((v_now - lastActiveMs) / 1000UL);
-        v_m["lastActiveSec"] = v_lastSec;
+		// 남은 hold 시간 (초 단위)
+		uint32_t v_now		 = millis();
+		uint32_t v_pirRemain = 0;
+		uint32_t v_bleRemain = 0;
 
-        // 남은 hold 시간 (초 단위)
-        uint32_t v_now = millis();
-        uint32_t v_pirRemain = 0;
-        uint32_t v_bleRemain = 0;
+		if (_pir.enabled && _pir.active) {
+			uint32_t v_pirElapsed = v_now - _pir.lastDetected_ms;
+			if (v_pirElapsed < _pir.hold_sec * 1000UL) {
+				v_pirRemain = (_pir.hold_sec * 1000UL - v_pirElapsed) / 1000UL;
+			}
+		}
 
-        if (_pir.enabled && _pir.active) {
-            uint32_t v_pirElapsed = v_now - _pir.lastDetected_ms;
-            if (v_pirElapsed < _pir.hold_sec * 1000UL) {
-                v_pirRemain = (_pir.hold_sec * 1000UL - v_pirElapsed) / 1000UL;
-            }
-        }
+		if (_ble.enabled && _ble.active) {
+			uint32_t v_bleElapsed = v_now - _ble.lastDetected_ms;
+			if (v_bleElapsed < _ble.hold_sec * 1000UL) {
+				v_bleRemain = (_ble.hold_sec * 1000UL - v_bleElapsed) / 1000UL;
+			}
+		}
 
-        if (_ble.enabled && _ble.active) {
-            uint32_t v_bleElapsed = v_now - _ble.lastDetected_ms;
-            if (v_bleElapsed < _ble.hold_sec * 1000UL) {
-                v_bleRemain = (_ble.hold_sec * 1000UL - v_bleElapsed) / 1000UL;
-            }
-        }
+		v_o["pirHoldRemain"] = v_pirRemain;
+		v_o["bleHoldRemain"] = v_bleRemain;
+	}
 
-        v_o["pirHoldRemain"] = v_pirRemain;
-        v_o["bleHoldRemain"] = v_bleRemain;
-    }
+	// --------------------------------------------------
+	// 외부에서 활성여부 확인
+	// --------------------------------------------------
+	bool isActive() {
+		unsigned long v_now = millis();
+		// hold_sec 로직은 외부 config 사용 (예: g_A10_config_root.motion)
+		uint32_t v_hold = 0;
+		if (g_A10_config_root.motion) {
+			v_hold = (uint32_t)g_A10_config_root.motion->pir.hold_sec;
+		}
+		if (pirActive || bleActive)
+			return true;
+		if (v_hold > 0 && (v_now - lastActiveMs) < (v_hold * 1000UL))
+			return true;
+		return false;
+	}
 
-    // --------------------------------------------------
-    // 외부에서 활성여부 확인
-    // --------------------------------------------------
-    bool isActive() {
-        unsigned long v_now = millis();
-        // hold_sec 로직은 외부 config 사용 (예: g_A10_config_root.motion)
-        uint32_t v_hold = 0;
-        if (g_A10_config_root.motion) {
-            v_hold = (uint32_t)g_A10_config_root.motion->pir.hold_sec;
-        }
-        if (pirActive || bleActive) return true;
-        if (v_hold > 0 && (v_now - lastActiveMs) < (v_hold * 1000UL)) return true;
-        return false;
-    }
+	// --------------------------------------------------
+	// 상태 변경 콜백 등록
+	//  - CT10 등에서 등록하여 상태 변경 시 diffOnly 브로드캐스트 트리거
+	// --------------------------------------------------
+	void setOnChangeCallback(T_M10_OnChangeCallback_t p_cb) {
+		_onChange = p_cb;
+	}
 
-    // --------------------------------------------------
-    // 상태 변경 콜백 등록
-    //  - CT10 등에서 등록하여 상태 변경 시 diffOnly 브로드캐스트 트리거
-    // --------------------------------------------------
-    void setOnChangeCallback(T_M10_OnChangeCallback_t p_cb) {
-        _onChange = p_cb;
-    }
-
-private:
-    ST_M10_PIR_t             _pir;
-    ST_M10_BLE_t             _ble;
-    ST_M10_MotionState_t     _state;
-    T_M10_OnChangeCallback_t _onChange;
+   private:
+	ST_M10_PIR_t			 _pir;
+	ST_M10_BLE_t			 _ble;
+	ST_M10_MotionState_t	 _state;
+	T_M10_OnChangeCallback_t _onChange;
 };
-

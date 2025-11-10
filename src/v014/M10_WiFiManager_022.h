@@ -47,41 +47,45 @@
 #include <time.h>
 
 #include "A10_Const_014.h"
-#include "D10_Logger_014.h"
+#include "D10_Logger_016.h"
 
 class CL_M10_WiFiManager {
-public:
+   public:
 	// --------------------------------------------------
 	// Static 상태 변수
 	// --------------------------------------------------
-	static bool        s_staConnected;
+	static bool		   s_staConnected;
 	static wl_status_t s_lastStaStatus;
-	static bool        s_timeSynced;
+	static bool		   s_timeSynced;
 
-public:
+   public:
 	// --------------------------------------------------
 	// Wi-Fi 이벤트 등록
 	// --------------------------------------------------
 	static void M10_attachWiFiEvents() {
 		static bool v_attached = false;
-		if (v_attached) return;
+		if (v_attached)
+			return;
 
 		WiFi.onEvent([](arduino_event_id_t, arduino_event_info_t) {
 			CL_D10_Logger::log(EN_L10_LOG_INFO, "[WiFi] STA start");
-		}, ARDUINO_EVENT_WIFI_STA_START);
+		},
+					 ARDUINO_EVENT_WIFI_STA_START);
 
 		WiFi.onEvent([](arduino_event_id_t, arduino_event_info_t) {
 			CL_D10_Logger::log(EN_L10_LOG_INFO, "[WiFi] STA got IP: %s",
-			                   WiFi.localIP().toString().c_str());
-			s_staConnected  = true;
+							   WiFi.localIP().toString().c_str());
+			s_staConnected	= true;
 			s_lastStaStatus = WL_CONNECTED;
-		}, ARDUINO_EVENT_WIFI_STA_GOT_IP);
+		},
+					 ARDUINO_EVENT_WIFI_STA_GOT_IP);
 
 		WiFi.onEvent([](arduino_event_id_t, arduino_event_info_t) {
 			CL_D10_Logger::log(EN_L10_LOG_WARN, "[WiFi] STA disconnected");
-			s_staConnected  = false;
+			s_staConnected	= false;
 			s_lastStaStatus = WL_DISCONNECTED;
-		}, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
+		},
+					 ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
 
 		v_attached = true;
 	}
@@ -89,11 +93,11 @@ public:
 	// --------------------------------------------------
 	// Wi-Fi 초기화
 	// --------------------------------------------------
-	static bool init(const ST_A10_WifiConfig& p_cfg_wifi,
-	                 const ST_A10_SystemConfig& p_cfg_system,
-	                 WiFiMulti& p_multi,
-	                 uint8_t p_apChannel = 1,
-	                 uint8_t p_staMaxTries = 15) {
+	static bool init(const ST_A10_WifiConfig&	p_cfg_wifi,
+					 const ST_A10_SystemConfig& p_cfg_system,
+					 WiFiMulti&					p_multi,
+					 uint8_t					p_apChannel	  = 1,
+					 uint8_t					p_staMaxTries = 15) {
 		M10_attachWiFiEvents();
 
 		WiFi.persistent(false);
@@ -102,15 +106,15 @@ public:
 
 		char v_hostname[32];
 		snprintf(v_hostname, sizeof(v_hostname), "NatureWind-%04X",
-		         (uint16_t)(esp_random() & 0xFFFF));
+				 (uint16_t)(esp_random() & 0xFFFF));
 		WiFi.setHostname(v_hostname);
 
 		switch (p_cfg_wifi.wifiMode) {
-			case 0: // AP
+			case 0:	 // AP
 				WiFi.mode(WIFI_AP);
 				return M10_startAP(p_cfg_wifi, p_apChannel);
 
-			case 1: { // STA
+			case 1: {  // STA
 				WiFi.mode(WIFI_STA);
 				bool v_ok = M10_startSTA(p_cfg_wifi, p_multi, p_staMaxTries);
 				if (!v_ok) {
@@ -125,7 +129,7 @@ public:
 			}
 
 			case 2:
-			default: { // AP+STA
+			default: {	// AP+STA
 				WiFi.mode(WIFI_AP_STA);
 				M10_startAP(p_cfg_wifi, p_apChannel);
 				bool v_ok = M10_startSTA(p_cfg_wifi, p_multi, p_staMaxTries);
@@ -155,8 +159,8 @@ public:
 
 		bool v_ok = WiFi.softAP(p_cfg_wifi.ap.ssid, v_pass, p_channel, false, 4);
 		CL_D10_Logger::log(v_ok ? EN_L10_LOG_INFO : EN_L10_LOG_ERROR,
-		                   v_ok ? "[WiFi] AP started (%s)" : "[WiFi] AP start ERR",
-		                   WiFi.softAPIP().toString().c_str());
+						   v_ok ? "[WiFi] AP started (%s)" : "[WiFi] AP start ERR",
+						   WiFi.softAPIP().toString().c_str());
 		return v_ok;
 	}
 
@@ -164,9 +168,9 @@ public:
 	// STA 모드 시작
 	// --------------------------------------------------
 	static bool M10_startSTA(const ST_A10_WifiConfig& p_cfg_wifi,
-	                         WiFiMulti& p_multi,
-	                         uint8_t p_maxTries) {
-		s_staConnected  = false;
+							 WiFiMulti&				  p_multi,
+							 uint8_t				  p_maxTries) {
+		s_staConnected	= false;
 		s_lastStaStatus = WL_IDLE_STATUS;
 
 		if (p_cfg_wifi.sta_count == 0) {
@@ -177,30 +181,32 @@ public:
 		for (uint8_t v_i = 0; v_i < p_cfg_wifi.sta_count; v_i++) {
 			const char* v_ssid = p_cfg_wifi.sta[v_i].ssid;
 			const char* v_pass = p_cfg_wifi.sta[v_i].pass;
-			if (v_ssid[0] == '\0') continue;
+			if (v_ssid[0] == '\0')
+				continue;
 
 			p_multi.addAP(v_ssid, v_pass);
 			CL_D10_Logger::log(EN_L10_LOG_INFO, "[WiFi] STA candidate: %s", v_ssid);
 		}
 
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "[WiFi] STA connecting...");
-		uint8_t  v_try  = 0;
+		uint8_t	 v_try	= 0;
 		uint32_t v_wait = 500;
 
 		while (WiFi.status() != WL_CONNECTED && v_try < p_maxTries) {
-			if (p_multi.run(2000) == WL_CONNECTED) break;
+			if (p_multi.run(2000) == WL_CONNECTED)
+				break;
 			v_try++;
 			delay(v_wait);
 			v_wait = (v_wait < 4000) ? (v_wait * 2) : 4000;
 		}
 
 		if (WiFi.status() == WL_CONNECTED) {
-			s_staConnected  = true;
+			s_staConnected	= true;
 			s_lastStaStatus = WL_CONNECTED;
 			CL_D10_Logger::log(EN_L10_LOG_INFO,
-			                   "[WiFi] STA ok: %s (%s)",
-			                   WiFi.SSID().c_str(),
-			                   WiFi.localIP().toString().c_str());
+							   "[WiFi] STA ok: %s (%s)",
+							   WiFi.SSID().c_str(),
+							   WiFi.localIP().toString().c_str());
 			return true;
 		}
 
@@ -211,9 +217,10 @@ public:
 	// --------------------------------------------------
 	// NTP 동기화
 	// --------------------------------------------------
-	static void M10_syncTimeIfNeeded(const ST_A10_WifiConfig& p_cfg_wifi,
-	                                 const ST_A10_SystemConfig& p_cfg_system) {
-		if (s_timeSynced || !s_staConnected) return;
+	static void M10_syncTimeIfNeeded(const ST_A10_WifiConfig&	p_cfg_wifi,
+									 const ST_A10_SystemConfig& p_cfg_system) {
+		if (s_timeSynced || !s_staConnected)
+			return;
 
 		const char* v_ntp = p_cfg_system.time.ntp_server;
 		const char* v_tz  = p_cfg_system.time.timezone;
@@ -241,13 +248,13 @@ public:
 	// Wi-Fi 상태 JSON
 	// --------------------------------------------------
 	static void M10_getWifiStateJson(JsonDocument& p_doc) {
-		JsonObject v_o = p_doc["wifi"]["state"].to<JsonObject>();
-		v_o["mode"]       = (int)WiFi.getMode();
-		v_o["status"]     = M10_getStaStatusString();
-		v_o["ssid"]       = WiFi.SSID();
-		v_o["ip"]         = WiFi.localIP().toString();
-		v_o["mac"]        = WiFi.macAddress();
-		v_o["rssi"]       = WiFi.RSSI();
+		JsonObject v_o	  = p_doc["wifi"]["state"].to<JsonObject>();
+		v_o["mode"]		  = (int)WiFi.getMode();
+		v_o["status"]	  = M10_getStaStatusString();
+		v_o["ssid"]		  = WiFi.SSID();
+		v_o["ip"]		  = WiFi.localIP().toString();
+		v_o["mac"]		  = WiFi.macAddress();
+		v_o["rssi"]		  = WiFi.RSSI();
 		v_o["connected"]  = M10_isStaConnected();
 		v_o["timeSynced"] = s_timeSynced;
 	}
@@ -256,16 +263,16 @@ public:
 	// 네트워크 스캔 JSON
 	// --------------------------------------------------
 	static void M10_scanNetworksToJson(JsonDocument& p_doc) {
-		int v_found = WiFi.scanNetworks(false, true);
-		JsonArray v_arr = p_doc["wifi"]["scan"].to<JsonArray>();
+		int		  v_found = WiFi.scanNetworks(false, true);
+		JsonArray v_arr	  = p_doc["wifi"]["scan"].to<JsonArray>();
 
 		for (int v_i = 0; v_i < v_found; v_i++) {
 			JsonObject v_o = v_arr.add<JsonObject>();
-			v_o["ssid"]  = WiFi.SSID(v_i);
-			v_o["rssi"]  = WiFi.RSSI(v_i);
-			v_o["chan"]  = WiFi.channel(v_i);
-			v_o["bssid"] = WiFi.BSSIDstr(v_i);
-			v_o["enc"]   = _encTypeToString(WiFi.encryptionType(v_i));
+			v_o["ssid"]	   = WiFi.SSID(v_i);
+			v_o["rssi"]	   = WiFi.RSSI(v_i);
+			v_o["chan"]	   = WiFi.channel(v_i);
+			v_o["bssid"]   = WiFi.BSSIDstr(v_i);
+			v_o["enc"]	   = _encTypeToString(WiFi.encryptionType(v_i));
 		}
 		WiFi.scanDelete();
 	}
@@ -279,26 +286,40 @@ public:
 
 	static const char* M10_getStaStatusString() {
 		switch (WiFi.status()) {
-			case WL_CONNECTED:       return "CONNECTED";
-			case WL_NO_SSID_AVAIL:   return "NO_SSID";
-			case WL_CONNECT_FAILED:  return "FAILED";
-			case WL_IDLE_STATUS:     return "IDLE";
-			case WL_DISCONNECTED:    return "DISCONNECTED";
-			default:                 return "UNKNOWN";
+			case WL_CONNECTED:
+				return "CONNECTED";
+			case WL_NO_SSID_AVAIL:
+				return "NO_SSID";
+			case WL_CONNECT_FAILED:
+				return "FAILED";
+			case WL_IDLE_STATUS:
+				return "IDLE";
+			case WL_DISCONNECTED:
+				return "DISCONNECTED";
+			default:
+				return "UNKNOWN";
 		}
 	}
 
-private:
+   private:
 	static const char* _encTypeToString(wifi_auth_mode_t p_mode) {
 		switch (p_mode) {
-			case WIFI_AUTH_OPEN:           return "OPEN";
-			case WIFI_AUTH_WEP:            return "WEP";
-			case WIFI_AUTH_WPA_PSK:        return "WPA_PSK";
-			case WIFI_AUTH_WPA2_PSK:       return "WPA2_PSK";
-			case WIFI_AUTH_WPA_WPA2_PSK:   return "WPA_WPA2_PSK";
-			case WIFI_AUTH_WPA3_PSK:       return "WPA3_PSK";
-			case WIFI_AUTH_WPA2_WPA3_PSK:  return "WPA2_WPA3_PSK";
-			default:                       return "UNKNOWN";
+			case WIFI_AUTH_OPEN:
+				return "OPEN";
+			case WIFI_AUTH_WEP:
+				return "WEP";
+			case WIFI_AUTH_WPA_PSK:
+				return "WPA_PSK";
+			case WIFI_AUTH_WPA2_PSK:
+				return "WPA2_PSK";
+			case WIFI_AUTH_WPA_WPA2_PSK:
+				return "WPA_WPA2_PSK";
+			case WIFI_AUTH_WPA3_PSK:
+				return "WPA3_PSK";
+			case WIFI_AUTH_WPA2_WPA3_PSK:
+				return "WPA2_WPA3_PSK";
+			default:
+				return "UNKNOWN";
 		}
 	}
 };
@@ -306,7 +327,6 @@ private:
 // --------------------------------------------------
 // Static Member 정의
 // --------------------------------------------------
-bool        CL_M10_WiFiManager::s_staConnected  = false;
+bool		CL_M10_WiFiManager::s_staConnected	= false;
 wl_status_t CL_M10_WiFiManager::s_lastStaStatus = WL_IDLE_STATUS;
-bool        CL_M10_WiFiManager::s_timeSynced    = false;
-
+bool		CL_M10_WiFiManager::s_timeSynced	= false;

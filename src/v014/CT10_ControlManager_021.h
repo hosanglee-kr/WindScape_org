@@ -7,7 +7,7 @@
  * ------------------------------------------------------
  * 기능 요약:
  *  - Schedule / UserProfile / Manual Override 기반 풍속 제어
- *  - WindDict 기반 해석 (C10_resolveWindParams) 후 S10.applyResolvedWind 연동
+ *  - WindDict 기반 해석 (resolveWindParams) 후 S10.applyResolvedWind 연동
  *  - PWM(P10) / Simulation(S10) 통합 제어
  *  - Motion (PIR / BLE) 및 AutoOff 조건 훅 제공
  *  - Web UI / 버튼에서 Profile 선택, Override 즉시 반영
@@ -50,10 +50,10 @@
 #include <string.h>
 
 #include "A10_Const_014.h"
-#include "C10_ConfigManager_020.h"
+#include "C10_ConfigManager_021.h"
 #include "S10_Simulation_018.h"
 #include "P10_PWM_ctrl_014.h"
-#include "D10_Logger_015.h"
+#include "D10_Logger_016.h"
 #include "M10_MotionLogic_016.h"
 
 
@@ -149,9 +149,9 @@ public:
         instance().stopOverride();
     }
 
-    // Config 전체 재로드 (C10_loadAll 사용)
+    // Config 전체 재로드 (loadAll 사용)
     static bool reloadAll() {
-        bool v_ok = CL_C10_ConfigManager::C10_loadAll(g_A10_config_root);
+        bool v_ok = CL_C10_ConfigManager::loadAll(g_A10_config_root);
         if (!v_ok) return false;
 
         CL_CT10_ControlManager& v_inst = instance();
@@ -316,7 +316,7 @@ public:
 
         ST_A10_ResolvedWind_t v_resolved;
         memset(&v_resolved, 0, sizeof(v_resolved));
-        bool v_ok = CL_C10_ConfigManager::C10_resolveWindParams(
+        bool v_ok = CL_C10_ConfigManager::resolveWindParams(
                         *g_A10_config_root.windDict,
                         p_presetCode,
                         p_styleCode,
@@ -817,7 +817,7 @@ private:
         ST_A10_ResolvedWind_t v_res;
         memset(&v_res, 0, sizeof(v_res));
 
-        bool v_ok = CL_C10_ConfigManager::C10_resolveWindParams(
+        bool v_ok = CL_C10_ConfigManager::resolveWindParams(
                         *g_A10_config_root.windDict,
                         p_seg.presetCode,
                         p_seg.styleCode,
