@@ -584,6 +584,10 @@ private:
         if (overrideState.endMs != 0 && v_now >= overrideState.endMs) {
             CL_D10_Logger::log(EN_L10_LOG_INFO, "[CT10] Override timeout");
             memset(&overrideState, 0, sizeof(overrideState));
+
+			_broadcastState();        // ✅ 상태 변경 브로드캐스트
+            _maybeBroadcastMetrics(); // ✅ 즉시 메트릭 갱신 (선택)
+            markDirty("state");       // ✅ Dirty 플래그 표시 (diffOnly 연동용)
             return false;
         }
 
@@ -636,6 +640,10 @@ private:
             runSource        = EN_CT10_RUN_NONE;
             curProfileIndex  = -1;
             CL_D10_Logger::log(EN_L10_LOG_INFO, "[CT10] UserProfile AutoOff stop");
+			
+			_broadcastState();        // ✅ 상태 변경 브로드캐스트
+            _maybeBroadcastMetrics(); // ✅ 즉시 메트릭 갱신 (선택)
+            markDirty("state");       // ✅ Dirty 플래그 표시 (diffOnly 연동용)
             return true;
         }
 
@@ -685,6 +693,9 @@ private:
             runSource        = EN_CT10_RUN_NONE;
             curScheduleIndex = -1;
             CL_D10_Logger::log(EN_L10_LOG_INFO, "[CT10] Schedule AutoOff stop");
+			_broadcastState();        // ✅ 상태 변경 브로드캐스트
+            _maybeBroadcastMetrics(); // ✅ 즉시 메트릭 갱신 (선택)
+            markDirty("state");       // ✅ Dirty 플래그 표시 (diffOnly 연동용)
             return true;
         }
 
