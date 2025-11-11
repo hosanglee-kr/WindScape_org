@@ -716,9 +716,32 @@ inline int8_t A10_getPresetIndexByCode(const char* code) {
     return -1;
 }
 
-// windDict 탐색
-inline int16_t findPresetIndexByCode(const ST_A10_WindProfileDict_t& dict, const char* code);
-inline int16_t findStyleIndexByCode(const ST_A10_WindProfileDict_t& dict, const char* code);
+// ------------------------------------------------------
+// WindProfileDict 검색 유틸리티
+// ------------------------------------------------------
+inline int16_t A10_findPresetIndexByCode(
+    const ST_A10_WindProfileDict_t& p_dict,
+    const char* p_code) {
+    if (!p_code || !p_code[0]) return -1;
+    for (uint8_t v_i = 0; v_i < p_dict.preset_count; v_i++) {
+        if (strcasecmp(p_dict.presets[v_i].code, p_code) == 0)
+            return (int16_t)v_i;
+    }
+    return -1;
+}
+
+inline int16_t A10_findStyleIndexByCode(
+    const ST_A10_WindProfileDict_t& p_dict,
+    const char* p_code) {
+    if (!p_code || !p_code[0]) return -1;
+    for (uint8_t v_i = 0; v_i < p_dict.style_count; v_i++) {
+        if (strcasecmp(p_dict.styles[v_i].code, p_code) == 0)
+            return (int16_t)v_i;
+    }
+    return -1;
+}
+
+/*
 // 해석 유틸: preset × style × adjust → ResolvedWind
 bool resolveWindParams(
 	const ST_A10_WindProfileDict_t& dict,
@@ -727,3 +750,4 @@ bool resolveWindParams(
 	const ST_A10_AdjustDelta_t*     adj,
 	ST_A10_ResolvedWind_t&          outResolved
 );
+*/
