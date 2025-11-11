@@ -58,7 +58,14 @@
 #include "S20_WindSolver_021.h"
 
 
-#include "W10_WebAPI_IF_020.h"
+// 기존 CL_W10_WebAPI::broadcast... 호출 제거
+extern void SC10_broadcastState(ArduinoJson::JsonDocument& doc, bool diffOnly);
+extern void SC10_broadcastChart(ArduinoJson::JsonDocument& doc, bool diffOnly);
+extern void SC10_broadcastMetrics(ArduinoJson::JsonDocument& doc, bool diffOnly);
+
+// ...
+// 사용처는 이렇게 교체
+SC10_broadcastChart(v_doc, true);
 // forward declaration으로 순환참조 방지
 
 // ✅ 전방 선언으로 순환참조 방지
