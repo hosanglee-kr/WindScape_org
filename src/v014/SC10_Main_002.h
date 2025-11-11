@@ -48,6 +48,10 @@ void SC10_broadcastMetrics(JsonDocument& doc, bool diffOnly) {
     CL_W10_WebAPI::broadcastMetrics(doc, diffOnly);
 }
 
+void SC10_markDirty(const char* key) {
+    CL_CT10_ControlManager::instance().markDirty(key);
+}
+
 AsyncWebServer		   g_SC10_server(80);
 WiFiMulti			   g_SC10_wifiMulti;
 CL_CT10_ControlManager g_SC10_control;
