@@ -529,7 +529,8 @@ class CL_W10_WebAPI {
 							v_seg.segNo       = v_jseg["segNo"]       | 0;
 							v_seg.on_minutes  = v_jseg["on_minutes"]  | 0;
 							v_seg.off_minutes = v_jseg["off_minutes"] | 0;
-							strlcpy(v_seg.mode, v_jseg["mode"] | "PRESET", sizeof(v_seg.mode));
+							v_seg.mode = A10_modeFromString(v_jseg["mode"] | "PRESET");
+							// strlcpy(v_seg.mode, v_jseg["mode"] | "PRESET", sizeof(v_seg.mode));
 							strlcpy(v_seg.presetCode, v_jseg["presetCode"] | "", sizeof(v_seg.presetCode));
 							strlcpy(v_seg.styleCode,  v_jseg["styleCode"]  | "", sizeof(v_seg.styleCode));
 
@@ -641,7 +642,8 @@ class CL_W10_WebAPI {
 							v_seg.segNo       = v_jseg["segNo"]       | 0;
 							v_seg.on_minutes  = v_jseg["on_minutes"]  | 0;
 							v_seg.off_minutes = v_jseg["off_minutes"] | 0;
-							strlcpy(v_seg.mode, v_jseg["mode"] | "PRESET", sizeof(v_seg.mode));
+							v_seg.mode = A10_modeFromString(v_jseg["mode"] | "PRESET");
+							//strlcpy(v_seg.mode, v_jseg["mode"] | "PRESET", sizeof(v_seg.mode));
 							strlcpy(v_seg.presetCode, v_jseg["presetCode"] | "", sizeof(v_seg.presetCode));
 							strlcpy(v_seg.styleCode,  v_jseg["styleCode"]  | "", sizeof(v_seg.styleCode));
 
