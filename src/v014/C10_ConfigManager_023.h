@@ -1117,6 +1117,7 @@ class CL_C10_ConfigManager {
 	/* =====================================================
 	 * Wind 해석 유틸
 	 * ===================================================== */
+/*
 	static int16_t findPresetIndexByCode(const ST_A10_WindProfileDict_t& p_dict,
 										 const char*					   p_code) {
 		if (!p_code || !p_code[0])
@@ -1200,6 +1201,7 @@ class CL_C10_ConfigManager {
 
 		return true;
 	}
+	*/
 
 	/* =====================================================
 	 * Lazy-Load 전체 로드 / 해제 / 저장 / Export
