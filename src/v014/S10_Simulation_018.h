@@ -257,7 +257,7 @@ class CL_S10_Simulation {
 			o["target"]	   = targetWindSpeed;
 			o["samples"]   = historyCount;
 			o["delta"]	   = v_delta;
-			CL_W10_WebAPI::broadcastChart(v_doc, true);	 // ✅ diffOnly 모드
+			SC10_broadcastChart(v_doc, true);	 // ✅ diffOnly 모드
 
 			CL_CT10_ControlManager::instance().markDirty("chart");	// ✅ Dirty 표시
 		}
