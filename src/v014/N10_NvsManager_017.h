@@ -121,6 +121,14 @@ class CL_N10_NvsManager {
 		s_initialized = false;
 	}
 
+    static void N10_clearAll() {
+        preferences.begin("SNW_RUN", false);
+        preferences.clear();     // 모든 key 삭제
+        preferences.end();
+
+        CL_D10_Logger::log(EN_L10_LOG_WARN, "[N10] NVS cleared (factory reset)");
+    }
+
 	// ==================================================
 	// Dirty 플래그 관리
 	// ==================================================
