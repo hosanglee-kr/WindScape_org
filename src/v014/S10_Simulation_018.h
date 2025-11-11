@@ -62,6 +62,7 @@
 extern void SC10_broadcastState(ArduinoJson::JsonDocument& doc, bool diffOnly);
 extern void SC10_broadcastChart(ArduinoJson::JsonDocument& doc, bool diffOnly);
 extern void SC10_broadcastMetrics(ArduinoJson::JsonDocument& doc, bool diffOnly);
+extern void SC10_markDirty(const char* key);
 
 // ✅ 전방 선언으로 순환참조 방지
 // class CL_W10_WebAPI;
@@ -104,7 +105,7 @@ class CL_S10_Simulation {
 	// Preset 기반 범위/확률
 	float baseMinWind	  = 1.8f;
 	float baseMaxWind	  = 5.5f;
-	float gustProbBase	  = 0.040f;
+	float gustProbBase    = 0.040f;
 	float gustStrengthMax = 2.1f;
 	float thermalFreqBase = 0.022f;
 
