@@ -34,6 +34,20 @@
 #include "W10_WebAPI_022.h"
 #include "WF10_WiFiManager_023.h"
 
+
+// ---- WebAPI Broker Functions ----
+void SC10_broadcastState(JsonDocument& doc, bool diffOnly) {
+    CL_W10_WebAPI::broadcastState(doc, diffOnly);
+}
+
+void SC10_broadcastChart(JsonDocument& doc, bool diffOnly) {
+    CL_W10_WebAPI::broadcastChart(doc, diffOnly);
+}
+
+void SC10_broadcastMetrics(JsonDocument& doc, bool diffOnly) {
+    CL_W10_WebAPI::broadcastMetrics(doc, diffOnly);
+}
+
 AsyncWebServer		   g_SC10_server(80);
 WiFiMulti			   g_SC10_wifiMulti;
 CL_CT10_ControlManager g_SC10_control;
