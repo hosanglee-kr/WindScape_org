@@ -111,7 +111,7 @@ void SC10_init() {
 	// 5. PWM + Control + Simulation
 	g_P10_pwm.P10_begin(*g_A10_config_root.system);
 	g_SC10_control.begin();
-	g_SC10_control.sim.begin();
+	g_SC10_control.sim.begin(g_P10_pwm);
 	g_SC10_control.sim.setActive(true);
 
 	// 6. Motion Logic (PIR/BLE 감지 활성)
