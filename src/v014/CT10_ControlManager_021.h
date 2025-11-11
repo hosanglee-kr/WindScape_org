@@ -50,6 +50,7 @@
 #include <string.h>
 
 #include "A10_Const_015.h"
+#include "S20_WindSolver_021.h"
 #include "C10_ConfigManager_022.h"
 #include "S10_Simulation_018.h"
 #include "P10_PWM_ctrl_014.h"
