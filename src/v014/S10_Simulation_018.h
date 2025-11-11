@@ -291,7 +291,7 @@ class CL_S10_Simulation {
 		_updateWindHistory(currentWindSpeed);
 
 		// ✅ 차트 샘플링 (1Hz)
-		uint32_t v_interval = (gustActive || thermalActive) ? 500UL : 1000UL;
+		v_interval = (gustActive || thermalActive) ? 500UL : 1000UL;
 		if (millis() - s_lastChartLogMs > v_interval) {
 			if (s_chartBuffer.size() >= 120)
 				s_chartBuffer.pop_front();

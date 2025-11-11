@@ -176,8 +176,8 @@ class CL_W10_WebAPI {
 		}
 		s_lastStateJson = v_msg;
 
-		for (auto c : s_wsServerState->getClients()) {
-			if (c && c->canSend())
+		for (auto c : s_wsServerState->getClients()) {  // ->getClients()) {
+			if (c && c.canSend())
 				c->text(v_msg);
 		}
 		CL_D10_Logger::log(EN_L10_LOG_DEBUG,
@@ -227,8 +227,8 @@ class CL_W10_WebAPI {
 		s_lastChartJson = v_msg;
 
 		for (auto c : s_wsServerChart->getClients()) {
-			if (c && c->canSend())
-				c->text(v_msg);
+			if (c && c.canSend())
+				c.text(v_msg);
 		}
 	}
 
@@ -259,7 +259,7 @@ class CL_W10_WebAPI {
 	// --------------------------------------------------
 	static bool checkApiKey(AsyncWebServerRequest* p_request) {
 		// system.security.api_key 가 비어있으면 검사 생략
-		const char* v_key = g_A10_config_root.system.security.api_key;
+		const char* v_key = g_A10_config_root.system->security.api_key; //   g_A10_config_root.system.security.api_key;
 		if (!v_key || v_key[0] == '\0')
 			return true;
 
@@ -354,7 +354,7 @@ class CL_W10_WebAPI {
 							 return;
 						 }
 						 JsonDocument v_doc;
-						 CL_C10_ConfigManager::toJson_System(g_A10_config_root.system, v_doc);
+						 CL_C10_ConfigManager::toJson_System(*g_A10_config_root.system, v_doc);
 						 sendJson(p_request, v_doc);
 					 });
 	}
@@ -417,10 +417,10 @@ class CL_W10_WebAPI {
 							 return;
 						 }
 
-						 v_doc["windProfile"]["version"] = v_dict.version;
+						 //v_doc["windProfile"]["version"] = v_dict.version;
 
-						 for (uint8_t v_i = 0; v_i < v_dict.presetCount; v_i++) {
-							 const ST_A10_WindPresetDef_t& v_p			= v_dict.presets[v_i];
+						 for (uint8_t v_i = 0; v_i < v_dict.preset_count; v_i++) {
+							 const ST_A10_PresetEntry_t& v_p			= v_dict.presets[v_i];
 							 JsonObject					   v_jp			= v_doc["windProfile"]["presets"][v_i];
 							 v_jp["name"]								= v_p.name;
 							 v_jp["code"]								= v_p.code;
@@ -435,15 +435,15 @@ class CL_W10_WebAPI {
 							 v_jp["base"]["thermal_bubble_radius"]		= v_p.base.thermal_bubble_radius;
 						 }
 
-						 for (uint8_t v_i = 0; v_i < v_dict.styleCount; v_i++) {
-							 const ST_A10_WindStyleDef_t& v_s	   = v_dict.styles[v_i];
+						 for (uint8_t v_i = 0; v_i < v_dict.style_count; v_i++) {
+							 const ST_A10_StyleEntry_t& v_s	   = v_dict.styles[v_i];
 							 JsonObject					  v_js	   = v_doc["windProfile"]["styles"][v_i];
 							 v_js["name"]						   = v_s.name;
 							 v_js["code"]						   = v_s.code;
-							 v_js["factors"]["intensity_factor"]   = v_s.factor.intensity_factor;
-							 v_js["factors"]["variability_factor"] = v_s.factor.variability_factor;
-							 v_js["factors"]["gust_factor"]		   = v_s.factor.gust_factor;
-							 v_js["factors"]["thermal_factor"]	   = v_s.factor.thermal_factor;
+							 v_js["factors"]["intensity_factor"]   = v_s.factors.intensity_factor;
+							 v_js["factors"]["variability_factor"] = v_s.factors.variability_factor;
+							 v_js["factors"]["gust_factor"]		   = v_s.factors.gust_factor;
+							 v_js["factors"]["thermal_factor"]	   = v_s.factors.thermal_factor;
 						 }
 
 						 sendJson(p_request, v_doc);
@@ -465,7 +465,7 @@ class CL_W10_WebAPI {
 						 }
 
 						 JsonDocument		   v_doc;
-						 ST_A10_ScheduleConfig v_cfg;
+						 ST_A10_SchedulesRoot_t v_cfg;
 						 memset(&v_cfg, 0, sizeof(v_cfg));
 
 						 CL_C10_ConfigManager::loadSchedules(v_cfg);
@@ -492,7 +492,7 @@ class CL_W10_WebAPI {
 					return;
 				}
 
-				ST_A10_ScheduleConfig v_cfg;
+				ST_A10_SchedulesRoot_t v_cfg;
 				memset(&v_cfg, 0, sizeof(v_cfg));
 
 				JsonArray v_arr = v_doc["schedules"].as<JsonArray>();
@@ -516,12 +516,12 @@ class CL_W10_WebAPI {
 							sizeof(v_s.period.end_time));
 
 					// segments
-					v_s.segCount = 0;
+					v_s.seg_count = 0;
 					if (v_js["segments"].is<JsonArray>()) {
 						JsonArray v_sArr = v_js["segments"].as<JsonArray>();
 						for (JsonObject v_jseg : v_sArr) {
-							if (v_s.segCount >= A10_Const::MAX_SEGMENTS_PER_SCHEDULE) break;
-							ST_A10_OpSegment_t& v_seg = v_s.segments[v_s.segCount++];
+							if (v_s.seg_count >= A10_Const::MAX_SEGMENTS_PER_SCHEDULE) break;
+							ST_A10_ScheduleSegment_t& v_seg = v_s.segments[v_s.seg_count++];
 
 							v_seg.segNo       = v_jseg["segNo"]       | 0;
 							v_seg.on_minutes  = v_jseg["on_minutes"]  | 0;
@@ -587,7 +587,7 @@ class CL_W10_WebAPI {
 							 return;
 						 }
 						 JsonDocument				v_doc;
-						 ST_A10_UserProfileConfig_t v_cfg;
+						 ST_A10_UserProfilesRoot_t v_cfg;
 						 memset(&v_cfg, 0, sizeof(v_cfg));
 
 						 CL_C10_ConfigManager::loadUserProfiles(v_cfg);
@@ -614,13 +614,13 @@ class CL_W10_WebAPI {
 					return;
 				}
 
-				ST_A10_UserProfileConfig_t v_cfg;
+				ST_A10_UserProfilesRoot_t v_cfg;
 				memset(&v_cfg, 0, sizeof(v_cfg));
 
 				JsonArray v_arr = v_doc["userProfiles"]["profiles"].as<JsonArray>();
 				for (JsonObject v_jp : v_arr) {
 					if (v_cfg.count >= A10_Const::MAX_USER_PROFILES) break;
-					ST_A10_UserProfile_t& v_up = v_cfg.items[v_cfg.count++];
+					ST_A10_UserProfileItem_t& v_up = v_cfg.items[v_cfg.count++];
 
 					v_up.profileNo = v_jp["profileNo"] | 0;
 					strlcpy(v_up.name, v_jp["name"] | "", sizeof(v_up.name));
@@ -628,12 +628,12 @@ class CL_W10_WebAPI {
 					v_up.repeatSegments = v_jp["repeatSegments"] | true;
 
 					// segments
-					v_up.segCount = 0;
+					v_up.seg_count = 0;
 					if (v_jp["segments"].is<JsonArray>()) {
 						JsonArray v_sArr = v_jp["segments"].as<JsonArray>();
 						for (JsonObject v_jseg : v_sArr) {
-							if (v_up.segCount >= A10_Const::MAX_SEGMENTS_PER_PROFILE) break;
-							ST_A10_OpSegment_t& v_seg = v_up.segments[v_up.segCount++];
+							if (v_up.seg_count >= A10_Const::MAX_SEGMENTS_PER_PROFILE) break;
+							ST_A10_UserProfileSegment_t& v_seg = v_up.segments[v_up.seg_count++];
 
 							v_seg.segNo       = v_jseg["segNo"]       | 0;
 							v_seg.on_minutes  = v_jseg["on_minutes"]  | 0;
@@ -681,7 +681,7 @@ class CL_W10_WebAPI {
 					p_request->send(500, "application/json", "{\"error\":\"save failed\"}");
 					return;
 				}
-				CL_N10_NvsManager::N10_markDirty("userProfiles", true);
+				CL_N10_NvsManager::markDirty("userProfiles", true);
 				p_request->send(200, "application/json", "{\"result\":\"ok\"}"); });
 	}
 
@@ -854,7 +854,8 @@ class CL_W10_WebAPI {
 							 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
 							 return;
 						 }
-						 ST_A10_ConfigRoot v_root;
+						 
+						 ST_A10_ConfigRoot_t v_root;
 						 bool			   v_ok = CL_C10_ConfigManager::loadAll(v_root);
 						 if (!v_ok) {
 							 p_request->send(500, "application/json", "{\"error\":\"reload failed\"}");
@@ -866,10 +867,14 @@ class CL_W10_WebAPI {
 	}
 
 	// ✅ metrics 전용 WebSocket 추가
-	static AsyncWebSocket s_wsLogs("/ws/log");
-	static AsyncWebSocket s_wsState("/ws/state");
-	static AsyncWebSocket s_wsChart("/ws/chart");
-	static AsyncWebSocket s_wsMetrics("/ws/metrics");
+	static AsyncWebSocket s_wsLogs;
+	static AsyncWebSocket s_wsState;
+	static AsyncWebSocket s_wsChart;
+	static AsyncWebSocket s_wsMetrics;
+	// static AsyncWebSocket s_wsLogs("/ws/log");
+	// static AsyncWebSocket s_wsState("/ws/state");
+	// static AsyncWebSocket s_wsChart("/ws/chart");
+	// static AsyncWebSocket s_wsMetrics("/ws/metrics");
 
 	static void routeWebSocket() {
 		// 기존 로그 WS
@@ -936,6 +941,12 @@ class CL_W10_WebAPI {
 // ------------------------------------------------------
 AsyncWebServer*			CL_W10_WebAPI::s_server	 = nullptr;
 CL_CT10_ControlManager* CL_W10_WebAPI::s_control = nullptr;
+
+// 정적 멤버 변수 정의 및 초기화 (생성자 호출)
+AsyncWebSocket CL_W10_WebAPI::s_wsLogs("/ws/log");
+AsyncWebSocket CL_W10_WebAPI::s_wsState("/ws/state");
+AsyncWebSocket CL_W10_WebAPI::s_wsChart("/ws/chart");
+AsyncWebSocket CL_W10_WebAPI::s_wsMetrics("/ws/metrics");
 
 inline AsyncWebSocket* CL_W10_WebAPI::s_wsServerState	= nullptr;
 inline AsyncWebSocket* CL_W10_WebAPI::s_wsServerLog		= nullptr;

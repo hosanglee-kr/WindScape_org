@@ -46,6 +46,7 @@
 #include <LittleFS.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <Stream.h> // Stream 헤더 파일 포함 필요
 
 // ------------------------------------------------------
 // 로그 레벨
@@ -87,9 +88,11 @@ class CL_D10_Logger {
 	// --------------------------------------------------
 	// 초기화
 	// --------------------------------------------------
-	static void begin(HardwareSerial& p_serial = Serial, uint32_t p_baud = 115200) {
+	
+	static void begin(Stream& p_serial = Serial, uint32_t p_baud = 115200) {
+	//static void begin(HardwareSerial& p_serial = Serial, uint32_t p_baud = 115200) {
 		_serial = &p_serial;
-		_serial->begin(p_baud);
+		// _serial->begin(p_baud);
 		delay(100);
 		printBanner();
 	}
@@ -260,7 +263,9 @@ class CL_D10_Logger {
 	// --------------------------------------------------
 	// 정적 멤버 변수
 	// --------------------------------------------------
-	static HardwareSerial*	 _serial;
+	Stream* 				_serial; // Stream*로 변경
+	//static HardwareSerial*	 _serial;
+
 	static EN_L10_LogLevel_t _logLevel;
 	static bool				 _showTimestamp;
 	static bool				 _showMemUsage;

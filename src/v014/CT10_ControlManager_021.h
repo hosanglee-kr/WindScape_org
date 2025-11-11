@@ -793,7 +793,8 @@ class CL_CT10_ControlManager {
 			return true;
 		}
 
-		ST_A10_OpSegment_t& v_seg	= p_segs[p_rt.index];
+	
+		T_segment& v_seg	= p_segs[p_rt.index];
 		uint32_t			v_onMs	= v_seg.on_minutes * 60000UL;
 		uint32_t			v_offMs = v_seg.off_minutes * 60000UL;
 

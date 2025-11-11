@@ -16,10 +16,10 @@
  */
 
 #include <Arduino.h>
-#include <WiFi.h>
-#include <WiFiMulti.h>
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
+#include <WiFi.h>
+#include <WiFiMulti.h>
 #include <esp_task_wdt.h>
 
 #include "A10_Const_015.h"
@@ -31,17 +31,17 @@
 #include "P10_PWM_ctrl_014.h"
 #include "S10_Simulation_018.h"
 #include "S20_WindSolver_021.h"
-#include "WF10_WiFiManager_023.h"
 #include "W10_WebAPI_022.h"
+#include "WF10_WiFiManager_023.h"
 
-AsyncWebServer		 g_SC10_server(80);
-WiFiMulti			 g_SC10_wifiMulti;
+AsyncWebServer		   g_SC10_server(80);
+WiFiMulti			   g_SC10_wifiMulti;
 CL_CT10_ControlManager g_SC10_control;
 
 // ------------------------------------------------------
 // LED 핀 설정 (Wi-Fi 상태 표시)
 // ------------------------------------------------------
-constexpr int G_SC10_LED_PIN = 2;	// 내장 LED (ESP32 보드용)
+constexpr int G_SC10_LED_PIN = 2;  // 내장 LED (ESP32 보드용)
 
 // ------------------------------------------------------
 // Factory Reset 유틸 (모든 JSON 삭제 후 기본 복원)
@@ -79,14 +79,13 @@ bool SC10_factoryReset() {
 // ------------------------------------------------------
 // 메인 초기화
 // ------------------------------------------------------
-void SC10_setup() {
-	delay(200);
-	Serial.begin(115200);
-	delay(200);
+void SC10_init() {
+
 
 	// 1. Logger 초기화
-	CL_D10_Logger::begin(Serial, 115200);
+	CL_D10_Logger::begin(Serial);
 	pinMode(G_SC10_LED_PIN, OUTPUT);
+
 	digitalWrite(G_SC10_LED_PIN, LOW);
 	CL_D10_Logger::log(EN_L10_LOG_INFO, "=== Smart Nature Wind Boot (v002) ===");
 
@@ -102,13 +101,15 @@ void SC10_setup() {
 	CL_N10_NvsManager::N10_begin();
 
 	// 4. Wi-Fi 초기화
-	const ST_A10_WifiConfig& v_wifi = *g_A10_config_root.wifi;
-	const ST_A10_SystemConfig& v_sys = g_A10_config_root.system;
-	bool v_wifiOk = CL_WF10_WiFiManager::init(v_wifi, v_sys, g_SC10_wifiMulti);
+	const ST_A10_WifiConfig&   v_wifi	= *g_A10_config_root.wifi;
+	const ST_A10_SystemConfig& v_sys 	= *g_A10_config_root.system;
+	// const ST_A10_SystemConfig& v_sys	= g_A10_config_root.system;
+
+	bool					   v_wifiOk = CL_WF10_WiFiManager::init(v_wifi, v_sys, g_SC10_wifiMulti);
 	digitalWrite(G_SC10_LED_PIN, v_wifiOk ? HIGH : LOW);
 
 	// 5. PWM + Control + Simulation
-	g_P10_pwm.P10_begin(g_A10_config_root.system);
+	g_P10_pwm.P10_begin(*g_A10_config_root.system);
 	g_SC10_control.begin();
 	g_SC10_control.sim.begin();
 	g_SC10_control.sim.setActive(true);
@@ -132,7 +133,7 @@ void SC10_setup() {
 // ------------------------------------------------------
 // 메인 루프
 // ------------------------------------------------------
-void SC10_loop() {
+void SC10_run() {
 	static uint32_t v_lastSimMs = 0;
 	static uint32_t v_lastLedMs = 0;
 	static uint32_t v_lastFlush = 0;

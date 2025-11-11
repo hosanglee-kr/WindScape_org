@@ -11,8 +11,12 @@
 #include <Arduino.h>
 #include <LittleFS.h>
 
-#include "v014/SC10_Main_002.h"
+#include "v013/WS10_Main_012.h"
+// #include "v012/WS10_Main_010.h"
 
+// 메인 컨트롤러 인스턴스
+CL_WS10_WindScapeSystem g_WS10;
+//CL_WS10_WindScapeSimulator g_WS10;
 
 void setup() {
 	Serial.begin(115200);
@@ -31,7 +35,7 @@ void setup() {
 	// ------------------------------------------------------
 	// 2️⃣ 시스템 초기화 (FS / Wi-Fi / PWM / WebAPI / Sim)
 	// ------------------------------------------------------
-	SC10_init();
+	g_WS10.init();
 
 	Serial.println();
 	Serial.println("[BOOT] Initialization complete");
@@ -45,9 +49,17 @@ void setup() {
 }
 
 void loop() {
+	// ------------------------------------------------------
+	// 3️⃣ Simulation Tick Loop
+	// ------------------------------------------------------
+	g_WS10.run();
 
-	SC10_run();
-
+	// 로그나 Wi-Fi 상태를 주기적으로 출력하고 싶다면:
+	// static unsigned long lastPrint = 0;
+	// if (millis() - lastPrint > 5000) {
+	//     g_WS10.WS10_printStatus();
+	//     lastPrint = millis();
+	// }
 
 	delay(5); // CPU 점유율 완화
 }

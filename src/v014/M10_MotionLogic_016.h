@@ -210,7 +210,6 @@ class CL_M10_MotionLogic {
 		v_o["lastActiveSec"]	= v_lastSec;
 
 		// 남은 hold 시간 (초 단위)
-		uint32_t v_now		 = millis();
 		uint32_t v_pirRemain = 0;
 		uint32_t v_bleRemain = 0;
 
