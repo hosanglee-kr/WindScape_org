@@ -35,6 +35,8 @@
 #include "WF10_WiFiManager_023.h"
 
 
+extern CL_M10_MotionLogic* g_M10_motionLogic;
+
 // ---- WebAPI Broker Functions ----
 void SC10_broadcastState(JsonDocument& doc, bool diffOnly) {
     CL_W10_WebAPI::broadcastState(doc, diffOnly);
