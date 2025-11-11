@@ -67,8 +67,8 @@ namespace A10_Const {
 	constexpr char CFG_WIFI_FILE_BAK[]			= "/json/cfg_wifi_" G_A10_CFG_JSON_FILE_VER ".json.bak";
 	constexpr char CFG_MOTION_FILE_BAK[]		= "/json/cfg_motion_" G_A10_CFG_JSON_FILE_VER ".json.bak";
 	constexpr char CFG_SCHEDULES_FILE_BAK[]		= "/json/cfg_schedules_" G_A10_CFG_JSON_FILE_VER ".json.bak";
-	constexpr char CFG_USER_PROFILES_FILE_BAK[] = "/json/cfg_uzOpProfile" G_A10_CFG_JSON_FILE_VER ".json.bak";
-	constexpr char CFG_WIND_PROFILE_FILE_BAK[]	= "/json/cfg_dft_windProfile" G_A10_CFG_JSON_FILE_VER ".json.bak";
+	constexpr char CFG_USER_PROFILES_FILE_BAK[] = "/json/cfg_uzOpProfile_" G_A10_CFG_JSON_FILE_VER ".json.bak";
+	constexpr char CFG_WIND_PROFILE_FILE_BAK[]	= "/json/cfg_dft_windProfile_" G_A10_CFG_JSON_FILE_VER ".json.bak";
 
 	// 문자열 및 배열 길이 정의
 	constexpr uint8_t LEN_NAME	 = 64;
@@ -502,11 +502,16 @@ typedef struct {
 /* ======================================================
  * Config Root (전역 보관)
  * ====================================================== */
+
 typedef struct {
-	ST_A10_WindProfileDict_t  windDict;		 // presets/styles 사전
-	ST_A10_SchedulesRoot_t	  schedules;	 // 스케줄 모음
-	ST_A10_UserProfilesRoot_t userProfiles;	 // 사용자 프로파일 모음
+    ST_A10_SystemConfig*     system = nullptr;
+    ST_A10_WifiConfig*       wifi = nullptr;
+    ST_A10_MotionConfig*     motion = nullptr;
+    ST_A10_WindProfileDict_t* windDict = nullptr;
+    ST_A10_SchedulesRoot_t*   schedules = nullptr;
+    ST_A10_UserProfilesRoot_t* userProfiles = nullptr;
 } ST_A10_ConfigRoot_t;
+
 
 extern ST_A10_ConfigRoot_t g_A10_config_root;
 
