@@ -43,8 +43,8 @@
 #include <WiFi.h>
 #include <WiFiMulti.h>
 
-#include "A10_Const_014.h"
-#include "C10_ConfigManager_022.h"
+#include "A10_Const_015.h"
+#include "C10_ConfigManager_023.h"
 #include "CT10_ControlManager_021.h"
 #include "D10_Logger_016.h"
 #include "M10_MotionLogic_016.h"
