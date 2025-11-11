@@ -532,6 +532,8 @@ typedef struct {
 
 extern ST_A10_ConfigRoot_t g_A10_config_root;
 
+extern CL_M10_MotionLogic* g_M10_motionLogic;
+
 /* ======================================================
  * 헬퍼 함수 선언
  * ====================================================== */
