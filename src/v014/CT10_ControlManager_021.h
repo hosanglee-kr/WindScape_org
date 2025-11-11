@@ -134,7 +134,7 @@ class CL_CT10_ControlManager {
 
 	// 모드 설정: false=schedule 모드, true=profile 전용 모드
 	static void setMode(bool p_profileMode) {
-		instance().setMode(p_profileMode);
+		instance()._setMode(p_profileMode);
 	}
 
 	// UserProfile 선택/시작 (profileNo 기준)
@@ -233,7 +233,7 @@ class CL_CT10_ControlManager {
 	}
 
 	// 모드 설정: false = Schedule 기반, true = UserProfile 전용 모드
-	void setMode(bool p_profileMode) {
+	void _setMode(bool p_profileMode) {
 		useProfileMode = p_profileMode;
 		if (!p_profileMode) {
 			// schedule 모드로 전환 시 프로파일은 정지
