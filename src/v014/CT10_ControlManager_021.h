@@ -63,9 +63,7 @@ extern void SC10_broadcastState(ArduinoJson::JsonDocument& doc, bool diffOnly);
 extern void SC10_broadcastChart(ArduinoJson::JsonDocument& doc, bool diffOnly);
 extern void SC10_broadcastMetrics(ArduinoJson::JsonDocument& doc, bool diffOnly);
 
-// ...
-// 사용처는 이렇게 교체
-SC10_broadcastChart(v_doc, true);
+
 // forward declaration으로 순환참조 방지
 
 // ✅ 전방 선언으로 순환참조 방지
@@ -670,7 +668,7 @@ class CL_CT10_ControlManager {
 			// ✅ override 적용 직후 차트 갱신
 			JsonDocument v_doc;
 			toChartJson(v_doc);
-			CL_W10_WebAPI::broadcastChart(v_doc);
+			SC10_broadcastChart(v_doc);
 		}
 
 		return true;
@@ -862,7 +860,7 @@ void _applySegmentOn(const T_segment& p_seg) {
 		// ✅ Segment 변경 시 상태 브로드캐스트 (Web UI 즉시 반영)
 		JsonDocument v_doc;
 		toJson(v_doc);
-		CL_W10_WebAPI::broadcastState(v_doc, true);
+		SC10_broadcastState(v_doc, true);
 	} else {
 		CL_D10_Logger::log(EN_L10_LOG_WARN,
 						   "[CT10] Segment resolve failed (mode=%s,preset=%s,style=%s)",
@@ -1037,7 +1035,7 @@ void _applySegmentOn(const T_segment& p_seg) {
 	void _broadcastState(bool p_diffOnly = true) {
 		JsonDocument v_doc;
 		toJson(v_doc);
-		CL_W10_WebAPI::broadcastState(v_doc, p_diffOnly);
+		SC10_broadcastState(v_doc, p_diffOnly);
 	}
 
 	// --------------------------------------------------
@@ -1051,6 +1049,6 @@ void _applySegmentOn(const T_segment& p_seg) {
 
 		JsonDocument v_doc;
 		toMetricsJson(v_doc);
-		CL_W10_WebAPI::broadcastMetrics(v_doc, true);
+		SC10_broadcastMetrics(v_doc, true);
 	}
 };
