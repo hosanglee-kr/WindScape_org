@@ -829,7 +829,7 @@ void _applySegmentOn(const T_segment& p_seg) {
 		return;
 
 	// FIXED 모드: 문자열 직접 비교 (규칙 준수)
-	if (strcasecmp(p_seg.mode, "FIXED") == 0) {
+	if (p_seg.mode == EN_A10_SEG_MODE_PRESET) {
 		sim.stop();
 		if (pwm) {
 			pwm->P10_setDutyPercent(p_seg.fixed_speed);
