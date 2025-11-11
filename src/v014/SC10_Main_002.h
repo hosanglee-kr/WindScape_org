@@ -59,6 +59,7 @@ AsyncWebServer		   g_SC10_server(80);
 WiFiMulti			   g_SC10_wifiMulti;
 CL_CT10_ControlManager g_SC10_control;
 
+CL_P10_PWM             g_P10_pwm;
 // ------------------------------------------------------
 // LED 핀 설정 (Wi-Fi 상태 표시)
 // ------------------------------------------------------
