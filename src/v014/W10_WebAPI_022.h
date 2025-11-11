@@ -176,10 +176,10 @@ class CL_W10_WebAPI {
 		}
 		s_lastStateJson = v_msg;
 
-		for (auto c : s_wsServerState->getClients()) {  // ->getClients()) {
-			if (c && c.canSend())
-				c->text(v_msg);
-		}
+		for (auto* c : s_wsServerState->getClients()) {
+            if (c && c->canSend()) c->text(v_msg);
+        }
+		
 		CL_D10_Logger::log(EN_L10_LOG_DEBUG,
 						   "[W10] broadcastState(diffOnly=%d) → %d clients",
 						   p_diffOnly ? 1 : 0,
@@ -201,7 +201,7 @@ class CL_W10_WebAPI {
 		}
 		s_lastMetricsJson = v_msg;
 
-		for (auto c : s_wsServerMetrics->getClients()) {
+		for (auto* c : s_wsServerMetrics->getClients()) {
 			if (c && c->canSend())
 				c->text(v_msg);
 		}
@@ -226,7 +226,7 @@ class CL_W10_WebAPI {
 		}
 		s_lastChartJson = v_msg;
 
-		for (auto c : s_wsServerChart->getClients()) {
+		for (auto* c : s_wsServerChart->getClients()) {
 			if (c && c.canSend())
 				c.text(v_msg);
 		}
