@@ -57,11 +57,13 @@
 #include "S10_Simulation_018.h"
 #include "S20_WindSolver_021.h"
 
+
+#inclide "W10_WebAPI_IF_020.h"
 // forward declaration으로 순환참조 방지
 
 // ✅ 전방 선언으로 순환참조 방지
-class CL_W10_WebAPI;
-class CL_CT10_ControlManager;  // CT10 정적 인터페이스 사용 대비
+// class CL_W10_WebAPI;
+// class CL_CT10_ControlManager;  // CT10 정적 인터페이스 사용 대비
 
 // ------------------------------------------------------
 // 런타임 상태 구조체
