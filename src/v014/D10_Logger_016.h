@@ -263,7 +263,7 @@ class CL_D10_Logger {
 	// --------------------------------------------------
 	// 정적 멤버 변수
 	// --------------------------------------------------
-	Stream* 				_serial; // Stream*로 변경
+	static Stream* 				_serial; // Stream*로 변경
 	//static HardwareSerial*	 _serial;
 
 	static EN_L10_LogLevel_t _logLevel;
