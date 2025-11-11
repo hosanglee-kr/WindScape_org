@@ -57,8 +57,10 @@
 #include "D10_Logger_016.h"
 #include "P10_PWM_ctrl_014.h"
 
+
+#inclide "W10_WebAPI_IF_020.h"
 // ✅ 전방 선언으로 순환참조 방지
-class CL_W10_WebAPI;
+// class CL_W10_WebAPI;
 
 // ======================================================
 // CL_S10_Simulation
