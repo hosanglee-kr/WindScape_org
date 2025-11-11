@@ -316,12 +316,18 @@ public:
 
         ST_A10_ResolvedWind_t v_resolved;
         memset(&v_resolved, 0, sizeof(v_resolved));
-        bool v_ok = CL_C10_ConfigManager::resolveWindParams(
+		bool v_ok = S20_resolveWindParams(
                         *g_A10_config_root.windDict,
                         p_presetCode,
                         p_styleCode,
                         p_adj,
                         v_resolved);
+        // bool v_ok = CL_C10_ConfigManager::resolveWindParams(
+        //                *g_A10_config_root.windDict,
+        //                p_presetCode,
+        //                p_styleCode,
+        //                p_adj,
+        //                v_resolved);
         if (!v_ok || !v_resolved.valid) {
             CL_D10_Logger::log(EN_L10_LOG_WARN,
                                "[CT10] startOverridePreset resolve failed (%s,%s)",
@@ -817,7 +823,7 @@ private:
         ST_A10_ResolvedWind_t v_res;
         memset(&v_res, 0, sizeof(v_res));
 
-        bool v_ok = CL_C10_ConfigManager::resolveWindParams(
+        bool v_ok = S20_resolveWindParams(
                         *g_A10_config_root.windDict,
                         p_seg.presetCode,
                         p_seg.styleCode,
