@@ -122,9 +122,9 @@ class CL_N10_NvsManager {
 	}
 
     static void N10_clearAll() {
-        preferences.begin("SNW_RUN", false);
-        preferences.clear();     // 모든 key 삭제
-        preferences.end();
+        s_prefs.begin("SNW_RUN", false);
+        s_prefs.clear();     // 모든 key 삭제
+        s_prefs.end();
 
         CL_D10_Logger::log(EN_L10_LOG_WARN, "[N10] NVS cleared (factory reset)");
     }
