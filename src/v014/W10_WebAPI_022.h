@@ -203,8 +203,8 @@ class CL_W10_WebAPI {
 		s_lastMetricsJson = v_msg;
 
 		for (auto& c : s_wsServerMetrics->getClients()) {
-			if (c && c->canSend())
-				c->text(v_msg);
+			if (c.canSend())
+				c.text(v_msg);
 		}
 		CL_D10_Logger::log(EN_L10_LOG_DEBUG,
 						   "[W10] broadcastMetrics(diffOnly=%d) → %d clients",
@@ -228,7 +228,7 @@ class CL_W10_WebAPI {
 		s_lastChartJson = v_msg;
 
 		for (auto& c : s_wsServerChart->getClients()) {
-			if (c && c.canSend())
+			if (c.canSend())
 				c.text(v_msg);
 		}
 	}
