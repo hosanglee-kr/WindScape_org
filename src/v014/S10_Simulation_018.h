@@ -260,7 +260,9 @@ class CL_S10_Simulation {
 			o["delta"]	   = v_delta;
 			SC10_broadcastChart(v_doc, true);	 // ✅ diffOnly 모드
 
-			CL_CT10_ControlManager::instance().markDirty("chart");	// ✅ Dirty 표시
+			SC10_markDirty("chart");
+
+			//CL_CT10_ControlManager::instance().markDirty("chart");	// ✅ Dirty 표시
 		}
 
 		// ---- 내부 물리 계산 ----
