@@ -53,31 +53,38 @@ class CL_C10_ConfigManager {
 	// =====================================================
 	// 공용: JSON IO Helper
 	// =====================================================
-	static bool ioLoadJson(const char* p_path, JsonDocument& p_doc) {
-		if (!LittleFS.exists(p_path)) {
-            if (LittleFS.exists(p_bak)) {
-                LittleFS.rename(p_bak, p_path);
-                CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Restored from backup: %s", p_bak);
-            } else {
-                CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] Missing config & no backup: %s", p_path);
-                return false;
-            }
-        }
-		
-		File v_f = LittleFS.open(p_path, "r");
-		if (!v_f) {
-			CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] Open failed: %s", p_path);
+	static bool ioLoadJson(const char* p_path, const char* p_bak, JsonDocument& p_doc) {
+	if (!LittleFS.exists(p_path)) {
+		if (p_bak && LittleFS.exists(p_bak)) {
+			LittleFS.rename(p_bak, p_path);
+			CL_D10_Logger::log(EN_L10_LOG_WARN,
+							   "[C10] Restored from backup: %s -> %s",
+							   p_bak, p_path);
+		} else {
+			CL_D10_Logger::log(EN_L10_LOG_ERROR,
+							   "[C10] Missing config & no backup: %s",
+							   p_path);
 			return false;
 		}
-		auto v_e = deserializeJson(p_doc, v_f);
-		v_f.close();
-		if (v_e) {
-			CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] Parse error(%s): %s",
-							   p_path, v_e.c_str());
-			return false;
-		}
-		return true;
 	}
+
+	File v_f = LittleFS.open(p_path, "r");
+	if (!v_f) {
+		CL_D10_Logger::log(EN_L10_LOG_ERROR,
+						   "[C10] Open failed: %s", p_path);
+		return false;
+	}
+
+	auto v_e = deserializeJson(p_doc, v_f);
+	v_f.close();
+	if (v_e) {
+		CL_D10_Logger::log(EN_L10_LOG_ERROR,
+						   "[C10] Parse error(%s): %s",
+						   p_path, v_e.c_str());
+		return false;
+	}
+	return true;
+}
 
 	static bool ioSaveJson(const char* p_path, const char* p_bak, const JsonDocument& p_doc) {
 		if (LittleFS.exists(p_path)) {
@@ -857,20 +864,28 @@ class CL_C10_ConfigManager {
 // ✅ Lazy-Load 기반 전체 로드 (필요 섹션만 동적 로드)
 // ------------------------------------------------------
 static bool loadAll(ST_A10_ConfigRoot& p_root) {
-    bool v_ok = true;
-    A10_resetToDefault(p_root);
+	bool v_ok = true;
+	A10_resetToDefault(p_root);
 
-    // 항상 System은 필수 로드
-    if (!loadSystemConfig(p_root.system)) v_ok = false;
+	// System (필수)
+	if (!loadSystemConfig(p_root.system)) {
+		v_ok = false;
+	}
 
-    // Lazy-Load 구조: 요청 시 동적 로드
-    loadLazySection("wifi", p_root);
-    loadLazySection("motion", p_root);
-    loadLazySection("schedules", p_root);
-    loadLazySection("userProfiles", p_root);
+	// WindProfile Dict (필수/참조용)
+	if (!loadWindProfileDict(p_root.windDict)) {
+		v_ok = false;
+	}
 
-    CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] Config loaded (lazy mode, result=%d)", v_ok);
-    return v_ok;
+	// Lazy 섹션 (실패해도 기본값 유지)
+	if (!loadLazySection("wifi", p_root))        v_ok = false;
+	if (!loadLazySection("motion", p_root))      v_ok = false;
+	if (!loadLazySection("schedules", p_root))   v_ok = false;
+	if (!loadLazySection("userProfiles", p_root))v_ok = false;
+
+	CL_D10_Logger::log(EN_L10_LOG_INFO,
+					   "[C10] Config loaded (lazy mode, result=%d)", v_ok);
+	return v_ok;
 }
 
 // ------------------------------------------------------
@@ -1013,20 +1028,59 @@ static bool patchConfigFromJson(const char* p_section, const JsonDocument& p_pat
 // ✅ Factory Reset (cfg_default_022.json 기반 복구)
 // ------------------------------------------------------
 static bool factoryResetFromDefault() {
-    JsonDocument v_def;
-    if (!ioLoadJson(A10_Const::CFG_DEFAULT_FILE, v_def)) {
-        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] Default file missing: %s", A10_Const::CFG_DEFAULT_FILE);
-        return false;
-    }
-    // 섹션별 저장
-    ioSaveJson(A10_Const::CFG_SYSTEM_FILE, A10_Const::CFG_SYSTEM_FILE_BAK, v_def["system"]);
-    ioSaveJson(A10_Const::CFG_WIFI_FILE, A10_Const::CFG_WIFI_FILE_BAK, v_def["wifi"]);
-    ioSaveJson(A10_Const::CFG_MOTION_FILE, A10_Const::CFG_MOTION_FILE_BAK, v_def["motion"]);
-    ioSaveJson(A10_Const::CFG_SCHEDULES_FILE, A10_Const::CFG_SCHEDULES_FILE_BAK, v_def["schedules"]);
-    ioSaveJson(A10_Const::CFG_USER_PROFILES_FILE, A10_Const::CFG_USER_PROFILES_FILE_BAK, v_def["userProfiles"]);
+	JsonDocument v_def;
+	if (!ioLoadJson(A10_Const::CFG_DEFAULT_FILE,
+					A10_Const::CFG_DEFAULT_FILE_BAK,
+					v_def)) {
+		CL_D10_Logger::log(EN_L10_LOG_ERROR,
+						   "[C10] Default file missing: %s",
+						   A10_Const::CFG_DEFAULT_FILE);
+		return false;
+	}
 
-    CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] Factory reset completed (default_022.json)");
-    return true;
+	// system
+	if (v_def["system"].is<JsonObjectConst>()) {
+		JsonDocument v_sys;
+		v_sys["system"] = v_def["system"];
+		ioSaveJson(A10_Const::CFG_SYSTEM_FILE,
+				   A10_Const::CFG_SYSTEM_FILE_BAK, v_sys);
+	}
+
+	// wifi
+	if (v_def["wifi"].is<JsonObjectConst>()) {
+		JsonDocument v_wifi;
+		v_wifi["wifi"] = v_def["wifi"];
+		ioSaveJson(A10_Const::CFG_WIFI_FILE,
+				   A10_Const::CFG_WIFI_FILE_BAK, v_wifi);
+	}
+
+	// motion
+	if (v_def["motion"].is<JsonObjectConst>()) {
+		JsonDocument v_motion;
+		v_motion["motion"] = v_def["motion"];
+		ioSaveJson(A10_Const::CFG_MOTION_FILE,
+				   A10_Const::CFG_MOTION_FILE_BAK, v_motion);
+	}
+
+	// schedules
+	if (v_def["schedules"].is<JsonArrayConst>()) {
+		JsonDocument v_sch;
+		v_sch["schedules"] = v_def["schedules"];
+		ioSaveJson(A10_Const::CFG_SCHEDULES_FILE,
+				   A10_Const::CFG_SCHEDULES_FILE_BAK, v_sch);
+	}
+
+	// userProfiles
+	if (v_def["userProfiles"].is<JsonObjectConst>()) {
+		JsonDocument v_up;
+		v_up["userProfiles"] = v_def["userProfiles"];
+		ioSaveJson(A10_Const::CFG_USER_PROFILES_FILE,
+				   A10_Const::CFG_USER_PROFILES_FILE_BAK, v_up);
+	}
+
+	CL_D10_Logger::log(EN_L10_LOG_INFO,
+					   "[C10] Factory reset completed from default");
+	return true;
 }
 
 
