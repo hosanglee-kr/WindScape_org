@@ -95,6 +95,8 @@ constexpr size_t MAX_CODE_LEN = 24;
 
 }  // namespace A10_Const
 
+
+
 // ======================================================
 // ENUM 정의
 // ======================================================
@@ -531,6 +533,11 @@ typedef struct {
 } ST_A10_ConfigRoot_t;
 
 extern ST_A10_ConfigRoot_t g_A10_config_root;
+
+
+class CL_M10_MotionLogic; // 전방 선언
+// ... (ST_A10_ConfigRoot_t 및 g_A10_config_root 선언) ...
+extern CL_M10_MotionLogic* g_M10_motionLogic; // extern 선언
 
 // extern CL_M10_MotionLogic* g_M10_motionLogic;
 
