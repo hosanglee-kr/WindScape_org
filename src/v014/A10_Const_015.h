@@ -296,7 +296,31 @@ typedef struct {
 typedef enum : uint8_t {
 	EN_A10_SEG_MODE_PRESET = 0,	 // 프리셋/스타일 기반
 	EN_A10_SEG_MODE_FIXED  = 1,	 // 고정속도
+    EN_A10_SEG_MODE_COUNT
 } EN_A10_segment_mode_t;
+.
+/* ======================================================
+ * Segment Mode <-> String 매핑 유틸
+ * ====================================================== */
+static const char* g_A10_SEG_MODE_NAMES[] = {
+    "PRESET",
+    "FIXED"
+};
+
+inline EN_A10_segment_mode_t A10_modeFromString(const char* p_str) {
+    if (!p_str) return EN_A10_SEG_MODE_PRESET;
+    for (uint8_t v_i = 0; v_i < EN_A10_SEG_MODE_COUNT; v_i++) {
+        if (strcasecmp(p_str, g_A10_SEG_MODE_NAMES[v_i]) == 0)
+            return static_cast<EN_A10_segment_mode_t>(v_i);
+    }
+    return EN_A10_SEG_MODE_PRESET; // fallback
+}
+
+inline const char* A10_modeToString(EN_A10_segment_mode_t p_mode) {
+    if (p_mode >= EN_A10_SEG_MODE_COUNT)
+        return "PRESET";
+    return g_A10_SEG_MODE_NAMES[p_mode];
+}
 
 /* ======================================================
  * Wind Profile 테이블(사전)
