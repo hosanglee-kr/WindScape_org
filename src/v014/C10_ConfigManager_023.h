@@ -423,7 +423,7 @@ class CL_C10_ConfigManager {
 	}
 
 	static void toJson_Motion(const ST_A10_MotionConfig& p,
-							  JsonDocument&				 d) {
+							  JsonObject&				 d) {
 		d["motion"]["enabled"]		   = p.enabled;
 		d["motion"]["pir"]["enabled"]  = p.pir.enabled;
 		d["motion"]["pir"]["hold_sec"] = p.pir.hold_sec;
