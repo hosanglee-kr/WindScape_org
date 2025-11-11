@@ -121,7 +121,7 @@ class CL_CT10_ControlManager {
 		instance().begin(g_P10_pwm);
 		return true;
 	}
-
+    /*
 	// 주기 호출
 	static void tick() {
 		instance().tick();
@@ -131,7 +131,7 @@ class CL_CT10_ControlManager {
 	static void toJson(JsonDocument& p_doc) {
 		instance().toJson(p_doc);
 	}
-
+    */
 	// 모드 설정: false=schedule 모드, true=profile 전용 모드
 	static void setMode(bool p_profileMode) {
 		instance()._setMode(p_profileMode);
