@@ -228,3 +228,5 @@ class CL_P10_PWM {
 		ledcWrite(_state.channel, p_raw);
 	}
 };
+
+extern CL_P10_PWM g_P10_pwm;

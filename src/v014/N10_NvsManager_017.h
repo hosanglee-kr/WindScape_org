@@ -97,6 +97,7 @@ class CL_N10_NvsManager {
 			return true;
 
 		if (!s_prefs.begin(G_N10_NS_RUNTIME, false)) {
+			s_initialized = false;
 			CL_D10_Logger::log(EN_L10_LOG_ERROR, "[N10] NVS begin failed (ns=%s)", G_N10_NS_RUNTIME);
 			return false;
 		}
@@ -162,38 +163,38 @@ class CL_N10_NvsManager {
 		// 2) Config JSON 계열
 		if (s_dirty.schedules && g_A10_config_root.schedules) {
 			s_dirty.schedules = false;
-			CL_C10_ConfigManager::saveSchedules();
+			CL_C10_ConfigManager::saveSchedules(*g_A10_config_root.schedules);
 			v_saved = true;
 		}
 		if (s_dirty.userProfiles && g_A10_config_root.userProfiles) {
 			s_dirty.userProfiles = false;
-			CL_C10_ConfigManager::saveUserProfiles();
+			CL_C10_ConfigManager::saveUserProfiles(*g_A10_config_root.userProfiles);
 			v_saved = true;
 		}
 		if (s_dirty.motion && g_A10_config_root.motion) {
 			s_dirty.motion = false;
-			CL_C10_ConfigManager::saveMotion();
+			CL_C10_ConfigManager::saveMotionConfig(*g_A10_config_root.motion);
 			v_saved = true;
 		}
 		if (s_dirty.system && g_A10_config_root.system) {
 			s_dirty.system = false;
-			CL_C10_ConfigManager::saveSystem();
+			CL_C10_ConfigManager::saveSystemConfig(*g_A10_config_root.system);
 			v_saved = true;
 		}
 		if (s_dirty.wifi && g_A10_config_root.wifi) {
 			s_dirty.wifi = false;
-			CL_C10_ConfigManager::saveWifi();
+			CL_C10_ConfigManager::saveWifiConfig(*g_A10_config_root.wifi);
 			v_saved = true;
 		}
 		if (s_dirty.windDict && g_A10_config_root.windDict) {
 			s_dirty.windDict = false;
-			// TODO: WindProfileDict 저장 함수 필요 시 추가
+			// CL_C10_ConfigManager::saveWindDict(*g_A10_config_root.windDict);
 			v_saved = true;
 		}
 
 		if (v_saved) {
 			s_lastSaveMs = v_now;
-			CL_D10_Logger::log(EN_L10_LOG_INFO, "[N10] Dirty flushed (runtime/config)");
+			CL_D10_Logger::log(EN_L10_LOG_INFO, "[N10] Dirty flushed ");
 		}
 	}
 
@@ -332,6 +333,8 @@ class CL_N10_NvsManager {
 		s_state.lastUserProfileNo = -1;
 		s_dirty.runtime			  = true;
 		N10_flush(true);
+
+		CL_D10_Logger::log(EN_L10_LOG_WARN, "[N10] Runtime state reset");
 	}
 
    private:

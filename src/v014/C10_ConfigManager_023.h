@@ -86,8 +86,8 @@ class CL_C10_ConfigManager {
 		return true;
 	}
 
-	static bool ioSaveJson(const char* p_path,
-						   const char* p_bak,
+	static bool ioSaveJson(const char*		   p_path,
+						   const char*		   p_bak,
 						   const JsonDocument& p_doc) {
 		if (LittleFS.exists(p_path)) {
 			if (p_bak && LittleFS.exists(p_bak)) {
@@ -228,7 +228,7 @@ class CL_C10_ConfigManager {
 	}
 
 	static void toJson_System(const ST_A10_SystemConfig& p,
-							  JsonDocument&				d) {
+							  JsonDocument&				 d) {
 		d["meta"]["version"]	 = p.meta.version;
 		d["meta"]["device_name"] = p.meta.device_name;
 		d["meta"]["last_update"] = p.meta.last_update;
@@ -334,8 +334,7 @@ class CL_C10_ConfigManager {
 		}
 	}
 
-
-/* =====================================================
+	/* =====================================================
 	 * Motion
 	 * ===================================================== */
 	static bool loadMotionConfig(ST_A10_MotionConfig& p) {
@@ -384,7 +383,7 @@ class CL_C10_ConfigManager {
 						v_js["manuf_prefix"] | "",
 						sizeof(v_d.manuf_prefix));
 				v_d.prefix_len = v_js["prefix_len"] | 0;
-				v_d.enabled    = v_js["enabled"] | true;
+				v_d.enabled	   = v_js["enabled"] | true;
 			}
 		}
 		return true;
@@ -424,7 +423,7 @@ class CL_C10_ConfigManager {
 	}
 
 	static void toJson_Motion(const ST_A10_MotionConfig& p,
-							  JsonDocument&				d) {
+							  JsonDocument&				 d) {
 		d["motion"]["enabled"]		   = p.enabled;
 		d["motion"]["pir"]["enabled"]  = p.pir.enabled;
 		d["motion"]["pir"]["hold_sec"] = p.pir.hold_sec;
@@ -547,7 +546,7 @@ class CL_C10_ConfigManager {
 		}
 
 		JsonArrayConst arr = d["schedules"].as<JsonArrayConst>();
-		p_cfg.count = 0;
+		p_cfg.count		   = 0;
 
 		for (JsonObjectConst js : arr) {
 			if (p_cfg.count >= A10_Const::MAX_SCHEDULES)
@@ -556,7 +555,7 @@ class CL_C10_ConfigManager {
 			ST_A10_ScheduleItem_t& s =
 				p_cfg.items[p_cfg.count++];
 
-			s.schNo   = js["schNo"]   | 0;
+			s.schNo = js["schNo"] | 0;
 			strlcpy(s.name,
 					js["name"] | "",
 					sizeof(s.name));
@@ -582,8 +581,7 @@ class CL_C10_ConfigManager {
 				JsonArrayConst segArr =
 					js["segments"].as<JsonArrayConst>();
 				for (JsonObjectConst jseg : segArr) {
-					if (s.seg_count
-						>= A10_Const::MAX_SEGMENTS_PER_SCHEDULE)
+					if (s.seg_count >= A10_Const::MAX_SEGMENTS_PER_SCHEDULE)
 						break;
 
 					ST_A10_ScheduleSegment_t& sg =
@@ -672,8 +670,8 @@ class CL_C10_ConfigManager {
 			JsonObject js =
 				d["schedules"][v_i];
 
-			js["schNo"]   = s.schNo;
-			js["name"]    = s.name;
+			js["schNo"]	  = s.schNo;
+			js["name"]	  = s.name;
 			js["enabled"] = s.enabled;
 
 			js["period"]["enabled"] =
@@ -695,24 +693,24 @@ class CL_C10_ConfigManager {
 				JsonObject jseg =
 					js["segments"][v_k];
 
-				jseg["segNo"]       = sg.segNo;
-				jseg["on_minutes"]  = sg.on_minutes;
+				jseg["segNo"]		= sg.segNo;
+				jseg["on_minutes"]	= sg.on_minutes;
 				jseg["off_minutes"] = sg.off_minutes;
-				jseg["mode"]        =
+				jseg["mode"] =
 					A10_modeToString(sg.mode);
-				jseg["presetCode"]  = sg.presetCode;
-				jseg["styleCode"]   = sg.styleCode;
+				jseg["presetCode"] = sg.presetCode;
+				jseg["styleCode"]  = sg.styleCode;
 
 				JsonObject adj = jseg["adjust"];
-				adj["wind_intensity"]   =
+				adj["wind_intensity"] =
 					sg.adjust.wind_intensity;
 				adj["wind_variability"] =
 					sg.adjust.wind_variability;
-				adj["gust_frequency"]   =
+				adj["gust_frequency"] =
 					sg.adjust.gust_frequency;
-				adj["fan_limit"]        =
+				adj["fan_limit"] =
 					sg.adjust.fan_limit;
-				adj["min_fan"]          =
+				adj["min_fan"] =
 					sg.adjust.min_fan;
 
 				jseg["fixed_speed"] =
@@ -751,7 +749,7 @@ class CL_C10_ConfigManager {
 	}
 
 	static void toJson_Schedules(const ST_A10_SchedulesRoot_t& p,
-								 JsonDocument&				  d) {
+								 JsonDocument&				   d) {
 		d["schedules_count"] = p.count;
 
 		for (uint8_t i = 0; i < p.count; i++) {
@@ -760,8 +758,8 @@ class CL_C10_ConfigManager {
 			JsonObject js =
 				d["schedules"][i];
 
-			js["schNo"]   = s.schNo;
-			js["name"]    = s.name;
+			js["schNo"]	  = s.schNo;
+			js["name"]	  = s.name;
 			js["enabled"] = s.enabled;
 
 			js["period"]["enabled"] =
@@ -784,25 +782,25 @@ class CL_C10_ConfigManager {
 				JsonObject jseg =
 					js["segments"][k];
 
-				jseg["segNo"]       = sg.segNo;
-				jseg["on_minutes"]  = sg.on_minutes;
+				jseg["segNo"]		= sg.segNo;
+				jseg["on_minutes"]	= sg.on_minutes;
 				jseg["off_minutes"] = sg.off_minutes;
-				jseg["mode"]        =
+				jseg["mode"] =
 					A10_modeToString(sg.mode);
-				jseg["presetCode"]  = sg.presetCode;
-				jseg["styleCode"]   = sg.styleCode;
+				jseg["presetCode"] = sg.presetCode;
+				jseg["styleCode"]  = sg.styleCode;
 
 				JsonObject adj =
 					jseg["adjust"];
-				adj["wind_intensity"]   =
+				adj["wind_intensity"] =
 					sg.adjust.wind_intensity;
 				adj["wind_variability"] =
 					sg.adjust.wind_variability;
-				adj["gust_frequency"]   =
+				adj["gust_frequency"] =
 					sg.adjust.gust_frequency;
-				adj["fan_limit"]        =
+				adj["fan_limit"] =
 					sg.adjust.fan_limit;
-				adj["min_fan"]          =
+				adj["min_fan"] =
 					sg.adjust.min_fan;
 
 				jseg["fixed_speed"] =
@@ -837,7 +835,7 @@ class CL_C10_ConfigManager {
 		}
 	}
 
-/* =====================================================
+	/* =====================================================
 	 * UserProfiles (cfg_uzOpProfile_025_final.json)
 	 * ===================================================== */
 	static bool loadUserProfiles(ST_A10_UserProfilesRoot_t& p_cfg) {
@@ -876,8 +874,7 @@ class CL_C10_ConfigManager {
 				JsonArrayConst sArr =
 					jp["segments"].as<JsonArrayConst>();
 				for (JsonObjectConst jseg : sArr) {
-					if (up.seg_count
-						>= A10_Const::MAX_SEGMENTS_PER_PROFILE)
+					if (up.seg_count >= A10_Const::MAX_SEGMENTS_PER_PROFILE)
 						break;
 
 					ST_A10_UserProfileSegment_t& sg =
@@ -967,9 +964,9 @@ class CL_C10_ConfigManager {
 			JsonObject jp =
 				d["userProfiles"]["profiles"][v_i];
 
-			jp["profileNo"]      = up.profileNo;
-			jp["name"]           = up.name;
-			jp["enabled"]        = up.enabled;
+			jp["profileNo"]		 = up.profileNo;
+			jp["name"]			 = up.name;
+			jp["enabled"]		 = up.enabled;
 			jp["repeatSegments"] = up.repeatSegments;
 
 			for (uint8_t v_k = 0;
@@ -980,25 +977,25 @@ class CL_C10_ConfigManager {
 				JsonObject jseg =
 					jp["segments"][v_k];
 
-				jseg["segNo"]       = sg.segNo;
-				jseg["on_minutes"]  = sg.on_minutes;
+				jseg["segNo"]		= sg.segNo;
+				jseg["on_minutes"]	= sg.on_minutes;
 				jseg["off_minutes"] = sg.off_minutes;
-				jseg["mode"]        =
+				jseg["mode"] =
 					A10_modeToString(sg.mode);
-				jseg["presetCode"]  = sg.presetCode;
-				jseg["styleCode"]   = sg.styleCode;
+				jseg["presetCode"] = sg.presetCode;
+				jseg["styleCode"]  = sg.styleCode;
 
 				JsonObject adj =
 					jseg["adjust"];
-				adj["wind_intensity"]   =
+				adj["wind_intensity"] =
 					sg.adjust.wind_intensity;
 				adj["wind_variability"] =
 					sg.adjust.wind_variability;
-				adj["gust_frequency"]   =
+				adj["gust_frequency"] =
 					sg.adjust.gust_frequency;
-				adj["fan_limit"]        =
+				adj["fan_limit"] =
 					sg.adjust.fan_limit;
-				adj["min_fan"]          =
+				adj["min_fan"] =
 					sg.adjust.min_fan;
 
 				jseg["fixed_speed"] =
@@ -1038,7 +1035,7 @@ class CL_C10_ConfigManager {
 	}
 
 	static void toJson_UserProfiles(const ST_A10_UserProfilesRoot_t& p,
-									JsonDocument&					d) {
+									JsonDocument&					 d) {
 		d["userProfiles"]["count"] = p.count;
 
 		for (uint8_t i = 0; i < p.count; i++) {
@@ -1047,11 +1044,11 @@ class CL_C10_ConfigManager {
 			JsonObject jp =
 				d["userProfiles"]["profiles"][i];
 
-			jp["profileNo"]      = up.profileNo;
-			jp["name"]           = up.name;
-			jp["enabled"]        = up.enabled;
+			jp["profileNo"]		 = up.profileNo;
+			jp["name"]			 = up.name;
+			jp["enabled"]		 = up.enabled;
 			jp["repeatSegments"] = up.repeatSegments;
-			jp["seg_count"]      = up.seg_count;
+			jp["seg_count"]		 = up.seg_count;
 
 			for (uint8_t k = 0;
 				 k < up.seg_count;
@@ -1061,25 +1058,25 @@ class CL_C10_ConfigManager {
 				JsonObject jseg =
 					jp["segments"][k];
 
-				jseg["segNo"]       = sg.segNo;
-				jseg["on_minutes"]  = sg.on_minutes;
+				jseg["segNo"]		= sg.segNo;
+				jseg["on_minutes"]	= sg.on_minutes;
 				jseg["off_minutes"] = sg.off_minutes;
-				jseg["mode"]        =
+				jseg["mode"] =
 					A10_modeToString(sg.mode);
-				jseg["presetCode"]  = sg.presetCode;
-				jseg["styleCode"]   = sg.styleCode;
+				jseg["presetCode"] = sg.presetCode;
+				jseg["styleCode"]  = sg.styleCode;
 
 				JsonObject adj =
 					jseg["adjust"];
-				adj["wind_intensity"]   =
+				adj["wind_intensity"] =
 					sg.adjust.wind_intensity;
 				adj["wind_variability"] =
 					sg.adjust.wind_variability;
-				adj["gust_frequency"]   =
+				adj["gust_frequency"] =
 					sg.adjust.gust_frequency;
-				adj["fan_limit"]        =
+				adj["fan_limit"] =
 					sg.adjust.fan_limit;
-				adj["min_fan"]          =
+				adj["min_fan"] =
 					sg.adjust.min_fan;
 
 				jseg["fixed_speed"] =
@@ -1115,98 +1112,9 @@ class CL_C10_ConfigManager {
 	}
 
 	/* =====================================================
-	 * Wind 해석 유틸
-	 * ===================================================== */
-/*
-	static int16_t findPresetIndexByCode(const ST_A10_WindProfileDict_t& p_dict,
-										 const char*					   p_code) {
-		if (!p_code || !p_code[0])
-			return -1;
-		for (uint8_t v_i = 0; v_i < p_dict.preset_count; v_i++) {
-			if (strcasecmp(p_dict.presets[v_i].code, p_code) == 0)
-				return (int16_t)v_i;
-		}
-		return -1;
-	}
-
-	static int16_t findStyleIndexByCode(const ST_A10_WindProfileDict_t& p_dict,
-										const char*						p_code) {
-		if (!p_code || !p_code[0])
-			return -1;
-		for (uint8_t v_i = 0; v_i < p_dict.style_count; v_i++) {
-			if (strcasecmp(p_dict.styles[v_i].code, p_code) == 0)
-				return (int16_t)v_i;
-		}
-		return -1;
-	}
-
-	static bool resolveWindParams(
-		const ST_A10_WindProfileDict_t& p_dict,
-		const char*						p_presetCode,
-		const char*						p_styleCode,
-		const ST_A10_AdjustDelta_t*		p_adj,
-		ST_A10_ResolvedWind_t&			p_out) {
-		int16_t v_pi = findPresetIndexByCode(p_dict, p_presetCode);
-		if (v_pi < 0)
-			return false;
-
-		const ST_A10_PresetEntry_t& v_p = p_dict.presets[v_pi];
-
-		float v_int	 = v_p.base.wind_intensity;
-		float v_var	 = v_p.base.wind_variability;
-		float v_gust = v_p.base.gust_frequency;
-		float v_fl	 = v_p.base.fan_limit;
-		float v_min	 = v_p.base.min_fan;
-		float v_tL	 = v_p.base.turbulence_length_scale;
-		float v_tS	 = v_p.base.turbulence_intensity_sigma;
-		float v_thB	 = v_p.base.thermal_bubble_strength;
-		float v_thR	 = v_p.base.thermal_bubble_radius;
-
-		if (p_styleCode && p_styleCode[0]) {
-			int16_t v_si = findStyleIndexByCode(p_dict, p_styleCode);
-			if (v_si >= 0) {
-				const ST_A10_StyleEntry_t& v_s =
-					p_dict.styles[v_si];
-				v_int *= v_s.factors.intensity_factor;
-				v_var *= v_s.factors.variability_factor;
-				v_gust *= v_s.factors.gust_factor;
-				v_thB *= v_s.factors.thermal_factor;
-			}
-		}
-
-		if (p_adj) {
-			v_int += p_adj->wind_intensity;
-			v_var += p_adj->wind_variability;
-			v_gust += p_adj->gust_frequency;
-			v_fl   += p_adj->fan_limit;
-			v_min  += p_adj->min_fan;
-		}
-
-		p_out.wind_intensity			 = A10_clampf(v_int, 0.0f, 100.0f);
-		p_out.wind_variability			 = A10_clampf(v_var, 0.0f, 100.0f);
-		p_out.gust_frequency			 = A10_clampf(v_gust, 0.0f, 100.0f);
-		p_out.fan_limit					 = A10_clampf(v_fl, 0.0f, 100.0f);
-		p_out.min_fan					 = A10_clampf(v_min, 0.0f, 100.0f);
-		p_out.turbulence_length_scale	 = (v_tL > 1.0f) ? v_tL : 1.0f;
-		p_out.turbulence_intensity_sigma = (v_tS > 0.0f) ? v_tS : 0.0f;
-		p_out.thermal_bubble_strength	 = (v_thB > 0.1f) ? v_thB : 0.1f;
-		p_out.thermal_bubble_radius		 = (v_thR > 1.0f) ? v_thR : 1.0f;
-
-		strlcpy(p_out.presetCode,
-				p_presetCode ? p_presetCode : "",
-				sizeof(p_out.presetCode));
-		strlcpy(p_out.styleCode,
-				p_styleCode ? p_styleCode : "",
-				sizeof(p_out.styleCode));
-
-		return true;
-	}
-	*/
-
-	/* =====================================================
 	 * Lazy-Load 전체 로드 / 해제 / 저장 / Export
 	 * ===================================================== */
-	static bool loadLazySection(const char* p_section,
+	static bool loadLazySection(const char*			 p_section,
 								ST_A10_ConfigRoot_t& p_root) {
 		if (strcmp(p_section, "wifi") == 0) {
 			if (!p_root.wifi)
@@ -1277,7 +1185,7 @@ class CL_C10_ConfigManager {
 		return v_ok;
 	}
 
-	static void freeLazySection(const char* p_section,
+	static void freeLazySection(const char*			 p_section,
 								ST_A10_ConfigRoot_t& p_root) {
 		if (strcmp(p_section, "wifi") == 0 && p_root.wifi) {
 			delete p_root.wifi;
@@ -1350,12 +1258,12 @@ class CL_C10_ConfigManager {
 	 * ===================================================== */
 	static void toJson_All(
 		const ST_A10_ConfigRoot_t& p,
-		JsonDocument&			  d,
-		bool					  includeSystem		 = true,
-		bool					  includeWifi		 = true,
-		bool					  includeMotion		 = true,
-		bool					  includeSchedules	 = true,
-		bool					  includeUserProfiles = true) {
+		JsonDocument&			   d,
+		bool					   includeSystem	   = true,
+		bool					   includeWifi		   = true,
+		bool					   includeMotion	   = true,
+		bool					   includeSchedules	   = true,
+		bool					   includeUserProfiles = true) {
 		if (includeSystem && p.system)
 			toJson_System(*p.system, d);
 		if (includeWifi && p.wifi)
@@ -1378,7 +1286,7 @@ class CL_C10_ConfigManager {
 	/* =====================================================
 	 * PATCH 기반 JSON 부분 업데이트 (예시)
 	 * ===================================================== */
-	static bool patchConfigFromJson(const char* p_section,
+	static bool patchConfigFromJson(const char*			p_section,
 									const JsonDocument& p_patch) {
 		if (strcmp(p_section, "system") == 0) {
 			ST_A10_SystemConfig v_cfg;
@@ -1497,8 +1405,7 @@ class CL_C10_ConfigManager {
 		return false;
 #endif
 	}
-}; // class CL_C10_ConfigManager
+};	// class CL_C10_ConfigManager
 
 // 전역 Config Root (포인터 보관용)
 inline ST_A10_ConfigRoot_t g_A10_config_root;
-

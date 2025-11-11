@@ -44,6 +44,7 @@
 #include <ArduinoJson.h>
 #include <string.h>
 
+#include "A10_Const_015.h"
 #include "D10_Logger_016.h"
 
 // ------------------------------------------------------
@@ -205,8 +206,8 @@ class CL_M10_MotionLogic {
 		v_o["bleRssi"]	 = _ble.last_rssi;
 		// v_o["lastChange"] = _state.lastChange_ms;
 		unsigned long v_now		= millis();
-		uint32_t	  v_lastSec = (lastActiveMs == 0) ? 0 : (uint32_t)((v_now - lastActiveMs) / 1000UL);
-		v_m["lastActiveSec"]	= v_lastSec;
+		uint32_t	  v_lastSec = (_state.lastChange_ms == 0) ? 0 : (uint32_t)((v_now - _state.lastChange_ms) / 1000UL);
+		v_o["lastActiveSec"]	= v_lastSec;
 
 		// 남은 hold 시간 (초 단위)
 		uint32_t v_now		 = millis();
@@ -234,16 +235,17 @@ class CL_M10_MotionLogic {
 	// --------------------------------------------------
 	// 외부에서 활성여부 확인
 	// --------------------------------------------------
-	bool isActive() {
+	bool isActive() const {
 		unsigned long v_now = millis();
 		// hold_sec 로직은 외부 config 사용 (예: g_A10_config_root.motion)
 		uint32_t v_hold = 0;
 		if (g_A10_config_root.motion) {
 			v_hold = (uint32_t)g_A10_config_root.motion->pir.hold_sec;
 		}
-		if (pirActive || bleActive)
+		if (_state.pirActive || _state.bleActive)
+			// if (pirActive || bleActive)
 			return true;
-		if (v_hold > 0 && (v_now - lastActiveMs) < (v_hold * 1000UL))
+		if (v_hold > 0 && (v_now - _state.lastChange_ms) < (v_hold * 1000UL))
 			return true;
 		return false;
 	}

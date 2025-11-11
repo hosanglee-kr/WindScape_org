@@ -35,48 +35,51 @@
 #include <ArduinoJson.h>
 #include <WiFi.h>
 #include <WiFiMulti.h>
-#include <time.h>
 #include <lwip/dns.h>
+#include <time.h>
 
 #include "A10_Const_015.h"
 #include "D10_Logger_016.h"
 
 class CL_WF10_WiFiManager {
-public:
-	static bool		s_staConnected;
+   public:
+	static bool		   s_staConnected;
 	static wl_status_t s_lastStaStatus;
-	static bool		s_timeSynced;
-	static uint32_t	s_lastSyncMs;
-	static uint8_t	s_reconnectAttempts;
+	static bool		   s_timeSynced;
+	static uint32_t	   s_lastSyncMs;
+	static uint8_t	   s_reconnectAttempts;
 
-public:
+   public:
 	// --------------------------------------------------
 	// 이벤트 등록
 	// --------------------------------------------------
 	static void attachWiFiEvents() {
 		static bool v_attached = false;
-		if (v_attached) return;
+		if (v_attached)
+			return;
 
 		WiFi.onEvent([](arduino_event_id_t, arduino_event_info_t) {
 			CL_D10_Logger::log(EN_L10_LOG_INFO, "[WiFi] STA start");
-		}, ARDUINO_EVENT_WIFI_STA_START);
+		},
+					 ARDUINO_EVENT_WIFI_STA_START);
 
 		WiFi.onEvent([](arduino_event_id_t, arduino_event_info_t) {
 			CL_D10_Logger::log(EN_L10_LOG_INFO, "[WiFi] STA got IP: %s",
 							   WiFi.localIP().toString().c_str());
-			s_staConnected = true;
-			s_lastStaStatus = WL_CONNECTED;
+			s_staConnected		= true;
+			s_lastStaStatus		= WL_CONNECTED;
 			s_reconnectAttempts = 0;
-		}, ARDUINO_EVENT_WIFI_STA_GOT_IP);
+		},
+					 ARDUINO_EVENT_WIFI_STA_GOT_IP);
 
 		WiFi.onEvent([](arduino_event_id_t event, arduino_event_info_t info) {
 			if (event == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
 				CL_D10_Logger::log(EN_L10_LOG_WARN,
 								   "[WiFi] STA disconnected (reason=%d)",
 								   info.wifi_sta_disconnected.reason);
-				s_staConnected = false;
+				s_staConnected	= false;
 				s_lastStaStatus = WL_DISCONNECTED;
-				s_timeSynced = false;
+				s_timeSynced	= false;
 
 				delay(500);
 				if (s_reconnectAttempts < 5) {
@@ -90,7 +93,8 @@ public:
 									   "[WiFi] Reconnect limit exceeded");
 				}
 			}
-		}, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
+		},
+					 ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
 
 		v_attached = true;
 	}
@@ -98,12 +102,12 @@ public:
 	// --------------------------------------------------
 	// 초기화
 	// --------------------------------------------------
-	static bool init(const ST_A10_WifiConfig& p_cfg_wifi,
+	static bool init(const ST_A10_WifiConfig&	p_cfg_wifi,
 					 const ST_A10_SystemConfig& p_cfg_system,
-					 WiFiMulti& p_multi,
-					 uint8_t p_apChannel = 1,
-					 uint8_t p_staMaxTries = 15,
-					 bool p_enableApDhcp = true) {
+					 WiFiMulti&					p_multi,
+					 uint8_t					p_apChannel	   = 1,
+					 uint8_t					p_staMaxTries  = 15,
+					 bool						p_enableApDhcp = true) {
 		attachWiFiEvents();
 
 		WiFi.persistent(false);
@@ -128,7 +132,8 @@ public:
 					WiFi.mode(WIFI_AP_STA);
 					startAP(p_cfg_wifi, p_apChannel, p_enableApDhcp);
 				}
-				if (s_staConnected) syncTimeIfNeeded(p_cfg_wifi, p_cfg_system);
+				if (s_staConnected)
+					syncTimeIfNeeded(p_cfg_wifi, p_cfg_system);
 				return true;
 			}
 			default: {
@@ -146,12 +151,13 @@ public:
 	// AP 시작 (고정 IP + DHCP On/Off)
 	// --------------------------------------------------
 	static bool startAP(const ST_A10_WifiConfig& p_cfg_wifi,
-						uint8_t p_channel,
-						bool p_enableDhcp) {
+						uint8_t					 p_channel,
+						bool					 p_enableDhcp) {
 		char v_pass[A10_Const::LEN_PASS + 1];
 		strlcpy(v_pass, p_cfg_wifi.ap.password, sizeof(v_pass));
 
-		if (strlen(v_pass) < 8) v_pass[0] = '\0';
+		if (strlen(v_pass) < 8)
+			v_pass[0] = '\0';
 
 		WiFi.softAPdisconnect(true);
 		WiFi.disconnect(true, true);
@@ -177,10 +183,10 @@ public:
 	// STA 시작
 	// --------------------------------------------------
 	static bool startSTA(const ST_A10_WifiConfig& p_cfg_wifi,
-						 WiFiMulti& p_multi,
-						 uint8_t p_maxTries) {
-		s_staConnected = false;
-		s_lastStaStatus = WL_IDLE_STATUS;
+						 WiFiMulti&				  p_multi,
+						 uint8_t				  p_maxTries) {
+		s_staConnected		= false;
+		s_lastStaStatus		= WL_IDLE_STATUS;
 		s_reconnectAttempts = 0;
 
 		if (p_cfg_wifi.sta_count == 0) {
@@ -191,15 +197,17 @@ public:
 		for (uint8_t v_i = 0; v_i < p_cfg_wifi.sta_count; v_i++) {
 			const char* v_ssid = p_cfg_wifi.sta[v_i].ssid;
 			const char* v_pass = p_cfg_wifi.sta[v_i].pass;
-			if (v_ssid[0] == '\0') continue;
+			if (v_ssid[0] == '\0')
+				continue;
 			p_multi.addAP(v_ssid, v_pass);
 			CL_D10_Logger::log(EN_L10_LOG_INFO, "[WiFi] STA candidate: %s", v_ssid);
 		}
 
-		uint8_t v_try = 0;
+		uint8_t	 v_try	= 0;
 		uint32_t v_wait = 500;
 		while (WiFi.status() != WL_CONNECTED && v_try < p_maxTries) {
-			if (p_multi.run(2000) == WL_CONNECTED) break;
+			if (p_multi.run(2000) == WL_CONNECTED)
+				break;
 			v_try++;
 			delay(v_wait);
 			v_wait = (v_wait < 4000) ? (v_wait * 2) : 4000;
@@ -209,7 +217,7 @@ public:
 			ip_addr_t v_dns;
 			dns_getserver(0, &v_dns);
 			CL_D10_Logger::log(EN_L10_LOG_INFO, "[WiFi] DNS: %s", ipaddr_ntoa(&v_dns));
-			s_staConnected = true;
+			s_staConnected	= true;
 			s_lastStaStatus = WL_CONNECTED;
 			return true;
 		}
@@ -223,10 +231,12 @@ public:
 	// --------------------------------------------------
 	static void syncTimeIfNeeded(const ST_A10_WifiConfig&,
 								 const ST_A10_SystemConfig& p_cfg_system,
-								 uint32_t p_interval_ms = 21600000) {
-		if (!s_staConnected) return;
+								 uint32_t					p_interval_ms = 21600000) {
+		if (!s_staConnected)
+			return;
 		uint32_t v_now = millis();
-		if (s_timeSynced && (v_now - s_lastSyncMs < p_interval_ms)) return;
+		if (s_timeSynced && (v_now - s_lastSyncMs < p_interval_ms))
+			return;
 
 		setenv("TZ", p_cfg_system.time.timezone, 1);
 		tzset();
@@ -250,18 +260,18 @@ public:
 	// 상태 JSON
 	// --------------------------------------------------
 	static void getWifiStateJson(JsonDocument& p_doc) {
-		JsonObject v = p_doc["wifi"]["state"].to<JsonObject>();
-		v["mode"] = (int)WiFi.getMode();
-		v["mode_name"] = (WiFi.getMode() == WIFI_STA ? "STA" :
-						  WiFi.getMode() == WIFI_AP ? "AP" : "AP+STA");
-		v["status"] = getStaStatusString();
-		v["ssid"] = WiFi.SSID();
-		v["ip"] = WiFi.localIP().toString();
-		v["mac"] = WiFi.macAddress();
-		v["rssi"] = WiFi.RSSI();
-		v["hostname"] = WiFi.getHostname();
-		v["connected"] = isStaConnected();
-		v["timeSynced"] = s_timeSynced;
+		JsonObject v		   = p_doc["wifi"]["state"].to<JsonObject>();
+		v["mode"]			   = (int)WiFi.getMode();
+		v["mode_name"]		   = (WiFi.getMode() == WIFI_STA ? "STA" : WiFi.getMode() == WIFI_AP ? "AP"
+																								 : "AP+STA");
+		v["status"]			   = getStaStatusString();
+		v["ssid"]			   = WiFi.SSID();
+		v["ip"]				   = WiFi.localIP().toString();
+		v["mac"]			   = WiFi.macAddress();
+		v["rssi"]			   = WiFi.RSSI();
+		v["hostname"]		   = WiFi.getHostname();
+		v["connected"]		   = isStaConnected();
+		v["timeSynced"]		   = s_timeSynced;
 		v["reconnectAttempts"] = s_reconnectAttempts;
 	}
 
@@ -269,15 +279,15 @@ public:
 	// 스캔 JSON
 	// --------------------------------------------------
 	static void scanNetworksToJson(JsonDocument& p_doc) {
-		int v_found = WiFi.scanNetworks(false, true);
-		JsonArray arr = p_doc["wifi"]["scan"].to<JsonArray>();
+		int		  v_found = WiFi.scanNetworks(false, true);
+		JsonArray arr	  = p_doc["wifi"]["scan"].to<JsonArray>();
 		for (int i = 0; i < v_found; i++) {
 			JsonObject o = arr.add<JsonObject>();
-			o["ssid"] = WiFi.SSID(i);
-			o["rssi"] = WiFi.RSSI(i);
-			o["chan"] = WiFi.channel(i);
-			o["bssid"] = WiFi.BSSIDstr(i);
-			o["enc"] = _encTypeToString(WiFi.encryptionType(i));
+			o["ssid"]	 = WiFi.SSID(i);
+			o["rssi"]	 = WiFi.RSSI(i);
+			o["chan"]	 = WiFi.channel(i);
+			o["bssid"]	 = WiFi.BSSIDstr(i);
+			o["enc"]	 = _encTypeToString(WiFi.encryptionType(i));
 		}
 		WiFi.scanDelete();
 	}
@@ -288,26 +298,40 @@ public:
 
 	static const char* getStaStatusString() {
 		switch (WiFi.status()) {
-			case WL_CONNECTED: return "CONNECTED";
-			case WL_NO_SSID_AVAIL: return "NO_SSID";
-			case WL_CONNECT_FAILED: return "FAILED";
-			case WL_IDLE_STATUS: return "IDLE";
-			case WL_DISCONNECTED: return "DISCONNECTED";
-			default: return "UNKNOWN";
+			case WL_CONNECTED:
+				return "CONNECTED";
+			case WL_NO_SSID_AVAIL:
+				return "NO_SSID";
+			case WL_CONNECT_FAILED:
+				return "FAILED";
+			case WL_IDLE_STATUS:
+				return "IDLE";
+			case WL_DISCONNECTED:
+				return "DISCONNECTED";
+			default:
+				return "UNKNOWN";
 		}
 	}
 
-private:
+   private:
 	static const char* _encTypeToString(wifi_auth_mode_t p_mode) {
 		switch (p_mode) {
-			case WIFI_AUTH_OPEN: return "OPEN";
-			case WIFI_AUTH_WEP: return "WEP";
-			case WIFI_AUTH_WPA_PSK: return "WPA_PSK";
-			case WIFI_AUTH_WPA2_PSK: return "WPA2_PSK";
-			case WIFI_AUTH_WPA_WPA2_PSK: return "WPA_WPA2_PSK";
-			case WIFI_AUTH_WPA3_PSK: return "WPA3_PSK";
-			case WIFI_AUTH_WPA2_WPA3_PSK: return "WPA2_WPA3_PSK";
-			default: return "UNKNOWN";
+			case WIFI_AUTH_OPEN:
+				return "OPEN";
+			case WIFI_AUTH_WEP:
+				return "WEP";
+			case WIFI_AUTH_WPA_PSK:
+				return "WPA_PSK";
+			case WIFI_AUTH_WPA2_PSK:
+				return "WPA2_PSK";
+			case WIFI_AUTH_WPA_WPA2_PSK:
+				return "WPA_WPA2_PSK";
+			case WIFI_AUTH_WPA3_PSK:
+				return "WPA3_PSK";
+			case WIFI_AUTH_WPA2_WPA3_PSK:
+				return "WPA2_WPA3_PSK";
+			default:
+				return "UNKNOWN";
 		}
 	}
 };
@@ -315,8 +339,8 @@ private:
 // --------------------------------------------------
 // Static Members
 // --------------------------------------------------
-bool		CL_WF10_WiFiManager::s_staConnected = false;
-wl_status_t CL_WF10_WiFiManager::s_lastStaStatus = WL_IDLE_STATUS;
-bool		CL_WF10_WiFiManager::s_timeSynced = false;
-uint32_t	CL_WF10_WiFiManager::s_lastSyncMs = 0;
+bool		CL_WF10_WiFiManager::s_staConnected		 = false;
+wl_status_t CL_WF10_WiFiManager::s_lastStaStatus	 = WL_IDLE_STATUS;
+bool		CL_WF10_WiFiManager::s_timeSynced		 = false;
+uint32_t	CL_WF10_WiFiManager::s_lastSyncMs		 = 0;
 uint8_t		CL_WF10_WiFiManager::s_reconnectAttempts = 0;

@@ -154,7 +154,7 @@ class CL_W10_WebAPI {
 						 s_control->toMetricsJson(v_metrics);  // ✅ metrics root object에 직접 채움
 
 						 CL_W10_WebAPI::broadcastMetrics(v_doc, true);
-						 CL_W10_WebAPI::broadcastChart(v_doc, true); 
+						 CL_W10_WebAPI::broadcastChart(v_doc, true);
 
 						 sendJson(p_request, v_doc);
 					 });
@@ -294,23 +294,23 @@ class CL_W10_WebAPI {
 	static void routeVersion() {
 		s_server->on("/api/version", HTTP_GET,
 					 [](AsyncWebServerRequest* p_request) {
-						if (!checkApiKey(p_request)) {
-							p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
-							return;
-						}
-						JsonDocument v_doc;
-						v_doc["module"]  = "SmartNatureWind";
-						v_doc["fw"]	  = A10_Const::FW_VERSION;
+						 if (!checkApiKey(p_request)) {
+							 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+							 return;
+						 }
+						 JsonDocument v_doc;
+						 v_doc["module"] = "SmartNatureWind";
+						 v_doc["fw"]	 = A10_Const::FW_VERSION;
 
-						v_doc["logger"]   = "D10_Logger_016";
-						v_doc["control"]  = "CT10_ControlManager_021";
-						v_doc["config"]  = "C10_ConfigManager_021";
-						v_doc["sim"]	  = "S10_Simulation_018";
-						v_doc["nvs"]	  = "N10_NvsManager_017";
-						v_doc["logger"]  = "D10_Logger_016";
-						v_doc["api"]      = "W10_WebAPI_022";
+						 v_doc["logger"]  = "D10_Logger_016";
+						 v_doc["control"] = "CT10_ControlManager_021";
+						 v_doc["config"]  = "C10_ConfigManager_021";
+						 v_doc["sim"]	  = "S10_Simulation_018";
+						 v_doc["nvs"]	  = "N10_NvsManager_017";
+						 v_doc["logger"]  = "D10_Logger_016";
+						 v_doc["api"]	  = "W10_WebAPI_022";
 
-						sendJson(p_request, v_doc);
+						 sendJson(p_request, v_doc);
 					 });
 	}
 
@@ -926,7 +926,7 @@ class CL_W10_WebAPI {
 		s_wsServerMetrics = &s_wsMetrics;
 
 		// Logger WebSocket 연결
-		CL_D10_Logger::attachWebSocket(&s_wsLogs);   // ✅ v016에서는 포인터 직접 전달
+		CL_D10_Logger::attachWebSocket(&s_wsLogs);	// ✅ v016에서는 포인터 직접 전달
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WebSocket routes initialized");
 	}
 };
