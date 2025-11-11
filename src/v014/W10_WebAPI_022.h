@@ -176,7 +176,7 @@ class CL_W10_WebAPI {
 		}
 		s_lastStateJson = v_msg;
 
-		for (auto* c : s_wsServerState->getClients()) {
+		for (auto& c : s_wsServerState->getClients()) {
             if (c && c->canSend()) c->text(v_msg);
         }
 		
@@ -201,7 +201,7 @@ class CL_W10_WebAPI {
 		}
 		s_lastMetricsJson = v_msg;
 
-		for (auto* c : s_wsServerMetrics->getClients()) {
+		for (auto& c : s_wsServerMetrics->getClients()) {
 			if (c && c->canSend())
 				c->text(v_msg);
 		}
@@ -226,7 +226,7 @@ class CL_W10_WebAPI {
 		}
 		s_lastChartJson = v_msg;
 
-		for (auto* c : s_wsServerChart->getClients()) {
+		for (auto& c : s_wsServerChart->getClients()) {
 			if (c && c.canSend())
 				c.text(v_msg);
 		}
@@ -236,7 +236,7 @@ class CL_W10_WebAPI {
 	// static void broadcastLog(const char* p_msg) {
 	// 	if (!s_wsServerLog)
 	// 		return;
-	// 	for (auto c : s_wsServerLog->getClients()) {
+	// 	for (auto& c : s_wsServerLog->getClients()) {
 	// 		if (c && c->canSend())
 	// 			c->text(p_msg);
 	// 	}
