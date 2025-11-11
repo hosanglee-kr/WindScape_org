@@ -668,7 +668,7 @@ class CL_CT10_ControlManager {
 			// ✅ override 적용 직후 차트 갱신
 			JsonDocument v_doc;
 			toChartJson(v_doc);
-			SC10_broadcastChart(v_doc);
+			SC10_broadcastChart(v_doc, true);
 		}
 
 		return true;
