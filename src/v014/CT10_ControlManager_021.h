@@ -58,7 +58,7 @@
 #include "S20_WindSolver_021.h"
 
 
-#inclide "W10_WebAPI_IF_020.h"
+#include "W10_WebAPI_IF_020.h"
 // forward declaration으로 순환참조 방지
 
 // ✅ 전방 선언으로 순환참조 방지
