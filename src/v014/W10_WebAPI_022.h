@@ -150,10 +150,10 @@ class CL_W10_WebAPI {
 						 }
 
 						 JsonDocument v_doc;
-						 JsonObject	  v_metrics = v_doc["metrics"].to<JsonObject>();
-						 s_control->toMetricsJson(v_metrics);  // ✅ metrics root object에 직접 채움
+					     // CT10이 "metrics" 루트를 포함한 전체 구조를 채우는 형태 유지
+					     s_control->toMetricsJson(v_doc);
 
-						 CL_W10_WebAPI::broadcastMetrics(v_doc, true);
+					     CL_W10_WebAPI::broadcastMetrics(v_doc, true);
 						 CL_W10_WebAPI::broadcastChart(v_doc, true);
 
 						 sendJson(p_request, v_doc);
@@ -569,7 +569,7 @@ class CL_W10_WebAPI {
 					p_request->send(500, "application/json", "{\"error\":\"save failed\"}");
 					return;
 				}
-				CL_N10_NvsManager::N10_markDirty("schedules", true);
+				CL_N10_NvsManager::markDirty("schedules", true);
 				p_request->send(200, "application/json", "{\"result\":\"ok\"}"); });
 	}
 
