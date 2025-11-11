@@ -35,7 +35,8 @@
 #include "WF10_WiFiManager_023.h"
 
 
-extern CL_M10_MotionLogic* g_M10_motionLogic;
+// [main.cpp] 또는 [MotionLogic.cpp] 파일에 추가
+CL_M10_MotionLogic* g_M10_motionLogic = nullptr;
 
 // ---- WebAPI Broker Functions ----
 void SC10_broadcastState(JsonDocument& doc, bool diffOnly) {
