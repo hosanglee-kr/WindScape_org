@@ -214,9 +214,10 @@ class CL_WF10_WiFiManager {
 		}
 
 		if (WiFi.status() == WL_CONNECTED) {
-			ip_addr_t v_dns;
-			dns_getserver(0, &v_dns);
-			CL_D10_Logger::log(EN_L10_LOG_INFO, "[WiFi] DNS: %s", ipaddr_ntoa(&v_dns));
+			const ip_addr_t* v_dns = dns_getserver(0);
+            if (v_dns) {
+                CL_D10_Logger::log(EN_L10_LOG_INFO, "[WiFi] DNS: %s", ipaddr_ntoa(v_dns));
+            }
 			s_staConnected	= true;
 			s_lastStaStatus = WL_CONNECTED;
 			return true;
