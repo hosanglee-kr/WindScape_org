@@ -97,7 +97,8 @@ void SC10_init() {
 	}
 
 	// 3. Config + NVS 초기화
-	CL_C10_ConfigManager::init();
+	CL_C10_ConfigManager::loadAll(g_A10_config_root);
+	// CL_C10_ConfigManager::init();
 	CL_N10_NvsManager::N10_begin();
 
 	// 4. Wi-Fi 초기화
@@ -145,16 +146,17 @@ void SC10_run() {
 	// Simulation 2Hz
 	if (v_now - v_lastSimMs >= 500) {
 		v_lastSimMs = v_now;
-		g_SC10_control.sim.loopTick();
+		g_SC10_control.sim.tick();
 	}
 
 	// ControlManager 루프
-	g_SC10_control.loop();
+	g_SC10_control.tick();
 
 	// NVS Dirty Flush (10초마다)
 	if (v_now - v_lastFlush >= 10000) {
 		v_lastFlush = v_now;
-		CL_N10_NvsManager::N10_flushIfDirty();
+		CL_N10_NvsManager::flushIfNeeded();
+		// CL_N10_NvsManager::N10_flushIfDirty();
 	}
 
 	// LED 상태 토글 (Wi-Fi 연결 유지 확인)
