@@ -298,7 +298,7 @@ typedef enum : uint8_t {
 	EN_A10_SEG_MODE_FIXED  = 1,	 // 고정속도
     EN_A10_SEG_MODE_COUNT
 } EN_A10_segment_mode_t;
-.
+
 /* ======================================================
  * Segment Mode <-> String 매핑 유틸
  * ====================================================== */
@@ -698,10 +698,9 @@ inline void A10_resetUserProfilesDefault(ST_A10_UserProfilesRoot_t& p_cfg) {
 //  - C10_ConfigManager::loadAll() 진입 전 호출 가정
 // ------------------------------------------------------
 inline void A10_resetToDefault(ST_A10_ConfigRoot_t& p_root) {
-    // windDict / schedules / userProfiles 전체 클리어
-    A10_resetWindProfileDictDefault(p_root.windDict);
-    A10_resetSchedulesDefault(p_root.schedules);
-    A10_resetUserProfilesDefault(p_root.userProfiles);
+    if (p_root.windDict)      A10_resetWindProfileDictDefault(*p_root.windDict);
+    if (p_root.schedules)     A10_resetSchedulesDefault(*p_root.schedules);
+    if (p_root.userProfiles)  A10_resetUserProfilesDefault(*p_root.userProfiles);
 }
 
 
@@ -718,12 +717,13 @@ inline int8_t A10_getPresetIndexByCode(const char* code) {
 }
 
 // windDict 탐색
-int16_t findPresetIndexByCode(const ST_A10_WindProfileDict_t& dict, const char* code);
-int16_t findStyleIndexByCode(const ST_A10_WindProfileDict_t& dict, const char* code);
-
+inline int16_t findPresetIndexByCode(const ST_A10_WindProfileDict_t& dict, const char* code);
+inline int16_t findStyleIndexByCode(const ST_A10_WindProfileDict_t& dict, const char* code);
 // 해석 유틸: preset × style × adjust → ResolvedWind
-bool resolveWindParams(const ST_A10_WindProfileDict_t& dict,
-						   const char*					   presetCode,
-						   const char*					   styleCode,
-						   const ST_A10_AdjustDelta_t*	   adj,
-						   ST_A10_ResolvedWind_t&		   outResolved);
+bool resolveWindParams(
+	const ST_A10_WindProfileDict_t& dict,
+	const char*                     presetCode,
+	const char*                     styleCode,
+	const ST_A10_AdjustDelta_t*     adj,
+	ST_A10_ResolvedWind_t&          outResolved
+);
