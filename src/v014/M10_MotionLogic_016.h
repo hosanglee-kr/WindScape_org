@@ -275,4 +275,4 @@ class CL_M10_MotionLogic {
 
 
 // 전역 인스턴스 포인터 선언
-CL_M10_MotionLogic* g_M10_motionLogic = nullptr;
+extern CL_M10_MotionLogic* g_M10_motionLogic;
