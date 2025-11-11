@@ -6,13 +6,14 @@
  * 모듈명 : Smart Nature Wind Wi-Fi Manager + NTP Sync (v023)
  * ------------------------------------------------------
  * 기능 요약:
- *  - Wi-Fi AP/STA/AP+STA 자동 연결 및 폴백 제어
- *  - WiFiMulti 기반 STA 우선 연결 + SoftAP 백업
- *  - Disconnect 이벤트 기반 자동 복구 (제한/지연 포함)
+ *  - Wi-Fi AP/STA/AP+STA 모드 자동 연결 및 폴백 지원
+ *  - STA 우선 연결 / 실패 시 Soft AP 백업 모드 전환
+ *  - Disconnect 이벤트 기반 자동 복구 (지연/횟수 제한 포함)
  *  - DHCP 재할당 지연 대응 및 SoftAP 고정 IP 설정
- *  - DNS 연결 검증 및 NTP 주기 동기화(6시간)
- *  - SoftAP DHCP 서버 활성/비활성 옵션 지원
- *  - Wi-Fi 상태 및 스캔 JSON 출력 (hostname 포함)
+ *  - WiFiMulti 기반 다중 네트워크 연결 및 재시도 로직
+ *  - DNS 서버 확인 및 NTP 시간 주기 동기화(6시간)
+ *  - SoftAP DHCP 서버 활성/비활성 제어 옵션
+ *  - Wi-Fi 상태 및 스캔 JSON 출력 (hostname, reconnect 횟수 포함)
  * ------------------------------------------------------
  * [구현 규칙]
  *  - ArduinoJson v7.x.x 사용 (v6 이하 금지)
@@ -22,7 +23,7 @@
  *  - 주석/필드명은 JSON 구조와 동일하게 유지
  * ------------------------------------------------------
  * [코드 네이밍 규칙]
- *   - 전역 함수      : WF10_ 접두사
+ *   - 전역 함수      : 모듈약어 제거
  *   - 로컬 변수      : v_ 접두사
  *   - 함수 인자      : p_ 접두사
  *   - 정적 멤버      : s_ 접두사
@@ -52,7 +53,7 @@ public:
 	// --------------------------------------------------
 	// 이벤트 등록
 	// --------------------------------------------------
-	static void WF10_attachWiFiEvents() {
+	static void attachWiFiEvents() {
 		static bool v_attached = false;
 		if (v_attached) return;
 
@@ -77,7 +78,6 @@ public:
 				s_lastStaStatus = WL_DISCONNECTED;
 				s_timeSynced = false;
 
-				// DHCP 지연 대응 + 재연결 시도 제한
 				delay(500);
 				if (s_reconnectAttempts < 5) {
 					s_reconnectAttempts++;
@@ -104,7 +104,7 @@ public:
 					 uint8_t p_apChannel = 1,
 					 uint8_t p_staMaxTries = 15,
 					 bool p_enableApDhcp = true) {
-		WF10_attachWiFiEvents();
+		attachWiFiEvents();
 
 		WiFi.persistent(false);
 		WiFi.setAutoReconnect(true);
@@ -116,28 +116,27 @@ public:
 		WiFi.setHostname(v_hostname);
 
 		switch (p_cfg_wifi.wifiMode) {
-			case 0: // AP
+			case 0:
 				WiFi.mode(WIFI_AP);
-				return WF10_startAP(p_cfg_wifi, p_apChannel, p_enableApDhcp);
-
-			case 1: { // STA
+				return startAP(p_cfg_wifi, p_apChannel, p_enableApDhcp);
+			case 1: {
 				WiFi.mode(WIFI_STA);
-				bool v_ok = WF10_startSTA(p_cfg_wifi, p_multi, p_staMaxTries);
+				bool v_ok = startSTA(p_cfg_wifi, p_multi, p_staMaxTries);
 				if (!v_ok) {
-					CL_D10_Logger::log(EN_L10_LOG_WARN, "[WiFi] STA fail → SoftAP fallback");
+					CL_D10_Logger::log(EN_L10_LOG_WARN,
+									   "[WiFi] STA fail → SoftAP fallback");
 					WiFi.mode(WIFI_AP_STA);
-					WF10_startAP(p_cfg_wifi, p_apChannel, p_enableApDhcp);
+					startAP(p_cfg_wifi, p_apChannel, p_enableApDhcp);
 				}
-				if (s_staConnected) WF10_syncTimeIfNeeded(p_cfg_wifi, p_cfg_system);
+				if (s_staConnected) syncTimeIfNeeded(p_cfg_wifi, p_cfg_system);
 				return true;
 			}
-
-			default: { // AP+STA
+			default: {
 				WiFi.mode(WIFI_AP_STA);
-				WF10_startAP(p_cfg_wifi, p_apChannel, p_enableApDhcp);
-				bool v_ok = WF10_startSTA(p_cfg_wifi, p_multi, p_staMaxTries);
+				startAP(p_cfg_wifi, p_apChannel, p_enableApDhcp);
+				bool v_ok = startSTA(p_cfg_wifi, p_multi, p_staMaxTries);
 				if (v_ok && s_staConnected)
-					WF10_syncTimeIfNeeded(p_cfg_wifi, p_cfg_system);
+					syncTimeIfNeeded(p_cfg_wifi, p_cfg_system);
 				return true;
 			}
 		}
@@ -146,9 +145,9 @@ public:
 	// --------------------------------------------------
 	// AP 시작 (고정 IP + DHCP On/Off)
 	// --------------------------------------------------
-	static bool WF10_startAP(const ST_A10_WifiConfig& p_cfg_wifi,
-							 uint8_t p_channel,
-							 bool p_enableDhcp) {
+	static bool startAP(const ST_A10_WifiConfig& p_cfg_wifi,
+						uint8_t p_channel,
+						bool p_enableDhcp) {
 		char v_pass[A10_Const::LEN_PASS + 1];
 		strlcpy(v_pass, p_cfg_wifi.ap.password, sizeof(v_pass));
 
@@ -164,7 +163,6 @@ public:
 		bool v_ok = WiFi.softAP(p_cfg_wifi.ap.ssid, v_pass, p_channel, false, 4);
 
 		if (!p_enableDhcp) {
-			// DHCP 서버 중지 (필요 시)
 			tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP);
 			CL_D10_Logger::log(EN_L10_LOG_INFO, "[WiFi] AP DHCP disabled");
 		}
@@ -178,9 +176,9 @@ public:
 	// --------------------------------------------------
 	// STA 시작
 	// --------------------------------------------------
-	static bool WF10_startSTA(const ST_A10_WifiConfig& p_cfg_wifi,
-							  WiFiMulti& p_multi,
-							  uint8_t p_maxTries) {
+	static bool startSTA(const ST_A10_WifiConfig& p_cfg_wifi,
+						 WiFiMulti& p_multi,
+						 uint8_t p_maxTries) {
 		s_staConnected = false;
 		s_lastStaStatus = WL_IDLE_STATUS;
 		s_reconnectAttempts = 0;
@@ -208,11 +206,9 @@ public:
 		}
 
 		if (WiFi.status() == WL_CONNECTED) {
-			// DNS 확인
 			ip_addr_t v_dns;
 			dns_getserver(0, &v_dns);
-			CL_D10_Logger::log(EN_L10_LOG_INFO, "[WiFi] DNS: %s",
-							   ipaddr_ntoa(&v_dns));
+			CL_D10_Logger::log(EN_L10_LOG_INFO, "[WiFi] DNS: %s", ipaddr_ntoa(&v_dns));
 			s_staConnected = true;
 			s_lastStaStatus = WL_CONNECTED;
 			return true;
@@ -225,9 +221,9 @@ public:
 	// --------------------------------------------------
 	// NTP 동기화 (6시간 주기)
 	// --------------------------------------------------
-	static void WF10_syncTimeIfNeeded(const ST_A10_WifiConfig&,
-									  const ST_A10_SystemConfig& p_cfg_system,
-									  uint32_t p_interval_ms = 21600000) {
+	static void syncTimeIfNeeded(const ST_A10_WifiConfig&,
+								 const ST_A10_SystemConfig& p_cfg_system,
+								 uint32_t p_interval_ms = 21600000) {
 		if (!s_staConnected) return;
 		uint32_t v_now = millis();
 		if (s_timeSynced && (v_now - s_lastSyncMs < p_interval_ms)) return;
@@ -253,18 +249,18 @@ public:
 	// --------------------------------------------------
 	// 상태 JSON
 	// --------------------------------------------------
-	static void WF10_getWifiStateJson(JsonDocument& p_doc) {
+	static void getWifiStateJson(JsonDocument& p_doc) {
 		JsonObject v = p_doc["wifi"]["state"].to<JsonObject>();
 		v["mode"] = (int)WiFi.getMode();
 		v["mode_name"] = (WiFi.getMode() == WIFI_STA ? "STA" :
 						  WiFi.getMode() == WIFI_AP ? "AP" : "AP+STA");
-		v["status"] = WF10_getStaStatusString();
+		v["status"] = getStaStatusString();
 		v["ssid"] = WiFi.SSID();
 		v["ip"] = WiFi.localIP().toString();
 		v["mac"] = WiFi.macAddress();
 		v["rssi"] = WiFi.RSSI();
 		v["hostname"] = WiFi.getHostname();
-		v["connected"] = WF10_isStaConnected();
+		v["connected"] = isStaConnected();
 		v["timeSynced"] = s_timeSynced;
 		v["reconnectAttempts"] = s_reconnectAttempts;
 	}
@@ -272,7 +268,7 @@ public:
 	// --------------------------------------------------
 	// 스캔 JSON
 	// --------------------------------------------------
-	static void WF10_scanNetworksToJson(JsonDocument& p_doc) {
+	static void scanNetworksToJson(JsonDocument& p_doc) {
 		int v_found = WiFi.scanNetworks(false, true);
 		JsonArray arr = p_doc["wifi"]["scan"].to<JsonArray>();
 		for (int i = 0; i < v_found; i++) {
@@ -286,11 +282,11 @@ public:
 		WiFi.scanDelete();
 	}
 
-	static bool WF10_isStaConnected() {
+	static bool isStaConnected() {
 		return s_staConnected && WiFi.status() == WL_CONNECTED;
 	}
 
-	static const char* WF10_getStaStatusString() {
+	static const char* getStaStatusString() {
 		switch (WiFi.status()) {
 			case WL_CONNECTED: return "CONNECTED";
 			case WL_NO_SSID_AVAIL: return "NO_SSID";
