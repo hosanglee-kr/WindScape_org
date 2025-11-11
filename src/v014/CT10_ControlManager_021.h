@@ -437,7 +437,7 @@ class CL_CT10_ControlManager {
 			// ✅ 시뮬레이터 차트 diffOnly 모드로 전송
 			JsonDocument v_doc;
 			toChartJson(v_doc, true);
-			CL_W10_WebAPI::broadcastChart(v_doc, true);
+			SC10_broadcastChart(v_doc, true);
 
 			_maybeBroadcastMetrics();
 			return;
@@ -453,28 +453,28 @@ class CL_CT10_ControlManager {
 		if (_dirtyState) {
 			JsonDocument v_doc;
 			toJson(v_doc);
-			CL_W10_WebAPI::broadcastState(v_doc, true);
+			SC10_broadcastState(v_doc, true);
 			_dirtyState = false;
 		}
 
 		if (_dirtyChart) {
 			JsonDocument v_doc;
 			toChartJson(v_doc);
-			CL_W10_WebAPI::broadcastChart(v_doc, true);
+			SC10_broadcastChart(v_doc, true);
 			_dirtyChart = false;
 		}
 
 		if (_dirtyMetrics) {
 			JsonDocument v_doc;
 			toMetricsJson(v_doc);
-			CL_W10_WebAPI::broadcastMetrics(v_doc, true);
+			SC10_broadcastMetrics(v_doc, true);
 			_dirtyMetrics = false;
 		}
 
 		if (_dirtySummary) {
 			JsonDocument v_doc;
 			toSummaryJson(v_doc);
-			CL_W10_WebAPI::broadcastState(v_doc, true);
+			SC10_broadcastState(v_doc, true);
 			_dirtySummary = false;
 		}
 	}
