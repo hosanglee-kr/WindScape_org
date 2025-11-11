@@ -1269,7 +1269,7 @@ class CL_C10_ConfigManager {
 		if (includeWifi && p.wifi)
 			toJson_Wifi(*p.wifi, d);
 		if (includeMotion && p.motion)
-			toJson_Motion(*p.motion, d);
+			toJson_Motion(*p.motion, d["motion"].to<JsonObject>());
 		if (includeSchedules && p.schedules)
 			toJson_Schedules(*p.schedules, d);
 		if (includeUserProfiles && p.userProfiles)
