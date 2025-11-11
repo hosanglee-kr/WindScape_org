@@ -392,7 +392,9 @@ class CL_W10_WebAPI {
 						 }
 						 JsonDocument v_doc;
 						 if (g_A10_config_root.motion) {
-							 CL_C10_ConfigManager::toJson_Motion(*g_A10_config_root.motion, v_doc);
+							 JsonObject v_motion = v_doc["motion"].to<JsonObject>();
+                             CL_C10_ConfigManager::toJson_Motion(*g_A10_config_root.motion, v_motion);
+							 //CL_C10_ConfigManager::toJson_Motion(*g_A10_config_root.motion, v_doc);
 						 }
 						 sendJson(p_request, v_doc);
 					 });
