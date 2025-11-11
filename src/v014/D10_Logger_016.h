@@ -279,7 +279,8 @@ class CL_D10_Logger {
 // ------------------------------------------------------
 // 정적 멤버 정의
 // ------------------------------------------------------
-inline HardwareSerial*	 CL_D10_Logger::_serial		   = nullptr;
+inline Stream* CL_D10_Logger::_serial = nullptr;
+//inline HardwareSerial*	 CL_D10_Logger::_serial		   = nullptr;
 inline EN_L10_LogLevel_t CL_D10_Logger::_logLevel	   = EN_L10_LOG_INFO;
 inline bool				 CL_D10_Logger::_showTimestamp = true;
 inline bool				 CL_D10_Logger::_showMemUsage  = false;
