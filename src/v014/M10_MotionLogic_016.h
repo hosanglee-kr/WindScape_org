@@ -73,6 +73,10 @@ typedef struct {
 	uint32_t lastChange_ms;
 } ST_M10_MotionState_t;
 
+
+// 전역 인스턴스 포인터 선언
+extern CL_M10_MotionLogic* g_M10_motionLogic;
+
 // 콜백 타입 (상태 변경 시 통지용)
 //  - CT10 등에서 등록하여 diffOnly WebSocket 브로드캐스트 등에 활용
 typedef void (*T_M10_OnChangeCallback_t)(const ST_M10_MotionState_t& p_state);
@@ -273,6 +277,3 @@ class CL_M10_MotionLogic {
 	T_M10_OnChangeCallback_t _onChange;
 };
 
-
-// 전역 인스턴스 포인터 선언
-extern CL_M10_MotionLogic* g_M10_motionLogic;
