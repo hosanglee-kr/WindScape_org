@@ -901,11 +901,11 @@ static bool loadLazySection(const char* p_section, ST_A10_ConfigRoot& p_root) {
         return loadMotionConfig(*p_root.motion);
     }
     if (strcmp(p_section, "schedules") == 0) {
-        if (!p_root.schedules) p_root.schedules = new ST_A10_ScheduleConfig();
+        if (!p_root.schedules) p_root.schedules = new ST_A10_SchedulesRoot_t();
         return loadSchedules(*p_root.schedules);
     }
     if (strcmp(p_section, "userProfiles") == 0) {
-        if (!p_root.userProfiles) p_root.userProfiles = new ST_A10_UserProfileConfig_t();
+        if (!p_root.userProfiles) p_root.userProfiles = new ST_A10_UserProfilesRoot_t();
         return loadUserProfiles(*p_root.userProfiles);
     }
     return false;
@@ -995,32 +995,46 @@ static void freeLazySection(const char* p_section, ST_A10_ConfigRoot& p_root) {
 // ------------------------------------------------------
 static bool patchConfigFromJson(const char* p_section, const JsonDocument& p_patch) {
     if (strcmp(p_section, "system") == 0) {
-        ST_A10_SystemConfig cfg;
-        if (!loadSystemConfig(cfg)) return false;
-        JsonObjectConst j = p_patch["system"];
-        if (j.contains("logging")) {
-            strlcpy(cfg.system.logging.level, j["logging"]["level"] | cfg.system.logging.level,
-                    sizeof(cfg.system.logging.level));
+        ST_A10_SystemConfig v_cfg;
+        if (!loadSystemConfig(v_cfg)) return false;
+
+        JsonObjectConst j_sys = p_patch["system"];
+        if (!j_sys.isNull()) {
+            JsonObjectConst j_log = j_sys["logging"];
+            if (!j_log.isNull()) {
+                const char* v_lv = j_log["level"] | v_cfg.system.logging.level;
+                strlcpy(v_cfg.system.logging.level, v_lv,
+                        sizeof(v_cfg.system.logging.level));
+            }
+
+            JsonObjectConst j_sec = j_sys["security"];
+            if (!j_sec.isNull()) {
+                const char* v_key = j_sec["api_key"] | v_cfg.security.api_key;
+                strlcpy(v_cfg.security.api_key, v_key,
+                        sizeof(v_cfg.security.api_key));
+            }
         }
-        if (j.contains("security")) {
-            strlcpy(cfg.security.api_key, j["security"]["api_key"] | cfg.security.api_key,
-                    sizeof(cfg.security.api_key));
-        }
-        return saveSystemConfig(cfg);
+        return saveSystemConfig(v_cfg);
     }
 
     if (strcmp(p_section, "wifi") == 0) {
-        ST_A10_WifiConfig cfg;
-        if (!loadWifiConfig(cfg)) return false;
-        JsonObjectConst j = p_patch["wifi"];
-        if (j.contains("ap")) {
-            strlcpy(cfg.ap.ssid, j["ap"]["ssid"] | cfg.ap.ssid, sizeof(cfg.ap.ssid));
-            strlcpy(cfg.ap.password, j["ap"]["password"] | cfg.ap.password, sizeof(cfg.ap.password));
+        ST_A10_WifiConfig v_cfg;
+        if (!loadWifiConfig(v_cfg)) return false;
+
+        JsonObjectConst j_wifi = p_patch["wifi"];
+        if (!j_wifi.isNull()) {
+            JsonObjectConst j_ap = j_wifi["ap"];
+            if (!j_ap.isNull()) {
+                const char* v_ssid = j_ap["ssid"] | v_cfg.ap.ssid;
+                const char* v_pwd  = j_ap["password"] | v_cfg.ap.password;
+                strlcpy(v_cfg.ap.ssid, v_ssid, sizeof(v_cfg.ap.ssid));
+                strlcpy(v_cfg.ap.password, v_pwd, sizeof(v_cfg.ap.password));
+            }
         }
-        return saveWifiConfig(cfg);
+        return saveWifiConfig(v_cfg);
     }
 
-    // motion, schedules, userProfiles 동일 패턴
+    // motion, schedules, userProfiles → 동일 패턴으로 확장 예정
     return false;
 }
 
