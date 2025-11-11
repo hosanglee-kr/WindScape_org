@@ -58,7 +58,10 @@
 #include "S20_WindSolver_021.h"
 
 // forward declaration으로 순환참조 방지
+
+// ✅ 전방 선언으로 순환참조 방지
 class CL_W10_WebAPI;
+class CL_CT10_ControlManager;  // CT10 정적 인터페이스 사용 대비
 
 // ------------------------------------------------------
 // 런타임 상태 구조체
@@ -817,45 +820,47 @@ class CL_CT10_ControlManager {
 		return true;
 	}
 
+
 	// Segment On
-	template <typename T_segment>
-	void _applySegmentOn(const T_segment& p_seg) {
-		if (!g_A10_config_root.windDict)
-			return;
+template <typename T_segment>
+void _applySegmentOn(const T_segment& p_seg) {
+	if (!g_A10_config_root.windDict)
+		return;
 
-		if (strcasecmp(p_seg.mode, "FIXED") == EN_A10_SEG_MODE_FIXED) {
-			sim.stop();
-			if (pwm) {
-				pwm->P10_setDutyPercent(p_seg.fixed_speed);
-			}
-			return;
+	// FIXED 모드: 문자열 직접 비교 (규칙 준수)
+	if (strcasecmp(p_seg.mode, "FIXED") == 0) {
+		sim.stop();
+		if (pwm) {
+			pwm->P10_setDutyPercent(p_seg.fixed_speed);
 		}
-
-		// PRESET 모드: presetCode+styleCode+adjust → ResolvedWind → sim.applyResolvedWind
-		ST_A10_ResolvedWind_t v_res;
-		memset(&v_res, 0, sizeof(v_res));
-
-		bool v_ok = S20_resolveWindParams(
-			*g_A10_config_root.windDict,
-			p_seg.presetCode,
-			p_seg.styleCode,
-			&p_seg.adjust,
-			v_res);
-		if (v_ok && v_res.valid) {
-			sim.applyResolvedWind(v_res);
-
-			// ✅ Segment 변경 시 상태 브로드캐스트 (Web UI 즉시 반영)
-			JsonDocument v_doc;
-			toJson(v_doc);
-			CL_W10_WebAPI::broadcastState(v_doc, true);
-		} else {
-			CL_D10_Logger::log(EN_L10_LOG_WARN,
-							   "[CT10] Segment resolve failed (mode=%s,preset=%s,style=%s)",
-							   p_seg.mode,
-							   p_seg.presetCode,
-							   p_seg.styleCode);
-		}
+		return;
 	}
+
+	// PRESET 모드: presetCode+styleCode+adjust → ResolvedWind → sim.applyResolvedWind
+	ST_A10_ResolvedWind_t v_res;
+	memset(&v_res, 0, sizeof(v_res));
+
+	bool v_ok = S20_resolveWindParams(
+		*g_A10_config_root.windDict,
+		p_seg.presetCode,
+		p_seg.styleCode,
+		&p_seg.adjust,
+		v_res);
+	if (v_ok && v_res.valid) {
+		sim.applyResolvedWind(v_res);
+
+		// ✅ Segment 변경 시 상태 브로드캐스트 (Web UI 즉시 반영)
+		JsonDocument v_doc;
+		toJson(v_doc);
+		CL_W10_WebAPI::broadcastState(v_doc, true);
+	} else {
+		CL_D10_Logger::log(EN_L10_LOG_WARN,
+						   "[CT10] Segment resolve failed (mode=%s,preset=%s,style=%s)",
+						   p_seg.mode,
+						   p_seg.presetCode,
+						   p_seg.styleCode);
+	}
+}
 
 	// Segment Off
 	void _applySegmentOff() {
