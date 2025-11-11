@@ -86,15 +86,10 @@ class CL_M10_MotionLogic {
     // [추가됨] 정적 초기화 함수 (SC10/Main 진입용)
 	// --------------------------------------------------
 	static void M10_begin() {
-		static CL_M10_MotionLogic s_instance;
-		s_instance.loadFromJson(*g_A10_config_root.system);  // 시스템 설정 기반 초기화
-		s_instance.tick();  // 초기 상태 업데이트 1회 수행
-
-		// 전역 접근이 필요한 경우 g_M10_motionLogic 포인터로 관리 가능
-		g_M10_motionLogic = &s_instance;
-
-		CL_D10_Logger::log(EN_L10_LOG_INFO, "[M10] MotionLogic initialized");
-	}
+        static CL_M10_MotionLogic s_instance;
+        g_M10_motionLogic = &s_instance;
+        CL_D10_Logger::log(EN_L10_LOG_INFO, "[M10] MotionLogic initialized");
+    }
 
 	CL_M10_MotionLogic() {
 		memset(&_pir, 0, sizeof(_pir));
