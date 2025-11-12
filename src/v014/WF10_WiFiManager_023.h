@@ -340,8 +340,11 @@ class CL_WF10_WiFiManager {
 // --------------------------------------------------
 // Static Members
 // --------------------------------------------------
+
+/*  cpp 에서 초기화
 bool		CL_WF10_WiFiManager::s_staConnected		 = false;
 wl_status_t CL_WF10_WiFiManager::s_lastStaStatus	 = WL_IDLE_STATUS;
 bool		CL_WF10_WiFiManager::s_timeSynced		 = false;
 uint32_t	CL_WF10_WiFiManager::s_lastSyncMs		 = 0;
 uint8_t		CL_WF10_WiFiManager::s_reconnectAttempts = 0;
+*/
