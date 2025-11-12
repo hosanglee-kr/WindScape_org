@@ -32,7 +32,7 @@
  */
 
 #include "W10_Web_024.h"
-#include "M10_WiFiManager_023.h" // M10_WiFiManager::M10_scanNetworksJson 사용을 위해 포함
+#include "WF10_WiFiManager_023.h" // M10_WiFiManager::M10_scanNetworksJson 사용을 위해 포함
 
 
 // ------------------------------------------------------
