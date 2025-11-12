@@ -69,7 +69,7 @@ static void W10_pushRoute(const char* p_uri, const char* p_file, const char* p_m
 // ------------------------------------------------------
 void CL_W10_WebAPI::routeStaticAssets() {
 	// v012의 _buildRoutes 로직 복구
-	auto& v_web = g_A10_config_root->system.system.web;
+	auto& v_web = g_A10_config_root.system->system.web;
 
 	auto v_addRoute = [&](const char* p_cfg, const char* p_def, const char* p_mime) {
 		if (strlen(p_cfg) > 0)
@@ -89,7 +89,7 @@ void CL_W10_WebAPI::routeStaticAssets() {
 
 	// 1. 루트 경로 '/' 리다이렉트
 	s_server->on("/", HTTP_GET, [](AsyncWebServerRequest* r) {
-		const char* f = g_A10_config_root->system.system.web.html;
+		const char* f = g_A10_config_root.system.system.web.html;
 		if (strlen(f) && LittleFS.exists(f))
 			r->redirect(f);
 		else
