@@ -26,6 +26,7 @@
         "initializer_list": "cpp",
         "regex": "cpp",
         "utility": "cpp",
-        "*.001": "cpp"
+        "*.001": "cpp",
+        "cmath": "cpp"
     } // Regular
 }

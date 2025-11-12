@@ -47,9 +47,9 @@
 #include "CT10_ControlManager_021.h"
 #include "D10_Logger_016.h"
 #include "M10_MotionLogic_016.h"
-#include "N10_NvsManager_017.h"
+#include "N10_NvsManager_018.h"
 #include "P10_PWM_ctrl_014.h"
-#include "S10_Simulation_018.h"
+#include "S10_Simulation_019.h"
 
 // CL_W10_WebAPI 클래스는 4개의 파일로 분리 구현됨:
 // 1. W10_Web_023.h (선언 및 인라인 유틸)
