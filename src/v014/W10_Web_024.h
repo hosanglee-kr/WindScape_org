@@ -46,7 +46,7 @@
 #include "D10_Logger_016.h"
 #include "CT10_ControlManager_021.h"
 #include "N10_NvsManager_018.h"
-#include "M10_WiFiManager_023.h"
+#include "WF10_WiFiManager_023.h"
 
 // ------------------------------------------------------
 // WebAPI Manager
