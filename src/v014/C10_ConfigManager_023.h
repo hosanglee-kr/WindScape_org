@@ -1346,6 +1346,233 @@ class CL_C10_ConfigManager {
 		return false;
 	}
 
+
+
+	/* =====================================================
+	 * Schedules/UserProfiles PATCH
+	 * ===================================================== */
+	// 스케줄 설정(p_cfg)을 JSON 패치(p_patch)로 업데이트 후 저장
+	static bool patchSchedulesFromJson(ST_A10_SchedulesRoot_t& p_cfg,
+									   const JsonDocument&	 p_patch) {
+		JsonArrayConst arr = p_patch["schedules"].as<JsonArrayConst>();
+		if (arr.isNull()) {
+			CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Schedules patch: 'schedules' array missing");
+			return false;
+		}
+
+		bool v_changed = false;
+
+		for (JsonObjectConst j_patch : arr) {
+			// schNo가 존재하고 유효한지 확인 (ID 기반으로 기존 항목 찾기)
+			if (!j_patch["schNo"].is<uint16_t>()) continue;
+			uint16_t v_schNo = j_patch["schNo"];
+
+			ST_A10_ScheduleItem_t* v_item = nullptr;
+			for (uint8_t i = 0; i < p_cfg.count; i++) {
+				if (p_cfg.items[i].schNo == v_schNo) {
+					v_item = &p_cfg.items[i];
+					break;
+				}
+			}
+
+			if (!v_item) {
+				CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Schedule patch skipped: ID %u not found", v_schNo);
+				continue;
+			}
+            
+            // --- 4. 필드별 덮어쓰기 (PATCH 로직) ---
+            // A. 기본 속성
+            if (j_patch["name"].is<const char*>()) {
+                strlcpy(v_item->name, j_patch["name"], sizeof(v_item->name));
+                v_changed = true;
+            }
+            if (j_patch["enabled"].is<bool>()) {
+                v_item->enabled = j_patch["enabled"];
+                v_changed = true;
+            }
+
+            // B. period
+            JsonObjectConst j_per = j_patch["period"];
+            if (!j_per.isNull()) {
+                if (j_per["enabled"].is<bool>()) {
+                    v_item->period.enabled = j_per["enabled"];
+                    v_changed = true;
+                }
+                if (j_per["start_time"].is<const char*>()) {
+                    strlcpy(v_item->period.start_time, j_per["start_time"], sizeof(v_item->period.start_time));
+                    v_changed = true;
+                }
+                if (j_per["end_time"].is<const char*>()) {
+                    strlcpy(v_item->period.end_time, j_per["end_time"], sizeof(v_item->period.end_time));
+                    v_changed = true;
+                }
+                
+                // days 배열 패치
+                JsonArrayConst j_days = j_per["days"].as<JsonArrayConst>();
+                if (!j_days.isNull()) {
+                    for (uint8_t v_d = 0; v_d < 7 && v_d < j_days.size(); v_d++) {
+                        if (j_days[v_d].is<uint8_t>()) {
+                            v_item->period.days[v_d] = j_days[v_d];
+                            v_changed = true;
+                        }
+                    }
+                }
+            }
+            
+            // C. segments
+            // 복잡한 segments 배열 전체를 부분적으로 패치하는 로직은 매우 복잡하며,
+            // 배열 전체를 덮어쓰는 것(loadSchedules와 동일)이 더 안전할 수 있습니다.
+            // 여기서는 segments 배열 전체가 패치로 주어지면 전체를 덮어씁니다.
+            // (PATCH가 아닌 PUT 방식 적용)
+            JsonArrayConst j_segs = j_patch["segments"].as<JsonArrayConst>();
+            if (!j_segs.isNull()) {
+                v_item->seg_count = 0; // 기존 세그먼트 초기화
+                for (JsonObjectConst jseg : j_segs) {
+                    if (v_item->seg_count >= A10_Const::MAX_SEGMENTS_PER_SCHEDULE) break;
+
+                    ST_A10_ScheduleSegment_t& sg = v_item->segments[v_item->seg_count++];
+                    // 기존 loadSchedules 로직을 부분적으로 사용 (안전한 덮어쓰기)
+                    sg.segNo = jseg["segNo"] | 0;
+                    sg.on_minutes = jseg["on_minutes"] | 10;
+                    sg.off_minutes = jseg["off_minutes"] | 0;
+
+                    const char* v_mode = jseg["mode"] | "PRESET";
+                    sg.mode = A10_modeFromString(v_mode);
+                    strlcpy(sg.presetCode, jseg["presetCode"] | "", sizeof(sg.presetCode));
+                    strlcpy(sg.styleCode, jseg["styleCode"] | "", sizeof(sg.styleCode));
+                    
+                    // adjust 구조체 패치
+                    if (jseg["adjust"].is<JsonObjectConst>()) {
+                        JsonObjectConst adj = jseg["adjust"];
+                        sg.adjust.wind_intensity = adj["wind_intensity"] | 0.0f;
+                        sg.adjust.wind_variability = adj["wind_variability"] | 0.0f;
+                        sg.adjust.gust_frequency = adj["gust_frequency"] | 0.0f;
+                        sg.adjust.fan_limit = adj["fan_limit"] | 0.0f;
+                        sg.adjust.min_fan = adj["min_fan"] | 0.0f;
+                    }
+                    
+                    sg.fixed_speed = jseg["fixed_speed"] | 0.0f;
+                }
+                v_changed = true;
+            }
+            
+            // D. autoOff
+            // ... (autoOff 및 motion 관련 나머지 필드에 대한 유사한 PATCH 로직 추가 필요)
+
+			if (v_changed) {
+				CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[C10] Schedule %u patched.", v_schNo);
+			}
+		}
+
+		// 5. 변경 사항 저장
+		if (v_changed) {
+			CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] Schedules config patched and saved");
+			return saveSchedules(p_cfg);
+		}
+
+		return false;
+	}
+
+	// 사용자 프로필 설정(p_cfg)을 JSON 패치(p_patch)로 업데이트 후 저장
+	static bool patchUserProfilesFromJson(ST_A10_UserProfilesRoot_t& p_cfg,
+										  const JsonDocument&		 p_patch) {
+		JsonArrayConst arr = p_patch["userProfiles"]["profiles"].as<JsonArrayConst>();
+		if (arr.isNull()) {
+			CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] UserProfiles patch: 'profiles' array missing");
+			return false;
+		}
+
+		bool v_changed = false;
+
+		for (JsonObjectConst j_patch : arr) {
+			// profileNo가 존재하고 유효한지 확인 (ID 기반으로 기존 항목 찾기)
+			if (!j_patch["profileNo"].is<uint16_t>()) continue;
+			uint16_t v_profileNo = j_patch["profileNo"];
+
+			ST_A10_UserProfileItem_t* v_item = nullptr;
+			for (uint8_t i = 0; i < p_cfg.count; i++) {
+				if (p_cfg.items[i].profileNo == v_profileNo) {
+					v_item = &p_cfg.items[i];
+					break;
+				}
+			}
+
+			if (!v_item) {
+				CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] UserProfile patch skipped: ID %u not found", v_profileNo);
+				continue;
+			}
+            
+            // --- 4. 필드별 덮어쓰기 (PATCH 로직) ---
+            // A. 기본 속성
+            if (j_patch["name"].is<const char*>()) {
+                strlcpy(v_item->name, j_patch["name"], sizeof(v_item->name));
+                v_changed = true;
+            }
+            if (j_patch["enabled"].is<bool>()) {
+                v_item->enabled = j_patch["enabled"];
+                v_changed = true;
+            }
+            if (j_patch["repeatSegments"].is<bool>()) {
+                v_item->repeatSegments = j_patch["repeatSegments"];
+                v_changed = true;
+            }
+
+            // B. segments
+            // patchSchedulesFromJson과 동일하게, segments 배열 전체가 주어지면 전체를 덮어씁니다.
+            JsonArrayConst j_segs = j_patch["segments"].as<JsonArrayConst>();
+            if (!j_segs.isNull()) {
+                v_item->seg_count = 0; // 기존 세그먼트 초기화
+                for (JsonObjectConst jseg : j_segs) {
+                    if (v_item->seg_count >= A10_Const::MAX_SEGMENTS_PER_PROFILE) break;
+
+                    ST_A10_UserProfileSegment_t& sg = v_item->segments[v_item->seg_count++];
+                    // 기존 loadUserProfiles 로직을 부분적으로 사용 (안전한 덮어쓰기)
+                    sg.segNo = jseg["segNo"] | 0;
+                    sg.on_minutes = jseg["on_minutes"] | 10;
+                    sg.off_minutes = jseg["off_minutes"] | 0;
+
+                    const char* v_mode = jseg["mode"] | "PRESET";
+                    sg.mode = A10_modeFromString(v_mode);
+                    strlcpy(sg.presetCode, jseg["presetCode"] | "", sizeof(sg.presetCode));
+                    strlcpy(sg.styleCode, jseg["styleCode"] | "", sizeof(sg.styleCode));
+                    
+                    // adjust 구조체 패치
+                    if (jseg["adjust"].is<JsonObjectConst>()) {
+                        JsonObjectConst adj = jseg["adjust"];
+                        sg.adjust.wind_intensity = adj["wind_intensity"] | 0.0f;
+                        sg.adjust.wind_variability = adj["wind_variability"] | 0.0f;
+                        sg.adjust.gust_frequency = adj["gust_frequency"] | 0.0f;
+                        sg.adjust.fan_limit = adj["fan_limit"] | 0.0f;
+                        sg.adjust.min_fan = adj["min_fan"] | 0.0f;
+                    }
+                    
+                    sg.fixed_speed = jseg["fixed_speed"] | 0.0f;
+                }
+                v_changed = true;
+            }
+            
+            // C. autoOff
+            // ... (autoOff 및 motion 관련 나머지 필드에 대한 유사한 PATCH 로직 추가 필요)
+
+			if (v_changed) {
+				CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[C10] UserProfile %u patched.", v_profileNo);
+			}
+		}
+
+		// 5. 변경 사항 저장
+		if (v_changed) {
+			CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] UserProfiles config patched and saved");
+			return saveUserProfiles(p_cfg);
+		}
+
+		return false;
+	}
+
+
+
+
+
+
 	/* =====================================================
 	 * Factory Reset (기본값 파일 기반 복구)
 	 *  - CFG_DEFAULT_FILE 관련 상수는 A10_Const 내 정의 가정
