@@ -31,7 +31,14 @@
  * ------------------------------------------------------
  */
 
-#include "W10_Web_024.h" // ✅ v024로 변경
+#include "W10_Web_024.h" 
+
+
+// ✅ 1. extern 선언 추가 (Routes.cpp에서 정의된 객체 참조)
+extern AsyncWebSocket s_wsLogs;
+extern AsyncWebSocket s_wsState;
+extern AsyncWebSocket s_wsChart;
+extern AsyncWebSocket s_wsMetrics;
 
 // --------------------------------------------------
 // WebSocket 초기화 및 라우팅
@@ -84,11 +91,12 @@ void CL_W10_WebAPI::routeWebSocket() {
 	});
 	s_server->addHandler(&s_wsMetrics);
 
-	// WebSocket 포인터 연결
-	s_wsServerLog	  = &s_wsLogs;
-	s_wsServerState	  = &s_wsState;
-	s_wsServerChart	  = &s_wsChart;
-	s_wsServerMetrics = &s_wsMetrics;
+	// ✅ 이 포인터 연결 로직은 Routes.cpp의 begin() 함수로 이동했습니다.
+	// s_wsServerLog	  = &s_wsLogs;
+	// s_wsServerState	  = &s_wsState;
+	// s_wsServerChart	  = &s_wsChart;
+	// s_wsServerMetrics = &s_wsMetrics;
+
 
 	// Logger 모듈에 WebSocket 연결
 	CL_D10_Logger::attachWebSocket(s_wsServerLog);
