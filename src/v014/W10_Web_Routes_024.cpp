@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------
- * 소스명 : W10_WebAPI_Routes_024.cpp
+ * 소스명 : W10_Web_Routes_024.cpp
  * 모듈 약어 : W10
  * 모듈명 : Smart Nature Wind Web API (v024) - Routes Implementation
  * ------------------------------------------------------
@@ -822,4 +822,34 @@ void CL_W10_WebAPI::routeMotionFeed() {
 		sendJson(p_request, v_res);
 	});
 }
+
+
+
+// ... (routeSchedules와 routeUserProfiles 등의 POST 핸들러 내에서 sendJson/sendText로 변경 필요 - 이 부분은 생략하고, 다음 단계에서 필요 시 수정 검토) ...
+
+// ... (routeLogs 함수 수정) ...
+void CL_W10_WebAPI::routeLogs() {
+	s_server->on("/api/logs", HTTP_GET,
+				 [](AsyncWebServerRequest* p_request) {
+					 if (!checkApiKey(p_request)) {
+						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+						 return;
+					 }
+					 JsonDocument v_doc;
+					 CL_D10_Logger::getLogsAsJson(v_doc);
+					 // 기존의 serializeJson + p_request->send 대신 sendJson 사용
+					 sendJson(p_request, v_doc);
+				 });
+}
+// ... (routeReload 함수 수정) ...
+void CL_W10_WebAPI::routeReload() {
+	s_server->on("/api/reload", HTTP_POST,
+				 [](AsyncWebServerRequest* p_request) {
+					 // ... (로직 생략) ...
+					 JsonDocument v_doc;
+					 v_doc["result"] = "ok";
+					 sendJson(p_request, v_doc); // 기존의 "{\"result\":\"ok\"}" 대신 sendJson 사용
+				 });
+}
+
 
