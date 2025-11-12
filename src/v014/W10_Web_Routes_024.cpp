@@ -278,7 +278,7 @@ void CL_W10_WebAPI::routeSchedules() {
 						 return;
 					 }
 					 JsonDocument v_doc;
-					 CL_C10_ConfigManager::toJson_Schedules(g_A10_config_root.schedules, v_doc);
+					 CL_C10_ConfigManager::toJson_Schedules(*g_A10_config_root.schedules, v_doc);
 					 sendJson(p_request, v_doc);
 				 });
 
@@ -445,7 +445,7 @@ void CL_W10_WebAPI::routeUserProfiles() {
 						 return;
 					 }
 					 JsonDocument v_doc;
-					 CL_C10_ConfigManager::toJson_UserProfiles(g_A10_config_root.userProfiles, v_doc);
+					 CL_C10_ConfigManager::toJson_UserProfiles(*g_A10_config_root.userProfiles, v_doc);
 					 sendJson(p_request, v_doc);
 				 });
 	
