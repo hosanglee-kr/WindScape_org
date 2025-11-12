@@ -32,6 +32,8 @@
  */
 
 #include "W10_Web_024.h"
+#include "M10_MotionLogic_016.h"
+#include "CT10_ControlManager_021.h"
 #include "WF10_WiFiManager_023.h" // M10_WiFiManager::M10_scanNetworksJson 사용을 위해 포함
 
 
