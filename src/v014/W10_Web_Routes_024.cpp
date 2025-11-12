@@ -298,12 +298,20 @@ void CL_W10_WebAPI::routeSchedules() {
 		}
 
 		bool v_changed = false;
+		if (g_A10_config_root.schedules) {
+		    v_changed = CL_C10_ConfigManager::patchSchedulesFromJson(
+                  *g_A10_config_root.schedules,
+                  v_doc
+            );
+		}
+		/*
 		if (s_control) {
 			// CT10_ControlManager의 schedules 객체를 통해 JSON 패치 및 변경 여부 확인
 			v_changed = s_control->schedules.patchFromJson(v_doc);
 			if (v_changed)
 				CL_C10_ConfigManager::saveAll(g_A10_config_root); // 변경 사항 저장
 		}
+		*/
 		
 		// ✅ v024 일관성: sendJson 유틸리티 사용
 		JsonDocument v_res;
