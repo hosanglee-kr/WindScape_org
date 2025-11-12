@@ -250,10 +250,56 @@ void CL_W10_WebAPI::routeWindProfile() {
 				 });
 }
 
+
 // --------------------------------------------------
-// 7. /api/schedules
+// 7. /api/schedules (GET/POST)
 // --------------------------------------------------
 void CL_W10_WebAPI::routeSchedules() {
+	// HTTP_GET 핸들러: 스케줄 설정 조회
+	s_server->on("/api/schedules", HTTP_GET,
+				 [](AsyncWebServerRequest* p_request) {
+					 if (!checkApiKey(p_request)) {
+						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+						 return;
+					 }
+					 JsonDocument v_doc;
+					 CL_C10_ConfigManager::toJson_Schedules(g_A10_config_root, v_doc);
+					 sendJson(p_request, v_doc);
+				 });
+
+	// HTTP_POST 핸들러: 스케줄 설정 수정 및 저장
+	s_server->on("/api/schedules", HTTP_POST, [](AsyncWebServerRequest* p_request) {}, nullptr,
+				 [](AsyncWebServerRequest* p_request, uint8_t* p_data, size_t p_len, size_t p_index, size_t p_total) {
+		if (!checkApiKey(p_request)) {
+			p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+			return;
+		}
+		if (p_index + p_len != p_total) return;
+
+		JsonDocument v_doc;
+		if (!parseJsonBody(p_request, p_data, p_len, v_doc)) {
+			p_request->send(400, "application/json", "{\"error\":\"json parse\"}");
+			return;
+		}
+
+		bool v_changed = false;
+		if (s_control) {
+			// CT10_ControlManager의 schedules 객체를 통해 JSON 패치 및 변경 여부 확인
+			v_changed = s_control->schedules.patchFromJson(v_doc);
+			if (v_changed)
+				CL_C10_ConfigManager::saveAll(g_A10_config_root); // 변경 사항 저장
+		}
+		
+		// ✅ v024 일관성: sendJson 유틸리티 사용
+		JsonDocument v_res;
+		v_res["updated"] = v_changed;
+		sendJson(p_request, v_res);
+	});
+}
+
+// -----------------
+/*
+void CL_W10_WebAPI::routeSchedules_old_01() {
 	// GET
 	s_server->on("/api/schedules", HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
@@ -369,11 +415,59 @@ void CL_W10_WebAPI::routeSchedules() {
 		CL_N10_NvsManager::markDirty("schedules", true);
 		p_request->send(200, "application/json", "{\"result\":\"ok\"}"); });
 }
+*/
+
 
 // --------------------------------------------------
-// 8. /api/userProfiles
+// 8. /api/user_profiles (GET/POST)
 // --------------------------------------------------
 void CL_W10_WebAPI::routeUserProfiles() {
+	// HTTP_GET 핸들러: 사용자 프로필 설정 조회
+	s_server->on("/api/user_profiles", HTTP_GET,
+				 [](AsyncWebServerRequest* p_request) {
+					 if (!checkApiKey(p_request)) {
+						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+						 return;
+					 }
+					 JsonDocument v_doc;
+					 CL_C10_ConfigManager::toJson_UserProfiles(g_A10_config_root, v_doc);
+					 sendJson(p_request, v_doc);
+				 });
+	
+	// HTTP_POST 핸들러: 사용자 프로필 설정 수정 및 저장
+	s_server->on("/api/user_profiles", HTTP_POST, [](AsyncWebServerRequest* p_request) {}, nullptr,
+				 [](AsyncWebServerRequest* p_request, uint8_t* p_data, size_t p_len, size_t p_index, size_t p_total) {
+		if (!checkApiKey(p_request)) {
+			p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+			return;
+		}
+		if (p_index + p_len != p_total) return;
+
+		JsonDocument v_doc;
+		if (!parseJsonBody(p_request, p_data, p_len, v_doc)) {
+			p_request->send(400, "application/json", "{\"error\":\"json parse\"}");
+			return;
+		}
+
+		bool v_changed = false;
+		if (s_control) {
+			// CT10_ControlManager의 user_profiles 객체를 통해 JSON 패치 및 변경 여부 확인
+			v_changed = s_control->user_profiles.patchFromJson(v_doc);
+			if (v_changed)
+				CL_C10_ConfigManager::saveAll(g_A10_config_root); // 변경 사항 저장
+		}
+		
+		// ✅ v024 일관성: sendJson 유틸리티 사용
+		JsonDocument v_res;
+		v_res["updated"] = v_changed;
+		sendJson(p_request, v_res);
+	});
+}
+
+// --------------------------------------------------
+/*
+
+void CL_W10_WebAPI::routeUserProfiles_old_01() {
 	// GET
 	s_server->on("/api/userProfiles", HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
@@ -479,7 +573,7 @@ void CL_W10_WebAPI::routeUserProfiles() {
 		CL_N10_NvsManager::markDirty("userProfiles", true);
 		p_request->send(200, "application/json", "{\"result\":\"ok\"}"); });
 }
-
+*/
 // --------------------------------------------------
 // 9. /api/control
 // --------------------------------------------------
