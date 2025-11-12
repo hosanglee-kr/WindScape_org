@@ -951,8 +951,8 @@ void CL_W10_WebAPI::routeMotionFeed() {
 		
 		// s_control->motion 접근 로직을 사용하여 CL_M10_MotionLogic에 피드
 		if (s_control) {
-			s_control->motion.feedPIR(v_doc["pir"] | false);
-			s_control->motion.feedBLE(v_doc["ble"] | false);
+			s_control->motion->feedPIR(v_doc["pir"] | false);
+            s_control->motion->feedBLE(v_doc["ble"] | false);
 		}
 
 		JsonDocument v_res;
