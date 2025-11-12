@@ -473,12 +473,21 @@ void CL_W10_WebAPI::routeUserProfiles() {
 		}
 
 		bool v_changed = false;
+		if (g_A10_config_root.userProfiles) {
+            // ✅ CL_C10_ConfigManager를 통해 패치 및 저장
+            v_changed = CL_C10_ConfigManager::patchUserProfilesFromJson(
+                *g_A10_config_root.userProfiles, // 현재 메모리상의 구조체
+                v_doc                              // 웹에서 받은 JSON 데이터
+            );
+       }
+		/*
 		if (s_control) {
 			// CT10_ControlManager의 user_profiles 객체를 통해 JSON 패치 및 변경 여부 확인
 			v_changed = s_control->user_profiles.patchFromJson(v_doc);
 			if (v_changed)
 				CL_C10_ConfigManager::saveAll(g_A10_config_root); // 변경 사항 저장
 		}
+		*/
 		
 		// ✅ v024 일관성: sendJson 유틸리티 사용
 		JsonDocument v_res;
