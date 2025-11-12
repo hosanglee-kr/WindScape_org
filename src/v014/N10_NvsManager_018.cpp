@@ -103,7 +103,7 @@ void CL_N10_NvsManager::flushIfNeeded() {
 
 	// 2) Config JSON 계열
 	// g_A10_config_root가 외부(A10_Const_015.h)에 정의된 전역 변수라고 가정합니다.
-	extern T_A10_ConfigRoot_t g_A10_config_root;
+	//// extern ST_A10_ConfigRoot_t g_A10_config_root;
 
 	if (s_dirty.schedules && g_A10_config_root.schedules) {
 		s_dirty.schedules = false;
