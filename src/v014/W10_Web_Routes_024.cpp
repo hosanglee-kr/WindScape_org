@@ -44,22 +44,35 @@ WiFiMulti* CL_W10_WebAPI::s_multi = nullptr; // v012 복구
 File CL_W10_WebAPI::s_upFile;			  // v012 복구
 
 
-AsyncWebSocket CL_W10_WebAPI::s_wsLogs("/ws/log");
-AsyncWebSocket CL_W10_WebAPI::s_wsState("/ws/state");
-AsyncWebSocket CL_W10_WebAPI::s_wsChart("/ws/chart");
-AsyncWebSocket CL_W10_WebAPI::s_wsMetrics("/ws/metrics");
+// AsyncWebSocket 객체 자체는 CL_W10_WebAPI 클래스 외부에서 정의합니다.
+AsyncWebSocket s_wsLogs("/ws/log");
+AsyncWebSocket s_wsState("/ws/state");
+AsyncWebSocket s_wsChart("/ws/chart");
+AsyncWebSocket s_wsMetrics("/ws/metrics");
 
+// AsyncWebSocket 포인터 멤버를 정의합니다.
 AsyncWebSocket* CL_W10_WebAPI::s_wsServerState	 = nullptr;
 AsyncWebSocket* CL_W10_WebAPI::s_wsServerLog		 = nullptr;
 AsyncWebSocket* CL_W10_WebAPI::s_wsServerChart	 = nullptr;
 AsyncWebSocket* CL_W10_WebAPI::s_wsServerMetrics = nullptr;
 
+
 // --------------------------------------------------
-// 초기화: WebServer + ControlManager 연결
+// 초기화: WebServer + ControlManager + WiFiMulti 연결
 // --------------------------------------------------
-void CL_W10_WebAPI::begin(AsyncWebServer& p_server, CL_CT10_ControlManager& p_control) {
+void CL_W10_WebAPI::begin(AsyncWebServer& p_server, CL_CT10_ControlManager& p_control, WiFiMulti& p_multi) { // ✅ WiFiMulti 인자 추가
 	s_server  = &p_server;
 	s_control = &p_control;
+	s_multi   = &p_multi;
+
+	// ✅ WebSocket 포인터 연결 (WebSockets.cpp에서 이동)
+	s_wsServerLog	  = &s_wsLogs;
+	s_wsServerState	  = &s_wsState;
+	s_wsServerChart	  = &s_wsChart;
+	s_wsServerMetrics = &s_wsMetrics;
+// void CL_W10_WebAPI::begin(AsyncWebServer& p_server, CL_CT10_ControlManager& p_control) {
+//	s_server  = &p_server;
+//	s_control = &p_control;
 
 	routeVersion();
 	routeState();
