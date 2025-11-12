@@ -935,31 +935,61 @@ void CL_W10_WebAPI::routeConfigInit() {
 // 19. /api/motion/feed (v012 복구)
 // --------------------------------------------------
 void CL_W10_WebAPI::routeMotionFeed() {
-	s_server->on("/api/motion/feed", HTTP_POST, [](AsyncWebServerRequest* p_request) {}, nullptr,
-				 [](AsyncWebServerRequest* p_request, uint8_t* p_data, size_t p_len, size_t p_index, size_t p_total) {
-		if (!checkApiKey(p_request)) {
-			p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
-			return;
-		}
-		if (p_index + p_len != p_total) return;
+    // 1. PIR Feed API 등록: /api/motion/pir/feed (POST)
+    s_server->on("/api/motion/pir/feed", HTTP_POST, [](AsyncWebServerRequest* p_request) {}, nullptr,
+                 [](AsyncWebServerRequest* p_request, uint8_t* p_data, size_t p_len, size_t p_index, size_t p_total) {
+        if (!checkApiKey(p_request)) {
+            p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+            return;
+        }
+        if (p_index + p_len != p_total) return;
 
-		JsonDocument v_doc;
-		if (!parseJsonBody(p_request, p_data, p_len, v_doc)) {
-			p_request->send(400, "application/json", "{\"error\":\"json parse\"}");
-			return;
-		}
-		
-		// s_control->motion 접근 로직을 사용하여 CL_M10_MotionLogic에 피드
-		if (s_control) {
-			s_control->motion->feedPIR(v_doc["pir"] | false);
+        JsonDocument v_doc;
+        if (!parseJsonBody(p_request, p_data, p_len, v_doc)) {
+            p_request->send(400, "application/json", "{\"error\":\"json parse\"}");
+            return;
+        }
+
+        // PIR 상태만 피드
+        if (s_control && s_control->motion) {
+            s_control->motion->feedPIR(v_doc["pir"] | false);
+        }
+
+        JsonDocument v_res;
+        v_res["fed"] = true;
+        v_res["type"] = "pir";
+        sendJson(p_request, v_res);
+    });
+
+    // 2. BLE Feed API 등록: /api/motion/ble/feed (POST)
+    s_server->on("/api/motion/ble/feed", HTTP_POST, [](AsyncWebServerRequest* p_request) {}, nullptr,
+                 [](AsyncWebServerRequest* p_request, uint8_t* p_data, size_t p_len, size_t p_index, size_t p_total) {
+        if (!checkApiKey(p_request)) {
+            p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+            return;
+        }
+        if (p_index + p_len != p_total) return;
+
+        JsonDocument v_doc;
+        if (!parseJsonBody(p_request, p_data, p_len, v_doc)) {
+            p_request->send(400, "application/json", "{\"error\":\"json parse\"}");
+            return;
+        }
+
+        // BLE 상태만 피드
+        // NOTE: JSON 키는 "ble" 또는 "detected" 등 적절한 키를 사용해야 합니다.
+        // 현재 로직을 단순화하여 "ble" 키를 사용합니다.
+        if (s_control && s_control->motion) {
             s_control->motion->feedBLE(v_doc["ble"] | false);
-		}
+        }
 
-		JsonDocument v_res;
-		v_res["fed"] = true;
-		sendJson(p_request, v_res);
-	});
+        JsonDocument v_res;
+        v_res["fed"] = true;
+        v_res["type"] = "ble";
+        sendJson(p_request, v_res);
+    });
 }
+
 
 
 // TODO 완성 필요 ... (routeSchedules와 routeUserProfiles 등의 POST 핸들러 내에서 sendJson/sendText로 변경 필요 - 이 부분은 생략하고, 다음 단계에서 필요 시 수정 검토) ...
