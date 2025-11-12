@@ -868,7 +868,16 @@ void CL_W10_WebAPI::routeScan() {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
 						 return;
 					 }
+					 JsonDocument v_doc;
+                     CL_M10_WiFiManager::scanNetworksToJson(v_doc); // ✅ JsonDocument를 인자로 전달
+    
+                     String v_json;
+                     serializeJson(v_doc, v_json);
+    
+                     v_request->send(200, "application/json", v_json);
+
 					 // CL_WF10_WiFiManager::scanNetworksToJson String을 반환하므로, 이를 JsonDocument로 변환하여 전송
+					 /*
 					 String v_json = CL_WF10_WiFiManager::scanNetworksToJson(false);
 					 JsonDocument v_doc;
 					 if (deserializeJson(v_doc, v_json) != DeserializationError::Ok) {
@@ -877,6 +886,7 @@ void CL_W10_WebAPI::routeScan() {
 						 return;
 					 }
 					 sendJson(p_request, v_doc);
+					 */
 				 });
 }
 
