@@ -89,7 +89,7 @@ void CL_W10_WebAPI::routeStaticAssets() {
 
 	// 1. 루트 경로 '/' 리다이렉트
 	s_server->on("/", HTTP_GET, [](AsyncWebServerRequest* r) {
-		const char* f = g_A10_config_root.system.system.web.html;
+		const char* f = g_A10_config_root.system->system.web.html;
 		if (strlen(f) && LittleFS.exists(f))
 			r->redirect(f);
 		else
