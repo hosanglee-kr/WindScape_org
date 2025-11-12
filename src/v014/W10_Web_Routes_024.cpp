@@ -873,8 +873,10 @@ void CL_W10_WebAPI::routeScan() {
     
                      String v_json;
                      serializeJson(v_doc, v_json);
+
+					 sendJson(p_request, v_doc);
     
-                     v_request->send(200, "application/json", v_json);
+                     //v_request->send(200, "application/json", v_json);
 
 					 // CL_WF10_WiFiManager::scanNetworksToJson String을 반환하므로, 이를 JsonDocument로 변환하여 전송
 					 /*
