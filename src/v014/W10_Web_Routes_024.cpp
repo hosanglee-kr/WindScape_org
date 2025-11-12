@@ -933,55 +933,6 @@ void CL_W10_WebAPI::routeMotionFeed() {
 }
 
 
-
-
-// --------------------------------------------------
-// 14. /api/logs
-// --------------------------------------------------
-void CL_W10_WebAPI::routeLogs() {
-	s_server->on("/api/logs", HTTP_GET,
-				 [](AsyncWebServerRequest* p_request) {
-					 if (!checkApiKey(p_request)) {
-						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
-						 return;
-					 }
-					 
-					 JsonDocument v_doc;
-					 // D10_Logger 모듈의 로그 데이터를 JsonDocument에 채웁니다.
-					 CL_D10_Logger::getLogsAsJson(v_doc);
-					 
-					 // v024의 유틸리티 sendJson을 사용하여 응답
-					 sendJson(p_request, v_doc);
-				 });
-}
-
-
-// W10_WebAPI_Routes_024.cpp
-
-// --------------------------------------------------
-// 15. /api/reload (TODO :구정필요)
-// --------------------------------------------------
-void CL_W10_WebAPI::routeReload() {
-	s_server->on("/api/reload", HTTP_POST,
-				 [](AsyncWebServerRequest* p_request) {
-					 if (!checkApiKey(p_request)) {
-						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
-						 return;
-					 }
-					 
-					 // NVS에서 전체 설정을 다시 로드합니다. (설정 적용은 ControlManager에서 후속 처리)
-					 CL_C10_ConfigManager::loadAll(g_A10_config_root);
-
-					 JsonDocument v_doc;
-					 v_doc["result"] = "ok";
-					 v_doc["reloaded"] = true;
-					 
-					 // v024의 유틸리티 sendJson을 사용하여 응답
-					 sendJson(p_request, v_doc);
-				 });
-}
-
-
 // TODO 완성 필요 ... (routeSchedules와 routeUserProfiles 등의 POST 핸들러 내에서 sendJson/sendText로 변경 필요 - 이 부분은 생략하고, 다음 단계에서 필요 시 수정 검토) ...
 
 
