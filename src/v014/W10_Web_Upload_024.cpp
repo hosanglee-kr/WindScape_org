@@ -53,7 +53,6 @@ void CL_W10_WebAPI::routeUpload() {
 		[](AsyncWebServerRequest* p_request, const String& p_filename, size_t p_index, uint8_t* p_data, size_t p_len, bool p_final) {
 			if (!checkApiKey(p_request))
 				return; // 인증 실패 시 데이터 수신 중단 (p_request->send는 이미 End Handler에서 처리됨)
-
 			// v012의 _api_upload_data 복구
 			if (p_index == 0) {
 				// 새 파일 업로드 시작
@@ -94,8 +93,9 @@ void CL_W10_WebAPI::routeUpdate() {
 				return;
 			}
 			// v012의 _api_update_end 복구
-			if (Update.is=='n') {
-				CL_W10_WebAPI::sendText(p_request, "{\"ota\":\"fail\", \"error\":\"" + Update.errorString() + "\"}", 500);
+            if (Update.hasError()) {
+                String v_errMsg = "{\"ota\":\"fail\", \"error\":\"" + String(Update.errorString()) + "\"}";
+                CL_W10_WebAPI::sendText(p_request, v_errMsg, 500); 
 			} else {
 				CL_W10_WebAPI::sendText(p_request, "{\"ota\":\"ok\"}");
 				delay(300);
