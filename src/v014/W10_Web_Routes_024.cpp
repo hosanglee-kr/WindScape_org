@@ -869,7 +869,7 @@ void CL_W10_WebAPI::routeScan() {
 						 return;
 					 }
 					 JsonDocument v_doc;
-                     CL_M10_WiFiManager::scanNetworksToJson(v_doc); // ✅ JsonDocument를 인자로 전달
+                     CL_WF10_WiFiManager::scanNetworksToJson(v_doc); // ✅ JsonDocument를 인자로 전달
     
                      String v_json;
                      serializeJson(v_doc, v_json);
