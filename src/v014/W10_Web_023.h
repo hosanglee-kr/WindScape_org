@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ------------------------------------------------------
- * 소스명 : W10_WebAPI_023.h
+ * 소스명 : W10_Web_023.h
  * 모듈 약어 : W10
  * 모듈명 : Smart Nature Wind Web API (v023)
  * ------------------------------------------------------
@@ -52,10 +52,10 @@
 #include "S10_Simulation_018.h"
 
 // CL_W10_WebAPI 클래스는 4개의 파일로 분리 구현됨:
-// 1. W10_WebAPI_023.h (선언 및 인라인 유틸)
-// 2. W10_WebAPI_Routes_023.cpp (API 라우팅)
-// 3. W10_WebAPI_WebSockets_023.cpp (WS 이벤트 핸들링)
-// 4. W10_WebAPI_Broadcasts_023.cpp (WS 브로드캐스트)
+// 1. W10_Web_023.h (선언 및 인라인 유틸)
+// 2. W10_Web_Routes_023.cpp (API 라우팅)
+// 3. W10_Web_WebSockets_023.cpp (WS 이벤트 핸들링)
+// 4. W10_Web_Broadcasts_023.cpp (WS 브로드캐스트)
 
 class CL_W10_WebAPI {
    public:
