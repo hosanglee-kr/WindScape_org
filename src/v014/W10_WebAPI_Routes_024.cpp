@@ -2,7 +2,7 @@
  * ------------------------------------------------------
  * 소스명 : W10_WebAPI_Routes_024.cpp
  * 모듈 약어 : W10
- * 모듈명 : Smart Nature Wind Web API (v023) - Routes Implementation
+ * 모듈명 : Smart Nature Wind Web API (v024) - Routes Implementation
  * ------------------------------------------------------
  * 기능 요약:
  * - Web UI / REST API 엔드포인트 라우팅 로직 구현
@@ -31,13 +31,18 @@
  * ------------------------------------------------------
  */
 
-#include "W10_Web_023.h"
+#include "W10_Web_024.h"
+#include "M10_WiFiManager_023.h" // M10_WiFiManager::M10_scanNetworksJson 사용을 위해 포함
+
 
 // ------------------------------------------------------
 // 정적 멤버 정의 (Routes/Broadcasts/WebSockets 파일 중 하나에만 정의)
 // ------------------------------------------------------
 AsyncWebServer* CL_W10_WebAPI::s_server	 = nullptr;
 CL_CT10_ControlManager* CL_W10_WebAPI::s_control = nullptr;
+WiFiMulti* CL_W10_WebAPI::s_multi = nullptr; // v012 복구
+File CL_W10_WebAPI::s_upFile;			  // v012 복구
+
 
 AsyncWebSocket CL_W10_WebAPI::s_wsLogs("/ws/log");
 AsyncWebSocket CL_W10_WebAPI::s_wsState("/ws/state");
@@ -72,6 +77,17 @@ void CL_W10_WebAPI::begin(AsyncWebServer& p_server, CL_CT10_ControlManager& p_co
 	routeLogs();
 	routeReload();
 
+	// --- v012 복구 라우트 추가 ---
+	routeDiag();		 // /api/diag
+	routeScan();		 // /api/scan
+	routeConfigInit();	 // /api/config/init
+	routeMotionFeed();	 // /api/motion/feed
+	routeStaticAssets(); // W10_Web_Static_024.cpp
+	routeUpload();		 // W10_Web_Upload_024.cpp
+	routeUpdate();		 // W10_Web_Upload_024.cpp
+
+
+	
 	routeWebSocket();
 
 	CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WebAPI initialized (v023)");
@@ -712,3 +728,98 @@ void CL_W10_WebAPI::routeReload() {
 					 p_request->send(200, "application/json", "{\"result\":\"ok\"}");
 				 });
 }
+
+
+// --------------------------------------------------
+// 16. /api/diag (v012 복구)
+// --------------------------------------------------
+void CL_W10_WebAPI::routeDiag() {
+	s_server->on("/api/diag", HTTP_GET,
+				 [](AsyncWebServerRequest* p_request) {
+					 if (!checkApiKey(p_request)) {
+						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+						 return;
+					 }
+					 JsonDocument v_doc;
+					 v_doc["heap"]	  = ESP.getFreeHeap();
+					 v_doc["fs_used"] = LittleFS.usedBytes();
+					 v_doc["fs_total"] = LittleFS.totalBytes();
+
+					 sendJson(p_request, v_doc);
+				 });
+}
+
+// --------------------------------------------------
+// 17. /api/scan (v012 복구)
+// --------------------------------------------------
+void CL_W10_WebAPI::routeScan() {
+	s_server->on("/api/scan", HTTP_GET,
+				 [](AsyncWebServerRequest* p_request) {
+					 if (!checkApiKey(p_request)) {
+						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+						 return;
+					 }
+					 // M10_scanNetworksJson이 String을 반환하므로, 이를 JsonDocument로 변환하여 전송
+					 String v_json = CL_M10_WiFiManager::M10_scanNetworksJson(false);
+					 JsonDocument v_doc;
+					 if (deserializeJson(v_doc, v_json) != DeserializationError::Ok) {
+						 CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] /api/scan JSON parse failed");
+						 p_request->send(500, "application/json", "{\"error\":\"scan failed\"}");
+						 return;
+					 }
+					 sendJson(p_request, v_doc);
+				 });
+}
+
+// --------------------------------------------------
+// 18. /api/config/init (v012 복구)
+// --------------------------------------------------
+void CL_W10_WebAPI::routeConfigInit() {
+	s_server->on("/api/config/init", HTTP_POST,
+				 [](AsyncWebServerRequest* p_request) {
+					 if (!checkApiKey(p_request)) {
+						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+						 return;
+					 }
+					 A10_resetToDefault(g_A10_config_root);
+					 CL_C10_ConfigManager::saveAll(g_A10_config_root);
+
+					 JsonDocument v_doc;
+					 v_doc["factory"] = true;
+					 sendJson(p_request, v_doc);
+
+					 delay(200);
+					 ESP.restart();
+				 });
+}
+
+// --------------------------------------------------
+// 19. /api/motion/feed (v012 복구)
+// --------------------------------------------------
+void CL_W10_WebAPI::routeMotionFeed() {
+	s_server->on("/api/motion/feed", HTTP_POST, [](AsyncWebServerRequest* p_request) {}, nullptr,
+				 [](AsyncWebServerRequest* p_request, uint8_t* p_data, size_t p_len, size_t p_index, size_t p_total) {
+		if (!checkApiKey(p_request)) {
+			p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+			return;
+		}
+		if (p_index + p_len != p_total) return;
+
+		JsonDocument v_doc;
+		if (!parseJsonBody(p_request, p_data, p_len, v_doc)) {
+			p_request->send(400, "application/json", "{\"error\":\"json parse\"}");
+			return;
+		}
+		
+		// s_control->motion 접근 로직을 사용하여 CL_M10_MotionLogic에 피드
+		if (s_control) {
+			s_control->motion.feedPIR(v_doc["pir"] | false);
+			s_control->motion.feedBLE(v_doc["ble"] | false);
+		}
+
+		JsonDocument v_res;
+		v_res["fed"] = true;
+		sendJson(p_request, v_res);
+	});
+}
+
