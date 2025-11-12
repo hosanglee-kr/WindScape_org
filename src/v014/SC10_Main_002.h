@@ -56,7 +56,7 @@ void SC10_markDirty(const char* key) {
 }
 
 AsyncWebServer		   g_SC10_server(80);
-WiFiMulti			   g_SC10_wifiMulti;
+static WiFiMulti	   g_SC10_wifiMulti;
 CL_CT10_ControlManager g_SC10_control;
 
 CL_P10_PWM             g_P10_pwm;
@@ -142,7 +142,10 @@ void SC10_init() {
 	CL_D10_Logger::log(EN_L10_LOG_INFO, "[M10] Motion Logic started");
 
 	// 7. Web API + Web UI
-	CL_W10_WebAPI::begin(g_SC10_server, g_SC10_control);
+	// src/v014/SC10_Main_002.h:145
+    CL_W10_WebAPI::begin(g_SC10_server, g_SC10_control, g_SC10_wifiMulti); // g_SC10_multi 객체 추가
+	//CL_W10_WebAPI::begin(g_SC10_server, g_SC10_control);
+	
 	g_SC10_server.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
 	g_SC10_server.begin();
 
