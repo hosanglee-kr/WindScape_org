@@ -1,0 +1,203 @@
+/* SC10_chart_005.css */
+
+body {
+  font-family: "Pretendard", "Noto Sans KR", sans-serif;
+  background-color: #f9fafc;
+  color: #222;
+  margin: 0;
+  padding: 20px;
+}
+
+.wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* 카드 기본 스타일 */
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  margin-bottom: 24px;
+}
+
+/* 섹션 타이틀 스타일 */
+.section-title {
+  margin-top: 0;
+  border-left: 5px solid #2196f3;
+  padding-left: 8px;
+  font-size: 1.2em;
+  font-weight: 700;
+}
+
+/* 그리드 시스템 */
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+/* 2열 레이아웃 */
+.col-6 {
+  flex: 1 1 calc(50% - 6px);
+  display: flex;
+  flex-direction: column;
+}
+/* 3열 레이아웃 (상세 설정용) */
+.col-4 {
+  flex: 1 1 calc(33.333% - 8px); 
+  display: flex;
+  flex-direction: column;
+}
+
+/* 입력/선택 요소 스타일 */
+label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 0.9em;
+  color: #333;
+}
+
+input, select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+input:focus, select:focus {
+  border-color: #2196f3;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+}
+
+/* 버튼 및 그룹 스타일 */
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.right { margin-left: auto; }
+.tight { gap: 4px; }
+.mt12 { margin-top: 12px; }
+.mt16 { margin-top: 16px; }
+.muted { color: #666; font-size: 0.9em; }
+
+.btn {
+  background-color: #eee;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  margin: 4px;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.btn.ok {
+  background-color: #2196f3;
+  color: #fff;
+  border-color: #2196f3;
+}
+
+.btn.warn {
+  background-color: #ff9800;
+  color: #fff;
+  border-color: #ff9800;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+.btn-group {
+  margin: 10px 0 20px;
+  text-align: center;
+}
+
+/* 차트 컨테이너 및 토글 스타일 (핵심 추가) */
+.chart-container {
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  margin-bottom: 16px;
+  overflow: hidden; 
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background-color: #f0f8ff; /* 연한 파란색 헤더 배경 */
+  border-bottom: 1px solid #e0e0e0;
+  cursor: pointer;
+}
+.chart-header .section-title {
+  border-left: none; /* 헤더 타이틀에서는 좌측 바를 제거 */
+  padding-left: 0;
+  margin-bottom: 0;
+  color: #1e88e5; /* 헤더 타이틀 색상 강조 */
+  font-size: 1.1em;
+}
+
+.btn-toggle {
+  background: none;
+  border: none;
+  font-size: 1.2em;
+  cursor: pointer;
+  padding: 0;
+  color: #1e88e5;
+  transition: transform 0.3s;
+  line-height: 1; 
+}
+
+.chart-content {
+  background: #fff;
+  padding: 20px; /* 캔버스 영역의 패딩 */
+}
+
+/* 캔버스 스타일 (Chart.js 출력 영역) */
+canvas {
+  width: 100% !important;
+  height: auto !important;
+  display: block;
+}
+
+#refreshInfo {
+  text-align: center;
+  margin: 10px 0;
+  font-weight: 500;
+  color: #333;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  /* 중간 화면에서 상세 설정(col-4)을 2열로 변경 */
+  .col-4 {
+    flex: 1 1 calc(50% - 6px);
+  }
+}
+
+@media (max-width: 480px) {
+  /* 모바일 화면에서 모든 그리드를 1열로 변경 */
+  .col-4, .col-6 {
+    flex: 1 1 100%;
+  }
+  .wrap { padding: 10px; }
+}
+
+footer {
+  text-align: center;
+  font-size: 0.9em;
+  color: #777;
+  margin-top: 40px;
+}
+
