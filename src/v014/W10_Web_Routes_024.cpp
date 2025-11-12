@@ -34,7 +34,7 @@
 #include "W10_Web_024.h"
 #include "M10_MotionLogic_016.h"
 #include "CT10_ControlManager_021.h"
-#include "WF10_WiFiManager_023.h" // M10_WiFiManager::M10_scanNetworksJson 사용을 위해 포함
+#include "WF10_WiFiManager_023.h" // CL_WF10_WiFiManager::scanNetworksToJson 사용을 위해 포함
 
 
 // ------------------------------------------------------
@@ -868,8 +868,8 @@ void CL_W10_WebAPI::routeScan() {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
 						 return;
 					 }
-					 // M10_scanNetworksJson이 String을 반환하므로, 이를 JsonDocument로 변환하여 전송
-					 String v_json = CL_M10_WiFiManager::M10_scanNetworksJson(false);
+					 // CL_WF10_WiFiManager::scanNetworksToJson String을 반환하므로, 이를 JsonDocument로 변환하여 전송
+					 String v_json = CL_WF10_WiFiManager::scanNetworksToJson(false);
 					 JsonDocument v_doc;
 					 if (deserializeJson(v_doc, v_json) != DeserializationError::Ok) {
 						 CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] /api/scan JSON parse failed");
