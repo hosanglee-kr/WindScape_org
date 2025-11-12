@@ -102,6 +102,48 @@ class CL_M10_MotionLogic {
 		_onChange = nullptr;
 	}
 
+    // --------------------------------------------------
+	// [추가됨] PIR 감지 상태 전달 (웹/MQTT 용)
+	// --------------------------------------------------
+    /*
+     * @brief 외부 소스로부터 PIR 감지 상태를 전달받아 처리합니다.
+     * @param p_detected 감지 여부 (true일 경우 notifyPIRDetected() 호출)
+     */
+	void feedPIR(bool p_detected) {
+		if (p_detected) {
+			// true일 경우만 기존 감지 로직(타이머 리셋)을 실행합니다.
+			notifyPIRDetected();
+		}
+        // false인 경우, 센서의 감지 타이머는 tick()에 의해 자연스럽게 만료되도록 둡니다.
+	}
+
+    // --------------------------------------------------
+	// [추가됨] BLE 감지 상태 전달 (웹/MQTT 용)
+	// --------------------------------------------------
+    /**
+     * @brief 외부 소스로부터 BLE 감지 상태를 전달받아 처리합니다.
+     * @param p_detected 감지 여부 (true일 경우 BLE 로직을 활성화합니다. RSSI 값은 무시)
+     */
+	void feedBLE(bool p_detected) {
+		if (p_detected) {
+			// 웹 API에서는 RSSI 값이 아닌, 감지 여부(true)만 전달하므로, 
+			// 임시로 활성 임계값을 만족하는 RSSI를 가정하여 updateBLE_RSSI를 호출합니다.
+            
+            // NOTE: _ble.rssi_threshold가 -70이라고 가정할 때, -60이 threshold보다 크므로 활성화됩니다.
+            // 0이 더 안전하지만, RSSI는 음수이므로, -1을 사용합니다.
+            int16_t v_activeRssi = -1; 
+            
+			if (_ble.enabled) {
+                _ble.last_rssi = v_activeRssi; // 마지막 RSSI 기록
+                _ble.lastDetected_ms = millis();
+                _ble.active = true;
+            }
+		}
+        // false인 경우, 센서의 감지 타이머는 tick()에 의해 자연스럽게 만료되도록 둡니다.
+	}
+    
+ 
+
 	// --------------------------------------------------
 	// JSON 로드 초기화 (cfg_system_xxx.json)
 	// --------------------------------------------------
