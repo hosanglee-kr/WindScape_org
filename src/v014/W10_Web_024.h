@@ -41,11 +41,11 @@
 #include <WiFiMulti.h> // WiFiMulti 추가
 #include <Update.h>    // OTA를 위해 추가
 
-#include "A10_Const_023.h"
+#include "A10_Const_015.h"
 #include "C10_ConfigManager_023.h"
-#include "D10_Logger_023.h"
-#include "CT10_ControlManager_023.h"
-#include "N10_NvsManager_023.h"
+#include "D10_Logger_016.h"
+#include "CT10_ControlManager_021.h"
+#include "N10_NvsManager_018.h"
 #include "M10_WiFiManager_023.h"
 
 // ------------------------------------------------------
