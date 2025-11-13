@@ -1568,11 +1568,6 @@ class CL_C10_ConfigManager {
 		return false;
 	}
 
-
-
-
-
-
 	/* =====================================================
 	 * Factory Reset (기본값 파일 기반 복구)
 	 *  - CFG_DEFAULT_FILE 관련 상수는 A10_Const 내 정의 가정

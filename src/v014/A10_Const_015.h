@@ -743,13 +743,3 @@ inline int16_t A10_findStyleIndexByCode(
 	return -1;
 }
 
-/*
-// 해석 유틸: preset × style × adjust → ResolvedWind
-bool resolveWindParams(
-	const ST_A10_WindProfileDict_t& dict,
-	const char*                     presetCode,
-	const char*                     styleCode,
-	const ST_A10_AdjustDelta_t*     adj,
-	ST_A10_ResolvedWind_t&          outResolved
-);
-*/

@@ -302,14 +302,6 @@ void CL_W10_WebAPI::routeSchedules() {
                   v_doc
             );
 		}
-		/*
-		if (s_control) {
-			// CT10_ControlManager의 schedules 객체를 통해 JSON 패치 및 변경 여부 확인
-			v_changed = s_control->schedules.patchFromJson(v_doc);
-			if (v_changed)
-				CL_C10_ConfigManager::saveAll(g_A10_config_root); // 변경 사항 저장
-		}
-		*/
 		
 		// ✅ v024 일관성: sendJson 유틸리티 사용
 		JsonDocument v_res;
@@ -317,126 +309,6 @@ void CL_W10_WebAPI::routeSchedules() {
 		sendJson(p_request, v_res);
 	});
 }
-
-// -----------------
-/*
-void CL_W10_WebAPI::routeSchedules_old_01() {
-	// GET
-	s_server->on("/api/schedules", HTTP_GET,
-				 [](AsyncWebServerRequest* p_request) {
-					 if (!checkApiKey(p_request)) {
-						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
-						 return;
-					 }
-
-					 JsonDocument		   v_doc;
-					 ST_A10_SchedulesRoot_t v_cfg;
-					 memset(&v_cfg, 0, sizeof(v_cfg));
-
-					 CL_C10_ConfigManager::loadSchedules(v_cfg);
-					 CL_C10_ConfigManager::toJson_Schedules(v_cfg, v_doc);
-					 sendJson(p_request, v_doc);
-				 });
-
-	// POST: 전체 교체 저장 (로직 생략)
-	s_server->on("/api/schedules", HTTP_POST, [](AsyncWebServerRequest* p_request) {}, nullptr, [](AsyncWebServerRequest* p_request, uint8_t* p_data, size_t p_len, size_t p_index, size_t p_total) {
-		if (!checkApiKey(p_request)) {
-			p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
-			return;
-		}
-		if (p_index + p_len != p_total) return;
-
-		JsonDocument v_doc;
-		if (!parseJsonBody(p_request, p_data, p_len, v_doc)) {
-			p_request->send(400, "application/json", "{\"error\":\"json parse\"}");
-			return;
-		}
-
-		if (!v_doc["schedules"].is<JsonArray>()) {
-			p_request->send(400, "application/json", "{\"error\":\"invalid format\"}");
-			return;
-		}
-
-		ST_A10_SchedulesRoot_t v_cfg;
-		memset(&v_cfg, 0, sizeof(v_cfg));
-
-		JsonArray v_arr = v_doc["schedules"].as<JsonArray>();
-		for (JsonObject v_js : v_arr) {
-			if (v_cfg.count >= A10_Const::MAX_SCHEDULES) break;
-			ST_A10_ScheduleItem_t& v_s = v_cfg.items[v_cfg.count++];
-
-			v_s.schNo   = v_js["schNo"]   | 0;
-			strlcpy(v_s.name, v_js["name"] | "", sizeof(v_s.name));
-			v_s.enabled = v_js["enabled"] | true;
-
-			// ... (나머지 로직 생략)
-			// 현재는 예시를 위해 상세 로직은 원본 그대로 유지했습니다.
-			v_s.period.enabled = v_js["period"]["enabled"] | false;
-			for (uint8_t v_d = 0; v_d < 7; v_d++) {
-				v_s.period.days[v_d] = v_js["period"]["days"][v_d] | 0;
-			}
-			strlcpy(v_s.period.start_time, v_js["period"]["start_time"] | "00:00", sizeof(v_s.period.start_time));
-			strlcpy(v_s.period.end_time, v_js["period"]["end_time"] | "23:59", sizeof(v_s.period.end_time));
-
-			// segments
-			v_s.seg_count = 0;
-			if (v_js["segments"].is<JsonArray>()) {
-				JsonArray v_sArr = v_js["segments"].as<JsonArray>();
-				for (JsonObject v_jseg : v_sArr) {
-					if (v_s.seg_count >= A10_Const::MAX_SEGMENTS_PER_SCHEDULE) break;
-					ST_A10_ScheduleSegment_t& v_seg = v_s.segments[v_s.seg_count++];
-
-					v_seg.segNo       = v_jseg["segNo"]       | 0;
-					v_seg.on_minutes  = v_jseg["on_minutes"]  | 0;
-					v_seg.off_minutes = v_jseg["off_minutes"] | 0;
-					v_seg.mode = A10_modeFromString(v_jseg["mode"] | "PRESET");
-					strlcpy(v_seg.presetCode, v_jseg["presetCode"] | "", sizeof(v_seg.presetCode));
-					strlcpy(v_seg.styleCode,  v_jseg["styleCode"]  | "", sizeof(v_seg.styleCode));
-
-					memset(&v_seg.adjust, 0, sizeof(v_seg.adjust));
-					if (v_jseg["adjust"].is<JsonObject>()) {
-						JsonObject v_adj = v_jseg["adjust"];
-						v_seg.adjust.wind_intensity   = v_adj["wind_intensity"]   | 0.0f;
-						v_seg.adjust.wind_variability = v_adj["wind_variability"] | 0.0f;
-						v_seg.adjust.gust_frequency   = v_adj["gust_frequency"]   | 0.0f;
-						v_seg.adjust.fan_limit        = v_adj["fan_limit"]        | 0.0f;
-						v_seg.adjust.min_fan          = v_adj["min_fan"]          | 0.0f;
-					}
-					v_seg.fixed_speed = v_jseg["fixed_speed"] | 0.0f;
-				}
-			}
-
-			// autoOff
-			memset(&v_s.autoOff, 0, sizeof(v_s.autoOff));
-			if (v_js["autoOff"].is<JsonObject>()) {
-				JsonObject v_ao = v_js["autoOff"];
-				v_s.autoOff.timer.enabled   = v_ao["timer"]["enabled"]   | false;
-				v_s.autoOff.timer.minutes   = v_ao["timer"]["minutes"]   | 0;
-				v_s.autoOff.offTime.enabled = v_ao["offTime"]["enabled"] | false;
-				strlcpy(v_s.autoOff.offTime.time,
-						v_ao["offTime"]["time"] | "",
-						sizeof(v_s.autoOff.offTime.time));
-				v_s.autoOff.offTemp.enabled = v_ao["offTemp"]["enabled"] | false;
-				v_s.autoOff.offTemp.temp    = v_ao["offTemp"]["temp"]    | 0.0f;
-			}
-
-			// motion
-			v_s.motion.pir.enabled        = v_js["motion"]["pir"]["enabled"]        | false;
-			v_s.motion.pir.hold_sec       = v_js["motion"]["pir"]["hold_sec"]       | 0;
-			v_s.motion.ble.enabled        = v_js["motion"]["ble"]["enabled"]        | false;
-			v_s.motion.ble.rssi_threshold = v_js["motion"]["ble"]["rssi_threshold"] | -70;
-			v_s.motion.ble.hold_sec       = v_js["motion"]["ble"]["hold_sec"]       | 0;
-		}
-		// ... (나머지 로직 생략)
-
-		if (!CL_C10_ConfigManager::saveSchedules(v_cfg)) {
-			p_request->send(500, "application/json", "{\"error\":\"save failed\"}");
-			return;
-		}
-		CL_N10_NvsManager::markDirty("schedules", true);
-		p_request->send(200, "application/json", "{\"result\":\"ok\"}"); });
-}
-*/
 
 
 // --------------------------------------------------
@@ -478,14 +350,6 @@ void CL_W10_WebAPI::routeUserProfiles() {
                 v_doc                              // 웹에서 받은 JSON 데이터
             );
        }
-		/*
-		if (s_control) {
-			// CT10_ControlManager의 user_profiles 객체를 통해 JSON 패치 및 변경 여부 확인
-			v_changed = s_control->user_profiles.patchFromJson(v_doc);
-			if (v_changed)
-				CL_C10_ConfigManager::saveAll(g_A10_config_root); // 변경 사항 저장
-		}
-		*/
 		
 		// ✅ v024 일관성: sendJson 유틸리티 사용
 		JsonDocument v_res;
@@ -494,116 +358,6 @@ void CL_W10_WebAPI::routeUserProfiles() {
 	});
 }
 
-// --------------------------------------------------
-/*
-
-void CL_W10_WebAPI::routeUserProfiles_old_01() {
-	// GET
-	s_server->on("/api/userProfiles", HTTP_GET,
-				 [](AsyncWebServerRequest* p_request) {
-					 if (!checkApiKey(p_request)) {
-						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
-						 return;
-					 }
-					 JsonDocument				v_doc;
-					 ST_A10_UserProfilesRoot_t v_cfg;
-					 memset(&v_cfg, 0, sizeof(v_cfg));
-
-					 CL_C10_ConfigManager::loadUserProfiles(v_cfg);
-					 CL_C10_ConfigManager::toJson_UserProfiles(v_cfg, v_doc);
-					 sendJson(p_request, v_doc);
-				 });
-
-	// POST (로직 생략)
-	s_server->on("/api/userProfiles", HTTP_POST, [](AsyncWebServerRequest* p_request) {}, nullptr, [](AsyncWebServerRequest* p_request, uint8_t* p_data, size_t p_len, size_t p_index, size_t p_total) {
-		if (!checkApiKey(p_request)) {
-			p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
-			return;
-		}
-		if (p_index + p_len != p_total) return;
-
-		JsonDocument v_doc;
-		if (!parseJsonBody(p_request, p_data, p_len, v_doc)) {
-			p_request->send(400, "application/json", "{\"error\":\"json parse\"}");
-			return;
-		}
-
-		if (!v_doc["userProfiles"]["profiles"].is<JsonArray>()) {
-			p_request->send(400, "application/json", "{\"error\":\"invalid format\"}");
-			return;
-		}
-
-		ST_A10_UserProfilesRoot_t v_cfg;
-		memset(&v_cfg, 0, sizeof(v_cfg));
-
-		JsonArray v_arr = v_doc["userProfiles"]["profiles"].as<JsonArray>();
-		for (JsonObject v_jp : v_arr) {
-			if (v_cfg.count >= A10_Const::MAX_USER_PROFILES) break;
-			ST_A10_UserProfileItem_t& v_up = v_cfg.items[v_cfg.count++];
-
-			v_up.profileNo = v_jp["profileNo"] | 0;
-			strlcpy(v_up.name, v_jp["name"] | "", sizeof(v_up.name));
-			v_up.enabled        = v_jp["enabled"]        | true;
-			v_up.repeatSegments = v_jp["repeatSegments"] | true;
-
-			// segments
-			v_up.seg_count = 0;
-			if (v_jp["segments"].is<JsonArray>()) {
-				JsonArray v_sArr = v_jp["segments"].as<JsonArray>();
-				for (JsonObject v_jseg : v_sArr) {
-					if (v_up.seg_count >= A10_Const::MAX_SEGMENTS_PER_PROFILE) break;
-					ST_A10_UserProfileSegment_t& v_seg = v_up.segments[v_up.seg_count++];
-
-					v_seg.segNo       = v_jseg["segNo"]       | 0;
-					v_seg.on_minutes  = v_jseg["on_minutes"]  | 0;
-					v_seg.off_minutes = v_jseg["off_minutes"] | 0;
-					v_seg.mode = A10_modeFromString(v_jseg["mode"] | "PRESET");
-					strlcpy(v_seg.presetCode, v_jseg["presetCode"] | "", sizeof(v_seg.presetCode));
-					strlcpy(v_seg.styleCode,  v_jseg["styleCode"]  | "", sizeof(v_seg.styleCode));
-
-					memset(&v_seg.adjust, 0, sizeof(v_seg.adjust));
-					if (v_jseg["adjust"].is<JsonObject>()) {
-						JsonObject v_adj = v_jseg["adjust"];
-						v_seg.adjust.wind_intensity   = v_adj["wind_intensity"]   | 0.0f;
-						v_seg.adjust.wind_variability = v_adj["wind_variability"] | 0.0f;
-						v_seg.adjust.gust_frequency   = v_adj["gust_frequency"]   | 0.0f;
-						v_seg.adjust.fan_limit        = v_adj["fan_limit"]        | 0.0f;
-						v_seg.adjust.min_fan          = v_adj["min_fan"]          | 0.0f;
-					}
-					v_seg.fixed_speed = v_jseg["fixed_speed"] | 0.0f;
-				}
-			}
-
-			// autoOff
-			memset(&v_up.autoOff, 0, sizeof(v_up.autoOff));
-			if (v_jp["autoOff"].is<JsonObject>()) {
-				JsonObject v_ao = v_jp["autoOff"];
-				v_up.autoOff.timer.enabled   = v_ao["timer"]["enabled"]   | false;
-				v_up.autoOff.timer.minutes   = v_ao["timer"]["minutes"]   | 0;
-				v_up.autoOff.offTime.enabled = v_ao["offTime"]["enabled"] | false;
-				strlcpy(v_up.autoOff.offTime.time,
-						v_ao["offTime"]["time"] | "",
-						sizeof(v_up.autoOff.offTime.time));
-				v_up.autoOff.offTemp.enabled = v_ao["offTemp"]["enabled"] | false;
-				v_up.autoOff.offTemp.temp    = v_ao["offTemp"]["temp"]    | 0.0f;
-			}
-
-			// motion
-			v_up.motion.pir.enabled        = v_jp["motion"]["pir"]["enabled"]        | false;
-			v_up.motion.pir.hold_sec       = v_jp["motion"]["pir"]["hold_sec"]       | 0;
-			v_up.motion.ble.enabled        = v_jp["motion"]["ble"]["enabled"]        | false;
-			v_up.motion.ble.rssi_threshold = v_jp["motion"]["ble"]["rssi_threshold"] | -70;
-			v_up.motion.ble.hold_sec       = v_jp["motion"]["ble"]["hold_sec"]       | 0;
-		}
-
-		if (!CL_C10_ConfigManager::saveUserProfiles(v_cfg)) {
-			p_request->send(500, "application/json", "{\"error\":\"save failed\"}");
-			return;
-		}
-		CL_N10_NvsManager::markDirty("userProfiles", true);
-		p_request->send(200, "application/json", "{\"result\":\"ok\"}"); });
-}
-*/
 // --------------------------------------------------
 // 9. /api/control
 // --------------------------------------------------
@@ -891,19 +645,6 @@ void CL_W10_WebAPI::routeScan() {
 
 					 sendJson(p_request, v_doc);
     
-                     //v_request->send(200, "application/json", v_json);
-
-					 // CL_WF10_WiFiManager::scanNetworksToJson String을 반환하므로, 이를 JsonDocument로 변환하여 전송
-					 /*
-					 String v_json = CL_WF10_WiFiManager::scanNetworksToJson(false);
-					 JsonDocument v_doc;
-					 if (deserializeJson(v_doc, v_json) != DeserializationError::Ok) {
-						 CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] /api/scan JSON parse failed");
-						 p_request->send(500, "application/json", "{\"error\":\"scan failed\"}");
-						 return;
-					 }
-					 sendJson(p_request, v_doc);
-					 */
 				 });
 }
 

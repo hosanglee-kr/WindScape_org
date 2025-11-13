@@ -91,12 +91,6 @@ void CL_W10_WebAPI::routeWebSocket() {
 	});
 	s_server->addHandler(&s_wsMetrics);
 
-	// ✅ 이 포인터 연결 로직은 Routes.cpp의 begin() 함수로 이동했습니다.
-	// s_wsServerLog	  = &s_wsLogs;
-	// s_wsServerState	  = &s_wsState;
-	// s_wsServerChart	  = &s_wsChart;
-	// s_wsServerMetrics = &s_wsMetrics;
-
 
 	// Logger 모듈에 WebSocket 연결
 	CL_D10_Logger::attachWebSocket(s_wsServerLog);
