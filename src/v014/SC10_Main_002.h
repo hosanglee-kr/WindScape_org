@@ -31,7 +31,7 @@
 #include "P10_PWM_ctrl_014.h"
 #include "S10_Simulation_019.h"
 #include "S20_WindSolver_021.h"
-#include "W10_Web_024.h"
+#include "W10_Web_025.h"
 #include "WF10_WiFiManager_023.h"
 
 

@@ -1,13 +1,13 @@
 /*
  * ------------------------------------------------------
  * 소스명 : SC10_main_019.js
- * 모듈명 : Smart Nature Wind Web UI Controller
+ * 모듈명 : Smart Nature Wind Web UI Controller (v019)
  * ------------------------------------------------------
  * 기능 요약:
- *  - 설정 그룹별 저장(Wi-Fi / HW / Timing / Sim / API Key)
- *  - /api/state 상태 반영
- *  - /api/scan /api/version 대응
- *  - 정적 파일 & 펌웨어 업로드 분리
+ * - 설정 그룹별 저장(Wi-Fi / HW / Timing / Sim / API Key)
+ * - /api/control/summary 상태 반영 (v024 API)
+ * - /api/scan /api/version 대응
+ * - 정적 파일 & 펌웨어 업로드 분리
  * ------------------------------------------------------
  */
 
@@ -105,7 +105,8 @@
 		$("#btnPreviewPreset")?.addEventListener("click", previewPreset);
 
 		$("#btnSaveSim")?.addEventListener("click", saveSim);
-		$("#btnSaveSimInit")?.addEventListener("click", saveSimInit);
+		// ✅ HTML ID 변경에 맞춰 수정
+		$("#btnConfigInit")?.addEventListener("click", saveConfigInit); 
 		$("#btnSaveTiming")?.addEventListener("click", saveTiming);
 		$("#btnSaveWifiAP")?.addEventListener("click", saveWifiAP);
 		$("#btnSaveWifiSTA")?.addEventListener("click", saveWifiSTA);
@@ -126,8 +127,9 @@
 		showToast(`"${displayPresetName(preset)}" 미리보기 적용`, "ok");
 	}
 
-	// 그룹별 저장
+	// ======================= 그룹별 저장 (API 경로/BODY 구조 변경) =======================
 	async function saveSim() {
+		// ✅ API 변경: /api/config -> /api/simulation
 		const body = {
 			sim: {
 				preset: $("#preset").value,
@@ -142,18 +144,21 @@
 				therm_rad: Number($("#therm_rad").value)
 			}
 		};
-		await fetchApi("/api/config", "POST", body, "시뮬 설정 저장");
+		await fetchApi("/api/simulation", "POST", body, "시뮬 설정 저장");
 		refreshState();
 	}
 
-	async function saveSimInit() {
-		const body = {
-		};
-		await fetchApi("/api/config/init", "POST", body, "시뮬 설정 초기화");
-		refreshState();
+	// ✅ 함수명 변경 및 /api/config/init 호출 로직
+	async function saveConfigInit() {
+		if (confirm("경고: 모든 설정을 초기화하고 장치를 재부팅합니다. 계속하시겠습니까?")) {
+			// API 유지: /api/config/init
+			await fetchApi("/api/config/init", "POST", {}, "시스템 전체 초기화");
+			// 초기화 후 재부팅이 되므로 refreshState는 불필요
+		}
 	}
 	
 	async function saveTiming() {
+		// ✅ API 변경: /api/config -> /api/motion (Motion 객체 내부로 이동)
 		const body = {
 			timing: {
 				sim_int: Number($("#sim_int").value),
@@ -161,12 +166,12 @@
 				thermal_int: Number($("#thermal_int").value)
 			}
 		};
-		await fetchApi("/api/config", "POST", body, "타이밍 설정 저장");
+		await fetchApi("/api/motion", "POST", body, "타이밍 설정 저장");
 		refreshState();
 	}
 
 	async function saveWifiAP() {
-		// 백엔드 구조: wifi { wifi_mode, ap_network{ap_ssid, ap_password} }
+		// ✅ API 변경: /api/config -> /api/network
 		const body = {
 			wifi: {
 				wifi_mode: Number($("#wifi_mode").value),
@@ -176,17 +181,20 @@
 				}
 			}
 		};
-		await fetchApi("/api/config", "POST", body, "AP 설정 저장");
+		await fetchApi("/api/network", "POST", body, "AP 설정 저장");
 		refreshState();
 	}
 
 	async function saveWifiSTA() {
-		const sta = g_config.config?.wifi?.sta_networks || [];
-		await fetchApi("/api/config", "POST", { wifi: { sta_networks: sta } }, "STA 목록 저장");
+		// ✅ API 변경: /api/config -> /api/network
+		// ✅ STA 목록은 g_config.network?.wifi?.sta_networks 에서 가져오도록 변경
+		const sta = g_config.network?.wifi?.sta_networks || []; 
+		await fetchApi("/api/network", "POST", { wifi: { sta_networks: sta } }, "STA 목록 저장");
 		refreshState();
 	}
 
 	async function savePWMConfig() {
+		// ✅ API 변경: /api/config -> /api/motion (Motion 객체 내부로 이동)
 		const body = {
 			hw: {
 				pwm_pin: Number($("#pwm_pin").value),
@@ -195,25 +203,28 @@
 				pwm_res: Number($("#pwm_res").value)
 			}
 		};
+		// GPIO 체크 로직 유지
 		if (body.hw.pwm_pin >= 6 && body.hw.pwm_pin <= 11)
 			return showToast("GPIO6~11은 Flash용 핀으로 PWM 불가", "warn");
 		if (body.hw.pwm_pin >= 34)
 			return showToast("GPIO34 이상은 입력전용으로 PWM 불가", "warn");
 		if (body.hw.pwm_channel < 0 || body.hw.pwm_channel > 7)
 			return showToast("PWM 채널은 0~7 범위", "warn");
-		await fetchApi("/api/config", "POST", body, "PWM 설정 저장");
+			
+		await fetchApi("/api/motion", "POST", body, "PWM 설정 저장");
 		refreshState();
 	}
 
 	async function saveApiKey() {
+		// ✅ API 변경: /api/config -> /api/security
 		const newKey = $("#apiKeyInput").value.trim();
 		if (!newKey) return showToast("API Key를 입력하세요.", "warn");
 		setKey(newKey);
-		await fetchApi("/api/config", "POST", { security: { api_key: newKey } }, "API Key 저장");
+		await fetchApi("/api/security", "POST", { security: { api_key: newKey } }, "API Key 저장");
 		showToast("API Key 저장 완료", "ok");
 	}
 
-	// 상태/버전
+	// ======================= 상태/버전 (API 경로/BODY 구조 변경) =======================
 	async function refreshVersion() {
 		try {
 			const r = await fetch("/api/version");
@@ -227,19 +238,24 @@
 	async function refreshState(showToastMsg = false) {
 		setLoading(true);
 		try {
-			const r = await fetch("/api/state");
+			// ✅ API 변경: /api/state -> /api/control/summary
+			const r = await fetch("/api/control/summary");
 			const j = await r.json();
 			g_config = j;
-			g_presets = j.presets || [];
+			
+			// ✅ Preset 목록은 windProfile에서 로드 가정 (summary 응답에 포함된다는 가정)
+			g_presets = j.windProfile?.presets?.map(p => p.code) || [];
 
 			// Status
 			text($("#simActive"), j.status.sim_active ? "Active" : "Idle");
 			text($("#phase"), j.status.phase_name);
 			text($("#wind"), `${Number(j.status.wind_speed || 0).toFixed(2)} m/s`);
 			text($("#pwm"), `${Number(j.status.fan_pwm_percent || 0).toFixed(1)}%`);
-			text($("#wifiMode"), j.status.wifi_mode || "-");
+			
+			// Wifi Mode (j.status.wifi_mode는 텍스트여야 함)
+			text($("#wifiMode"), j.status.wifi_mode || "-"); 
 
-			// 백엔드가 ip_addr(단일) 또는 ip_ap/ip_sta(복수)를 줄 수 있어 둘 다 처리
+			// IP 처리 로직은 유지
 			const ipStr = (j.status.ip_ap || j.status.ip_sta)
 				? [j.status.ip_ap && `AP:${j.status.ip_ap}`, j.status.ip_sta && `STA:${j.status.ip_sta}`].filter(Boolean).join(" / ")
 				: (j.status.ip_addr || "-");
@@ -252,28 +268,36 @@
 			sel.innerHTML = "";
 			g_presets.forEach(p => {
 				const o = document.createElement("option");
-				o.value = p;
+				o.value = p; // code 사용 가정
 				o.textContent = displayPresetName(p);
 				sel.appendChild(o);
 			});
-			sel.value = j.config.sim.preset || "";
+			
+			// ✅ Sim 설정 로드: j.simulation.sim 경로 사용
+			const simConfig = j.simulation?.sim || {};
+			sel.value = simConfig.preset || "";
 			$("#presetPreview").textContent = `프리셋 미리보기: ${displayPresetName(sel.value)}`;
 
-			// Sim / Timing
-			Object.entries(j.config.sim || {}).forEach(([k, v]) => { const el = $(`#${k}`); if (el) el.value = v; });
-			Object.entries(j.config.timing || {}).forEach(([k, v]) => { const el = $(`#${k}`); if (el) el.value = v; });
+			// Sim
+			Object.entries(simConfig).forEach(([k, v]) => { const el = $(`#${k}`); if (el) el.value = v; });
+			
+			// ✅ Timing 설정 로드: j.motion.timing 경로 사용
+			const timingConfig = j.motion?.timing || {};
+			Object.entries(timingConfig).forEach(([k, v]) => { const el = $(`#${k}`); if (el) el.value = v; });
+			
+			// ✅ Wi-Fi 설정 로드: j.network.wifi 경로 사용
+			const wifiConfig = j.network?.wifi || {};
+			$("#wifi_mode").value = wifiConfig.wifi_mode || 0;
+			$("#ap_ssid").value = wifiConfig.ap_network?.ap_ssid || "";
+			$("#ap_password").value = wifiConfig.ap_network?.ap_password || "";
+			displayStaNetworks(wifiConfig.sta_networks || []);
 
-			// Wi-Fi (새 구조: ap_network)
-			$("#wifi_mode").value = j.config.wifi.wifi_mode;
-			$("#ap_ssid").value = j.config.wifi.ap_network?.ap_ssid || "";
-			$("#ap_password").value = j.config.wifi.ap_network?.ap_password || "";
-			displayStaNetworks(j.config.wifi.sta_networks || []);
-
-			// HW
-			$("#pwm_pin").value = j.config.hw.pwm_pin;
-			$("#pwm_channel").value = j.config.hw.pwm_channel;
-			$("#pwm_freq").value = j.config.hw.pwm_freq;
-			$("#pwm_res").value = j.config.hw.pwm_res;
+			// ✅ HW 설정 로드: j.motion.hw 경로 사용
+			const hwConfig = j.motion?.hw || {};
+			$("#pwm_pin").value = hwConfig.pwm_pin;
+			$("#pwm_channel").value = hwConfig.pwm_channel;
+			$("#pwm_freq").value = hwConfig.pwm_freq;
+			$("#pwm_res").value = hwConfig.pwm_res;
 
 			if (showToastMsg) showToast("상태 갱신 완료", "ok");
 		} catch (e) {
@@ -308,7 +332,8 @@
 				const idx = Number(e.target.dataset.index);
 				const removed = networks[idx]?.ssid || "";
 				networks.splice(idx, 1);
-				if (g_config.config?.wifi) g_config.config.wifi.sta_networks = networks;
+				// ✅ g_config의 경로 수정
+				if (g_config.network?.wifi) g_config.network.wifi.sta_networks = networks; 
 				showToast(`${removed} 삭제됨 (STA 저장 필요)`, "warn");
 				displayStaNetworks(networks);
 			});
@@ -350,17 +375,21 @@
 		if (!ssid) return showToast("SSID를 선택하세요.", "warn");
 		if (pass.length > 0 && pass.length < 8) return showToast("비밀번호는 8자 이상 (OPEN 제외)", "err");
 
-		const arr = g_config.config?.wifi?.sta_networks || [];
+		// ✅ g_config의 경로 수정 및 초기화
+		let arr = g_config.network?.wifi?.sta_networks || [];
+		if (!g_config.network) g_config.network = {};
+		if (!g_config.network.wifi) g_config.network.wifi = {};
+
 		if (arr.some(n => n.ssid === ssid)) return showToast(`"${ssid}"는 이미 등록됨`, "warn");
 
 		arr.push({ ssid, pass });
-		if (g_config.config?.wifi) g_config.config.wifi.sta_networks = arr;
+		g_config.network.wifi.sta_networks = arr;
 		displayStaNetworks(arr);
 		$("#scanPass").value = "";
 		showToast(`${ssid} 추가됨 (STA 저장 필요)`, "ok");
 	}
 
-	// 파일 업로드
+	// 파일 업로드 (로직 유지)
 	async function uploadFile(inputSel, url, msgSel, desc, isOTA = false) {
 		const fileInput = $(inputSel);
 		if (!fileInput || fileInput.files.length === 0)
@@ -380,7 +409,8 @@
 			if (isOTA) {
 				showToast(`${desc} 완료, 재부팅 중`, "ok");
 				text($(msgSel), "업데이트 성공! 재시작 중...");
-				setTimeout(() => location.reload(), 5000);
+				// 재부팅 대기
+				setTimeout(() => location.reload(), 5000); 
 			} else {
 				showToast(`${desc} 성공`, "ok");
 				text($(msgSel), `업로드 완료: ${txt}`);
@@ -396,4 +426,3 @@
 	async function uploadOTA() { await uploadFile("#fileOTA", "/update", "#otaMsg", "펌웨어 OTA", true); }
 
 })();
-

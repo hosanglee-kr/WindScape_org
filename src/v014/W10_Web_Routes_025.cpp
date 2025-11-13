@@ -1,8 +1,8 @@
 /*
  * ------------------------------------------------------
- * 소스명 : W10_Web_Routes_024.cpp
+ * 소스명 : W10_Web_Routes_025.cpp
  * 모듈 약어 : W10
- * 모듈명 : Smart Nature Wind Web API (v024) - Routes Implementation
+ * 모듈명 : Smart Nature Wind Web API (v025) - Routes Implementation
  * ------------------------------------------------------
  * 기능 요약:
  * - Web UI / REST API 엔드포인트 라우팅 로직 구현
@@ -31,7 +31,7 @@
  * ------------------------------------------------------
  */
 
-#include "W10_Web_024.h"
+#include "W10_Web_025.h"
 #include "M10_MotionLogic_016.h"
 #include "CT10_ControlManager_021.h"
 #include "WF10_WiFiManager_023.h" // CL_WF10_WiFiManager::scanNetworksToJson 사용을 위해 포함
@@ -40,24 +40,22 @@
 // ------------------------------------------------------
 // 정적 멤버 정의 (Routes/Broadcasts/WebSockets 파일 중 하나에만 정의)
 // ------------------------------------------------------
-AsyncWebServer* CL_W10_WebAPI::s_server	 = nullptr;
-CL_CT10_ControlManager* CL_W10_WebAPI::s_control = nullptr;
-WiFiMulti* CL_W10_WebAPI::s_multi = nullptr; // v012 복구
-File CL_W10_WebAPI::s_upFile;			  // v012 복구
-
+AsyncWebServer*			CL_W10_WebAPI::s_server	 		= nullptr;
+CL_CT10_ControlManager* CL_W10_WebAPI::s_control 		= nullptr;
+WiFiMulti*				CL_W10_WebAPI::s_multi	 		= nullptr;	 	// v012 복구
+File					CL_W10_WebAPI::s_upFile;			 			// v012 복구
 
 // AsyncWebSocket 객체 자체는 CL_W10_WebAPI 클래스 외부에서 정의합니다.
-AsyncWebSocket s_wsLogs("/ws/log");
-AsyncWebSocket s_wsState("/ws/state");
-AsyncWebSocket s_wsChart("/ws/chart");
-AsyncWebSocket s_wsMetrics("/ws/metrics");
+AsyncWebSocket 			s_wsLogs("/ws/log");
+AsyncWebSocket 			s_wsState("/ws/state");
+AsyncWebSocket 			s_wsChart("/ws/chart");
+AsyncWebSocket 			s_wsMetrics("/ws/metrics");
 
 // AsyncWebSocket 포인터 멤버를 정의합니다.
-AsyncWebSocket* CL_W10_WebAPI::s_wsServerState	 = nullptr;
-AsyncWebSocket* CL_W10_WebAPI::s_wsServerLog		 = nullptr;
-AsyncWebSocket* CL_W10_WebAPI::s_wsServerChart	 = nullptr;
-AsyncWebSocket* CL_W10_WebAPI::s_wsServerMetrics = nullptr;
-
+AsyncWebSocket* 		CL_W10_WebAPI::s_wsServerState	 = nullptr;
+AsyncWebSocket* 		CL_W10_WebAPI::s_wsServerLog	 = nullptr;
+AsyncWebSocket* 		CL_W10_WebAPI::s_wsServerChart	 = nullptr;
+AsyncWebSocket* 		CL_W10_WebAPI::s_wsServerMetrics = nullptr;
 
 // --------------------------------------------------
 // 초기화: WebServer + ControlManager + WiFiMulti 연결
