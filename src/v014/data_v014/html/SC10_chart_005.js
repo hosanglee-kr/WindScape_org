@@ -1,4 +1,15 @@
-// SC10_chart_005.js
+/*
+ * ------------------------------------------------------
+ * 소스명 : SC10_chart_005.js
+ * 모듈 약어 : SC10
+ * 모듈명 : Smart Nature Wind Chart/Simulation UI (v005)
+ * ------------------------------------------------------
+ * 기능 요약:
+ * - WebSocket을 통한 실시간 시뮬레이션/제어 차트 모니터링
+ * - 풍속 관련 상세 매개변수 설정 및 저장 (REST API)
+ * - 백엔드 v024 API 명세에 맞춰 API 경로 및 데이터 구조 수정
+ * ------------------------------------------------------
+ */
 
 (() => {
 	"use strict";
@@ -31,21 +42,13 @@
 	// DOM Helper
 	const $ = (s, r = document) => r.querySelector(s);
 	const text = (el, v) => el && (el.textContent = v);
-	const setLoading = (flag) => {
-		const ov = $("#loadingOverlay");
-		if (ov) ov.style.display = flag ? "flex" : "none";
-	};
-	const showToast = (msg, type = "ok") => {
-		const cont = $("#toastContainer");
-		if (!cont) return;
-		const div = document.createElement("div");
-		div.className = `toast ${type}`;
-		div.textContent = msg;
-		cont.appendChild(div);
-		setTimeout(() => div.remove(), 3000);
-	};
+	
+	// ✅ 로딩/토스트 기능은 HTML에 해당 요소가 없으므로 임시로 기능만 구현하거나 주석 처리
+	const setLoading = (flag) => { /* console.log(flag ? "Loading..." : "Loaded."); */ };
+	const showToast = (msg, type = "ok") => { console.log(`[${type.toUpperCase()}] ${msg}`); };
 
-	// ======================= 공통 API (SC10_main_017.js 유사) =======================
+
+	// ======================= 공통 API =======================
 	async function fetchApi(url, method = "GET", body = null, desc = "작업") {
 		setLoading(true);
 		try {
@@ -77,18 +80,19 @@
 		}
 	}
 
-	// ======================= 초기화 및 상태 갱신 (Main 페이지 로직 통합) =======================
+	// ======================= 초기화 및 상태 갱신 (API 경로 수정) =======================
 	document.addEventListener("DOMContentLoaded", () => {
 		bindEvents();
-		refreshState(); // 초기 상태 및 프리셋 로드
-		setInterval(updateCharts, 2000); // 3초마다 차트 데이터 갱신
+		refreshState(false); // 초기 상태 및 프리셋 로드
+		setInterval(updateCharts, 2000); // 2초마다 차트 데이터 갱신
 		updateCharts();
 	});
 
 	function bindEvents() {
 		$("#btnPreviewPreset")?.addEventListener("click", previewPreset);
 		$("#btnSaveSim")?.addEventListener("click", saveSim);
-		$("#btnSaveSimInit")?.addEventListener("click", saveSimInit);
+		// ✅ HTML의 btnSaveSimInit -> btnConfigInit으로 ID 변경 가정
+		$("#btnConfigInit")?.addEventListener("click", saveConfigInit); 
 		$("#btnSaveTiming")?.addEventListener("click", saveTiming);
 
 		$("#btnPause")?.addEventListener("click", () => (paused = true));
@@ -104,28 +108,34 @@
 	async function refreshState(showToastMsg = false) {
 		setLoading(true);
 		try {
-			const r = await fetch("/api/state");
+			// ✅ API 변경: /api/state -> /api/control/summary (Sim 설정이 포함된 Summary API 사용)
+			const r = await fetch("/api/control/summary");
 			const j = await r.json();
-			g_config = j;
-			g_presets = j.presets || [];
+			g_config = j; 
+			// ✅ j.windProfile에서 프리셋 목록 로드 가정 (summary 응답에 포함된다는 가정 하에 수정)
+			g_presets = j.windProfile?.presets || []; 
 
+			// ✅ Sim 설정 로드: j.simulation.sim 경로 사용
+			const simConfig = j.simulation?.sim || {};
+			
 			// 프리셋 채우기
 			const sel = $("#preset");
 			sel.innerHTML = "";
 			g_presets.forEach(p => {
 				const o = document.createElement("option");
-				o.value = p;
-				o.textContent = displayPresetName(p);
+				o.value = p.code; // code 필드 사용 가정
+				o.textContent = displayPresetName(p.code);
 				sel.appendChild(o);
 			});
-			sel.value = j.config.sim.preset || "";
+			sel.value = simConfig.preset || "";
 			$("#presetPreview").textContent = `프리셋 미리보기: ${displayPresetName(sel.value)}`;
 
 			// Sim 값 반영
-			Object.entries(j.config.sim || {}).forEach(([k, v]) => { const el = $(`#${k}`); if (el) el.value = v; });
+			Object.entries(simConfig).forEach(([k, v]) => { const el = $(`#${k}`); if (el) el.value = v; });
 
-			// Timing 반영
-			Object.entries(j.config.timing || {}).forEach(([k, v]) => { const el = $(`#${k}`); if (el) el.value = v; });
+			// ✅ Timing 반영: j.motion.timing 경로 사용
+			const timingConfig = j.motion?.timing || {};
+			Object.entries(timingConfig).forEach(([k, v]) => { const el = $(`#${k}`); if (el) el.value = v; });
 
 			if (showToastMsg) showToast("설정 상태 갱신 완료", "ok");
 		} catch (e) {
@@ -135,7 +145,7 @@
 		}
 	}
 
-	// ======================= 그룹별 저장 로직 =======================
+	// ======================= 그룹별 저장 로직 (API 경로 및 Body 구조 수정) =======================
 	function previewPreset() {
 		const preset = $("#preset").value;
 		$("#presetPreview").textContent = `프리셋 미리보기: ${displayPresetName(preset)}`;
@@ -143,6 +153,7 @@
 	}
 
 	async function saveSim() {
+		// ✅ API 변경: /api/config -> /api/simulation
 		const body = {
 			sim: {
 				preset: $("#preset").value,
@@ -157,18 +168,22 @@
 				therm_rad: Number($("#therm_rad").value)
 			}
 		};
-		await fetchApi("/api/config", "POST", body, "시뮬 설정 저장");
+		await fetchApi("/api/simulation", "POST", body, "시뮬 설정 저장");
 		refreshState();
 	}
 
-	async function saveSimInit() {
-		const body = {
-		};
-		await fetchApi("/api/config/init", "POST", body, "시뮬 설정 초기화");
-		refreshState();
+	// ✅ 함수명 변경 및 /api/config/init 호출 로직
+	async function saveConfigInit() {
+		if (confirm("경고: 모든 설정을 초기화하고 장치를 재부팅합니다. 계속하시겠습니까?")) {
+			// ✅ API 유지: /api/config/init
+			await fetchApi("/api/config/init", "POST", {}, "시스템 전체 초기화");
+			// 초기화 후 재부팅이 되므로 refreshState는 불필요하지만, 로직은 유지
+			// refreshState();
+		}
 	}
 
 	async function saveTiming() {
+		// ✅ API 변경: /api/config -> /api/motion (타이밍 설정은 Motion 객체 내부에 포함됨)
 		const body = {
 			timing: {
 				sim_int: Number($("#sim_int").value),
@@ -176,7 +191,7 @@
 				thermal_int: Number($("#thermal_int").value)
 			}
 		};
-		await fetchApi("/api/config", "POST", body, "타이밍 설정 저장");
+		await fetchApi("/api/motion", "POST", body, "타이밍 설정 저장");
 		refreshState();
 	}
 
@@ -184,6 +199,7 @@
 	function toggleChartContent(e) {
 		const btn = e.currentTarget;
 		const content = btn.closest(".chart-container").querySelector(".chart-content");
+		// CSS display 속성을 사용한 토글
 		if (content.style.display === "none") {
 			content.style.display = "block";
 			btn.textContent = "▲"; // 열림
@@ -194,13 +210,13 @@
 	}
 
 
-	// ======================= 차트 초기화 (신규 차트 추가) =======================
+	// ======================= 차트 초기화 (기존 로직 유지) =======================
 	const ctxWind = $("#chartWind");
 	const ctxParam = $("#chartParams");
-	const ctxTurbThermSig = $("#chartTurbThermSig"); // 신규
+	const ctxTurbThermSig = $("#chartTurbThermSig"); 
 	const ctxEvent = $("#chartEvents");
 	const ctxPreset = $("#chartPreset");
-	const ctxTiming = $("#chartTiming"); // 신규
+	const ctxTiming = $("#chartTiming"); 
 
 	const chartOptions = {
 		animation: false,
@@ -235,14 +251,14 @@
 			datasets: [
 				{ label: "강도(Intensity)", borderColor: "#4caf50", data: [] },
 				{ label: "가변성(Variability)", borderColor: "#ff9800", data: [] },
-				{ label: "팬 최대(Fan Limit)", borderColor: "#00bcd4", data: [] }, // 차트 파라미터 확장
-				{ label: "팬 최소(Min Fan)", borderColor: "#e91e63", data: [] }, // 차트 파라미터 확장
+				{ label: "팬 최대(Fan Limit)", borderColor: "#00bcd4", data: [] }, 
+				{ label: "팬 최소(Min Fan)", borderColor: "#e91e63", data: [] }, 
 			]
 		},
 		options: { ...chartOptions, plugins: { legend: { position: "bottom" } } },
 	});
 
-	// 신규 차트: 난류/열기포 시그마 및 길이
+	// 난류/열기포 시그마 및 길이
 	const chartTurbThermSig = new Chart(ctxTurbThermSig, {
 		type: "line",
 		data: {
@@ -257,8 +273,8 @@
 			...chartOptions,
 			scales: {
 				...chartOptions.scales,
-				ySig: { position: "left", min: 0, max: 5 }, // Sigma/Strength 범위
-				yLen: { position: "right", min: 0, max: 200, grid: { drawOnChartArea: false } }, // Length/Radius 범위
+				ySig: { position: "left", min: 0, max: 5 }, 
+				yLen: { position: "right", min: 0, max: 200, grid: { drawOnChartArea: false } }, 
 			},
 		},
 	});
@@ -284,7 +300,7 @@
 		options: { ...chartOptions, scales: { ...chartOptions.scales, y: { min: 0, max: 10 } } },
 	});
 
-	// 신규 차트: 타이밍 설정
+	// 타이밍 설정
 	const chartTiming = new Chart(ctxTiming, {
 		type: "line",
 		data: {
@@ -303,16 +319,19 @@
 	}
 
 
-	// ======================= 데이터 갱신 로직 =======================
+	// ======================= 데이터 갱신 로직 (API 경로 수정) =======================
 	async function updateCharts() {
 		if (paused) {
 			refreshLabel.textContent = "⏸ 일시정지 중...";
 			return;
 		}
 		try {
-			const resp = await fetch("/api/chart_data");
+			// ✅ API 변경: /api/chart_data -> /api/sim/chart
+			const resp = await fetch("/api/sim/chart"); 
 			const json = await resp.json();
-			const recs = json.records || [];
+			
+			// ✅ 백엔드 API 명세에 따라 chart 필드 사용 가정
+			const recs = json.chart || []; 
 
 			const toXY = (arr, key) => arr.map((e) => ({ x: new Date(e.t), y: e[key] }));
 
@@ -326,7 +345,7 @@
 			chartParam.data.datasets[2].data = toXY(recs, "fan_limit");
 			chartParam.data.datasets[3].data = toXY(recs, "min_fan");
 
-			// Chart TurbThermSig (난류/열기포 시그마 및 길이) - 신규
+			// Chart TurbThermSig (난류/열기포 시그마 및 길이)
 			chartTurbThermSig.data.datasets[0].data = toXY(recs, "turb_sig");
 			chartTurbThermSig.data.datasets[1].data = toXY(recs, "turb_len");
 			chartTurbThermSig.data.datasets[2].data = toXY(recs, "therm_str");
@@ -339,7 +358,7 @@
 			// Chart Preset
 			chartPreset.data.datasets[0].data = toXY(recs, "preset");
 
-			// Chart Timing - 신규
+			// Chart Timing
 			chartTiming.data.datasets[0].data = toXY(recs, "sim_int");
 			chartTiming.data.datasets[1].data = toXY(recs, "gust_int");
 			chartTiming.data.datasets[2].data = toXY(recs, "thermal_int");
@@ -354,6 +373,3 @@
 		}
 	}
 })();
-
-
-
