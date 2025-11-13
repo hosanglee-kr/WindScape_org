@@ -37,13 +37,13 @@
 // 정적 페이지 경로 (v012 Const 복구)
 // ------------------------------------------------------
 namespace W10_Const {
-constexpr char MAIN_HTML[] = "/html/SC10_main_021.html";
-constexpr char MAIN_CSS[]  = "/html/SC10_main_021.css";
-constexpr char MAIN_JS[]   = "/html/SC10_main_021.js";
+constexpr char MAIN_HTML[] = "/html/SC10_main_018.html";
+constexpr char MAIN_CSS[]  = "/html/SC10_main_018.css";
+constexpr char MAIN_JS[]   = "/html/SC10_main_018.js";
 
-constexpr char CHART_HTML[] = "/html/SC10_chart_003.html";
-constexpr char CHART_CSS[]  = "/html/SC10_chart_003.css";
-constexpr char CHART_JS[]   = "/html/SC10_chart_003.js";
+constexpr char CHART_HTML[] = "/html/SC10_chart_004.html";
+constexpr char CHART_CSS[]  = "/html/SC10_chart_004.css";
+constexpr char CHART_JS[]   = "/html/SC10_chart_004.js";
 }
 
 // ------------------------------------------------------
