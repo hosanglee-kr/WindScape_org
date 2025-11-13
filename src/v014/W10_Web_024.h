@@ -115,9 +115,7 @@ private:
 	// --------------------------------------------------
 	// 유틸리티 함수
 	// --------------------------------------------------
-	static bool checkApiKey(AsyncWebServerRequest* p_request);
-	static bool parseJsonBody(AsyncWebServerRequest* p_request, uint8_t* p_data, size_t p_len, JsonDocument& p_doc);
-
+	
 	// v012의 _applyHeaders 로직 복구 및 send 함수에 적용
 	static inline void _applyHeaders(AsyncWebServerResponse* p_response, bool p_nocache) {
 		if (p_nocache) {
