@@ -6,7 +6,7 @@ import { getFirestore, doc, setDoc, onSnapshot, setLogLevel } from "https://www.
 
 // --- Gemini API Configuration ---
 const GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025";
-const apiKey = ""; // API key is provided by the environment
+const apiKey = "AIzaSyAw7kGautBWbZhVr0CDYwzBK8_QbPH743A"; // API key is provided by the environment
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
 
 // --- Firebase Global Variables ---
