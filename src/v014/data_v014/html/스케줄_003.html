@@ -106,17 +106,17 @@
                 <h3 class="text-lg font-semibold text-gray-700 mb-3 border-l-2 border-green-500 pl-2">기본 정보 및 기간</h3>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="md:col-span-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">번호</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">스케줄 번호</label>
                         <input type="number" id="schNoDetail" class="input-text bg-gray-100 cursor-not-allowed" readonly>
                     </div>
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">이름</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">스케줄 이름</label>
                         <input type="text" id="scheduleNameDetail" class="input-text">
                     </div>
                     <div class="md:col-span-1 flex items-end">
                         <label class="inline-flex items-center">
                             <input type="checkbox" id="scheduleEnabledDetail" class="form-checkbox h-5 w-5 text-blue-600 rounded">
-                            <span class="ml-2 text-sm font-medium text-gray-700">스케줄 활성화</span>
+                            <span class="ml-2 text-sm font-medium text-gray-700">스케줄 사용 여부</span>
                         </label>
                     </div>
                 </div>
@@ -125,7 +125,7 @@
                     <div class="md:col-span-1 flex items-start pt-2">
                         <label class="inline-flex items-center">
                             <input type="checkbox" id="periodEnabledDetail" class="form-checkbox h-5 w-5 text-blue-600 rounded">
-                            <span class="ml-2 text-sm font-medium text-gray-700">기간 제한 사용</span>
+                            <span class="ml-2 text-sm font-medium text-gray-700">동작 시간대 Rule</span>
                         </label>
                     </div>
                     <div id="startTimeContainer">
@@ -137,7 +137,7 @@
                         <input type="time" id="endTimeDetail" class="input-text">
                     </div>
                     <div class="md:col-span-4 mt-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">실행 요일 선택</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">동작 요일</label>
                         <div id="daySelectorsDetail" class="flex flex-wrap gap-2">
                             <!-- Day buttons generated here -->
                         </div>
@@ -148,9 +148,9 @@
             <!-- B. 세그먼트 시퀀스 설정 -->
             <div class="mt-6 border-t pt-4">
                 <div class="flex justify-between items-center mb-3">
-                    <h3 class="text-lg font-semibold text-gray-700 border-l-2 border-green-500 pl-2">세그먼트 시퀀스</h3>
+                    <h3 class="text-lg font-semibold text-gray-700 border-l-2 border-green-500 pl-2">동작 단계</h3>
                     <button id="btnAddSegmentDetail" class="bg-green-500 hover:bg-green-600 text-white py-1 px-3 text-sm rounded transition">
-                        + 세그먼트 추가
+                        + 동작 단계 추가
                     </button>
                 </div>
                 <div id="segmentListDetail" class="space-y-3">
@@ -169,53 +169,53 @@
                         <div class="space-y-3">
                             <label class="inline-flex items-center ml-2">
                                 <input type="checkbox" id="autoOffTimerEnabledDetail" class="form-checkbox h-4 w-4 text-blue-600 rounded autooff-toggle">
-                                <span class="ml-1 text-sm font-medium text-gray-700">타이머 사용</span>
+                                <span class="ml-1 text-sm font-medium text-gray-700">종료 타이머 적용</span>
                             </label>
                             <label class="block text-sm font-medium text-gray-700">시간 (분)</label>
                             <input type="number" id="autoOffTimerMinutesDetail" min="0" class="input-text inline-block w-full autooff-input-timer">
                             
                             <label class="inline-flex items-center ml-2">
                                 <input type="checkbox" id="autoOffOffTimeEnabledDetail" class="form-checkbox h-4 w-4 text-blue-600 rounded autooff-toggle">
-                                <span class="ml-1 text-sm font-medium text-gray-700">종료 시간 사용</span>
+                                <span class="ml-1 text-sm font-medium text-gray-700">종료 시간 적용</span>
                             </label>
                             <label class="block text-sm font-medium text-gray-700">시간 (HH:MM)</label>
                             <input type="time" id="autoOffOffTimeDetail" class="input-text inline-block w-full autooff-input-offtime">
 
                             <label class="inline-flex items-center ml-2">
                                 <input type="checkbox" id="autoOffOffTempEnabledDetail" class="form-checkbox h-4 w-4 text-blue-600 rounded autooff-toggle">
-                                <span class="ml-1 text-sm font-medium text-gray-700">종료 온도 사용</span>
+                                <span class="ml-1 text-sm font-medium text-gray-700">종료 온도 적용</span>
                             </label>
-                            <label class="block text-sm font-medium text-gray-700">온도 (°C)</label>
+                            <label class="block text-sm font-medium text-gray-700">온도 미만 (°C)</label>
                             <input type="number" id="autoOffOffTempDetail" min="0" step="0.1" class="input-text inline-block w-full autooff-input-offtemp">
                         </div>
                     </div>
 
                     <!-- Motion 설정 -->
                     <div class="md:col-span-2">
-                        <h4 class="font-semibold text-gray-600 mb-2">모션 감지 (Motion)</h4>
+                        <h4 class="font-semibold text-gray-600 mb-2">움직임 감지 (Motion) 작동 Rule</h4>
                         <div class="grid grid-cols-2 gap-4">
                             
                             <!-- PIR 설정 -->
                             <div class="space-y-3 p-3 bg-gray-50 rounded-lg">
-                                <h5 class="font-medium text-sm text-gray-800">PIR 설정</h5>
+                                <h5 class="font-medium text-sm text-gray-800">적외선 설정</h5>
                                 <label class="inline-flex items-center text-sm">
                                     <input type="checkbox" id="motionPirEnabledDetail" class="form-checkbox h-4 w-4 text-blue-600 rounded motion-toggle-pir">
-                                    <span class="ml-2">PIR 활성화</span>
+                                    <span class="ml-2">적외선 감지 적용</span>
                                 </label>
-                                <label class="block text-xs text-gray-600">감지 유지 시간 (초)</label>
+                                <label class="block text-xs text-gray-600">감지 시 작동 시간 (초)</label>
                                 <input type="number" id="motionPirHoldSecDetail" min="0" class="input-text text-sm motion-input-pir">
                             </div>
 
                             <!-- BLE 설정 -->
                             <div class="space-y-3 p-3 bg-gray-50 rounded-lg">
-                                <h5 class="font-medium text-sm text-gray-800">BLE 설정</h5>
+                                <h5 class="font-medium text-sm text-gray-800">블루투스 디바이스 설정</h5>
                                 <label class="inline-flex items-center text-sm">
                                     <input type="checkbox" id="motionBleEnabledDetail" class="form-checkbox h-4 w-4 text-blue-600 rounded motion-toggle-ble">
-                                    <span class="ml-2">BLE 활성화</span>
+                                    <span class="ml-2">블루투스 감지 적용</span>
                                 </label>
-                                <label class="block text-xs text-gray-600">RSSI 임계값 (dBm)</label>
+                                <label class="block text-xs text-gray-600">신호(RSSI) 임계값 (dBm)</label>
                                 <input type="number" id="motionBleRssiThresholdDetail" min="-100" max="-30" class="input-text text-sm motion-input-ble">
-                                <label class="block text-xs text-gray-600">감지 유지 시간 (초)</label>
+                                <label class="block text-xs text-gray-600">감지 시 작동 시간 (초)</label>
                                 <input type="number" id="motionBleHoldSecDetail" min="0" class="input-text text-sm motion-input-ble">
                             </div>
                         </div>
