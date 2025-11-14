@@ -150,7 +150,7 @@
                 <div class="flex justify-between items-center mb-3">
                     <h3 class="text-lg font-semibold text-gray-700 border-l-2 border-green-500 pl-2">동작 단계</h3>
                     <button id="btnAddSegmentDetail" class="bg-green-500 hover:bg-green-600 text-white py-1 px-3 text-sm rounded transition">
-                        + 동작 단계 추가
+                        + 동작 단계(Step) 추가
                     </button>
                 </div>
                 <div id="segmentListDetail" class="space-y-3">
@@ -466,7 +466,7 @@
         
         function startNewSchedule() {
             const maxSchNo = g_scheduleData.reduce((max, item) => Math.max(max, item.schNo), 0);
-            const newSchNo = maxSchNo > 0 ? maxSchNo + 1 : 1;
+            const newSchNo = maxSchNo > 0 ? maxSchNo + 10 : 10;
 
             const newItem = {
                 schNo: newSchNo,
@@ -571,18 +571,18 @@
                 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <div>
-                        <label class="text-xs text-gray-600">ON 시간 (분)</label>
+                        <label class="text-xs text-gray-600">시작 시간 (분)</label>
                         <input type="number" data-key="on_minutes" value="${seg.on_minutes}" min="0" class="input-text text-sm">
                     </div>
                     <div>
-                        <label class="text-xs text-gray-600">OFF 시간 (분)</label>
+                        <label class="text-xs text-gray-600">종료 시간 (분)</label>
                         <input type="number" data-key="off_minutes" value="${seg.off_minutes}" min="0" class="input-text text-sm">
                     </div>
                      <div class="col-span-2 md:col-span-1">
-                        <label class="text-xs text-gray-600">모드</label>
+                        <label class="text-xs text-gray-600">작동 모드</label>
                         <select data-key="mode" class="input-select text-sm seg-mode-select">
-                            <option value="PRESET">프리셋</option>
-                            <option value="FIXED">고정 속도</option>
+                            <option value="PRESET">Preset</option>
+                            <option value="FIXED">고정속도</option>
                         </select>
                     </div>
                      <div class="col-span-2 md:col-span-1">
@@ -592,16 +592,16 @@
                 </div>
 
                 <div class="preset-details space-y-3 mt-3 p-3 bg-gray-50 rounded-lg seg-preset-group">
-                    <h5 class="text-sm font-semibold mb-2">프리셋 상세 / 조정 (Adjust)</h5>
+                    <h5 class="text-sm font-semibold mb-2">Preset 상세 조정 (Adjust)</h5>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="text-xs text-gray-600">프리셋 코드</label>
+                            <label class="text-xs text-gray-600">풍향 Preset</label>
                             <select data-key="presetCode" class="input-select text-sm seg-preset-input">
                                 ${presetOptions}
                             </select>
                         </div>
                         <div>
-                            <label class="text-xs text-gray-600">스타일 코드</label>
+                            <label class="text-xs text-gray-600">풍향 스타일</label>
                             <select data-key="styleCode" class="input-select text-sm seg-style-input">
                                 <option value="BALANCE">BALANCE</option>
                             </select>
@@ -611,7 +611,7 @@
                     <div class="grid grid-cols-2 gap-4">
                         <label class="text-xs text-gray-600">강도 조정(±)</label>
                         <input type="number" data-key="adjust.wind_intensity" value="${seg.adjust.wind_intensity}" step="0.1" class="input-text text-sm seg-adjust-input">
-                        <label class="text-xs text-gray-600">가변성 조정(±)</label>
+                        <label class="text-xs text-gray-600">변동성 조정(±)</label>
                         <input type="number" data-key="adjust.wind_variability" value="${seg.adjust.wind_variability}" step="0.1" class="input-text text-sm seg-adjust-input">
                     </div>
                 </div>
@@ -649,7 +649,7 @@
             
             item.segments.push(newSegment);
             renderSegmentList(item.segments);
-            showToast("세그먼트 추가 완료", "ok"); 
+            showToast("작동 단계 추가 완료", "ok"); 
         }
         
         function deleteSegment(index) {
@@ -662,7 +662,7 @@
                 item.segments.splice(index, 1);
                 // Re-render the list immediately
                 renderSegmentList(item.segments); 
-                showToast("세그먼트 삭제됨", "warn");
+                showToast("작동단계 삭제됨", "warn");
             }
         }
 
