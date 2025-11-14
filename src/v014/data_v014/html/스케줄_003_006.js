@@ -1,4 +1,4 @@
-// schedule_manager.js (JavaScript Implementation with Firebase and Gemini API)
+// 스케줄_003_006.js (JavaScript Implementation with Firebase and Gemini API)
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
