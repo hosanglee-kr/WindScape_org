@@ -8,7 +8,7 @@ let globalSettings = {};
 async function loadSettings() {
     try {
         // 1. fetch를 사용하여 JSON 파일을 비동기적으로 요청합니다.
-        const response = await fetch('./config.json');
+        const response = await fetch('./config_secret.json');
         
         // HTTP 응답 상태가 성공(200-299)인지 확인합니다.
         if (!response.ok) {
