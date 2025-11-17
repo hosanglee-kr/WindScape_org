@@ -1,44 +1,45 @@
-// main.js
+// app.js
 
-let globalSettings = {};
+let apiKeys = {};
 
 /**
- * config.json 파일을 불러와서 설정값을 전역 변수에 저장하는 함수
+ * 로컬 config_secret.json 파일을 불러와서 설정값을 저장합니다.
  */
-async function loadSettings() {
+async function loadSecretConfig() {
+    const configPath = './config_secret.json'; // 파일 경로
+    
     try {
-        // 1. fetch를 사용하여 JSON 파일을 비동기적으로 요청합니다.
-        const response = await fetch('./config_secret.json');
+        // 1. fetch 요청 (웹 서버 환경 필수)
+        const response = await fetch(configPath);
         
-        // HTTP 응답 상태가 성공(200-299)인지 확인합니다.
         if (!response.ok) {
-            throw new Error(`파일 로드 실패! 상태 코드: ${response.status}`);
+            throw new Error(`파일 로드 실패: ${response.status} ${response.statusText}`);
         }
         
-        // 2. 응답 본문(Body)을 JSON 객체로 파싱합니다.
-        globalSettings = await response.json();
+        // 2. JSON 객체로 파싱
+        apiKeys = await response.json();
         
-        console.log("✅ 설정 로드 완료:", globalSettings);
+        console.log("✅ 설정 로드 완료.");
         
-        // 3. 설정값을 사용하는 애플리케이션의 핵심 로직을 호출합니다.
-        applySettings(globalSettings);
+        // 3. 로드된 키 사용 (예시)
+        useKeys(apiKeys);
         
     } catch (error) {
-        console.error("❌ 설정 파일 로드 중 오류 발생:", error);
-        document.getElementById('status').textContent = "설정값 로드 실패!";
+        console.error("❌ config_secret.json 로드 중 오류 발생:", error);
     }
 }
 
-function applySettings(settings) {
-    // 로드된 설정값을 사용합니다.
-    const url = settings.service_url;
-    const theme = settings.theme;
+function useKeys(keys) {
+    const firebaseKey = keys.FIREBASE_API_KEY;
+    const geminiKey = keys.GEMINI_API_KEY;
     
-    document.getElementById('status').textContent = `로드된 테마: ${theme}`;
-    console.log(`사용할 서비스 URL: ${url}`);
-    
-    // ... 이후 애플리케이션 초기화 및 실행 로직 ...
+    // 이 시점에서 키가 브라우저 메모리에 로드되어 있습니다.
+    document.getElementById('result').textContent = 
+        `Firebase Key Start: ${firebaseKey.substring(0, 8)}...`;
+        
+    // ⚠️ 경고: 민감한 키를 브라우저에서 직접 사용하는 것은 보안 위험이 큽니다.
+    // fetch(..., { headers: { 'Authorization': `Bearer ${geminiKey}` } });
 }
 
-// 애플리케이션 시작 (가장 먼저 실행)
-loadSettings();
+// 애플리케이션 시작
+loadSecretConfig();
