@@ -189,27 +189,27 @@ void SC10_run() {
 	
 	// 1. 상태 브로드캐스트 (상태 변경 발생 시)
 	if (v_ctrl.consumeDirtyState()) {
-		ArduinoJson::JsonDocument v_doc(JSON_DOC_SIZE_LARGE);
+		JsonDocument v_doc;
 		v_ctrl.toJson(v_doc);
 		SC10_broadcastState(v_doc, true);
 	}
 
 	// 2. 메트릭/차트 브로드캐스트 (CT10 내부에서 1.5초 주기로 Dirty 설정)
 	if (v_ctrl.consumeDirtyMetrics()) {
-		ArduinoJson::JsonDocument v_doc(JSON_DOC_SIZE_MEDIUM);
+		JsonDocument v_doc;
 		v_ctrl.toMetricsJson(v_doc);
 		SC10_broadcastMetrics(v_doc, true);
 	}
 	
 	if (v_ctrl.consumeDirtyChart()) {
-		ArduinoJson::JsonDocument v_doc(JSON_DOC_SIZE_LARGE);
+		JsonDocument v_doc;
 		v_ctrl.toChartJson(v_doc, true);
 		SC10_broadcastChart(v_doc, true);
 	}
 	
 	// 3. 요약 상태 브로드캐스트 (필요 시)
 	if (v_ctrl.consumeDirtySummary()) {
-		ArduinoJson::JsonDocument v_doc(JSON_DOC_SIZE_SMALL);
+		JsonDocument v_doc;
 		v_ctrl.toSummaryJson(v_doc);
 		// SC10_broadcastSummary(v_doc, true); // summary 브로커는 현재 정의되어 있지 않음
 	}
