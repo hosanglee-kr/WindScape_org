@@ -1286,10 +1286,104 @@ class CL_C10_ConfigManager {
 			includeUserProfiles);
 	}
 
+/**
+ * @brief 메모리상의 시스템 설정 구조체에 JSON 데이터를 패치하고 저장합니다.
+ * @param p_config 현재 메모리상의 시스템 설정 구조체 (In/Out)
+ * @param p_patch 웹에서 수신한 JSON 패치 데이터 (ConfigManager 구조와 동일해야 함)
+ * @return 변경 및 저장이 성공했으면 true, 아니면 false
+ */
+static bool patchSystemFromJson(ST_A10_SystemConfig_t& p_config,
+								const JsonDocument&	 p_patch) {
+	bool v_changed = false;
+	
+	// 1. system 객체 접근
+	JsonObjectConst j_sys = p_patch["system"];
+	if (j_sys.isNull()) {
+		// 패치 내용이 "system" 객체를 포함하지 않아도 오류는 아님.
+		return false; 
+	}
+
+	// 2. logging 객체 처리
+	JsonObjectConst j_log = j_sys["logging"];
+	if (!j_log.isNull()) {
+		const char* v_lv = j_log["level"] | "";
+		if (strlen(v_lv) > 0 && strcmp(v_lv, p_config.logging.level) != 0) {
+			strlcpy(p_config.logging.level, v_lv, sizeof(p_config.logging.level));
+			v_changed = true;
+		}
+	}
+
+	// 3. security 객체 처리
+	JsonObjectConst j_sec = j_sys["security"];
+	if (!j_sec.isNull()) {
+		const char* v_key = j_sec["api_key"] | "";
+		if (strlen(v_key) > 0 && strcmp(v_key, p_config.security.api_key) != 0) {
+			strlcpy(p_config.security.api_key, v_key, sizeof(p_config.security.api_key));
+			v_changed = true;
+		}
+	}
+	
+	// 4. 변경 사항이 있을 경우에만 저장 및 true 반환
+	if (v_changed) {
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] System config patched. Saving...");
+		return saveSystemConfig(p_config);
+	}
+	
+	return false;
+}
+
+
+/**
+ * @brief 메모리상의 Wi-Fi 설정 구조체에 JSON 데이터를 패치하고 저장합니다.
+ * @param p_config 현재 메모리상의 Wi-Fi 설정 구조체 (In/Out)
+ * @param p_patch 웹에서 수신한 JSON 패치 데이터 (ConfigManager 구조와 동일해야 함)
+ * @return 변경 및 저장이 성공했으면 true, 아니면 false
+ */
+static bool patchWifiFromJson(ST_A10_WifiConfig_t& p_config,
+							  const JsonDocument&	 p_patch) {
+	bool v_changed = false;
+	
+	// 1. wifi 객체 접근
+	JsonObjectConst j_wifi = p_patch["wifi"];
+	if (j_wifi.isNull()) {
+		return false;
+	}
+
+	// 2. ap 객체 처리
+	JsonObjectConst j_ap = j_wifi["ap"];
+	if (!j_ap.isNull()) {
+		// SSID 처리
+		const char* v_ssid = j_ap["ssid"] | "";
+		if (strlen(v_ssid) > 0 && strcmp(v_ssid, p_config.ap.ssid) != 0) {
+			strlcpy(p_config.ap.ssid, v_ssid, sizeof(p_config.ap.ssid));
+			v_changed = true;
+		}
+		
+		// Password 처리
+		const char* v_pwd = j_ap["password"] | "";
+		// 보안을 위해 길이가 0이 아니거나, 기존 패스워드와 다른 경우에만 변경
+		if (strlen(v_pwd) > 0 && strcmp(v_pwd, p_config.ap.password) != 0) {
+			strlcpy(p_config.ap.password, v_pwd, sizeof(p_config.ap.password));
+			v_changed = true;
+		}
+	}
+	
+	// 3. 변경 사항이 있을 경우에만 저장 및 true 반환
+	if (v_changed) {
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] Wi-Fi config patched. Saving...");
+		return saveWifiConfig(p_config);
+	}
+	
+	return false;
+}
+
+
+
+
 	/* =====================================================
 	 * PATCH 기반 JSON 부분 업데이트 (예시)
 	 * ===================================================== */
-	static bool patchConfigFromJson(const char*			p_section,
+	static bool patchConfigFromJson_old(const char*			p_section,
 									const JsonDocument& p_patch) {
 		if (strcmp(p_section, "system") == 0) {
 			ST_A10_SystemConfig v_cfg;
