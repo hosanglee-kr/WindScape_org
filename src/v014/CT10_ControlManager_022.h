@@ -136,17 +136,17 @@ class CL_CT10_ControlManager {
 	// ✅ 2. 정적 인터페이스 활성화 적용
 	// 주기 호출
 	static void tick() {
-		instance().tick();
+		instance()._tick();
 	}
 
 	// 상태 JSON Export (전체 상태)
 	static void toJson(JsonDocument& p_doc) {
-		instance().toJson(p_doc);
+		instance()._toJson(p_doc);
 	}
 	// ✅ 2. 정적 인터페이스 활성화 적용
 	// 차트 JSON Export
 	static void toChartJson(JsonDocument& p_doc, bool p_diffOnly = false) {
-		instance().toChartJson(p_doc, p_diffOnly);
+		instance()._toChartJson(p_doc, p_diffOnly);
 	}
 
 
@@ -425,7 +425,7 @@ class CL_CT10_ControlManager {
 	// --------------------------------------------------
 	// Tick 루프
 	// --------------------------------------------------
-	void tick() {
+	void _tick() {
 		if (!active || !pwm)
 			return;
 
@@ -485,7 +485,7 @@ class CL_CT10_ControlManager {
 	}
 
 	// ✅ 2. 정적 인터페이스 활성화
-	void toJson(JsonDocument& p_doc) {
+	void _toJson(JsonDocument& p_doc) {
 		JsonObject v_o		  = p_doc["control"].to<JsonObject>();
 		v_o["active"]		  = active;
 		v_o["useProfileMode"] = useProfileMode;
@@ -527,7 +527,7 @@ class CL_CT10_ControlManager {
 	// 외부용: 시뮬레이션 차트 Export (S10에 위임 + 메타만 추가)
 	// --------------------------------------------------
 	// ✅ 2. 정적 인터페이스 활성화
-	void toChartJson(JsonDocument& p_doc, bool p_diffOnly = false) {
+	void _toChartJson(JsonDocument& p_doc, bool p_diffOnly = false) {
 		// 1) S10 차트 데이터 생성 ("sim.chart")
 		sim.toChartJson(p_doc, p_diffOnly);
 
