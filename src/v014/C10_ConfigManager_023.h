@@ -1292,7 +1292,7 @@ class CL_C10_ConfigManager {
  * @param p_patch 웹에서 수신한 JSON 패치 데이터 (ConfigManager 구조와 동일해야 함)
  * @return 변경 및 저장이 성공했으면 true, 아니면 false
  */
-static bool patchSystemFromJson(ST_A10_SystemConfig_t& p_config,
+static bool patchSystemFromJson(ST_A10_SystemConfig& p_config,
 								const JsonDocument&	 p_patch) {
 	bool v_changed = false;
 	
@@ -1339,7 +1339,7 @@ static bool patchSystemFromJson(ST_A10_SystemConfig_t& p_config,
  * @param p_patch 웹에서 수신한 JSON 패치 데이터 (ConfigManager 구조와 동일해야 함)
  * @return 변경 및 저장이 성공했으면 true, 아니면 false
  */
-static bool patchWifiFromJson(ST_A10_WifiConfig_t& p_config,
+static bool patchWifiFromJson(ST_A10_WifiConfig& p_config,
 							  const JsonDocument&	 p_patch) {
 	bool v_changed = false;
 	
