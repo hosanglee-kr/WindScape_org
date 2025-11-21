@@ -1292,38 +1292,59 @@ class CL_C10_ConfigManager {
  * @param p_patch 웹에서 수신한 JSON 패치 데이터 (ConfigManager 구조와 동일해야 함)
  * @return 변경 및 저장이 성공했으면 true, 아니면 false
  */
+/**
+ * @brief 메모리상의 시스템 설정 구조체에 JSON 데이터를 패치하고 저장합니다.
+ * @param p_config 현재 메모리상의 시스템 설정 구조체 (In/Out)
+ * @param p_patch 웹에서 수신한 JSON 패치 데이터 (ConfigManager 구조와 동일해야 함)
+ * @return 변경 및 저장이 성공했으면 true, 아니면 false
+ */
 static bool patchSystemFromJson(ST_A10_SystemConfig& p_config,
 								const JsonDocument&	 p_patch) {
 	bool v_changed = false;
 	
-	// 1. system 객체 접근
+	// JSON 패치 데이터의 최상위 "system" 객체를 찾음
 	JsonObjectConst j_sys = p_patch["system"];
-	if (j_sys.isNull()) {
-		// 패치 내용이 "system" 객체를 포함하지 않아도 오류는 아님.
+	// JSON 패치 데이터의 최상위 "security" 객체를 찾음
+	JsonObjectConst j_sec_root = p_patch["security"];
+
+	if (j_sys.isNull() && j_sec_root.isNull()) {
+		// 패치할 내용이 없음
 		return false; 
 	}
 
-	// 2. logging 객체 처리
-	JsonObjectConst j_log = j_sys["logging"];
-	if (!j_log.isNull()) {
-		const char* v_lv = j_log["level"] | "";
-		if (strlen(v_lv) > 0 && strcmp(v_lv, p_config.logging.level) != 0) {
-			strlcpy(p_config.logging.level, v_lv, sizeof(p_config.logging.level));
-			v_changed = true;
+	// 1. system.logging 객체 처리
+	if (!j_sys.isNull()) {
+		JsonObjectConst j_log = j_sys["logging"];
+		if (!j_log.isNull()) {
+			const char* v_lv = j_log["level"] | "";
+			const uint16_t v_max = j_log["max_entries"] | 0;
+
+			// level 필드 패치
+			// ✅ 수정: p_config.system.logging.level (중첩 구조체 경로 적용)
+			if (strlen(v_lv) > 0 && strcmp(v_lv, p_config.system.logging.level) != 0) { 
+				strlcpy(p_config.system.logging.level, v_lv, sizeof(p_config.system.logging.level));
+				v_changed = true;
+			}
+
+			// max_entries 필드 패치
+			if (v_max > 0 && v_max != p_config.system.logging.max_entries) {
+				p_config.system.logging.max_entries = v_max;
+				v_changed = true;
+			}
 		}
 	}
 
-	// 3. security 객체 처리
-	JsonObjectConst j_sec = j_sys["security"];
-	if (!j_sec.isNull()) {
-		const char* v_key = j_sec["api_key"] | "";
+	// 2. security 객체 처리
+	if (!j_sec_root.isNull()) {
+		const char* v_key = j_sec_root["api_key"] | "";
+		// ✅ 수정: p_config.security.api_key (최상위 security 구조체 경로 적용)
 		if (strlen(v_key) > 0 && strcmp(v_key, p_config.security.api_key) != 0) {
 			strlcpy(p_config.security.api_key, v_key, sizeof(p_config.security.api_key));
 			v_changed = true;
 		}
 	}
 	
-	// 4. 변경 사항이 있을 경우에만 저장 및 true 반환
+	// 3. 변경 사항이 있을 경우에만 저장 및 true 반환
 	if (v_changed) {
 		CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] System config patched. Saving...");
 		return saveSystemConfig(p_config);
