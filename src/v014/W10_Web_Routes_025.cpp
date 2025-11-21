@@ -174,6 +174,35 @@ void CL_W10_WebAPI::routeSystem() {
 					 CL_C10_ConfigManager::toJson_System(*g_A10_config_root.system, v_doc);
 					 sendJson(p_request, v_doc);
 				 });
+	// ✅ HTTP_POST 핸들러 추가: 시스템 설정 수정 및 저장
+	s_server->on("/api/system", HTTP_POST, [](AsyncWebServerRequest* p_request) {}, nullptr,
+				 [](AsyncWebServerRequest* p_request, uint8_t* p_data, size_t p_len, size_t p_index, size_t p_total) {
+		if (!checkApiKey(p_request)) {
+			p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+			return;
+		}
+		if (p_index + p_len != p_total) return;
+
+		JsonDocument v_doc;
+		if (!parseJsonBody(p_request, p_data, p_len, v_doc)) {
+			p_request->send(400, "application/json", "{\"error\":\"json parse\"}");
+			return;
+		}
+
+		bool v_changed = false;
+		if (g_A10_config_root.system) {
+		    v_changed = CL_C10_ConfigManager::patchSystemFromJson(
+                  *g_A10_config_root.system,
+                  v_doc
+            );
+		}
+		
+		JsonDocument v_res;
+		v_res["updated"] = v_changed;
+		// 시스템 설정 변경은 재부팅이 필요할 수 있으므로, 재부팅 플래그를 추가할 수도 있음.
+		// v_res["need_reboot"] = true; 
+		sendJson(p_request, v_res);
+	});
 }
 
 // --------------------------------------------------
@@ -192,6 +221,35 @@ void CL_W10_WebAPI::routeWifi() {
 					 }
 					 sendJson(p_request, v_doc);
 				 });
+	// ✅ HTTP_POST 핸들러 추가: Wi-Fi 설정 수정 및 저장
+	s_server->on("/api/wifi", HTTP_POST, [](AsyncWebServerRequest* p_request) {}, nullptr,
+				 [](AsyncWebServerRequest* p_request, uint8_t* p_data, size_t p_len, size_t p_index, size_t p_total) {
+		if (!checkApiKey(p_request)) {
+			p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+			return;
+		}
+		if (p_index + p_len != p_total) return;
+
+		JsonDocument v_doc;
+		if (!parseJsonBody(p_request, p_data, p_len, v_doc)) {
+			p_request->send(400, "application/json", "{\"error\":\"json parse\"}");
+			return;
+		}
+
+		bool v_changed = false;
+		if (g_A10_config_root.wifi) {
+		    v_changed = CL_C10_ConfigManager::patchWifiFromJson(
+                  *g_A10_config_root.wifi,
+                  v_doc
+            );
+		}
+		
+		JsonDocument v_res;
+		v_res["updated"] = v_changed;
+		// Wi-Fi 설정 변경은 재부팅이 필요함
+		v_res["need_reboot"] = true; 
+		sendJson(p_request, v_res);
+	});
 }
 
 // --------------------------------------------------
