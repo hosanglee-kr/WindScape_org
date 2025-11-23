@@ -50,6 +50,45 @@
 
 class CL_C10_ConfigManager {
    public:
+
+ // Dirty Flags (각 섹션별 변경 여부 추적)
+    static bool _dirty_system;
+    static bool _dirty_wifi;
+    static bool _dirty_motion;
+    static bool _dirty_schedules;
+    static bool _dirty_userProfiles;
+
+    // =====================================================
+    // 공통: 변경 사항 파일 저장 (Commit)
+    // =====================================================
+    static void saveDirtyConfigs() {
+        if (_dirty_system && g_A10_config_root.system) {
+            if (saveSystemConfig(*g_A10_config_root.system)) _dirty_system = false;
+        }
+        if (_dirty_wifi && g_A10_config_root.wifi) {
+            if (saveWifiConfig(*g_A10_config_root.wifi)) _dirty_wifi = false;
+        }
+        if (_dirty_motion && g_A10_config_root.motion) {
+            if (saveMotionConfig(*g_A10_config_root.motion)) _dirty_motion = false;
+        }
+        if (_dirty_schedules && g_A10_config_root.schedules) {
+            if (saveSchedules(*g_A10_config_root.schedules)) _dirty_schedules = false;
+        }
+        if (_dirty_userProfiles && g_A10_config_root.userProfiles) {
+            if (saveUserProfiles(*g_A10_config_root.userProfiles)) _dirty_userProfiles = false;
+        }
+        CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] All dirty configs saved to storage.");
+    }
+
+    // 현재 Dirty 상태 조회
+    static void getDirtyStatus(JsonDocument& doc) {
+        doc["system"]       = _dirty_system;
+        doc["wifi"]         = _dirty_wifi;
+        doc["motion"]       = _dirty_motion;
+        doc["schedules"]    = _dirty_schedules;
+        doc["userProfiles"] = _dirty_userProfiles;
+    }
+
 	/* =====================================================
 	 * 공용: JSON IO Helper
 	 * ===================================================== */
