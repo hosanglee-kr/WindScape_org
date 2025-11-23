@@ -89,6 +89,7 @@ void CL_W10_WebAPI::begin(AsyncWebServer& p_server, CL_CT10_ControlManager& p_co
 	routeMetrics();			// /api/metrics
 	routeLogs();
 	routeReload();
+	routeConfigSave(); 
 
 	// --- v012 복구 라우트 추가 ---
 	routeDiag();		 // /api/diag
@@ -414,6 +415,37 @@ void CL_W10_WebAPI::routeUserProfiles() {
 		v_res["updated"] = v_changed;
 		sendJson(p_request, v_res);
 	});
+}
+
+// 2. [신규] Config 저장 라우트 추가
+void CL_W10_WebAPI::routeConfigSave() {
+    // /api/config/save (POST)
+    // Dirty 상태인 모든 설정을 파일로 저장합니다.
+    s_server->on("/api/config/save", HTTP_POST, 
+        [](AsyncWebServerRequest* p_request) {
+            if (!checkApiKey(p_request)) {
+                p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+                return;
+            }
+            
+            CL_C10_ConfigManager::saveDirtyConfigs();
+            p_request->send(200, "application/json", "{\"result\":\"saved\", \"status\":\"clean\"}");
+        }
+    );
+
+    // /api/config/dirty (GET)
+    // 현재 저장되지 않은 변경 사항 확인
+    s_server->on("/api/config/dirty", HTTP_GET, 
+        [](AsyncWebServerRequest* p_request) {
+            if (!checkApiKey(p_request)) {
+                p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+                return;
+            }
+            JsonDocument v_doc;
+            CL_C10_ConfigManager::getDirtyStatus(v_doc);
+            sendJson(p_request, v_doc);
+        }
+    );
 }
 
 // --------------------------------------------------
