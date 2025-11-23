@@ -72,12 +72,14 @@ typedef struct {
 // ------------------------------------------------------
 typedef struct {
     bool runtime;
+    /*
     bool schedules;
     bool userProfiles;
     bool motion;
     bool system;
     bool wifi;
     bool windDict;
+    */
 } ST_N10_DirtyFlags_t;
 
 // ------------------------------------------------------
