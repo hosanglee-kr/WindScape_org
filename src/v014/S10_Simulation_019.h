@@ -48,6 +48,8 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <string.h>
+#include <freertos/FreeRTOS.h> // ✅ FreeRTOS 헤더 추가
+#include <freertos/task.h>     // ✅ Task 헤더 추가
 
 #include <cmath>
 #include <deque>
@@ -203,7 +205,10 @@ class CL_S10_Simulation {
     void toChartJson(JsonDocument& p_doc, bool p_diffOnly = false);
 
     private:
+
     CL_P10_PWM* _pwm = nullptr;
+    portMUX_TYPE _simMutex = portMUX_INITIALIZER_UNLOCKED; // ✅ Mutex 정의
+
 
     // ==================================================
     // 내부 구현부 (Private Method Declarations)
