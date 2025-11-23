@@ -72,6 +72,7 @@ void CL_N10_NvsManager::markDirty(const char* p_key, bool p_flag) {
 
 	if (strcasecmp(p_key, "runtime") == 0)
 		s_dirty.runtime = p_flag;
+	/*
 	else if (strcasecmp(p_key, "schedules") == 0)
 		s_dirty.schedules = p_flag;
 	else if (strcasecmp(p_key, "userProfiles") == 0)
@@ -84,6 +85,7 @@ void CL_N10_NvsManager::markDirty(const char* p_key, bool p_flag) {
 		s_dirty.wifi = p_flag;
 	else if (strcasecmp(p_key, "windDict") == 0)
 		s_dirty.windDict = p_flag;
+	*/
 }
 
 void CL_N10_NvsManager::flushIfNeeded() {
