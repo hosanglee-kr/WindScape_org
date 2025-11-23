@@ -1431,12 +1431,19 @@ class CL_C10_ConfigManager {
 	    }
 	    
 	    // 3. 변경 사항이 있을 경우에만 저장 및 true 반환
+		if (v_changed) {
+            _dirty_system = true;
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] System config patched (Memory Only). Dirty=true");
+        }
+        return v_changed;
+		/*
 	    if (v_changed) {
 		    CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] System config patched. Saving...");
 		    return saveSystemConfig(p_config);
 	    }
 	    
 	    return false;
+		*/
     }
     
     
@@ -1476,12 +1483,19 @@ class CL_C10_ConfigManager {
 	    }
 	    
 	    // 3. 변경 사항이 있을 경우에만 저장 및 true 반환
+		if (v_changed) {
+            _dirty_wifi = true;
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] WiFi config patched (Memory Only). Dirty=true");
+        }
+        return v_changed;
+		/*
 	    if (v_changed) {
 		    CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] Wi-Fi config patched. Saving...");
 		    return saveWifiConfig(p_config);
 	    }
 	    
 	    return false;
+		*/
     }
     
 
@@ -1688,11 +1702,18 @@ class CL_C10_ConfigManager {
 
 		// 5. 변경 사항 저장
 		if (v_changed) {
+            _dirty_schedules = true;
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] schedules config patched (Memory Only). Dirty=true");
+        }
+        return v_changed;
+		/*
+		if (v_changed) {
 			CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] Schedules config patched and saved");
 			return saveSchedules(p_cfg);
 		}
 
 		return false;
+		*/
 	}
 
 
@@ -1865,11 +1886,18 @@ class CL_C10_ConfigManager {
 
 		// 5. 변경 사항 저장
 		if (v_changed) {
+            _dirty_userProfiles = true;
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] userProfiles config patched (Memory Only). Dirty=true");
+        }
+        return v_changed;
+		/*
+		if (v_changed) {
 			CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] UserProfiles config patched and saved");
 			return saveUserProfiles(p_cfg);
 		}
 
 		return false;
+		*/
 	}
 
 	
@@ -1974,12 +2002,19 @@ class CL_C10_ConfigManager {
 
 
 	    // 4. 변경 사항이 있을 경우에만 저장 및 true 반환
+		if (v_changed) {
+            _dirty_motion = true;
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] motion config patched (Memory Only). Dirty=true");
+        }
+        return v_changed;
+		/*
 	    if (v_changed) {
 		    CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] Motion config patched. Saving...");
 		    return saveMotionConfig(p_config);
 	    }
 	    
 	    return false;
+		*/
     }
     
 	
