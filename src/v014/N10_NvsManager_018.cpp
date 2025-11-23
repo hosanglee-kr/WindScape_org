@@ -18,8 +18,8 @@
 Preferences			  CL_N10_NvsManager::s_prefs;
 bool				  CL_N10_NvsManager::s_initialized = false;
 ST_N10_RuntimeState_t CL_N10_NvsManager::s_state;
-ST_N10_DirtyFlags_t	  CL_N10_NvsManager::s_dirty = {
-	  false, false, false, false, false, false, false};
+ST_N10_DirtyFlags_t	  CL_N10_NvsManager::s_dirty = {false};
+// ST_N10_DirtyFlags_t	  CL_N10_NvsManager::s_dirty = { false, false, false, false, false, false, false};
 uint32_t CL_N10_NvsManager::s_lastSaveMs = 0;
 
 // ==================================================
