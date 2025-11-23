@@ -94,18 +94,26 @@ void CL_S10_Simulation::resetDefaults() {
 // 메인 tick (CT10에서 주기 호출)
 // ==================================================
 void CL_S10_Simulation::tick() {
-    if (!active)
+    portENTER_CRITICAL(&_simMutex); // ✅ Critical Section 시작
+
+    if (!active){
+        portEXIT_CRITICAL(&_simMutex); // Critical Section 종료
         return;
+    }
 
     unsigned long   v_now        = millis();
     static uint32_t s_jitterSeed = 0;
 
     uint32_t v_interval = 40u + (s_jitterSeed % 60u);
-    if (v_now - lastUpdateMs < v_interval)
+    if (v_now - lastUpdateMs < v_interval){
+        portEXIT_CRITICAL(&_simMutex); // Critical Section 종료
         return;
+    }
+    
     s_jitterSeed = esp_random();
 
     float v_dt   = (v_now - lastUpdateMs) / 1000.0f;
+    v_dt = A10_clampf(v_dt, 0.001f, 0.5f); // ✅ Time Delta 상한선 설정 (0.5초)
     lastUpdateMs = v_now;
 
     float             v_prevWind  = currentWindSpeed;
@@ -184,6 +192,8 @@ void CL_S10_Simulation::tick() {
 
         s_lastChartLogMs = millis();
     }
+
+    portEXIT_CRITICAL(&_simMutex); // ✅ Critical Section 종료
 }
 
 // ==================================================
