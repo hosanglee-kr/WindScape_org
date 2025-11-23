@@ -94,7 +94,7 @@ bool SC10_factoryReset() {
 
 	delay(500);
 	CL_C10_ConfigManager::factoryResetFromDefault();
-	CL_N10_NvsManager::N10_clearAll();
+	CL_N10_NvsManager::clearAll();
 	ESP.restart();
 	return true;
 }
@@ -120,7 +120,7 @@ void SC10_init() {
 
 	// 3. Config + NVS 초기화
 	CL_C10_ConfigManager::loadAll(g_A10_config_root);
-	CL_N10_NvsManager::N10_begin();
+	CL_N10_NvsManager::begin();
 
 	// 4. Wi-Fi 초기화
 	const ST_A10_WifiConfig&   v_wifi	= *g_A10_config_root.wifi;
