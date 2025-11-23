@@ -44,12 +44,19 @@
 #include <ArduinoJson.h>
 #include <LittleFS.h>
 #include <string.h>
+#include <freertos/semphr.h> // Mutex 사용을 위해 FreeRTOS 세마포어 포함
+
 
 #include "A10_Const_015.h"
 #include "D10_Logger_016.h"
 
 class CL_C10_ConfigManager {
-   public:
+  private:
+    // **[추가]** Config 구조체 접근 보호를 위한 Mutex
+    static SemaphoreHandle_t s_configMutex;
+    static const TickType_t MUTEX_TIMEOUT = pdMS_TO_TICKS(500); // 500ms 타임아웃
+
+  public:
 
  // Dirty Flags (각 섹션별 변경 여부 추적)
     static bool _dirty_system;
@@ -2092,6 +2099,11 @@ inline bool CL_C10_ConfigManager::_dirty_wifi         = false;
 inline bool CL_C10_ConfigManager::_dirty_motion       = false;
 inline bool CL_C10_ConfigManager::_dirty_schedules    = false;
 inline bool CL_C10_ConfigManager::_dirty_userProfiles = false;
+
+
+// **[추가]** 정적 Mutex 초기화 (헤더에 인라인으로 정의)
+inline SemaphoreHandle_t CL_C10_ConfigManager::s_configMutex = xSemaphoreCreateMutex();
+
 
 
 
