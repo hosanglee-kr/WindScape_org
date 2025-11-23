@@ -241,6 +241,8 @@ void CL_S10_Simulation::applyResolvedWind(const ST_A10_ResolvedWind_t& p_resolve
 // ==================================================
 // ✅ 개선된 toJson — JsonObject 직접 전달 방식 (WebAPI 직렬화 대응)
 void CL_S10_Simulation::toJson(JsonObject& p_obj) {
+    portENTER_CRITICAL(&_simMutex); // ✅ Critical Section 시작
+    
     p_obj["active"]        = active;
     p_obj["phase"]         = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
     p_obj["windSpeed"]     = currentWindSpeed;
@@ -259,6 +261,8 @@ void CL_S10_Simulation::toJson(JsonObject& p_obj) {
     p_obj["turbScale"]     = turbLenScale;
     p_obj["thermalPower"]  = thermalStrength;
     p_obj["thermalRadius"] = thermalRadius;
+
+    portEXIT_CRITICAL(&_simMutex); // ✅ Critical Section 종료
 }
 
 // ==================================================
