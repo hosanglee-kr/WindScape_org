@@ -49,7 +49,7 @@
 #include <time.h>
 
 #include "A10_Const_015.h"
-#include "C10_ConfigManager_023.h"
+#include "C10_ConfigManager_024.h"
 #include "D10_Logger_016.h"
 #include "M10_MotionLogic_016.h"
 #include "P10_PWM_ctrl_014.h"
