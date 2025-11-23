@@ -42,7 +42,7 @@
 #include <Update.h>    // OTA를 위해 추가
 
 #include "A10_Const_015.h"
-#include "C10_ConfigManager_023.h"
+#include "C10_ConfigManager_024.h"
 #include "D10_Logger_016.h"
 #include "CT10_ControlManager_022.h"
 #include "N10_NvsManager_018.h"
@@ -99,6 +99,7 @@ private:
 	static void routeMetrics();
 	static void routeLogs();
 	static void routeReload();
+    static void routeConfigSave(); 
 
 	// --- v012에서 복구된 REST API 라우트 선언 ---
 	static void routeDiag();	  // /api/diag
