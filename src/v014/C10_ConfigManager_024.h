@@ -1971,7 +1971,8 @@ class CL_C10_ConfigManager {
 			    CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[C10] Motion Trusted Devices array fully replaced.");
 		    }
 	    }
-	    
+
+
 	    // 4. 변경 사항이 있을 경우에만 저장 및 true 반환
 	    if (v_changed) {
 		    CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] Motion config patched. Saving...");
@@ -2049,5 +2050,13 @@ class CL_C10_ConfigManager {
 
 // 전역 Config Root (포인터 보관용)
 inline ST_A10_ConfigRoot_t g_A10_config_root;
+
+// 정적 멤버 정의 (C10_ConfigManager.cpp 또는 헤더 하단에 inline 정의 필요)
+inline bool CL_C10_ConfigManager::_dirty_system       = false;
+inline bool CL_C10_ConfigManager::_dirty_wifi         = false;
+inline bool CL_C10_ConfigManager::_dirty_motion       = false;
+inline bool CL_C10_ConfigManager::_dirty_schedules    = false;
+inline bool CL_C10_ConfigManager::_dirty_userProfiles = false;
+
 
 
