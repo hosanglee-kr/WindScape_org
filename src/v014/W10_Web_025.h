@@ -45,7 +45,7 @@
 #include "C10_ConfigManager_024.h"
 #include "D10_Logger_016.h"
 #include "CT10_ControlManager_022.h"
-#include "N10_NvsManager_018.h"
+#include "N10_NvsManager_019.h"
 #include "WF10_WiFiManager_023.h"
 
 // ------------------------------------------------------
