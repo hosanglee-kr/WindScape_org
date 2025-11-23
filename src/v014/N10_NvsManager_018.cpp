@@ -25,7 +25,7 @@ uint32_t CL_N10_NvsManager::s_lastSaveMs = 0;
 // ==================================================
 // 초기화 / 종료
 // ==================================================
-bool CL_N10_NvsManager::N10_begin() {
+bool CL_N10_NvsManager::begin() {
 	if (s_initialized)
 		return true;
 
@@ -40,7 +40,8 @@ bool CL_N10_NvsManager::N10_begin() {
 
 	s_state.lastScheduleNo	  = -1;
 	s_state.lastUserProfileNo = -1;
-	N10_loadRuntimeFromNvs();
+	
+	loadRuntimeFromNvs();
 
 	s_lastSaveMs  = millis();
 	s_initialized = true;
@@ -48,13 +49,13 @@ bool CL_N10_NvsManager::N10_begin() {
 	return true;
 }
 
-void CL_N10_NvsManager::N10_end() {
-	N10_flush(true);
+void CL_N10_NvsManager::end() {
+	flush(true);
 	s_prefs.end();
 	s_initialized = false;
 }
 
-void CL_N10_NvsManager::N10_clearAll() {
+void CL_N10_NvsManager::clearAll() {
 	s_prefs.begin("SNW_RUN", false);
 	s_prefs.clear();  // 모든 key 삭제
 	s_prefs.end();
@@ -97,7 +98,7 @@ void CL_N10_NvsManager::flushIfNeeded() {
 
 	// 1) 런타임 상태 저장
 	if (s_dirty.runtime) {
-		N10_flush(false);
+		flush(false);
 		v_saved = true;
 	}
 
@@ -145,11 +146,11 @@ void CL_N10_NvsManager::flushIfNeeded() {
 // ==================================================
 // Getter / JSON Export
 // ==================================================
-ST_N10_RuntimeState_t CL_N10_NvsManager::N10_getState() {
+ST_N10_RuntimeState_t CL_N10_NvsManager::getState() {
 	return s_state;
 }
 
-void CL_N10_NvsManager::N10_toJson(JsonDocument& p_doc) {
+void CL_N10_NvsManager::toJson(JsonDocument& p_doc) {
 	JsonObject o		   = p_doc["runtime"].to<JsonObject>();
 	o["runMode"]		   = s_state.runMode;
 	o["runSource"]		   = s_state.runSource;
@@ -171,7 +172,7 @@ void CL_N10_NvsManager::N10_toJson(JsonDocument& p_doc) {
 // ==================================================
 // 주기 Flush (loop용)
 // ==================================================
-void CL_N10_NvsManager::N10_tick() {
+void CL_N10_NvsManager::tick() {
 	if (!s_initialized)
 		return;
 	if (!s_dirty.runtime)
@@ -181,15 +182,15 @@ void CL_N10_NvsManager::N10_tick() {
 	if (v_now - s_lastSaveMs < G_N10_SAVE_INTERVAL_MS)
 		return;
 
-	N10_flush(false);
+	flush(false);
 }
 
 // ==================================================
 // Setter API (CT10 등에서 호출)
 // ==================================================
-void CL_N10_NvsManager::N10_setRunMode(uint8_t p_mode, uint8_t p_source) {
+void CL_N10_NvsManager::setRunMode(uint8_t p_mode, uint8_t p_source) {
 	if (!s_initialized)
-		N10_begin();
+		begin();
 	if (s_state.runMode == p_mode && s_state.runSource == p_source)
 		return;
 	s_state.runMode	  = p_mode;
@@ -197,27 +198,27 @@ void CL_N10_NvsManager::N10_setRunMode(uint8_t p_mode, uint8_t p_source) {
 	s_dirty.runtime	  = true;
 }
 
-void CL_N10_NvsManager::N10_setLastSchedule(int16_t p_schNo) {
+void CL_N10_NvsManager::setLastSchedule(int16_t p_schNo) {
 	if (!s_initialized)
-		N10_begin();
+		begin();
 	if (s_state.lastScheduleNo == p_schNo)
 		return;
 	s_state.lastScheduleNo = p_schNo;
 	s_dirty.runtime		   = true;
 }
 
-void CL_N10_NvsManager::N10_setLastUserProfile(int16_t p_profileNo) {
+void CL_N10_NvsManager::setLastUserProfile(int16_t p_profileNo) {
 	if (!s_initialized)
-		N10_begin();
+		begin();
 	if (s_state.lastUserProfileNo == p_profileNo)
 		return;
 	s_state.lastUserProfileNo = p_profileNo;
 	s_dirty.runtime			  = true;
 }
 
-void CL_N10_NvsManager::N10_setAutoOff(bool p_enabled, uint32_t p_minutes) {
+void CL_N10_NvsManager::setAutoOff(bool p_enabled, uint32_t p_minutes) {
 	if (!s_initialized)
-		N10_begin();
+		begin();
 	if (s_state.autoOffEnabled == p_enabled && s_state.autoOffMinutes == p_minutes)
 		return;
 	s_state.autoOffEnabled = p_enabled;
@@ -225,9 +226,9 @@ void CL_N10_NvsManager::N10_setAutoOff(bool p_enabled, uint32_t p_minutes) {
 	s_dirty.runtime		   = true;
 }
 
-void CL_N10_NvsManager::N10_setOverrideFixed(bool p_enabled, float p_percent) {
+void CL_N10_NvsManager::setOverrideFixed(bool p_enabled, float p_percent) {
 	if (!s_initialized)
-		N10_begin();
+		begin();
 	s_state.overrideEnabled		  = p_enabled;
 	s_state.overrideMode		  = p_enabled ? 1 : 0;
 	s_state.overrideFixedPercent  = p_enabled ? p_percent : 0.0f;
@@ -236,11 +237,11 @@ void CL_N10_NvsManager::N10_setOverrideFixed(bool p_enabled, float p_percent) {
 	s_dirty.runtime				  = true;
 }
 
-void CL_N10_NvsManager::N10_setOverridePreset(bool		  p_enabled,
+void CL_N10_NvsManager::setOverridePreset(bool		  p_enabled,
 											  const char* p_presetCode,
 											  const char* p_styleCode) {
 	if (!s_initialized)
-		N10_begin();
+		begin();
 	s_state.overrideEnabled		 = p_enabled;
 	s_state.overrideMode		 = p_enabled ? 2 : 0;
 	s_state.overrideFixedPercent = 0.0f;
@@ -255,9 +256,9 @@ void CL_N10_NvsManager::N10_setOverridePreset(bool		  p_enabled,
 	s_dirty.runtime = true;
 }
 
-void CL_N10_NvsManager::N10_clearOverride() {
+void CL_N10_NvsManager::clearOverride() {
 	if (!s_initialized)
-		N10_begin();
+		begin();
 	if (!s_state.overrideEnabled && s_state.overrideMode == 0)
 		return;
 
@@ -269,14 +270,14 @@ void CL_N10_NvsManager::N10_clearOverride() {
 	s_dirty.runtime				  = true;
 }
 
-void CL_N10_NvsManager::N10_resetRuntime() {
+void CL_N10_NvsManager::resetRuntime() {
 	if (!s_initialized)
-		N10_begin();
+		begin();
 	memset(&s_state, 0, sizeof(s_state));
 	s_state.lastScheduleNo	  = -1;
 	s_state.lastUserProfileNo = -1;
 	s_dirty.runtime			  = true;
-	N10_flush(true);
+	flush(true);
 
 	CL_D10_Logger::log(EN_L10_LOG_WARN, "[N10] Runtime state reset");
 }
@@ -284,7 +285,7 @@ void CL_N10_NvsManager::N10_resetRuntime() {
 // --------------------------------------------------
 // 내부: NVS 로드/저장
 // --------------------------------------------------
-void CL_N10_NvsManager::N10_loadRuntimeFromNvs() {
+void CL_N10_NvsManager::loadRuntimeFromNvs() {
 	s_state.runMode			  = s_prefs.getUChar("run_mode", 0);
 	s_state.runSource		  = s_prefs.getUChar("run_src", 0);
 	s_state.lastScheduleNo	  = s_prefs.getShort("sched_no", -1);
@@ -314,7 +315,7 @@ void CL_N10_NvsManager::N10_loadRuntimeFromNvs() {
 					   (int)s_state.overrideEnabled);
 }
 
-void CL_N10_NvsManager::N10_flush(bool p_force) {
+void CL_N10_NvsManager::flush(bool p_force) {
 	if (!s_initialized)
 		return;
 	if (!p_force && !s_dirty.runtime)
