@@ -1394,7 +1394,13 @@ class CL_C10_ConfigManager {
     static bool patchSystemFromJson(ST_A10_SystemConfig& p_config,
 								    const JsonDocument&	 p_patch) {
 	    bool v_changed = false;
-	    
+
+		// 💡 Mutex를 사용하여 쓰기 작업 보호
+        if (xSemaphoreTake(s_configMutex, MUTEX_TIMEOUT) != pdTRUE) {
+            CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] patchSystem() Mutex timeout!");
+            return false; // Mutex 획득 실패 시 실패 처리
+        }
+		
 	    // JSON 패치 데이터의 최상위 "system" 객체를 찾음
 	    JsonObjectConst j_sys = p_patch["system"];
 	    // JSON 패치 데이터의 최상위 "security" 객체를 찾음
@@ -1442,6 +1448,9 @@ class CL_C10_ConfigManager {
             _dirty_system = true;
             CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] System config patched (Memory Only). Dirty=true");
         }
+
+		xSemaphoreGive(s_configMutex); // Mutex 해제
+		
         return v_changed;
 		/*
 	    if (v_changed) {
@@ -1463,6 +1472,12 @@ class CL_C10_ConfigManager {
     static bool patchWifiFromJson(ST_A10_WifiConfig& p_config,
 							      const JsonDocument&	 p_patch) {
 	    bool v_changed = false;
+
+		// 💡 Mutex를 사용하여 쓰기 작업 보호
+        if (xSemaphoreTake(s_configMutex, MUTEX_TIMEOUT) != pdTRUE) {
+            CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] patchWifiFromJson() Mutex timeout!");
+            return false; // Mutex 획득 실패 시 실패 처리
+        }
 	    
 	    // 1. wifi 객체 접근
 	    JsonObjectConst j_wifi = p_patch["wifi"];
@@ -1494,6 +1509,9 @@ class CL_C10_ConfigManager {
             _dirty_wifi = true;
             CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] WiFi config patched (Memory Only). Dirty=true");
         }
+
+		xSemaphoreGive(s_configMutex); // Mutex 해제
+		
         return v_changed;
 		/*
 	    if (v_changed) {
@@ -1514,6 +1532,14 @@ class CL_C10_ConfigManager {
 	// 스케줄 설정(p_cfg)을 JSON 패치(p_patch)로 업데이트 후 저장
 	static bool patchSchedulesFromJson(ST_A10_SchedulesRoot_t& p_cfg,
 									   const JsonDocument&	 p_patch) {
+
+		// 💡 Mutex를 사용하여 쓰기 작업 보호
+        if (xSemaphoreTake(s_configMutex, MUTEX_TIMEOUT) != pdTRUE) {
+            CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] patchSchedulesFromJson() Mutex timeout!");
+            return false; // Mutex 획득 실패 시 실패 처리
+        }
+
+		
 		JsonArrayConst arr = p_patch["schedules"].as<JsonArrayConst>();
 		if (arr.isNull()) {
 			CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Schedules patch: 'schedules' array missing");
@@ -1712,6 +1738,9 @@ class CL_C10_ConfigManager {
             _dirty_schedules = true;
             CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] schedules config patched (Memory Only). Dirty=true");
         }
+
+		xSemaphoreGive(s_configMutex); // Mutex 해제
+		
         return v_changed;
 		/*
 		if (v_changed) {
@@ -1727,6 +1756,13 @@ class CL_C10_ConfigManager {
 	// 사용자 프로필 설정(p_cfg)을 JSON 패치(p_patch)로 업데이트 후 저장
 	static bool patchUserProfilesFromJson(ST_A10_UserProfilesRoot_t& p_cfg,
 										  const JsonDocument&		 p_patch) {
+
+		// 💡 Mutex를 사용하여 쓰기 작업 보호
+        if (xSemaphoreTake(s_configMutex, MUTEX_TIMEOUT) != pdTRUE) {
+            CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] patchUserProfilesFromJson() Mutex timeout!");
+            return false; // Mutex 획득 실패 시 실패 처리
+        }
+		
 		JsonArrayConst arr = p_patch["userProfiles"]["profiles"].as<JsonArrayConst>();
 		if (arr.isNull()) {
 			CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] UserProfiles patch: 'profiles' array missing");
@@ -1896,6 +1932,9 @@ class CL_C10_ConfigManager {
             _dirty_userProfiles = true;
             CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] userProfiles config patched (Memory Only). Dirty=true");
         }
+
+		xSemaphoreGive(s_configMutex); // Mutex 해제
+		
         return v_changed;
 		/*
 		if (v_changed) {
@@ -1916,6 +1955,12 @@ class CL_C10_ConfigManager {
      */
     static bool patchMotionFromJson(ST_A10_MotionConfig& p_config,
 								    const JsonDocument&	 p_patch) {
+		// 💡 Mutex를 사용하여 쓰기 작업 보호
+        if (xSemaphoreTake(s_configMutex, MUTEX_TIMEOUT) != pdTRUE) {
+            CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] patchMotionFromJson() Mutex timeout!");
+            return false; // Mutex 획득 실패 시 실패 처리
+        }
+		
 	    bool v_changed = false;
 	    
 	    JsonObjectConst j_motion = p_patch["motion"];
@@ -2013,6 +2058,9 @@ class CL_C10_ConfigManager {
             _dirty_motion = true;
             CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] motion config patched (Memory Only). Dirty=true");
         }
+
+		xSemaphoreGive(s_configMutex); // Mutex 해제
+		
         return v_changed;
 		/*
 	    if (v_changed) {
