@@ -92,9 +92,9 @@ class CL_N10_NvsManager {
     // ==================================================
     // 초기화 / 종료
     // ==================================================
-    static bool N10_begin();
-    static void N10_end();
-    static void N10_clearAll();
+    static bool begin();
+    static void end();
+    static void clearAll();
 
     // ==================================================
     // Dirty 플래그 관리
@@ -105,27 +105,27 @@ class CL_N10_NvsManager {
     // ==================================================
     // Getter / JSON Export
     // ==================================================
-    static ST_N10_RuntimeState_t N10_getState();
-    static void N10_toJson(JsonDocument& p_doc);
+    static ST_N10_RuntimeState_t getState();
+    static void toJson(JsonDocument& p_doc);
 
     // ==================================================
     // 주기 Flush (loop용)
     // ==================================================
-    static void N10_tick();
+    static void tick();
 
     // ==================================================
     // Setter API (CT10 등에서 호출)
     // ==================================================
-    static void N10_setRunMode(uint8_t p_mode, uint8_t p_source);
-    static void N10_setLastSchedule(int16_t p_schNo);
-    static void N10_setLastUserProfile(int16_t p_profileNo);
-    static void N10_setAutoOff(bool p_enabled, uint32_t p_minutes);
-    static void N10_setOverrideFixed(bool p_enabled, float p_percent);
-    static void N10_setOverridePreset(bool p_enabled,
+    static void setRunMode(uint8_t p_mode, uint8_t p_source);
+    static void setLastSchedule(int16_t p_schNo);
+    static void setLastUserProfile(int16_t p_profileNo);
+    static void setAutoOff(bool p_enabled, uint32_t p_minutes);
+    static void setOverrideFixed(bool p_enabled, float p_percent);
+    static void setOverridePreset(bool p_enabled,
                                       const char* p_presetCode,
                                       const char* p_styleCode);
-    static void N10_clearOverride();
-    static void N10_resetRuntime();
+    static void clearOverride();
+    static void resetRuntime();
 
     private:
     static Preferences       s_prefs;
@@ -137,8 +137,8 @@ class CL_N10_NvsManager {
     // --------------------------------------------------
     // 내부: NVS 로드/저장
     // --------------------------------------------------
-    static void N10_loadRuntimeFromNvs();
-    static void N10_flush(bool p_force);
+    static void loadRuntimeFromNvs();
+    static void flush(bool p_force);
 };
 
 // 정적 멤버 변수는 .cpp 파일에서 정의됩니다.
