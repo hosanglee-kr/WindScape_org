@@ -69,12 +69,17 @@ class CL_C10_ConfigManager {
     // 공통: 변경 사항 파일 저장 (Commit)
     // =====================================================
     static void saveDirtyConfigs() {
+		if (xSemaphoreTake(s_configMutex, MUTEX_TIMEOUT) != pdTRUE) {
+            CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] saveDirtyConfigs() Mutex timeout!");
+            return; 
+        }
+		
         if (_dirty_system && g_A10_config_root.system) {
             if (saveSystemConfig(*g_A10_config_root.system)) _dirty_system = false;
         }
         if (_dirty_wifi && g_A10_config_root.wifi) {
             if (saveWifiConfig(*g_A10_config_root.wifi)) _dirty_wifi = false;
-        }
+		}
         if (_dirty_motion && g_A10_config_root.motion) {
             if (saveMotionConfig(*g_A10_config_root.motion)) _dirty_motion = false;
         }
@@ -84,7 +89,10 @@ class CL_C10_ConfigManager {
         if (_dirty_userProfiles && g_A10_config_root.userProfiles) {
             if (saveUserProfiles(*g_A10_config_root.userProfiles)) _dirty_userProfiles = false;
         }
+		
         CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] All dirty configs saved to storage.");
+		
+		xSemaphoreGive(s_configMutex);
     }
 
     // 현재 Dirty 상태 조회
