@@ -102,6 +102,7 @@ void CL_N10_NvsManager::flushIfNeeded() {
 		v_saved = true;
 	}
 
+	/*
 	// 2) Config JSON 계열
 	// g_A10_config_root가 외부(A10_Const_015.h)에 정의된 전역 변수라고 가정합니다.
 	//// extern ST_A10_ConfigRoot_t g_A10_config_root;
@@ -136,6 +137,7 @@ void CL_N10_NvsManager::flushIfNeeded() {
 		// CL_C10_ConfigManager::saveWindDict(*g_A10_config_root.windDict);
 		v_saved = true;
 	}
+	*/
 
 	if (v_saved) {
 		s_lastSaveMs = v_now;
