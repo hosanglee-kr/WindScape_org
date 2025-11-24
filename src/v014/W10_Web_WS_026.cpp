@@ -145,19 +145,19 @@ void CL_W10_WebAPI::routeWebSocket() {
 // 상태 브로드캐스트
 // --------------------------------------------------
 void CL_W10_WebAPI::broadcastState(JsonDocument& p_doc, bool p_diffOnly) {
-	broadcast(&s_wsServerState, p_doc, p_diffOnly);
+	_broadcast(&s_wsServerState, p_doc, p_diffOnly);
 }
 
 // --------------------------------------------------
 // 메트릭스 브로드캐스트
 // --------------------------------------------------
 void CL_W10_WebAPI::broadcastMetrics(JsonDocument& p_doc, bool p_diffOnly) {
-	broadcast(&s_wsServerMetrics, p_doc, p_diffOnly);
+	_broadcast(&s_wsServerMetrics, p_doc, p_diffOnly);
 }
 
 // --------------------------------------------------
 // 차트 브로드캐스트
 // --------------------------------------------------
 void CL_W10_WebAPI::broadcastChart(JsonDocument& p_doc, bool p_diffOnly) {
-	broadcast(&s_wsServerChart, p_doc, p_diffOnly);
+	_broadcast(&s_wsServerChart, p_doc, p_diffOnly);
 }
