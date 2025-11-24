@@ -47,6 +47,22 @@ extern AsyncWebSocket s_wsServerMetrics;
 // --------------------------------------------------
 // 브로드캐스트 유틸리티
 // --------------------------------------------------
+
+void CL_W10_WebAPI::broadcast(AsyncWebSocket* p_ws, JsonDocument& p_doc, bool p_diffOnly) {
+	if (!p_ws || !p_ws->count())
+		return;
+
+	String v_json;
+	// Unicode 공백문자 제거됨
+	serializeJson(p_doc, v_json);
+
+	// p_diffOnly=true 이면, JSON 길이가 5 이하인(변화가 미미한) 브로드캐스트는 억제 (규칙)
+	if (!p_diffOnly || v_json.length() > 5) {
+		p_ws->textAll(v_json);
+	}
+}
+
+/*
 namespace {
 void W10_broadcast(AsyncWebSocket* p_ws, JsonDocument& p_doc, bool p_diffOnly) {
 	if (!p_ws || !p_ws->count())
@@ -63,7 +79,11 @@ void W10_broadcast(AsyncWebSocket* p_ws, JsonDocument& p_doc, bool p_diffOnly) {
 }
 } // namespace
 
-// --------------------------------------------------
+*/
+
+// -----------------------------------
+
+---------------
 // WebSocket 초기화 및 라우팅
 // --------------------------------------------------
 void CL_W10_WebAPI::routeWebSocket() {
@@ -126,19 +146,19 @@ void CL_W10_WebAPI::routeWebSocket() {
 // 상태 브로드캐스트
 // --------------------------------------------------
 void CL_W10_WebAPI::broadcastState(JsonDocument& p_doc, bool p_diffOnly) {
-	W10_broadcast(&s_wsServerState, p_doc, p_diffOnly);
+	broadcast(&s_wsServerState, p_doc, p_diffOnly);
 }
 
 // --------------------------------------------------
 // 메트릭스 브로드캐스트
 // --------------------------------------------------
 void CL_W10_WebAPI::broadcastMetrics(JsonDocument& p_doc, bool p_diffOnly) {
-	W10_broadcast(&s_wsServerMetrics, p_doc, p_diffOnly);
+	broadcast(&s_wsServerMetrics, p_doc, p_diffOnly);
 }
 
 // --------------------------------------------------
 // 차트 브로드캐스트
 // --------------------------------------------------
 void CL_W10_WebAPI::broadcastChart(JsonDocument& p_doc, bool p_diffOnly) {
-	W10_broadcast(&s_wsServerChart, p_doc, p_diffOnly);
+	broadcast(&s_wsServerChart, p_doc, p_diffOnly);
 }
