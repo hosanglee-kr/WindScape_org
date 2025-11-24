@@ -1,8 +1,8 @@
 /*
  * ------------------------------------------------------
- * 소스명 : W10_Web_Integrated_025.cpp
+ * 소스명 : W10_Web_WS_026.cpp
  * 모듈 약어 : W10
- * 모듈명 : Smart Nature Wind Web API (v025) - Integrated WebSocket & Broadcast
+ * 모듈명 : Smart Nature Wind Web API - Integrated WebSocket & Broadcast
  * ------------------------------------------------------
  * 기능 요약:
  * - WebSocket 엔드포인트 설정 및 이벤트 핸들링 구현
