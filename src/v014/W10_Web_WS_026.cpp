@@ -48,7 +48,7 @@ extern AsyncWebSocket s_wsServerMetrics;
 // 브로드캐스트 유틸리티
 // --------------------------------------------------
 
-void CL_W10_WebAPI::broadcast(AsyncWebSocket* p_ws, JsonDocument& p_doc, bool p_diffOnly) {
+void CL_W10_WebAPI::_broadcast(AsyncWebSocket* p_ws, JsonDocument& p_doc, bool p_diffOnly) {
 	if (!p_ws || !p_ws->count())
 		return;
 
@@ -83,7 +83,6 @@ void W10_broadcast(AsyncWebSocket* p_ws, JsonDocument& p_doc, bool p_diffOnly) {
 
 // -----------------------------------
 
----------------
 // WebSocket 초기화 및 라우팅
 // --------------------------------------------------
 void CL_W10_WebAPI::routeWebSocket() {
