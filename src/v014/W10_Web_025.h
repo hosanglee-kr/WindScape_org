@@ -116,6 +116,8 @@ private:
 	// --------------------------------------------------
 	// 유틸리티 함수
 	// --------------------------------------------------
+    void _broadcast(AsyncWebSocket* p_ws, JsonDocument& p_doc, bool p_diffOnly) {
+	
 	
 	// v012의 _applyHeaders 로직 복구 및 send 함수에 적용
 	static inline void _applyHeaders(AsyncWebServerResponse* p_response, bool p_nocache) {
