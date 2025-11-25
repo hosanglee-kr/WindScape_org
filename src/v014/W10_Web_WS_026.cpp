@@ -137,7 +137,7 @@ void CL_W10_WebAPI::routeWebSocket() {
 
 
 	// Logger 모듈에 WebSocket 연결
-	CL_D10_Logger::attachWebSocket(&s_wsServerLogs);
+	CL_D10_Logger::attachWebSocket(s_wsServerLogs);
 	CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WebSocket routes initialized (v025)");
 }
 
