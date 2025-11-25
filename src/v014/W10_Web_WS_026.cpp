@@ -38,10 +38,10 @@
 // --------------------------------------------------
 // 전역/외부 WebSocket 객체 선언 (Routes.cpp에서 정의된 객체 참조)
 // --------------------------------------------------
-extern AsyncWebSocket s_wsServerLogs;
-extern AsyncWebSocket s_wsServerState;
-extern AsyncWebSocket s_wsServerChart;
-extern AsyncWebSocket s_wsServerMetrics;
+extern AsyncWebSocket* s_wsServerLogs;
+extern AsyncWebSocket* s_wsServerState;
+extern AsyncWebSocket* s_wsServerChart;
+extern AsyncWebSocket* s_wsServerMetrics;
 
 
 // --------------------------------------------------
@@ -87,15 +87,15 @@ void W10_broadcast(AsyncWebSocket* p_ws, JsonDocument& p_doc, bool p_diffOnly) {
 // --------------------------------------------------
 void CL_W10_WebAPI::routeWebSocket() {
 	// 1. 로그 WS 핸들러
-	s_wsServerLogs.onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client,
+	s_wsServerLogs->onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client,
 						AwsEventType type, void*, uint8_t*, size_t) {
 		if (type == WS_EVT_CONNECT)
 			CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WS /logs connected (id=%u)", client->id());
 	});
-	s_server->addHandler(&s_wsServerLogs);
+	s_server->addHandler(s_wsServerLogs);
 
 	// 2. 상태 WS 핸들러
-	s_wsServerState.onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client,
+	s_wsServerState->onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client,
 						 AwsEventType type, void*, uint8_t*, size_t) {
 		if (type == WS_EVT_CONNECT) {
 			CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WS /state connected (id=%u)", client->id());
@@ -108,18 +108,18 @@ void CL_W10_WebAPI::routeWebSocket() {
 			client->text(v_json); // 초기 상태 전송
 		}
 	});
-	s_server->addHandler(&s_wsServerState);
+	s_server->addHandler(s_wsServerState);
 
 	// 3. 차트 WS 핸들러
-	s_wsServerChart.onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client,
+	s_wsServerChart->onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client,
 						 AwsEventType type, void*, uint8_t*, size_t) {
 		if (type == WS_EVT_CONNECT)
 			CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WS /chart connected (id=%u)", client->id());
 	});
-	s_server->addHandler(&s_wsServerChart);
+	s_server->addHandler(s_wsServerChart);
 
 	// 4. 메트릭 WS 핸들러
-	s_wsServerMetrics.onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client,
+	s_wsServerMetrics->onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client,
 						   AwsEventType type, void*, uint8_t*, size_t) {
 		if (type == WS_EVT_CONNECT) {
 			CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WS /metrics connected (id=%u)", client->id());
@@ -133,7 +133,7 @@ void CL_W10_WebAPI::routeWebSocket() {
 			}
 		}
 	});
-	s_server->addHandler(&s_wsServerMetrics);
+	s_server->addHandler(s_wsServerMetrics);
 
 
 	// Logger 모듈에 WebSocket 연결
