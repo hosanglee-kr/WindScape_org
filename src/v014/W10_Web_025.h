@@ -77,7 +77,7 @@ private:
 
 	// WebSocket Servers (WebSockets.cpp 정의, Broadcasts.cpp 사용)
 	static AsyncWebSocket* s_wsServerState;
-	static AsyncWebSocket* s_wsServerLog;
+	static AsyncWebSocket* s_wsServerLogs;
 	static AsyncWebSocket* s_wsServerChart;
 	static AsyncWebSocket* s_wsServerMetrics;
 
