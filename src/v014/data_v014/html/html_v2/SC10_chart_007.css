@@ -1,0 +1,80 @@
+/*
+ * ------------------------------------------------------
+ * 소스명 : SC10_chart_007.css
+ * 모듈명 : Smart Nature Wind Chart Monitor UI Style (v007)
+ * ------------------------------------------------------
+ * 주요 내용:
+ * - SC10_common_001.css에 의존
+ * - 6개 차트 컨테이너 레이아웃 및 스타일 정의
+ * ------------------------------------------------------
+ */
+
+/* ======================= 차트 섹션 스타일 ======================= */
+
+.chart-section {
+    margin-top: 20px;
+}
+
+.chart-grid {
+    /* 차트 컨테이너 간 간격 */
+    gap: 20px;
+}
+
+.chart-container {
+    /* SC10_common_001.css의 col-6 활용 */
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; 
+    border: 1px solid #e0e6ed;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: #f7f9fb;
+    border-bottom: 1px solid #e0e6ed;
+    cursor: pointer;
+}
+
+.chart-header h3 {
+    margin: 0;
+    font-size: 1.1em;
+    color: #34495e;
+    font-weight: 600;
+}
+
+.btn-toggle {
+    background: none;
+    border: none;
+    font-size: 1.2em;
+    color: #34495e;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.chart-content {
+    padding: 15px;
+    background-color: #fff;
+    flex-grow: 1;
+}
+
+/* Chart.js 캔버스 높이 조정 (필수) */
+.chart-content canvas {
+    max-height: 250px; 
+}
+
+
+/* 공통 CSS의 미디어 쿼리를 따릅니다. */
+@media (max-width: 768px) {
+    .chart-container {
+        /* col-6이 모바일에서 100%를 차지하도록 공통 CSS에 정의됨 */
+        flex: 1 1 100%;
+    }
+}
