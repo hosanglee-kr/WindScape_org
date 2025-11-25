@@ -53,7 +53,7 @@ AsyncWebSocket 			s_wsMetrics("/ws/metrics");
 
 // AsyncWebSocket 포인터 멤버를 정의합니다.
 AsyncWebSocket* 		CL_W10_WebAPI::s_wsServerState	 = nullptr;
-AsyncWebSocket* 		CL_W10_WebAPI::s_wsServerLog	 = nullptr;
+AsyncWebSocket* 		CL_W10_WebAPI::s_wsServerLogs	 = nullptr;
 AsyncWebSocket* 		CL_W10_WebAPI::s_wsServerChart	 = nullptr;
 AsyncWebSocket* 		CL_W10_WebAPI::s_wsServerMetrics = nullptr;
 
@@ -65,14 +65,11 @@ void CL_W10_WebAPI::begin(AsyncWebServer& p_server, CL_CT10_ControlManager& p_co
 	s_control = &p_control;
 	s_multi   = &p_multi;
 
-	// ✅ WebSocket 포인터 연결 (WebSockets.cpp에서 이동)
-	s_wsServerLog	  = &s_wsLogs;
+	s_wsServerLogs	  = &s_wsLogs;
 	s_wsServerState	  = &s_wsState;
 	s_wsServerChart	  = &s_wsChart;
 	s_wsServerMetrics = &s_wsMetrics;
-// void CL_W10_WebAPI::begin(AsyncWebServer& p_server, CL_CT10_ControlManager& p_control) {
-//	s_server  = &p_server;
-//	s_control = &p_control;
+
 
 	routeVersion();
 	routeState();
