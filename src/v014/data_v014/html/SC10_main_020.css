@@ -1,0 +1,329 @@
+/*
+ * ------------------------------------------------------
+ * 소스명 : SC10_main_020.css
+ * 모듈 약어 : SC10
+ * 모듈명 : Smart Nature Wind Configuration UI Style (v020)
+ * ------------------------------------------------------
+ * 추가 내용:
+ * - .pill 스타일 개선
+ * - .list 내 table 스타일 개선
+ * - 로그 콘솔 (pre#logConsole) 스타일 추가
+ * ------------------------------------------------------
+ */
+
+/* 폰트 설정 및 기본 스타일 */
+body {
+  font-family: "Pretendard", "Noto Sans KR", sans-serif;
+  background-color: #f0f4f8; /* 배경색 변경: 좀 더 부드러운 파란색 계열 */
+  color: #2c3e50;
+  margin: 0;
+  padding: 20px;
+  line-height: 1.6;
+}
+
+.wrap {
+  max-width: 960px; /* Main 페이지는 Chart보다 좁게 유지 */
+  margin: 0 auto;
+}
+
+h1 {
+  color: #1a5276;
+  text-align: center;
+  margin-bottom: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 폼 요소 기본 스타일 */
+label {
+  font-weight: 600;
+  margin-bottom: 5px;
+  font-size: 0.9em;
+  color: #4a637a;
+  display: block;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #c8d4e0;
+  border-radius: 8px;
+  font-size: 15px;
+  box-sizing: border-box;
+  background-color: #fcfdfe;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, select:focus {
+  border-color: #3498db;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+/* 카드 및 섹션 스타일 */
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px 25px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+  border: 1px solid #e0e6ed;
+}
+
+.section-title {
+  margin-top: 0;
+  border-left: 4px solid #3498db;
+  padding-left: 10px;
+  font-size: 1.3em;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+/* 그리드 시스템 */
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.col-12 {
+  flex: 1 1 100%;
+  display: flex;
+  flex-direction: column;
+}
+.col-6 {
+  flex: 1 1 calc(50% - 8px);
+  display: flex;
+  flex-direction: column;
+}
+.col-4 {
+  flex: 1 1 calc(33.333% - 10.666px); 
+  display: flex;
+  flex-direction: column;
+}
+.col-3 {
+  flex: 1 1 calc(25% - 12px); 
+  display: flex;
+  flex-direction: column;
+}
+
+/* 유틸리티 */
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+.row.tight { gap: 8px; }
+.row .flex { display: flex; align-items: center; gap: 10px; }
+.right { margin-left: auto; }
+.fill { flex-grow: 1; }
+.mt8 { margin-top: 8px; }
+.mt16 { margin-top: 16px; }
+.hr { border-top: 1px solid #e0e6ed; margin: 20px 0; }
+.muted { color: #7f8c8d; font-size: 0.9em; }
+
+/* 버튼 스타일 */
+.btn {
+  background-color: #f1f6f9;
+  color: #4a637a;
+  border: 1px solid #c8d4e0;
+  border-radius: 8px;
+  padding: 8px 15px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background-color: #e5edf3;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.btn.ok {
+  background-color: #2ecc71;
+  color: #fff;
+  border-color: #27ae60;
+}
+.btn.ok:hover {
+  background-color: #27ae60;
+}
+
+.btn.warn {
+  background-color: #f39c12;
+  color: #fff;
+  border-color: #e67e22;
+}
+.btn.warn:hover {
+  background-color: #e67e22;
+}
+
+.btn.err {
+  background-color: #e74c3c;
+  color: #fff;
+  border-color: #c0392b;
+}
+.btn.err:hover {
+  background-color: #c0392b;
+}
+
+/* 필 및 상태 표시 (Status) */
+.pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.9em;
+  font-weight: 700;
+  background-color: #ecf0f1;
+  color: #2c3e50;
+  margin-left: 8px;
+  white-space: nowrap;
+  min-width: 40px;
+  text-align: center;
+}
+#simActive.pill { background-color: #2ecc71; color: #fff; } /* Active */
+#simActive.pill[data-status="idle"] { background-color: #e74c3c; color: #fff; } /* Idle */
+
+
+/* STA 목록 스타일 */
+.list {
+  border: 1px solid #c8d4e0;
+  border-radius: 8px;
+  padding: 0;
+  overflow: hidden;
+}
+.list table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.list th, .list td {
+  padding: 10px 15px;
+  text-align: left;
+  border-bottom: 1px solid #ecf0f1;
+  font-size: 0.95em;
+}
+.list th {
+  background-color: #f1f6f9;
+  font-weight: 700;
+  color: #4a637a;
+}
+.list td:last-child {
+  text-align: right;
+  width: 120px;
+}
+.list tr:last-child td {
+  border-bottom: none;
+}
+.list .muted {
+  display: block;
+  padding: 15px;
+  text-align: center;
+}
+
+/* ======================= v020 추가 스타일 ======================= */
+
+/* ✅ 로그 콘솔 스타일 */
+pre#logConsole {
+  background-color: #2c3e50; /* 어두운 배경 */
+  color: #ecf0f1; /* 밝은 텍스트 */
+  padding: 15px;
+  border-radius: 8px;
+  overflow-y: auto; /* 스크롤 가능 */
+  max-height: 400px; /* 최대 높이 지정 */
+  font-size: 0.85em;
+  line-height: 1.4;
+  white-space: pre-wrap; /* 줄바꿈 허용 */
+  font-family: monospace;
+}
+
+/* ✅ 전체 저장 버튼 (Dirty 상태) 기본 스타일 */
+/* .btn-err (빨간색) 대신 Dirty 상태에 따라 JS에서 동적으로 색상을 변경하지만, */
+/* HTML에 초기 스타일을 지정하기 위해 아래 스타일을 사용합니다. */
+#btnSaveAllConfig {
+    transition: background-color 0.3s, border-color 0.3s;
+    font-weight: 700;
+}
+
+
+/* 로딩 오버레이 */
+#loadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(44, 62, 80, 0.8);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.spinner {
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 토스트 알림 */
+#toastContainer {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1001;
+}
+.toast {
+  background-color: #333;
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-top: 10px;
+  opacity: 0.9;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: opacity 0.3s;
+}
+.toast.ok { background-color: #2ecc71; }
+.toast.warn { background-color: #f39c12; }
+.toast.err { background-color: #e74c3c; }
+
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .wrap { padding: 10px; }
+  /* 중간 화면에서 4열/3열을 2열로 변경 */
+  .col-4, .col-3 {
+    flex: 1 1 calc(50% - 8px);
+  }
+}
+
+@media (max-width: 480px) {
+  /* 모바일 화면에서 모든 그리드를 1열로 변경 */
+  .col-4, .col-6, .col-3 {
+    flex: 1 1 100%;
+  }
+  .row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .row .right {
+    margin-left: 0;
+    width: 100%;
+    justify-content: stretch;
+  }
+  .row.tight {
+    width: 100%;
+  }
+  .row.tight .btn {
+    flex-grow: 1;
+  }
+  .pill { margin-left: 0; margin-top: 5px; }
+  h1 { font-size: 1.8em; }
+}
