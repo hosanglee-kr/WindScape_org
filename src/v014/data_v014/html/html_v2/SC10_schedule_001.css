@@ -1,0 +1,113 @@
+/*
+ * ------------------------------------------------------
+ * 소스명 : SC10_schedule_001.css
+ * 모듈명 : Smart Nature Wind Schedule Manager UI Style (v001)
+ * ------------------------------------------------------
+ * 주요 내용:
+ * - SC10_common_001.css에 의존
+ * - 스케줄 목록 테이블 스타일
+ * - 반복 요일 선택 체크박스 그룹 스타일
+ * ------------------------------------------------------
+ */
+
+/* ======================= 1. 스케줄 테이블 스타일 (Profile CSS 재사용) ======================= */
+/* profile-table과 유사하게 재정의 */
+.schedule-list-container {
+    margin-top: 15px;
+    overflow-x: auto;
+}
+
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.schedule-table th, .schedule-table td {
+    padding: 12px 10px;
+    text-align: left;
+    border-bottom: 1px solid #e0e6ed;
+    font-size: 0.95em;
+}
+
+.schedule-table th {
+    background-color: #f7f9fb;
+    color: #34495e;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.schedule-table td:last-child {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.schedule-table .action-buttons {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+.schedule-table .btn-small {
+    padding: 5px 10px;
+    font-size: 0.85em;
+}
+
+
+/* ======================= 2. 모달 및 폼 그룹 스타일 (Profile CSS 재사용) ======================= */
+/* 모달 오버레이, 모달 콘텐츠, 헤더, 액션 버튼 스타일은 SC10_profile_001.css와 동일하다고 가정 */
+
+.schedule-settings-grid {
+    gap: 15px;
+}
+
+.form-group.repeat-days-group {
+    padding-top: 5px;
+}
+
+.day-checkboxes {
+    display: flex;
+    gap: 10px;
+    padding: 5px 0;
+    flex-wrap: wrap;
+}
+
+.day-checkboxes label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    font-weight: normal;
+    background-color: #f0f4f8;
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid #c8d4e0;
+    transition: background-color 0.2s;
+}
+
+.day-checkboxes input[type="checkbox"] {
+    margin-right: 0;
+}
+
+.day-checkboxes input[type="checkbox"]:checked + label {
+    background-color: #3498db;
+    color: #ffffff;
+    border-color: #2980b9;
+}
+
+/* 체크박스를 감춘 후 커스텀 스타일을 적용하는 방법이 일반적이나, 여기서는 기본 스타일 유지 */
+.day-checkboxes label input[type="checkbox"] {
+    display: none; /* 체크박스 숨기기 */
+}
+
+.day-checkboxes label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+}
+.day-checkboxes label.checked {
+    background-color: #3498db;
+    color: #ffffff;
+}
