@@ -2,11 +2,12 @@
  * ------------------------------------------------------
  * 소스명 : W10_Web_Static_026.cpp
  * 모듈 약어 : W10
- * 모듈명 : Smart Nature Wind Web API (v025) - Static Assets Implementation (Refactored)
+ * 모듈명 : Smart Nature Wind Web API (v025) - Static Assets & Menu API Implementation
  * ------------------------------------------------------
  * 기능 요약:
  * - LittleFS에 저장된 Web UI 파일 라우팅을 구조체 배열 기반으로 효율화
- * - [리팩토링]: 페이지 목록을 간소화된 구조체 배열로 통합하고, 파일 경로를 동적으로 생성
+ * - Web UI 메뉴 정보를 JSON으로 반환하는 API (/api/v1/menu) 구현
+ * - [리팩토링]: 페이지 목록을 간소화된 구조체 배열로 통합 및 경로 동적 생성
  * - [규칙 적용]: 모든 HTML/CSS/JS 파일명이 동일하다는 규칙을 기반으로 구현
  * ------------------------------------------------------
  * [구현 규칙]
@@ -35,36 +36,38 @@
 
 #include "W10_Web_025.h"
 #include <LittleFS.h> 
+#include <ArduinoJson.h> // ArduinoJson V7.4.x 사용
 
 // ------------------------------------------------------
 // 정적 페이지 관리 구조체 및 목록
 // ------------------------------------------------------
 
-// 페이지 파일 경로 정의 구조체 (파일명 통일 규칙에 따라 base 이름만 저장)
+// 페이지 파일 경로 정의 구조체 (레이블 추가 및 경로 간소화)
 typedef struct {
 	const char* uri;   // HTTP 요청 단축 URI (예: "/dashboard")
 	const char* base;  // 파일의 기본 이름 (예: "SC10_dashboard_001")
-	bool isMain;       // 설정 오버라이드 대상 여부 (true: MAIN 페이지)
+    const char* label; // 페이지 레이블 (메뉴 표시 이름)
+	bool isMain;       // 설정 오버라이드 대상 여부
 } ST_W10_Page_t;
 
 // [공통 자산 경로]
-constexpr char G_W10_COMMON_CSS[] = "/html/SC10_common_001.css"; // 모든 페이지에 공통 적용되는 CSS
-constexpr char G_W10_COMMON_JS[]  = "/html/SC10_common_001.js";  // 공통 JavaScript (선택적)
+constexpr char G_W10_COMMON_CSS[] = "/html/SC10_common_001.css";
+constexpr char G_W10_COMMON_JS[]  = "/html/SC10_common_001.js";
 
-// 정적 페이지 목록: 기본 파일 이름만 포함
+// 정적 페이지 목록: 기본 파일 이름과 레이블 포함
 static const ST_W10_Page_t s_pages_static[] = {
-	// uri         , base                          , isMain
-	{"/",           "SC10_main_019",                true  }, // MAIN (설정 오버라이드 대상)
-	{"/dashboard",  "SC10_dashboard_001",           false }, // 대시보드
-	{"/chart1",     "SC10_chart_006",               false }, // 차트 모니터링 1
-	{"/chart2",     "SC10_chart_007",               false }, // 차트 모니터링 2
-	{"/sim_details","SC10_sim_details_001",         false }, // 시뮬 설정
-	{"/profiles",   "SC10_profile_001",             false }, // 프로파일 관리
-	{"/schedules",  "SC10_schedule_001",            false }, // 스케줄 관리
-	{"/user_profiles","SC10_user_001",              false }, // 사용자 프로필
-	{"/settings",   "SC10_settings_001",            false }, // 시스템 설정
-	{"/config",     "SC10_config_025",              false }, // Config 설정
-	{"/diag",       "SC10_diag_025",                false }  // 시스템 진단
+	// uri         , base                          , label                , isMain
+	{"/",           "SC10_main_019",                "홈",                  true  },
+	{"/dashboard",  "SC10_dashboard_001",           "대시보드",             false },
+	{"/chart1",     "SC10_chart_006",               "차트 모니터링",         false }, // 메뉴 표기용
+	{"/chart2",     "SC10_chart_007",               "차트 모니터링 2",       false },
+	{"/sim_details","SC10_sim_details_001",         "시뮬 설정",            false },
+	{"/profiles",   "SC10_profile_001",             "프로파일 관리",         false },
+	{"/schedules",  "SC10_schedule_001",            "스케줄 관리",          false },
+	{"/user_profiles","SC10_user_001",              "사용자 프로필",         false },
+	{"/settings",   "SC10_settings_001",            "시스템 설정",          false },
+	{"/config",     "SC10_config_025",              "Config 설정",          false }, 
+	{"/diag",       "SC10_diag_025",                "시스템 진단",          false } 
 };
 // 페이지 목록 크기 계산
 static const uint8_t G_W10_PAGE_COUNT = sizeof(s_pages_static) / sizeof(ST_W10_Page_t);
@@ -97,12 +100,10 @@ static void W10_pushRoute(const char* p_uri, const char* p_file, const char* p_m
 
 /**
  * @brief 기본 이름(base)과 확장자(ext)를 사용하여 파일 시스템 경로를 동적으로 생성합니다.
- * @param p_base 파일 기본 이름 (예: "SC10_main_019")
- * @param p_ext 확장자 (예: "html", "css", "js")
  * @return String /html/base.ext 형식의 경로
  */
 static String W10_buildPath(const char* p_base, const char* p_ext) {
-    // "/html/" + p_base + "." + p_ext
+    // String 객체를 사용하면 String이 자동으로 메모리 관리
     String path = "/html/";
     path += p_base;
     path += ".";
@@ -112,10 +113,57 @@ static String W10_buildPath(const char* p_base, const char* p_ext) {
 
 
 // ------------------------------------------------------
+// 메뉴 Web API 구현
+// ------------------------------------------------------
+
+/**
+ * @brief 정적 페이지 목록을 JSON 형태의 메뉴 데이터로 반환합니다.
+ */
+static void W10_getMenuJson(AsyncWebServerRequest* r) {
+	// 메뉴 항목이 G_W10_PAGE_COUNT 이므로 적절한 버퍼 크기를 계산
+	// 항목당 약 64바이트 가정: {"label":"...", "path":"..."}
+	
+	// JsonDocument 단일 타입만 사용 규칙 준수
+    JsonDocument v_doc; 
+
+	// 페이지 목록을 순회하며 메뉴 항목 추가
+	for (uint8_t v_i = 0; v_i < G_W10_PAGE_COUNT; v_i++) {
+		const auto& v_page = s_pages_static[v_i];
+        
+        // isMain 페이지(URI가 "/")는 메뉴에서 제외 (옵션)
+        if (v_page.isMain) continue; 
+        
+        // HTML 파일 경로 동적 생성 (예: /html/SC10_dashboard_001.html)
+        String v_html_path = W10_buildPath(v_page.base, "html");
+
+        // 메뉴 항목 구성
+        // createNestedObject 사용 금지 규칙 준수: v_doc이 배열이 아니므로 Array 타입으로 강제 변환 후 사용
+        JsonArray v_array = v_doc.to<JsonArray>();
+        JsonObject v_item = v_array.add<JsonObject>();
+        
+        v_item["label"] = v_page.label;
+        // 메뉴 HTML의 상대 경로를 위해 "/html/" 접두사 제거 (substring(6) 사용)
+        v_item["path"]  = v_html_path.substring(6); 
+	}
+    
+	// JSON 직렬화 및 응답 전송
+	String v_json_output;
+	if (serializeJson(v_doc, v_json_output) > 0) {
+		auto* v_resp = r->beginResponse(200, "application/json", v_json_output);
+		CL_W10_WebAPI::_applyHeaders(v_resp, true); // API 응답은 캐시 방지
+		r->send(v_resp);
+	} else {
+		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] Menu API serialization failed.");
+		r->send(500, "application/json", "{\"error\":\"Serialization Failed\"}");
+	}
+}
+
+
+// ------------------------------------------------------
 // 정적 자산 라우팅 초기화
 // ------------------------------------------------------
 /**
- * @brief 웹 서버에 정적 자산 라우팅을 등록합니다.
+ * @brief 웹 서버에 정적 자산 및 API 라우팅을 등록합니다.
  */
 void CL_W10_WebAPI::routeStaticAssets() {
 	auto& v_web = g_A10_config_root.system->system.web;
@@ -143,7 +191,7 @@ void CL_W10_WebAPI::routeStaticAssets() {
 			W10_pushRoute(v_html_path.c_str(), v_html_path.c_str(), "text/html");
 		}
 
-		// 1-2. CSS/JS 파일 라우팅 등록 (경로가 모두 동일하다는 규칙 적용)
+		// 1-2. CSS/JS 파일 라우팅 등록
 		W10_pushRoute(v_css_path.c_str(), v_css_path.c_str(), "text/css");
 		W10_pushRoute(v_js_path.c_str(), v_js_path.c_str(), "application/javascript");
 
@@ -172,10 +220,7 @@ void CL_W10_WebAPI::routeStaticAssets() {
             const char* v_file = s_routes_static[v_i].file;
             const char* v_mime = s_routes_static[v_i].mime;
             
-            // 인증 검사 생략 (정적 자산)
-            
             if (LittleFS.exists(v_file)) {
-                // 파일이 존재하면 LittleFS에서 파일을 읽어 응답
                 auto* v_resp = r->beginResponse(LittleFS, v_file, v_mime);
                 CL_W10_WebAPI::_applyHeaders(v_resp, false); // 정적 파일 캐싱 허용
                 r->send(v_resp);
@@ -189,6 +234,10 @@ void CL_W10_WebAPI::routeStaticAssets() {
             r->send(v_resp);
         });
     }
+    
+    // 5. [추가] 메뉴 API 라우팅 등록
+    s_server->on("/api/v1/menu", HTTP_GET, W10_getMenuJson);
 
-	CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] Static assets routing initialized (%d routes, %d pages)", s_routeCnt_static, G_W10_PAGE_COUNT);
+
+	CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] Web routing initialized (%d routes, %d pages)", s_routeCnt_static, G_W10_PAGE_COUNT);
 }
