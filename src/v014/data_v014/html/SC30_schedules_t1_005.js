@@ -1,4 +1,4 @@
-// SC30_schedule_005.js (JavaScript Implementation with Firebase and Gemini API)
+// SC30_schedules_t1_005.js (JavaScript Implementation with Firebase and Gemini API)
 
 // --- Configuration (ESP32 환경에서는 C++ 코드에서 주입되어야 합니다) ---
 const GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025";

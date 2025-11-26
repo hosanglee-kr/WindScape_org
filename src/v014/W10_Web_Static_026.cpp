@@ -56,19 +56,20 @@ constexpr char G_W10_COMMON_JS[]  = "/html/SC10_common_001.js";
 
 // 정적 페이지 목록: 기본 파일 이름과 레이블 포함
 static const ST_W10_Page_t s_pages_static[] = {
-	// uri         , base                          , label                , isMain
-	{"/",           "SC10_main_019",                "홈",                  true  },
-	{"/chart1",     "SC10_chart_006",               "차트 모니터링",         false }, // 메뉴 표기용
-	
-	{"/dashboard",  "SC10_dashboard_001",           "대시보드",             false },
-    {"/chart2",     "SC10_chart_007",               "차트 모니터링 2",       false },
-	{"/sim_details","SC10_sim_details_001",         "시뮬 설정",            false },
-	{"/profiles",   "SC10_profile_001",             "프로파일 관리",         false },
-	{"/schedules",  "SC10_schedule_001",            "스케줄 관리",          false },
-	{"/user_profiles","SC10_user_001",              "사용자 프로필",         false },
-	{"/settings",   "SC10_settings_001",            "시스템 설정",          false },
-	{"/config",     "SC10_config_025",              "Config 설정",          false }, 
-	{"/diag",       "SC10_diag_025",                "시스템 진단",          false } 
+	// uri         , base							, label                , isMain
+	{"/"				, "SC10_main_019"			, "Home"				, true  },
+	{"/chart_t1"		, "SC10_chart_t1_006"		, "차트 모니터링 T1"	, false }, 
+	{"/schedules_t1"	, "SC30_schedules_t1_005"	, "스케줄 관리 T1"		, false }, 
+
+	{"/dashboard"		, "SC10_dashboard_001"		, "대시보드"			, false },
+    {"/chart_t2"		, "SC10_chart_t2_007"		, "차트 모니터링 T2"	, false },
+	{"/sim_details"		, "SC10_sim_details_001"	, "시뮬 설정"			, false },
+	{"/profiles"		, "SC10_profile_001"		, "프로파일 관리"		, false },
+	{"/schedules_t2"	, "SC10_schedules_t2_001"	, "스케줄 관리 T2"		, false },
+	{"/user_profiles"	, "SC10_user_001"			, "사용자 프로필"		, false },
+	{"/settings"		, "SC10_settings_001"		, "시스템 설정"			, false },
+	{"/config"			, "SC10_config_025"			, "Config 설정"			, false }, 
+	{"/diag"			, "SC10_diag_025"			, "시스템 진단"			, false } 
 };
 // 페이지 목록 크기 계산
 static const uint8_t G_W10_PAGE_COUNT = sizeof(s_pages_static) / sizeof(ST_W10_Page_t);

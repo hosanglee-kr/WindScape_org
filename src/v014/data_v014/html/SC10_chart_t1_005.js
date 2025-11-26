@@ -1,29 +1,27 @@
 /*
  * ------------------------------------------------------
- * 소스명 : SC10_chart_006.js
- * 모듈명 : Smart Nature Wind Chart/Simulation UI Controller (v025)
+ * 소스명 : SC10_chart_t1_005.js
+ * 모듈 약어 : SC10
+ * 모듈명 : Smart Nature Wind Chart/Simulation UI (v005)
  * ------------------------------------------------------
  * 기능 요약:
- * - ✅ /ws/chart WebSocket을 통한 실시간 차트 데이터 모니터링 (v025 핵심)
- * - 풍속 관련 상세 매개변수 및 타이밍 설정 (메모리 패치)
- * - ✅ /api/config/save 명시적 저장 기능 및 Dirty 상태 체크 통합
+ * - WebSocket을 통한 실시간 시뮬레이션/제어 차트 모니터링
+ * - 풍속 관련 상세 매개변수 설정 및 저장 (REST API)
+ * - 백엔드 v024 API 명세에 맞춰 API 경로 및 데이터 구조 수정
  * ------------------------------------------------------
  */
 
 (() => {
 	"use strict";
 
-	let g_config = {}; 
+	let g_config = {}; // 설정 상태를 저장하기 위한 전역 변수
 	let g_presets = [];
 	let paused = false;
-	let configDirty = false; // ✅ 설정 변경 상태 플래그
-
 	const refreshLabel = document.getElementById("refreshInfo");
-	
-	// API Key (localStorage)
+
+	// API Key (localStorage) - Main 페이지와 동일 로직
 	const KEY_API = 'sc10_api_key';
 	const getKey = () => localStorage.getItem(KEY_API) || '';
-	const getWSHost = () => `ws://${window.location.host}/ws/chart`; // ✅ WS 경로
 
 	// 프리셋 한글 매핑
 	const presetNameMap = {
@@ -45,39 +43,9 @@
 	const $ = (s, r = document) => r.querySelector(s);
 	const text = (el, v) => el && (el.textContent = v);
 	
-	// ✅ HTML에 토스트/로딩이 없으므로 콘솔 출력으로 대체
+	// ✅ 로딩/토스트 기능은 HTML에 해당 요소가 없으므로 임시로 기능만 구현하거나 주석 처리
 	const setLoading = (flag) => { /* console.log(flag ? "Loading..." : "Loaded."); */ };
 	const showToast = (msg, type = "ok") => { console.log(`[${type.toUpperCase()}] ${msg}`); };
-
-	// ✅ 설정 Dirty 상태 UI 업데이트 함수
-	const setDirtyStatus = (isDirty) => {
-		configDirty = isDirty;
-		// HTML에 이 버튼 ID가 존재해야 합니다. (SC10_chart_005.html 수정 요청 사항 반영)
-		const btnSaveAll = $("#btnSaveAllConfig"); 
-		if (btnSaveAll) {
-			if (isDirty) {
-				btnSaveAll.style.backgroundColor = "#dc2626"; // 빨간색
-				btnSaveAll.textContent = "⚠️ 전체 설정 저장 (미저장)";
-			} else {
-				btnSaveAll.style.backgroundColor = "#2196f3"; // 파란색
-				btnSaveAll.textContent = "✅ 전체 설정 저장";
-			}
-		}
-	};
-	
-	// ✅ Dirty 상태 체크 함수 추가
-	async function checkConfigDirtyState() {
-		try {
-			// Main 페이지와 동일하게 Dirty 상태 API 사용
-			const r = await fetch("/api/config/dirty", { headers: { "X-API-Key": getKey() } });
-			const j = await r.json();
-			setDirtyStatus(j.dirty || false); 
-		} catch (e) {
-			// API 호출 오류 시 경고 표시
-		}
-		// 5초마다 체크
-		setTimeout(checkConfigDirtyState, 5000); 
-	}
 
 
 	// ======================= 공통 API =======================
@@ -104,10 +72,6 @@
 				throw new Error(txt || resp.status);
 			}
 			showToast(`${desc} 성공`, "ok");
-			
-			// ✅ 파일 저장 성공 시 Dirty 상태 초기화
-			if (url === "/api/config/save") setDirtyStatus(false);
-			
 			return txt;
 		} catch (e) {
 			if (e.message !== "Unauthorized") showToast(`${desc} 실패: ${e.message}`, "err");
@@ -116,23 +80,20 @@
 		}
 	}
 
-	// ======================= 초기화 및 상태 갱신 =======================
+	// ======================= 초기화 및 상태 갱신 (API 경로 수정) =======================
 	document.addEventListener("DOMContentLoaded", () => {
 		bindEvents();
-		refreshState(false); // 초기 상태 및 프리셋 로드 (REST API 사용)
-		initChartWebSocket(); // ✅ WS 연결 시작 (차트 데이터용)
-		checkConfigDirtyState(); // ✅ Dirty 상태 주기적 체크 시작
+		refreshState(false); // 초기 상태 및 프리셋 로드
+		setInterval(updateCharts, 2000); // 2초마다 차트 데이터 갱신
+		updateCharts();
 	});
 
 	function bindEvents() {
 		$("#btnPreviewPreset")?.addEventListener("click", previewPreset);
-		// ✅ 개별 저장 버튼은 메모리 패치 후 Dirty 상태만 업데이트
 		$("#btnSaveSim")?.addEventListener("click", saveSim);
+		// ✅ HTML의 btnSaveSimInit -> btnConfigInit으로 ID 변경 가정
 		$("#btnConfigInit")?.addEventListener("click", saveConfigInit); 
 		$("#btnSaveTiming")?.addEventListener("click", saveTiming);
-		
-		// ✅ 전체 저장 버튼 이벤트 바인딩 (HTML에 이 버튼이 추가되어야 함)
-		$("#btnSaveAllConfig")?.addEventListener("click", saveAllConfig); 
 
 		$("#btnPause")?.addEventListener("click", () => (paused = true));
 		$("#btnResume")?.addEventListener("click", () => (paused = false));
@@ -147,15 +108,14 @@
 	async function refreshState(showToastMsg = false) {
 		setLoading(true);
 		try {
-			// API 경로 변경: /api/control/summary (Sim 설정이 포함된 Summary API 사용)
+			// ✅ API 변경: /api/state -> /api/control/summary (Sim 설정이 포함된 Summary API 사용)
 			const r = await fetch("/api/control/summary");
 			const j = await r.json();
 			g_config = j; 
-			
-			// j.windProfile에서 프리셋 목록 로드
+			// ✅ j.windProfile에서 프리셋 목록 로드 가정 (summary 응답에 포함된다는 가정 하에 수정)
 			g_presets = j.windProfile?.presets || []; 
 
-			// Sim 설정 로드: j.simulation.sim 경로 사용
+			// ✅ Sim 설정 로드: j.simulation.sim 경로 사용
 			const simConfig = j.simulation?.sim || {};
 			
 			// 프리셋 채우기
@@ -168,11 +128,12 @@
 				sel.appendChild(o);
 			});
 			sel.value = simConfig.preset || "";
+			$("#presetPreview").textContent = `프리셋 미리보기: ${displayPresetName(sel.value)}`;
 
 			// Sim 값 반영
 			Object.entries(simConfig).forEach(([k, v]) => { const el = $(`#${k}`); if (el) el.value = v; });
 
-			// Timing 반영: j.motion.timing 경로 사용
+			// ✅ Timing 반영: j.motion.timing 경로 사용
 			const timingConfig = j.motion?.timing || {};
 			Object.entries(timingConfig).forEach(([k, v]) => { const el = $(`#${k}`); if (el) el.value = v; });
 
@@ -184,26 +145,15 @@
 		}
 	}
 
-	// ======================= 그룹별 저장 및 전체 저장 (v025 핵심 변경) =======================
-	
+	// ======================= 그룹별 저장 로직 (API 경로 및 Body 구조 수정) =======================
 	function previewPreset() {
 		const preset = $("#preset").value;
-		showToast(`"${displayPresetName(preset)}" 미리보기 적용 (장치에 반영되지 않음)`, "ok");
-	}
-	
-	// ✅ saveAllConfig 함수 추가 (실제 파일 저장)
-	async function saveAllConfig() {
-		if (configDirty) {
-			await fetchApi("/api/config/save", "POST", {}, "전체 설정 파일 저장");
-			// 저장 후 장치에 적용된 최신 설정값을 다시 로드
-			refreshState(); 
-		} else {
-			showToast("저장할 변경 사항이 없습니다.", "warn");
-		}
+		$("#presetPreview").textContent = `프리셋 미리보기: ${displayPresetName(preset)}`;
+		showToast(`"${displayPresetName(preset)}" 미리보기 적용`, "ok");
 	}
 
 	async function saveSim() {
-		// API 변경: /api/config -> /api/simulation
+		// ✅ API 변경: /api/config -> /api/simulation
 		const body = {
 			sim: {
 				preset: $("#preset").value,
@@ -218,21 +168,22 @@
 				therm_rad: Number($("#therm_rad").value)
 			}
 		};
-		// 메모리에 패치
-		await fetchApi("/api/simulation", "POST", body, "시뮬 설정 메모리 패치");
-		// ✅ refreshState 제거 및 Dirty 상태 업데이트
-		setDirtyStatus(true); 
+		await fetchApi("/api/simulation", "POST", body, "시뮬 설정 저장");
+		refreshState();
 	}
 
+	// ✅ 함수명 변경 및 /api/config/init 호출 로직
 	async function saveConfigInit() {
 		if (confirm("경고: 모든 설정을 초기화하고 장치를 재부팅합니다. 계속하시겠습니까?")) {
-			// API 유지: /api/config/init
+			// ✅ API 유지: /api/config/init
 			await fetchApi("/api/config/init", "POST", {}, "시스템 전체 초기화");
+			// 초기화 후 재부팅이 되므로 refreshState는 불필요하지만, 로직은 유지
+			// refreshState();
 		}
 	}
 
 	async function saveTiming() {
-		// API 변경: /api/config -> /api/motion (타이밍 설정은 Motion 객체 내부에 포함됨)
+		// ✅ API 변경: /api/config -> /api/motion (타이밍 설정은 Motion 객체 내부에 포함됨)
 		const body = {
 			timing: {
 				sim_int: Number($("#sim_int").value),
@@ -240,10 +191,8 @@
 				thermal_int: Number($("#thermal_int").value)
 			}
 		};
-		// 메모리에 패치
-		await fetchApi("/api/motion", "POST", body, "타이밍 설정 메모리 패치");
-		// ✅ refreshState 제거 및 Dirty 상태 업데이트
-		setDirtyStatus(true);
+		await fetchApi("/api/motion", "POST", body, "타이밍 설정 저장");
+		refreshState();
 	}
 
 	// ======================= 차트 토글 기능 =======================
@@ -261,15 +210,7 @@
 	}
 
 
-	// ======================= 차트 초기화 =======================
-	
-	const charts = [];
-	const initChart = (ctx, config) => {
-		const chart = new Chart(ctx, config);
-		charts.push(chart);
-		return chart;
-	};
-
+	// ======================= 차트 초기화 (기존 로직 유지) =======================
 	const ctxWind = $("#chartWind");
 	const ctxParam = $("#chartParams");
 	const ctxTurbThermSig = $("#chartTurbThermSig"); 
@@ -285,9 +226,8 @@
 		},
 		scales: { x: { type: "time", time: { unit: "second" } } }
 	};
-	
-	// 각 차트 인스턴스를 initChart 함수로 생성하여 charts 배열에 추가
-	const chartWind = initChart(ctxWind, {
+
+	const chartWind = new Chart(ctxWind, {
 		type: "line",
 		data: {
 			datasets: [
@@ -305,7 +245,7 @@
 		},
 	});
 
-	const chartParam = initChart(ctxParam, {
+	const chartParam = new Chart(ctxParam, {
 		type: "line",
 		data: {
 			datasets: [
@@ -318,7 +258,8 @@
 		options: { ...chartOptions, plugins: { legend: { position: "bottom" } } },
 	});
 
-	const chartTurbThermSig = initChart(ctxTurbThermSig, {
+	// 난류/열기포 시그마 및 길이
+	const chartTurbThermSig = new Chart(ctxTurbThermSig, {
 		type: "line",
 		data: {
 			datasets: [
@@ -338,7 +279,7 @@
 		},
 	});
 
-	const chartEvent = initChart(ctxEvent, {
+	const chartEvent = new Chart(ctxEvent, {
 		type: "line",
 		data: {
 			datasets: [
@@ -349,7 +290,7 @@
 		options: { ...chartOptions, scales: { ...chartOptions.scales, y: { min: 0, max: 1 } } },
 	});
 
-	const chartPreset = initChart(ctxPreset, {
+	const chartPreset = new Chart(ctxPreset, {
 		type: "line",
 		data: {
 			datasets: [
@@ -359,7 +300,8 @@
 		options: { ...chartOptions, scales: { ...chartOptions.scales, y: { min: 0, max: 10 } } },
 	});
 
-	const chartTiming = initChart(ctxTiming, {
+	// 타이밍 설정
+	const chartTiming = new Chart(ctxTiming, {
 		type: "line",
 		data: {
 			datasets: [
@@ -373,78 +315,61 @@
 
 
 	function resetAllChartsZoom() {
-		charts.forEach((c) => c.resetZoom());
+		[chartWind, chartParam, chartTurbThermSig, chartEvent, chartPreset, chartTiming].forEach((c) => c.resetZoom());
 	}
 
 
-	// ======================= WS 데이터 수신 및 차트 갱신 (v025 핵심) =======================
-	function processChartData(recs) {
-		const toXY = (arr, key) => arr.map((e) => ({ x: new Date(e.t), y: e[key] }));
+	// ======================= 데이터 갱신 로직 (API 경로 수정) =======================
+	async function updateCharts() {
+		if (paused) {
+			refreshLabel.textContent = "⏸ 일시정지 중...";
+			return;
+		}
+		try {
+			// ✅ API 변경: /api/chart_data -> /api/sim/chart
+			const resp = await fetch("/api/sim/chart"); 
+			const json = await resp.json();
+			
+			// ✅ 백엔드 API 명세에 따라 chart 필드 사용 가정
+			const recs = json.chart || []; 
 
-		// Chart Wind/PWM
-		chartWind.data.datasets[0].data = toXY(recs, "wind");
-		chartWind.data.datasets[1].data = toXY(recs, "pwm");
+			const toXY = (arr, key) => arr.map((e) => ({ x: new Date(e.t), y: e[key] }));
 
-		// Chart Params
-		chartParam.data.datasets[0].data = toXY(recs, "intensity");
-		chartParam.data.datasets[1].data = toXY(recs, "variability");
-		chartParam.data.datasets[2].data = toXY(recs, "fan_limit");
-		chartParam.data.datasets[3].data = toXY(recs, "min_fan");
+			// Chart Wind/PWM
+			chartWind.data.datasets[0].data = toXY(recs, "wind");
+			chartWind.data.datasets[1].data = toXY(recs, "pwm");
 
-		// Chart TurbThermSig
-		chartTurbThermSig.data.datasets[0].data = toXY(recs, "turb_sig");
-		chartTurbThermSig.data.datasets[1].data = toXY(recs, "turb_len");
-		chartTurbThermSig.data.datasets[2].data = toXY(recs, "therm_str");
-		chartTurbThermSig.data.datasets[3].data = toXY(recs, "therm_rad");
+			// Chart Params (Intensity, Variability, Fan Limits)
+			chartParam.data.datasets[0].data = toXY(recs, "intensity");
+			chartParam.data.datasets[1].data = toXY(recs, "variability");
+			chartParam.data.datasets[2].data = toXY(recs, "fan_limit");
+			chartParam.data.datasets[3].data = toXY(recs, "min_fan");
 
-		// Chart Events
-		chartEvent.data.datasets[0].data = toXY(recs, "gust").map((v) => ({ x: v.x, y: v.y ? 1 : 0 }));
-		chartEvent.data.datasets[1].data = toXY(recs, "thermal").map((v) => ({ x: v.x, y: v.y ? 1 : 0 }));
+			// Chart TurbThermSig (난류/열기포 시그마 및 길이)
+			chartTurbThermSig.data.datasets[0].data = toXY(recs, "turb_sig");
+			chartTurbThermSig.data.datasets[1].data = toXY(recs, "turb_len");
+			chartTurbThermSig.data.datasets[2].data = toXY(recs, "therm_str");
+			chartTurbThermSig.data.datasets[3].data = toXY(recs, "therm_rad");
 
-		// Chart Preset
-		chartPreset.data.datasets[0].data = toXY(recs, "preset");
+			// Chart Events
+			chartEvent.data.datasets[0].data = toXY(recs, "gust").map((v) => ({ x: v.x, y: v.y ? 1 : 0 }));
+			chartEvent.data.datasets[1].data = toXY(recs, "thermal").map((v) => ({ x: v.x, y: v.y ? 1 : 0 }));
 
-		// Chart Timing
-		chartTiming.data.datasets[0].data = toXY(recs, "sim_int");
-		chartTiming.data.datasets[1].data = toXY(recs, "gust_int");
-		chartTiming.data.datasets[2].data = toXY(recs, "thermal_int");
+			// Chart Preset
+			chartPreset.data.datasets[0].data = toXY(recs, "preset");
 
-		charts.forEach((c) => c.update("none"));
+			// Chart Timing
+			chartTiming.data.datasets[0].data = toXY(recs, "sim_int");
+			chartTiming.data.datasets[1].data = toXY(recs, "gust_int");
+			chartTiming.data.datasets[2].data = toXY(recs, "thermal_int");
 
-		const last = recs.length ? new Date(recs[recs.length - 1].t).toLocaleTimeString() : "-";
-		refreshLabel.textContent = `🕒 WS 업데이트: ${last} (데이터 ${recs.length}개)`;
+
+			[chartWind, chartParam, chartTurbThermSig, chartEvent, chartPreset, chartTiming].forEach((c) => c.update("none"));
+
+			const last = recs.length ? new Date(recs[recs.length - 1].t).toLocaleTimeString() : "-";
+			refreshLabel.textContent = `🕒 업데이트: ${last} (데이터 ${recs.length}개)`;
+		} catch (err) {
+			refreshLabel.textContent = `❌ 데이터 수신 실패: ${err.message}`;
+		}
 	}
-
-	// ✅ WebSocket 연결 로직 추가
-	function initChartWebSocket() {
-		const ws = new WebSocket(getWSHost());
-		ws.onopen = () => {
-			showToast("WebSocket /ws/chart 연결 성공", "ok");
-			refreshLabel.textContent = "✅ 실시간 차트 데이터 수신 중...";
-		};
-
-		ws.onmessage = (event) => {
-			if (paused) return;
-			try {
-				const data = JSON.parse(event.data);
-				// WS 메시지는 /api/sim/chart와 동일하게 'chart' 필드에 배열이 담겨온다고 가정
-				if (data.chart && Array.isArray(data.chart)) {
-					processChartData(data.chart);
-				}
-			} catch (e) {
-				showToast("WS 데이터 파싱 오류", "err");
-			}
-		};
-
-		ws.onclose = () => {
-			showToast("WebSocket /ws/chart 연결 끊김, 5초 후 재연결 시도", "warn");
-			refreshLabel.textContent = "❌ WS 연결 끊김. 재연결 시도 중...";
-			setTimeout(initChartWebSocket, 5000); 
-		};
-
-		ws.onerror = (e) => {
-			showToast(`WebSocket 오류: ${e.message}`, "err");
-		};
-	}
-
 })();

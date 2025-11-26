@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------
- * 소스명 : SC10_chart_007.js
+ * 소스명 : SC10_chart_t2_007.js
  * 모듈명 : Smart Nature Wind Chart Monitor Controller (v007)
  * ------------------------------------------------------
  * 기능 요약:
@@ -84,8 +84,11 @@
         scales: {
             x: {
                 type: 'time',
-                time: { unit: 'second' },
-                // tooltipFormat: 'HH:mm:ss.SSS', // v006과 동일
+                time: { 
+                    unit: 'second',
+                    tooltipFormat: 'yyyy-MM-dd HH:mm:ss.SSS'
+                },
+                
                 ticks: { source: 'auto' }
             },
         },
