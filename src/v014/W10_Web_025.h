@@ -107,6 +107,10 @@ private:
 	static void routeConfigInit(); // /api/config/init
 	static void routeMotionFeed(); // /api/motion/feed
 
+    static void routeWifiConfig();    // 23. /api/network/wifi/config (POST)
+	static void routeTimeSet();       // 24. /api/system/time/set (POST)
+	static void routeFirmwareCheck(); // 25. /api/system/firmware/check (GET)
+
 	// --- 신규 분리 모듈 라우트 선언 ---
 	static void routeWebSocket();		// (WebSockets.cpp)
 	static void routeStaticAssets();	// (W10_Web_Static_024.cpp)
