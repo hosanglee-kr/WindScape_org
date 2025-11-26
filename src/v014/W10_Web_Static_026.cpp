@@ -58,9 +58,10 @@ constexpr char G_W10_COMMON_JS[]  = "/html/SC10_common_001.js";
 static const ST_W10_Page_t s_pages_static[] = {
 	// uri         , base                          , label                , isMain
 	{"/",           "SC10_main_019",                "홈",                  true  },
-	{"/dashboard",  "SC10_dashboard_001",           "대시보드",             false },
 	{"/chart1",     "SC10_chart_006",               "차트 모니터링",         false }, // 메뉴 표기용
-	{"/chart2",     "SC10_chart_007",               "차트 모니터링 2",       false },
+	
+	{"/dashboard",  "SC10_dashboard_001",           "대시보드",             false },
+    {"/chart2",     "SC10_chart_007",               "차트 모니터링 2",       false },
 	{"/sim_details","SC10_sim_details_001",         "시뮬 설정",            false },
 	{"/profiles",   "SC10_profile_001",             "프로파일 관리",         false },
 	{"/schedules",  "SC10_schedule_001",            "스케줄 관리",          false },
