@@ -1,3 +1,4 @@
+
 #pragma once
 /*
  * ------------------------------------------------------
@@ -1374,12 +1375,12 @@ class CL_C10_ConfigManager {
 		bool					   includeUserProfiles = true) {
 		if (includeSystem && p.system)
 			toJson_System(*p.system, d);
+		// Wi-Fi 설정은 최상위가 "wifi" 필드이기 때문에 to<JsonObject>() 불필요 (toJson_Wifi 내부에서 처리)
 		if (includeWifi && p.wifi)
 			toJson_Wifi(*p.wifi, d);
 		if (includeMotion && p.motion){
-			JsonObject v_motion = d["motion"].to<JsonObject>();
-            toJson_Motion(*p.motion, v_motion);
-			//toJson_Motion(*p.motion, d["motion"].to<JsonObject>());
+			// Motion 설정은 최상위가 "motion" 필드이기 때문에 to<JsonObject>() 불필요 (toJson_Motion 내부에서 처리)
+            toJson_Motion(*p.motion, d); 
 		}
 		if (includeSchedules && p.schedules)
 			toJson_Schedules(*p.schedules, d);
@@ -1396,10 +1397,10 @@ class CL_C10_ConfigManager {
 
     
     /**
-     * @brief 메모리상의 시스템 설정 구조체에 JSON 데이터를 패치하고 저장합니다.
+     * @brief 메모리상의 시스템 설정 구조체에 JSON 데이터를 패치합니다. (저장은 saveDirtyConfigs에서)
      * @param p_config 현재 메모리상의 시스템 설정 구조체 (In/Out)
      * @param p_patch 웹에서 수신한 JSON 패치 데이터 (ConfigManager 구조와 동일해야 함)
-     * @return 변경 및 저장이 성공했으면 true, 아니면 false
+     * @return 변경 사항이 있었으면 true, 아니면 false
      */
     static bool patchSystemFromJson(ST_A10_SystemConfig& p_config,
 								    const JsonDocument&	 p_patch) {
@@ -1417,7 +1418,7 @@ class CL_C10_ConfigManager {
 	    JsonObjectConst j_sec_root = p_patch["security"];
     
 	    if (j_sys.isNull() && j_sec_root.isNull()) {
-		    // 패치할 내용이 없음
+			xSemaphoreGive(s_configMutex);
 		    return false; 
 	    }
     
@@ -1426,18 +1427,18 @@ class CL_C10_ConfigManager {
 		    JsonObjectConst j_log = j_sys["logging"];
 		    if (!j_log.isNull()) {
 			    const char* v_lv = j_log["level"] | "";
-			    const uint16_t v_max = j_log["max_entries"] | 0;
+			    // 0이 기본값인 경우 | 0을 사용하지 않고, is<int>()로 존재 여부 확인
+			    if (j_log["max_entries"].is<uint16_t>()) {
+					uint16_t v_max = j_log["max_entries"];
+					if (v_max != p_config.system.logging.max_entries) {
+						p_config.system.logging.max_entries = v_max;
+						v_changed = true;
+					}
+				}
     
 			    // level 필드 패치
-			    // ✅ 수정: p_config.system.logging.level (중첩 구조체 경로 적용)
 			    if (strlen(v_lv) > 0 && strcmp(v_lv, p_config.system.logging.level) != 0) { 
 				    strlcpy(p_config.system.logging.level, v_lv, sizeof(p_config.system.logging.level));
-				    v_changed = true;
-			    }
-    
-			    // max_entries 필드 패치
-			    if (v_max > 0 && v_max != p_config.system.logging.max_entries) {
-				    p_config.system.logging.max_entries = v_max;
 				    v_changed = true;
 			    }
 		    }
@@ -1446,38 +1447,30 @@ class CL_C10_ConfigManager {
 	    // 2. security 객체 처리
 	    if (!j_sec_root.isNull()) {
 		    const char* v_key = j_sec_root["api_key"] | "";
-		    // ✅ 수정: p_config.security.api_key (최상위 security 구조체 경로 적용)
 		    if (strlen(v_key) > 0 && strcmp(v_key, p_config.security.api_key) != 0) {
 			    strlcpy(p_config.security.api_key, v_key, sizeof(p_config.security.api_key));
 			    v_changed = true;
 		    }
 	    }
 	    
-	    // 3. 변경 사항이 있을 경우에만 저장 및 true 반환
+	    // 3. 변경 사항이 있을 경우에만 Dirty Flag 설정
 		if (v_changed) {
             _dirty_system = true;
             CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] System config patched (Memory Only). Dirty=true");
         }
 
-		xSemaphoreGive(s_configMutex); // Mutex 해제
+		xSemaphoreGive(s_configMutex); 
 		
         return v_changed;
-		/*
-	    if (v_changed) {
-		    CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] System config patched. Saving...");
-		    return saveSystemConfig(p_config);
-	    }
-	    
-	    return false;
-		*/
     }
     
     
+    
     /**
-     * @brief 메모리상의 Wi-Fi 설정 구조체에 JSON 데이터를 패치하고 저장합니다.
+     * @brief 메모리상의 Wi-Fi 설정 구조체에 JSON 데이터를 패치합니다. (저장은 saveDirtyConfigs에서)
      * @param p_config 현재 메모리상의 Wi-Fi 설정 구조체 (In/Out)
      * @param p_patch 웹에서 수신한 JSON 패치 데이터 (ConfigManager 구조와 동일해야 함)
-     * @return 변경 및 저장이 성공했으면 true, 아니면 false
+     * @return 변경 사항이 있었으면 true, 아니면 false
      */
     static bool patchWifiFromJson(ST_A10_WifiConfig& p_config,
 							      const JsonDocument&	 p_patch) {
@@ -1486,14 +1479,29 @@ class CL_C10_ConfigManager {
 		// 💡 Mutex를 사용하여 쓰기 작업 보호
         if (xSemaphoreTake(s_configMutex, MUTEX_TIMEOUT) != pdTRUE) {
             CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] patchWifiFromJson() Mutex timeout!");
-            return false; // Mutex 획득 실패 시 실패 처리
+            return false; 
         }
 	    
 	    // 1. wifi 객체 접근
 	    JsonObjectConst j_wifi = p_patch["wifi"];
 	    if (j_wifi.isNull()) {
+			xSemaphoreGive(s_configMutex);
 		    return false;
 	    }
+
+		// wifiMode 처리
+		if (j_wifi["wifiMode"].is<uint8_t>()) {
+			uint8_t v_mode = j_wifi["wifiMode"];
+			if (v_mode != p_config.wifiMode) {
+				// 유효한 모드 범위(0, 1, 2) 확인
+				if (v_mode >= EN_A10_WIFI_MODE_AP && v_mode <= EN_A10_WIFI_MODE_AP_STA) { 
+					p_config.wifiMode = (EN_A10_WIFI_MODE_t)v_mode;
+					v_changed = true;
+				} else {
+					CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Invalid wifiMode value: %d", v_mode);
+				}
+			}
+		}
     
 	    // 2. ap 객체 처리
 	    JsonObjectConst j_ap = j_wifi["ap"];
@@ -1507,30 +1515,48 @@ class CL_C10_ConfigManager {
 		    
 		    // Password 처리
 		    const char* v_pwd = j_ap["password"] | "";
-		    // 보안을 위해 길이가 0이 아니거나, 기존 패스워드와 다른 경우에만 변경
+		    // 길이가 0이 아니거나, 기존 패스워드와 다른 경우에만 변경 (길이가 0이면 패스워드 미변경)
 		    if (strlen(v_pwd) > 0 && strcmp(v_pwd, p_config.ap.password) != 0) {
 			    strlcpy(p_config.ap.password, v_pwd, sizeof(p_config.ap.password));
 			    v_changed = true;
 		    }
 	    }
 	    
-	    // 3. 변경 사항이 있을 경우에만 저장 및 true 반환
+	    // 3. sta 배열 전체 덮어쓰기 (PUT 방식)
+	    JsonArrayConst j_sta = j_wifi["sta"].as<JsonArrayConst>();
+	    if (!j_sta.isNull()) {
+			// 기존 목록 초기화
+			p_config.sta_count = 0; 
+			// memset(&p_config.sta, 0, sizeof(p_config.sta)); // strlcpy가 덮어쓰므로 불필요
+
+		    for (JsonObjectConst v_js : j_sta) {
+			    if (p_config.sta_count >= A10_Const::MAX_STA_NETWORKS)
+				    break;
+			    
+				ST_A10_STANetwork_t& v_net = p_config.sta[p_config.sta_count];
+
+			    strlcpy(v_net.ssid,
+					    v_js["ssid"] | "",
+					    sizeof(v_net.ssid));
+			    strlcpy(v_net.pass,
+					    v_js["pass"] | "",
+					    sizeof(v_net.pass));
+			    p_config.sta_count++;
+		    }
+		    v_changed = true;
+		    CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[C10] WiFi STA array fully replaced.");
+	    }
+
+
+	    // 4. 변경 사항이 있을 경우에만 Dirty Flag 설정
 		if (v_changed) {
             _dirty_wifi = true;
             CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] WiFi config patched (Memory Only). Dirty=true");
         }
 
-		xSemaphoreGive(s_configMutex); // Mutex 해제
+		xSemaphoreGive(s_configMutex); 
 		
         return v_changed;
-		/*
-	    if (v_changed) {
-		    CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] Wi-Fi config patched. Saving...");
-		    return saveWifiConfig(p_config);
-	    }
-	    
-	    return false;
-		*/
     }
     
 
@@ -1538,8 +1564,7 @@ class CL_C10_ConfigManager {
 	/* =====================================================
 	 * Schedules/UserProfiles PATCH
 	 * ===================================================== */
-	// 스케줄 설정(p_cfg)을 JSON 패치(p_patch)로 업데이트 후 저장
-	// 스케줄 설정(p_cfg)을 JSON 패치(p_patch)로 업데이트 후 저장
+	// 스케줄 설정(p_cfg)을 JSON 패치(p_patch)로 업데이트 후 Dirty Flag 설정
 	static bool patchSchedulesFromJson(ST_A10_SchedulesRoot_t& p_cfg,
 									   const JsonDocument&	 p_patch) {
 
@@ -1553,6 +1578,7 @@ class CL_C10_ConfigManager {
 		JsonArrayConst arr = p_patch["schedules"].as<JsonArrayConst>();
 		if (arr.isNull()) {
 			CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Schedules patch: 'schedules' array missing");
+			xSemaphoreGive(s_configMutex);
 			return false;
 		}
 
@@ -1634,8 +1660,11 @@ class CL_C10_ConfigManager {
                     ST_A10_ScheduleSegment_t& sg = v_item->segments[v_item->seg_count++];
                     // 기존 loadSchedules 로직을 사용한 안전한 덮어쓰기
                     sg.segNo = jseg["segNo"] | 0;
-                    sg.on_minutes = jseg["on_minutes"] | 10;
-                    sg.off_minutes = jseg["off_minutes"] | 0;
+                    
+                    // on_minutes, off_minutes는 0이 유효할 수 있으므로 is<uint16_t>()로 존재 여부 확인
+                    sg.on_minutes = jseg["on_minutes"].is<uint16_t>() ? jseg["on_minutes"].as<uint16_t>() : 10;
+                    sg.off_minutes = jseg["off_minutes"].is<uint16_t>() ? jseg["off_minutes"].as<uint16_t>() : 0;
+
 
                     const char* v_mode = jseg["mode"] | "PRESET";
                     sg.mode = A10_modeFromString(v_mode);
@@ -1644,17 +1673,19 @@ class CL_C10_ConfigManager {
                     
                     if (jseg["adjust"].is<JsonObjectConst>()) {
                         JsonObjectConst adj = jseg["adjust"];
-                        sg.adjust.wind_intensity = adj["wind_intensity"] | 0.0f;
-                        sg.adjust.wind_variability = adj["wind_variability"] | 0.0f;
-                        sg.adjust.gust_frequency = adj["gust_frequency"] | 0.0f;
-                        sg.adjust.fan_limit = adj["fan_limit"] | 0.0f;
-                        sg.adjust.min_fan = adj["min_fan"] | 0.0f;
+                        // float 값은 | 0.0f 사용 시 0.0f이 기본값이 되므로, is<float>()로 존재 여부 확인 
+                        sg.adjust.wind_intensity = adj["wind_intensity"].is<float>() ? adj["wind_intensity"].as<float>() : 0.0f;
+                        sg.adjust.wind_variability = adj["wind_variability"].is<float>() ? adj["wind_variability"].as<float>() : 0.0f;
+                        sg.adjust.gust_frequency = adj["gust_frequency"].is<float>() ? adj["gust_frequency"].as<float>() : 0.0f;
+                        sg.adjust.fan_limit = adj["fan_limit"].is<float>() ? adj["fan_limit"].as<float>() : 0.0f;
+                        sg.adjust.min_fan = adj["min_fan"].is<float>() ? adj["min_fan"].as<float>() : 0.0f;
+
                     } else {
-						// adjust가 없으면 0으로 초기화
 						memset(&sg.adjust, 0, sizeof(sg.adjust));
 					}
                     
-                    sg.fixed_speed = jseg["fixed_speed"] | 0.0f;
+                    // fixed_speed는 0이 유효할 수 있으므로 is<float>()로 존재 여부 확인
+                    sg.fixed_speed = jseg["fixed_speed"].is<float>() ? jseg["fixed_speed"].as<float>() : 0.0f;
                 }
                 v_changed = true;
             }
@@ -1669,9 +1700,11 @@ class CL_C10_ConfigManager {
 						v_item->autoOff.timer.enabled = j_timer["enabled"];
 						v_changed = true;
 					}
-					if (j_timer["minutes"].is<uint16_t>() && j_timer["minutes"].as<uint16_t>() != v_item->autoOff.timer.minutes) {
-						v_item->autoOff.timer.minutes = j_timer["minutes"];
-						v_changed = true;
+					if (j_timer["minutes"].is<uint16_t>()) { // 0이 유효할 수 있으므로 is<uint16_t>()로 존재 여부 확인
+						if (j_timer["minutes"].as<uint16_t>() != v_item->autoOff.timer.minutes) {
+							v_item->autoOff.timer.minutes = j_timer["minutes"];
+							v_changed = true;
+						}
 					}
 				}
 				// 2. offTime
@@ -1695,7 +1728,7 @@ class CL_C10_ConfigManager {
 						v_item->autoOff.offTemp.enabled = j_offTemp["enabled"];
 						v_changed = true;
 					}
-					if (j_offTemp["temp"].is<float>()) {
+					if (j_offTemp["temp"].is<float>()) { // 0.0f가 유효할 수 있으므로 is<float>()로 존재 여부 확인
 						if (abs(j_offTemp["temp"].as<float>() - v_item->autoOff.offTemp.temp) > 0.001f) {
 							v_item->autoOff.offTemp.temp = j_offTemp["temp"];
 							v_changed = true;
@@ -1714,9 +1747,11 @@ class CL_C10_ConfigManager {
 						v_item->motion.pir.enabled = j_mpir["enabled"];
 						v_changed = true;
 					}
-					if (j_mpir["hold_sec"].is<uint16_t>() && j_mpir["hold_sec"].as<uint16_t>() != v_item->motion.pir.hold_sec) {
-						v_item->motion.pir.hold_sec = j_mpir["hold_sec"];
-						v_changed = true;
+					if (j_mpir["hold_sec"].is<uint16_t>()) { // 0이 유효할 수 있으므로 is<uint16_t>()로 존재 여부 확인
+						if (j_mpir["hold_sec"].as<uint16_t>() != v_item->motion.pir.hold_sec) {
+							v_item->motion.pir.hold_sec = j_mpir["hold_sec"];
+							v_changed = true;
+						}
 					}
 				}
 				// ble
@@ -1726,13 +1761,17 @@ class CL_C10_ConfigManager {
 						v_item->motion.ble.enabled = j_mble["enabled"];
 						v_changed = true;
 					}
-					if (j_mble["rssi_threshold"].is<int8_t>() && j_mble["rssi_threshold"].as<int8_t>() != v_item->motion.ble.rssi_threshold) {
-						v_item->motion.ble.rssi_threshold = j_mble["rssi_threshold"];
-						v_changed = true;
+					if (j_mble["rssi_threshold"].is<int8_t>()) { // 음수 포함, 0이 유효할 수 있으므로 is<int8_t>()로 존재 여부 확인
+						if (j_mble["rssi_threshold"].as<int8_t>() != v_item->motion.ble.rssi_threshold) {
+							v_item->motion.ble.rssi_threshold = j_mble["rssi_threshold"];
+							v_changed = true;
+						}
 					}
-					if (j_mble["hold_sec"].is<uint16_t>() && j_mble["hold_sec"].as<uint16_t>() != v_item->motion.ble.hold_sec) {
-						v_item->motion.ble.hold_sec = j_mble["hold_sec"];
-						v_changed = true;
+					if (j_mble["hold_sec"].is<uint16_t>()) { // 0이 유효할 수 있으므로 is<uint16_t>()로 존재 여부 확인
+						if (j_mble["hold_sec"].as<uint16_t>() != v_item->motion.ble.hold_sec) {
+							v_item->motion.ble.hold_sec = j_mble["hold_sec"];
+							v_changed = true;
+						}
 					}
 				}
 			}
@@ -1743,27 +1782,19 @@ class CL_C10_ConfigManager {
 			}
 		}
 
-		// 5. 변경 사항 저장
+		// 5. 변경 사항이 있을 경우에만 Dirty Flag 설정
 		if (v_changed) {
             _dirty_schedules = true;
             CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] schedules config patched (Memory Only). Dirty=true");
         }
 
-		xSemaphoreGive(s_configMutex); // Mutex 해제
+		xSemaphoreGive(s_configMutex); 
 		
         return v_changed;
-		/*
-		if (v_changed) {
-			CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] Schedules config patched and saved");
-			return saveSchedules(p_cfg);
-		}
-
-		return false;
-		*/
 	}
 
 
-	// 사용자 프로필 설정(p_cfg)을 JSON 패치(p_patch)로 업데이트 후 저장
+	// 사용자 프로필 설정(p_cfg)을 JSON 패치(p_patch)로 업데이트 후 Dirty Flag 설정
 	static bool patchUserProfilesFromJson(ST_A10_UserProfilesRoot_t& p_cfg,
 										  const JsonDocument&		 p_patch) {
 
@@ -1776,6 +1807,7 @@ class CL_C10_ConfigManager {
 		JsonArrayConst arr = p_patch["userProfiles"]["profiles"].as<JsonArrayConst>();
 		if (arr.isNull()) {
 			CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] UserProfiles patch: 'profiles' array missing");
+			xSemaphoreGive(s_configMutex);
 			return false;
 		}
 
@@ -1829,8 +1861,11 @@ class CL_C10_ConfigManager {
                     ST_A10_UserProfileSegment_t& sg = v_item->segments[v_item->seg_count++];
                     // 기존 loadUserProfiles 로직을 사용한 안전한 덮어쓰기
                     sg.segNo = jseg["segNo"] | 0;
-                    sg.on_minutes = jseg["on_minutes"] | 10;
-                    sg.off_minutes = jseg["off_minutes"] | 0;
+                    
+                    // on_minutes, off_minutes는 0이 유효할 수 있으므로 is<uint16_t>()로 존재 여부 확인
+                    sg.on_minutes = jseg["on_minutes"].is<uint16_t>() ? jseg["on_minutes"].as<uint16_t>() : 10;
+                    sg.off_minutes = jseg["off_minutes"].is<uint16_t>() ? jseg["off_minutes"].as<uint16_t>() : 0;
+
 
                     const char* v_mode = jseg["mode"] | "PRESET";
                     sg.mode = A10_modeFromString(v_mode);
@@ -1839,17 +1874,18 @@ class CL_C10_ConfigManager {
                     
                     if (jseg["adjust"].is<JsonObjectConst>()) {
                         JsonObjectConst adj = jseg["adjust"];
-                        sg.adjust.wind_intensity = adj["wind_intensity"] | 0.0f;
-                        sg.adjust.wind_variability = adj["wind_variability"] | 0.0f;
-                        sg.adjust.gust_frequency = adj["gust_frequency"] | 0.0f;
-                        sg.adjust.fan_limit = adj["fan_limit"] | 0.0f;
-                        sg.adjust.min_fan = adj["min_fan"] | 0.0f;
+                        // float 값은 | 0.0f 사용 시 0.0f이 기본값이 되므로, is<float>()로 존재 여부 확인 
+                        sg.adjust.wind_intensity = adj["wind_intensity"].is<float>() ? adj["wind_intensity"].as<float>() : 0.0f;
+                        sg.adjust.wind_variability = adj["wind_variability"].is<float>() ? adj["wind_variability"].as<float>() : 0.0f;
+                        sg.adjust.gust_frequency = adj["gust_frequency"].is<float>() ? adj["gust_frequency"].as<float>() : 0.0f;
+                        sg.adjust.fan_limit = adj["fan_limit"].is<float>() ? adj["fan_limit"].as<float>() : 0.0f;
+                        sg.adjust.min_fan = adj["min_fan"].is<float>() ? adj["min_fan"].as<float>() : 0.0f;
                     } else {
-						// adjust가 없으면 0으로 초기화
 						memset(&sg.adjust, 0, sizeof(sg.adjust));
 					}
                     
-                    sg.fixed_speed = jseg["fixed_speed"] | 0.0f;
+                    // fixed_speed는 0이 유효할 수 있으므로 is<float>()로 존재 여부 확인
+                    sg.fixed_speed = jseg["fixed_speed"].is<float>() ? jseg["fixed_speed"].as<float>() : 0.0f;
                 }
                 v_changed = true;
             }
@@ -1864,9 +1900,11 @@ class CL_C10_ConfigManager {
 						v_item->autoOff.timer.enabled = j_timer["enabled"];
 						v_changed = true;
 					}
-					if (j_timer["minutes"].is<uint16_t>() && j_timer["minutes"].as<uint16_t>() != v_item->autoOff.timer.minutes) {
-						v_item->autoOff.timer.minutes = j_timer["minutes"];
-						v_changed = true;
+					if (j_timer["minutes"].is<uint16_t>()) { // 0이 유효할 수 있으므로 is<uint16_t>()로 존재 여부 확인
+						if (j_timer["minutes"].as<uint16_t>() != v_item->autoOff.timer.minutes) {
+							v_item->autoOff.timer.minutes = j_timer["minutes"];
+							v_changed = true;
+						}
 					}
 				}
 				// 2. offTime
@@ -1890,7 +1928,7 @@ class CL_C10_ConfigManager {
 						v_item->autoOff.offTemp.enabled = j_offTemp["enabled"];
 						v_changed = true;
 					}
-					if (j_offTemp["temp"].is<float>()) {
+					if (j_offTemp["temp"].is<float>()) { // 0.0f가 유효할 수 있으므로 is<float>()로 존재 여부 확인
 						if (abs(j_offTemp["temp"].as<float>() - v_item->autoOff.offTemp.temp) > 0.001f) {
 							v_item->autoOff.offTemp.temp = j_offTemp["temp"];
 							v_changed = true;
@@ -1909,9 +1947,11 @@ class CL_C10_ConfigManager {
 						v_item->motion.pir.enabled = j_mpir["enabled"];
 						v_changed = true;
 					}
-					if (j_mpir["hold_sec"].is<uint16_t>() && j_mpir["hold_sec"].as<uint16_t>() != v_item->motion.pir.hold_sec) {
-						v_item->motion.pir.hold_sec = j_mpir["hold_sec"];
-						v_changed = true;
+					if (j_mpir["hold_sec"].is<uint16_t>()) { // 0이 유효할 수 있으므로 is<uint16_t>()로 존재 여부 확인
+						if (j_mpir["hold_sec"].as<uint16_t>() != v_item->motion.pir.hold_sec) {
+							v_item->motion.pir.hold_sec = j_mpir["hold_sec"];
+							v_changed = true;
+						}
 					}
 				}
 				// ble
@@ -1921,13 +1961,17 @@ class CL_C10_ConfigManager {
 						v_item->motion.ble.enabled = j_mble["enabled"];
 						v_changed = true;
 					}
-					if (j_mble["rssi_threshold"].is<int8_t>() && j_mble["rssi_threshold"].as<int8_t>() != v_item->motion.ble.rssi_threshold) {
-						v_item->motion.ble.rssi_threshold = j_mble["rssi_threshold"];
-						v_changed = true;
+					if (j_mble["rssi_threshold"].is<int8_t>()) { // 음수 포함, 0이 유효할 수 있으므로 is<int8_t>()로 존재 여부 확인
+						if (j_mble["rssi_threshold"].as<int8_t>() != v_item->motion.ble.rssi_threshold) {
+							v_item->motion.ble.rssi_threshold = j_mble["rssi_threshold"];
+							v_changed = true;
+						}
 					}
-					if (j_mble["hold_sec"].is<uint16_t>() && j_mble["hold_sec"].as<uint16_t>() != v_item->motion.ble.hold_sec) {
-						v_item->motion.ble.hold_sec = j_mble["hold_sec"];
-						v_changed = true;
+					if (j_mble["hold_sec"].is<uint16_t>()) { // 0이 유효할 수 있으므로 is<uint16_t>()로 존재 여부 확인
+						if (j_mble["hold_sec"].as<uint16_t>() != v_item->motion.ble.hold_sec) {
+							v_item->motion.ble.hold_sec = j_mble["hold_sec"];
+							v_changed = true;
+						}
 					}
 				}
 			}
@@ -1937,38 +1981,30 @@ class CL_C10_ConfigManager {
 			}
 		}
 
-		// 5. 변경 사항 저장
+		// 5. 변경 사항이 있을 경우에만 Dirty Flag 설정
 		if (v_changed) {
             _dirty_userProfiles = true;
             CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] userProfiles config patched (Memory Only). Dirty=true");
         }
 
-		xSemaphoreGive(s_configMutex); // Mutex 해제
+		xSemaphoreGive(s_configMutex); 
 		
         return v_changed;
-		/*
-		if (v_changed) {
-			CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] UserProfiles config patched and saved");
-			return saveUserProfiles(p_cfg);
-		}
-
-		return false;
-		*/
 	}
-
+	
 	
 	/**
-     * @brief 메모리상의 모션 설정 구조체에 JSON 데이터를 패치하고 저장합니다.
+     * @brief 메모리상의 모션 설정 구조체에 JSON 데이터를 패치합니다. (저장은 saveDirtyConfigs에서)
      * @param p_config 현재 메모리상의 모션 설정 구조체 (In/Out)
      * @param p_patch 웹에서 수신한 JSON 패치 데이터 (ConfigManager 구조와 동일해야 함)
-     * @return 변경 및 저장이 성공했으면 true, 아니면 false
+     * @return 변경 사항이 있었으면 true, 아니면 false
      */
     static bool patchMotionFromJson(ST_A10_MotionConfig& p_config,
 								    const JsonDocument&	 p_patch) {
 		// 💡 Mutex를 사용하여 쓰기 작업 보호
         if (xSemaphoreTake(s_configMutex, MUTEX_TIMEOUT) != pdTRUE) {
             CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] patchMotionFromJson() Mutex timeout!");
-            return false; // Mutex 획득 실패 시 실패 처리
+            return false; 
         }
 		
 	    bool v_changed = false;
@@ -1976,6 +2012,7 @@ class CL_C10_ConfigManager {
 	    JsonObjectConst j_motion = p_patch["motion"];
     
 	    if (j_motion.isNull()) {
+			xSemaphoreGive(s_configMutex);
 		    return false; 
 	    }
     
@@ -1994,10 +2031,11 @@ class CL_C10_ConfigManager {
 			    p_config.pir.enabled = j_pir["enabled"];
 			    v_changed = true;
 		    }
-		    if (j_pir["hold_sec"].is<uint16_t>() &&
-			    j_pir["hold_sec"].as<uint16_t>() != p_config.pir.hold_sec) {
-			    p_config.pir.hold_sec = j_pir["hold_sec"];
-			    v_changed = true;
+		    if (j_pir["hold_sec"].is<uint16_t>()) { // 0이 유효할 수 있으므로 is<uint16_t>()로 존재 여부 확인
+			    if (j_pir["hold_sec"].as<uint16_t>() != p_config.pir.hold_sec) {
+					p_config.pir.hold_sec = j_pir["hold_sec"];
+					v_changed = true;
+				}
 		    }
 	    }
 	    
@@ -2033,22 +2071,24 @@ class CL_C10_ConfigManager {
 				    p_config.ble.rssi.persist_count = j_rssi["persist_count"];
 				    v_changed = true;
 			    }
-			    if (j_rssi["exit_delay_sec"].is<uint16_t>() &&
-				    j_rssi["exit_delay_sec"].as<uint16_t>() != p_config.ble.rssi.exit_delay_sec) {
-				    p_config.ble.rssi.exit_delay_sec = j_rssi["exit_delay_sec"];
-				    v_changed = true;
+			    if (j_rssi["exit_delay_sec"].is<uint16_t>()) { // 0이 유효할 수 있으므로 is<uint16_t>()로 존재 여부 확인
+					if (j_rssi["exit_delay_sec"].as<uint16_t>() != p_config.ble.rssi.exit_delay_sec) {
+						p_config.ble.rssi.exit_delay_sec = j_rssi["exit_delay_sec"];
+						v_changed = true;
+					}
 			    }
 		    }
     
-		    // trusted_devices 배열은 복잡하여 배열 전체 덮어쓰기(PUT) 방식으로만 처리합니다.
+		    // trusted_devices 배열 전체 덮어쓰기(PUT) 방식으로 처리합니다.
 		    JsonArrayConst j_devices = j_ble["trusted_devices"].as<JsonArrayConst>();
 		    if (!j_devices.isNull()) {
 			    p_config.ble.trusted_count = 0; // 기존 목록 초기화
+			    // memset(&p_config.ble.trusted_devices, 0, sizeof(p_config.ble.trusted_devices)); // strlcpy가 덮어쓰므로 불필요
 			    for (JsonObjectConst j_dev : j_devices) {
 				    if (p_config.ble.trusted_count >= A10_Const::MAX_BLE_DEVICES)
 					    break;
 				    
-				    ST_A10_BLETrustedDevice& v_d = p_config.ble.trusted_devices[p_config.ble.trusted_count++];
+				    ST_A10_BLETrustedDevice& v_d = p_config.ble.trusted_devices[p_config.ble.trusted_count];
     
 				    strlcpy(v_d.alias, j_dev["alias"] | "", sizeof(v_d.alias));
 				    strlcpy(v_d.name, j_dev["name"] | "", sizeof(v_d.name));
@@ -2056,6 +2096,8 @@ class CL_C10_ConfigManager {
 				    strlcpy(v_d.manuf_prefix, j_dev["manuf_prefix"] | "", sizeof(v_d.manuf_prefix));
 				    v_d.prefix_len = j_dev["prefix_len"] | 0;
 				    v_d.enabled	   = j_dev["enabled"] | true;
+					
+					p_config.ble.trusted_count++;
 			    }
 			    v_changed = true;
 			    CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[C10] Motion Trusted Devices array fully replaced.");
@@ -2063,23 +2105,15 @@ class CL_C10_ConfigManager {
 	    }
 
 
-	    // 4. 변경 사항이 있을 경우에만 저장 및 true 반환
+	    // 4. 변경 사항이 있을 경우에만 Dirty Flag 설정
 		if (v_changed) {
             _dirty_motion = true;
             CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] motion config patched (Memory Only). Dirty=true");
         }
 
-		xSemaphoreGive(s_configMutex); // Mutex 해제
+		xSemaphoreGive(s_configMutex); 
 		
         return v_changed;
-		/*
-	    if (v_changed) {
-		    CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] Motion config patched. Saving...");
-		    return saveMotionConfig(p_config);
-	    }
-	    
-	    return false;
-		*/
     }
     
 	
@@ -2161,6 +2195,5 @@ inline bool CL_C10_ConfigManager::_dirty_userProfiles = false;
 
 // **[추가]** 정적 Mutex 초기화 (헤더에 인라인으로 정의)
 inline SemaphoreHandle_t CL_C10_ConfigManager::s_configMutex = xSemaphoreCreateMutex();
-
 
 
