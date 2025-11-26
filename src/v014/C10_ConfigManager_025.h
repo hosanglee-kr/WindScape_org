@@ -74,6 +74,7 @@ class CL_C10_ConfigManager {
             return; 
         }
 		
+        // g_A10_config_root.system는 항상 존재한다고 가정 (loadAll/LazyLoad 외부에서 처리 필요)
         if (_dirty_system && g_A10_config_root.system) {
             if (saveSystemConfig(*g_A10_config_root.system)) _dirty_system = false;
         }
@@ -103,6 +104,7 @@ class CL_C10_ConfigManager {
         doc["schedules"]    = _dirty_schedules;
         doc["userProfiles"] = _dirty_userProfiles;
     }
+    
 
 	/* =====================================================
 	 * 공용: JSON IO Helper
