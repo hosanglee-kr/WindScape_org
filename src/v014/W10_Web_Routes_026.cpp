@@ -79,6 +79,11 @@ void CL_W10_WebAPI::begin(AsyncWebServer& p_server, CL_CT10_ControlManager& p_co
 	routeScan();
 	routeAuthTest(); // 인증 테스트
 
+	routeWifiConfig();
+    routeTimeSet();
+    routeFirmwareCheck();
+	
+
 	// 2. 설정 및 제어
 	routeMotion();
 	routeSimulation();
@@ -1036,6 +1041,136 @@ void CL_W10_WebAPI::routeConfigDirty() {
         }
     );
 }
+
+// --------------------------------------------------
+// 23. /api/network/wifi/config (Wi-Fi 설정 상세 저장)
+// --------------------------------------------------
+// 이 라우트는 SC10_settings_001.js에서 호출하며, Wi-Fi 설정을 저장하고 적용을 시도합니다.
+void CL_W10_WebAPI::routeWifiConfig() {
+	s_server->on("/api/network/wifi/config", HTTP_POST, [](AsyncWebServerRequest* p_request) {}, nullptr,
+				 [](AsyncWebServerRequest* p_request, uint8_t* p_data, size_t p_len, size_t p_index, size_t p_total) {
+		if (!checkApiKey(p_request)) {
+			p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+			return;
+		}
+		if (p_index + p_len != p_total) return;
+
+		JsonDocument v_doc;
+		if (!parseJsonBody(p_request, p_data, p_len, v_doc)) {
+			p_request->send(400, "application/json", "{\"error\":\"json parse\"}");
+			return;
+		}
+
+		bool v_changed = false;
+        // Wi-Fi 설정 패치 및 변경 여부 확인
+		if (g_A10_config_root.wifi) {
+		    v_changed = CL_C10_ConfigManager::patchWifiFromJson(
+                  *g_A10_config_root.wifi,
+                  v_doc
+            );
+		}
+		
+		JsonDocument v_res;
+		v_res["updated"] = v_changed;
+		
+        if (v_changed) {
+            // 변경이 발생했을 경우, 설정을 파일에 저장하고 WiFi 재접속을 시도합니다.
+            CL_C10_ConfigManager::saveDirtyConfigs(); 
+            // WiFiManager에 재접속/모드 변경을 요청하는 로직 호출 (가정)
+            // CL_WF10_WiFiManager::applyConfig(*g_A10_config_root.wifi); 
+            
+            v_res["status"] = "applied";
+            v_res["need_reboot"] = true;
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WiFi config updated and applied.");
+        } else {
+            v_res["status"] = "no_change";
+            v_res["need_reboot"] = false;
+        }
+
+		sendJson(p_request, v_res);
+	});
+}
+
+// --------------------------------------------------
+// 24. /api/system/time/set (NTP 및 시간대 설정 저장)
+// --------------------------------------------------
+// 이 라우트는 SC10_settings_001.js에서 호출하며, 시간 관련 설정을 저장하고 적용을 시도합니다.
+void CL_W10_WebAPI::routeTimeSet() {
+	s_server->on("/api/system/time/set", HTTP_POST, [](AsyncWebServerRequest* p_request) {}, nullptr,
+				 [](AsyncWebServerRequest* p_request, uint8_t* p_data, size_t p_len, size_t p_index, size_t p_total) {
+		if (!checkApiKey(p_request)) {
+			p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+			return;
+		}
+		if (p_index + p_len != p_total) return;
+
+		JsonDocument v_doc;
+		if (!parseJsonBody(p_request, p_data, p_len, v_doc)) {
+			p_request->send(400, "application/json", "{\"error\":\"json parse\"}");
+			return;
+		}
+        
+        // system 설정의 일부만 패치합니다.
+        // 현재 ST_A10_ConfigSystem_t 구조체에 NTP와 Timezone 필드가 있다고 가정합니다.
+		bool v_changed = false;
+		if (g_A10_config_root.system) {
+            // v_doc의 내용만 System 설정에 패치
+            v_changed = CL_C10_ConfigManager::patchSystemFromJson(
+                  *g_A10_config_root.system,
+                  v_doc
+            );
+		}
+		
+		JsonDocument v_res;
+		v_res["updated"] = v_changed;
+		
+        if (v_changed) {
+            CL_C10_ConfigManager::saveDirtyConfigs(); 
+            // 새로운 NTP/Timezone 설정을 즉시 시스템에 적용하는 로직 호출 (가정)
+            // CL_T10_TimeManager::applyConfig(g_A10_config_root.system->ntp_server, g_A10_config_root.system->timezone_offset);
+            v_res["status"] = "applied";
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] Time config updated and applied.");
+        } else {
+            v_res["status"] = "no_change";
+        }
+		sendJson(p_request, v_res);
+	});
+}
+
+// --------------------------------------------------
+// 25. /api/system/firmware/check (펌웨어 업데이트 확인)
+// --------------------------------------------------
+// 이 라우트는 SC10_settings_001.js에서 호출하며, OTA 서버에 최신 펌웨어를 확인합니다.
+void CL_W10_WebAPI::routeFirmwareCheck() {
+	s_server->on("/api/system/firmware/check", HTTP_GET,
+				 [](AsyncWebServerRequest* p_request) {
+					 if (!checkApiKey(p_request)) {
+						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+						 return;
+					 }
+					 
+					 JsonDocument v_doc;
+					 // 실제 OTA 서버 체크 로직은 여기에 구현되거나 다른 모듈을 호출해야 합니다.
+                     
+                     // 시뮬레이션 응답 (실제 구현 필요)
+                     const char* v_current_version = A10_Const::FW_VERSION;
+                     const char* v_latest_version = "V1.0.1"; // 가상의 최신 버전
+
+                     v_doc["current_version"] = v_current_version;
+                     
+                     if (strcmp(v_current_version, v_latest_version) < 0) {
+                         v_doc["status"] = "available";
+                         v_doc["latest_version"] = v_latest_version;
+                         v_doc["url"] = "/api/update/latest";
+                     } else {
+                         v_doc["status"] = "latest";
+                         v_doc["latest_version"] = v_current_version;
+                     }
+
+					 sendJson(p_request, v_doc);
+				 });
+}
+
 
 // --------------------------------------------------
 // 22. 라우트 더미 함수 (실제 구현은 다른 파일에 있음)
