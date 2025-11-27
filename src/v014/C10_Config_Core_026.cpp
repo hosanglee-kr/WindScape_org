@@ -63,18 +63,7 @@ namespace A10_Const {
     #define CFG_DEFAULT_FILE_EXISTS // Factory Reset 활성화
 }
 
-// 더미 I/O 함수
-// 실제 구현에서는 파일 시스템 (SPIFFS/LittleFS) I/O 로직이 들어갑니다.
-bool ioLoadJson(const char* p_path, const char* p_bak_path, JsonDocument& p_doc) {
-    CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[C10] Dummy Load: %s", p_path);
-    // 더미 로직: 항상 성공하고 빈 객체를 반환한다고 가정
-    p_doc.clear();
-    return true; 
-}
-bool ioSaveJson(const char* p_path, const char* p_bak_path, const JsonDocument& p_doc) {
-    CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[C10] Dummy Save: %s", p_path);
-    return true;
-}
+
 
 
 // =====================================================
