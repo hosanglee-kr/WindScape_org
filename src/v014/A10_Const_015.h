@@ -231,16 +231,24 @@ typedef struct {
 // WIFI 설정 (cfg_wifi_022.json)
 // ------------------------------------------------------
 typedef struct {
+	char ssid[A10_Const::LEN_SSID];
+	char pass[A10_Const::LEN_PASS];
+} ST_A10_STANetwork_t; // 1. STA 네트워크 개별 항목 정의
+
+typedef struct {
 	EN_A10_WIFI_MODE_t wifiMode;
 	char			   wifiModeDesc[48];
 	struct {
 		char ssid[A10_Const::LEN_SSID];
 		char password[A10_Const::LEN_PASS];
 	} ap;
+    ST_A10_STANetwork_t sta[A10_Const::MAX_STA_NETWORKS]; 
+    /*
 	struct {
 		char ssid[A10_Const::LEN_SSID];
 		char pass[A10_Const::LEN_PASS];
 	} ST_A10_STANetwork_t sta[A10_Const::MAX_STA_NETWORKS];
+	*/
 	uint8_t sta_count;
 } ST_A10_WifiConfig;
 
