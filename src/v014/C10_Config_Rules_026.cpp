@@ -178,7 +178,7 @@ bool CL_C10_ConfigManager::patchSchedulesFromJson(ST_A10_SchedulesRoot_t& p_cfg,
 
                     ST_A10_ScheduleSegment_t& sg = v_item->segments[v_item->seg_count++];
                     // 기존 loadSchedules 로직을 사용한 안전한 덮어쓰기
-                    sg.segId = jseg["segId"] | 0
+                    sg.segId = jseg["segId"] | 0;
 					sg.segNo = jseg["segNo"] | 0;
                     
                     // on_minutes, off_minutes는 0이 유효할 수 있으므로 is<uint16_t>()로 존재 여부 확인
@@ -334,7 +334,7 @@ bool CL_C10_ConfigManager::patchUserProfilesFromJson(ST_A10_UserProfilesRoot_t& 
 
 		for (JsonObjectConst j_patch : arr) {
 			if (!j_patch["profileId"].is<uint8_t>()) continue;
-			uint8_t v_profileId = j_patch["profileId"]
+			uint8_t v_profileId = j_patch["profileId"];
 			uint16_t v_profileNo = j_patch["profileNo"];
 
 			ST_A10_UserProfileItem_t* v_item = nullptr;
