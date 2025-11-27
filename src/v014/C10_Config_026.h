@@ -61,6 +61,17 @@ extern EN_A10_segment_mode_t A10_modeFromString(const char* p_mode);
 
 
 
+// @brief 뮤텍스를 획득합니다.
+#define C10_MUTEX_ACQUIRE() \
+    if (!CL_C10_ConfigManager::_mutex_Acquire(__func__)) { \
+        return false; \
+    }
+
+// @brief 설정 뮤텍스를 해제합니다.
+#define C10_MUTEX_RELEASE() \
+    CL_C10_ConfigManager::_mutex_Release();
+
+
 /* =====================================================
 	* 공용: JSON IO Helper
 	* ===================================================== */
@@ -75,7 +86,8 @@ bool ioLoadJson(const char* p_path, const char* p_bak, JsonDocument& p_doc) {
 			CL_D10_Logger::log(EN_L10_LOG_ERROR,
 								"[C10] Missing config & no backup: %s",
 								p_path);
-			return false;
+			r
+				eturn false;
 		}
 	}
 
@@ -207,6 +219,26 @@ private:
     static void resetUserProfilesDefault(ST_A10_UserProfilesRoot_t& p_cfg);
     static void resetWifiDefault(ST_A10_WifiConfig& p_cfg);
     static void resetMotionDefault(ST_A10_MotionConfig& p_cfg);
+
+
+        // 뮤텍스 관리 헬퍼 함수 정의                   
+    static bool _mutex_Acquire(const char* p_funcName) {
+        
+        // 성공 시 디버그 로그
+        // CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[C10] Mutex attempt: %s", p_funcName);
+        
+        // 뮤텍스 획득 시도
+        if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
+            // 실패 시 에러 로그
+            CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] %s() Mutex timeout!", p_funcName);
+            return false;
+        }
+        return true;
+    }
+    
+    static void _mutex_Release() {
+        xSemaphoreGive(s_configMutex);
+    }
 
 };
 
