@@ -339,7 +339,7 @@ void CL_C10_ConfigManager::toJson_Wifi(const ST_A10_WifiConfig& p,
 }
 
 void CL_C10_ConfigManager::toJson_Motion(const ST_A10_MotionConfig& p,
-							  JsonObject&				 d) {
+							  JsonDocument&				 d) {
 		d["motion"]["enabled"]		   = p.enabled;
 		d["motion"]["pir"]["enabled"]  = p.pir.enabled;
 		d["motion"]["pir"]["hold_sec"] = p.pir.hold_sec;
