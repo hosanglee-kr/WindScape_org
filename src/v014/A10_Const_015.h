@@ -433,6 +433,7 @@ typedef struct {
 } ST_A10_SchedulePeriod_t;
 
 typedef struct {
+    uint8_t  segId       = 0;
 	uint16_t segNo		 = 0;
 	uint16_t on_minutes	 = 0;
 	uint16_t off_minutes = 0;
@@ -449,6 +450,7 @@ typedef struct {
 } ST_A10_ScheduleSegment_t;
 
 typedef struct {
+    uint8_t  schId                         = 0;
 	uint16_t schNo						   = 0;
 	char	 name[A10_Const::MAX_NAME_LEN] = {0};
 	bool	 enabled					   = true;
@@ -471,6 +473,7 @@ typedef struct {
  * UserProfiles JSON 구조
  * ====================================================== */
 typedef struct {
+    uint8_t  segId       = 0;
 	uint16_t segNo		 = 0;
 	uint16_t on_minutes	 = 0;
 	uint16_t off_minutes = 0;
@@ -485,6 +488,7 @@ typedef struct {
 } ST_A10_UserProfileSegment_t;
 
 typedef struct {
+    uint8_t profileId                     = 0;
 	uint8_t profileNo					  = 0;
 	char	name[A10_Const::MAX_NAME_LEN] = {0};
 	bool	enabled						  = true;
