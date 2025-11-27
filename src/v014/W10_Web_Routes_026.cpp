@@ -33,7 +33,7 @@
 
 #include "W10_Web_025.h"
 #include "M10_MotionLogic_016.h"
-#include "CT10_ControlManager_022.h"
+#include "CT10_ControlManager_023.h"
 #include "WF10_WiFiManager_023.h"
 
 // ------------------------------------------------------
