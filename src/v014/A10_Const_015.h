@@ -240,7 +240,7 @@ typedef struct {
 	struct {
 		char ssid[A10_Const::LEN_SSID];
 		char pass[A10_Const::LEN_PASS];
-	} sta[A10_Const::MAX_STA_NETWORKS];
+	} ST_A10_STANetwork_t sta[A10_Const::MAX_STA_NETWORKS];
 	uint8_t sta_count;
 } ST_A10_WifiConfig;
 
