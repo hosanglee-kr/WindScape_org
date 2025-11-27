@@ -72,10 +72,13 @@ bool CL_C10_ConfigManager::patchSchedulesFromJson(ST_A10_SchedulesRoot_t& p_cfg,
 									   const JsonDocument&	 p_patch) {
 
 		// 💡 Mutex를 사용하여 쓰기 작업 보호
+	    C10_MUTEX_ACQUIRE()
+	    /*
         if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
             CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] patchSchedulesFromJson() Mutex timeout!");
             return false; // Mutex 획득 실패 시 실패 처리
         }
+        */
 
 		
 		JsonArrayConst arr = p_patch["schedules"].as<JsonArrayConst>();
@@ -290,8 +293,8 @@ bool CL_C10_ConfigManager::patchSchedulesFromJson(ST_A10_SchedulesRoot_t& p_cfg,
             _dirty_schedules = true;
             CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] schedules config patched (Memory Only). Dirty=true");
         }
-
-		xSemaphoreGive(s_configMutex); 
+	    C10_MUTEX_RELEASE()
+		// xSemaphoreGive(s_configMutex); 
 		
         return v_changed;
 }
