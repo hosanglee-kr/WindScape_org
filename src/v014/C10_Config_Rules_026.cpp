@@ -338,3 +338,19 @@ bool CL_C10_ConfigManager::deleteSchedule(uint16_t p_id) {
     xSemaphoreGive(s_configMutex);
     return true;
 }
+
+
+// **[추가 구현]** WindProfileDict를 JSON으로 변환하는 함수
+void CL_C10_ConfigManager::toJson_WindProfileDict(const ST_A10_WindProfileDict_t& p, JsonDocument& d) {
+    // [Implementation required: WindProfileDict -> JSON]
+    JsonArray j_arr = d.createNestedArray("windProfiles");
+    
+    for (uint8_t i = 0; i < p.count; i++) {
+        JsonObject j_item = j_arr.createNestedObject();
+        j_item["wpNo"] = p.items[i].wpNo;
+        j_item["name"] = p.items[i].name;
+        j_item["speed"] = p.items[i].speed;
+        // ... (나머지 필드 복사 로직 생략)
+    }
+}
+
