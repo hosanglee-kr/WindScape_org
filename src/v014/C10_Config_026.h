@@ -159,11 +159,11 @@ public:
     static bool loadWifiConfig(ST_A10_WifiConfig& p_cfg);
     static bool loadMotionConfig(ST_A10_MotionConfig& p_cfg);
 
-    static void saveSystemConfig(const ST_A10_SystemConfig& p_cfg);
-    static void saveWifiConfig(const ST_A10_WifiConfig& p_cfg);
-    static void saveMotionConfig(const ST_A10_MotionConfig& p_cfg);
-    static void saveSchedules(const ST_A10_SchedulesRoot_t& p_cfg);
-    static void saveUserProfiles(const ST_A10_UserProfilesRoot_t& p_cfg);
+    static bool saveSystemConfig(const ST_A10_SystemConfig& p_cfg);
+    static bool saveWifiConfig(const ST_A10_WifiConfig& p_cfg);
+    static bool saveMotionConfig(const ST_A10_MotionConfig& p_cfg);
+    static bool saveSchedules(const ST_A10_SchedulesRoot_t& p_cfg);
+    static bool saveUserProfiles(const ST_A10_UserProfilesRoot_t& p_cfg);
 
 
 	// =====================================================
