@@ -1236,11 +1236,11 @@ void CL_C10_ConfigManager::saveAll(const ST_A10_ConfigRoot_t& p_root) {
 void CL_C10_ConfigManager::toJson_All(
     const ST_A10_ConfigRoot_t& p,
 		JsonDocument&			   d,
-		bool					   includeSystem	   = true,
-		bool					   includeWifi		   = true,
-		bool					   includeMotion	   = true,
-		bool					   includeSchedules	   = true,
-		bool					   includeUserProfiles = true) {
+		bool					   includeSystem	   ,
+		bool					   includeWifi		   ,
+		bool					   includeMotion	   ,
+		bool					   includeSchedules	   ,
+		bool					   includeUserProfiles ) {
 		if (includeSystem && p.system)
 			toJson_System(*p.system, d);
 		// Wi-Fi 설정은 최상위가 "wifi" 필드이기 때문에 to<JsonObject>() 불필요 (toJson_Wifi 내부에서 처리)
