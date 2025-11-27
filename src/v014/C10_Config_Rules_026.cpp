@@ -689,89 +689,186 @@ bool CL_C10_ConfigManager::patchUserProfilesFromJson(ST_A10_UserProfilesRoot_t& 
 // 7. Schedules CRUD 구현
 // ===================================================== 
 
-bool CL_C10_ConfigManager::updateScheduleFromJson(uint16_t p_id, const JsonDocument& p_patch) {
-        if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
-            CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] updateScheduleFromJson() Mutex timeout!");
-            return false;
-        }
+Bool CL_C10_ConfigManager::updateScheduleFromJson(uint16_t p_id, const JsonDocument& p_patch) {
+    // 1. 뮤텍스 획득
+    if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] updateScheduleFromJson() Mutex timeout!");
+        return false;
+    }
 
-        ST_A10_SchedulesRoot_t* v_root = g_A10_config_root.schedules;
-        if (!v_root) {
-            xSemaphoreGive(s_configMutex);
-            return false;
-        }
+    ST_A10_SchedulesRoot_t* v_root = g_A10_config_root.schedules;
+    if (!v_root) {
+        xSemaphoreGive(s_configMutex);
+        return false;
+    }
 
-        ST_A10_ScheduleItem_t* v_item = nullptr;
-        for (uint8_t i = 0; i < v_root->count; i++) {
-            if (v_root->items[i].schId == p_id) {
-                v_item = &v_root->items[i];
-                break;
-            }
-			/*
-			if (v_root->items[i].schNo == p_id) {
-                v_item = &v_root->items[i];
-                break;
-            }
-			*/
+    // 2. Schedule Item 찾기 (schId 기준)
+    ST_A10_ScheduleItem_t* v_item = nullptr;
+    for (uint8_t i = 0; i < v_root->count; i++) {
+        if (v_root->items[i].schId == p_id) {
+            v_item = &v_root->items[i];
+            break;
         }
+    }
 
-        if (!v_item) {
-            CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Schedule update failed: ID %u not found.", p_id);
-            xSemaphoreGive(s_configMutex);
-            return false;
+    if (!v_item) {
+        CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Schedule update failed: ID %u not found.", p_id);
+        xSemaphoreGive(s_configMutex);
+        return false;
+    }
+
+    bool v_changed = false;
+    JsonObjectConst j_patch = p_patch.as<JsonObjectConst>();
+    
+    // name 패치
+    if (j_patch["name"].is<const char*>()) {
+        const char* v_new = j_patch["name"];
+        if (strcmp(v_new, v_item->name) != 0) {
+            A10_safe_strlcpy(v_item->name, v_new, sizeof(v_item->name));
+            v_changed = true;
         }
-
-        bool v_changed = false;
-        JsonObjectConst j_patch = p_patch.as<JsonObjectConst>();
+    }
+    
+    // enabled 패치
+    if (j_patch["enabled"].is<bool>()) {
+        if (j_patch["enabled"].as<bool>() != v_item->enabled) {
+            v_item->enabled = j_patch["enabled"];
+            v_changed = true;
+        }
+    }
+    
+    // =========================================================================
+    // period 패치 (ST_A10_SchedulePeriod_t)
+    // =========================================================================
+    if (j_patch["period"].is<JsonObjectConst>()) {
+        JsonObjectConst j_period = j_patch["period"];
         
-        // name
-        if (j_patch["name"].is<const char*>()) {
-            const char* v_new = j_patch["name"];
-            if (strcmp(v_new, v_item->name) != 0) {
-                strlcpy(v_item->name, v_new, sizeof(v_item->name));
-                v_changed = true;
-            }
+        uint16_t v_start = j_period["start"].is<uint16_t>() ? j_period["start"].as<uint16_t>() : v_item->period.start_minutes;
+        if (v_start != v_item->period.start_minutes) {
+            v_item->period.start_minutes = v_start;
+            v_changed = true;
         }
-        
-        // enabled
-        if (j_patch["enabled"].is<bool>()) {
-            if (j_patch["enabled"].as<bool>() != v_item->enabled) {
-                v_item->enabled = j_patch["enabled"];
-                v_changed = true;
-            }
-        }
-        
-        // segments (배열 전체 덮어쓰기)
-        JsonArrayConst j_segs = j_patch["segments"].as<JsonArrayConst>();
-        if (!j_segs.isNull()) {
-            uint8_t v_new_count = 0;
-            // segments 배열의 내용이 기존과 다른지 확인하는 로직은 복잡하여 생략하고, 변경되었다고 가정
-            
-            v_item->seg_count = 0; // 기존 세그먼트 초기화
-            for (JsonObjectConst jseg : j_segs) {
-                if (v_item->seg_count >= A10_Const::MAX_SEGMENTS_PER_SCHEDULE) {
-					break;
-				}
-                ST_A10_ScheduleSegment_t& sg = v_item->segments[v_item->seg_count++];
-                sg.segId      = jseg["segId"] | 0;
-				sg.segNo      = jseg["segNo"] | 0;
-                sg.on_minutes = jseg["on_minutes"].is<uint16_t>() ? jseg["on_minutes"].as<uint16_t>() : 10;
-                sg.windProfileId = jseg["windProfileId"] | 0;
-                // ... 나머지 세그먼트 필드 복사 로직 ...
-            }
+
+        uint16_t v_end = j_period["end"].is<uint16_t>() ? j_period["end"].as<uint16_t>() : v_item->period.end_minutes;
+        if (v_end != v_item->period.end_minutes) {
+            v_item->period.end_minutes = v_end;
             v_changed = true;
         }
         
-        // period, autoOff, motion 등의 복잡한 필드 패치 로직 추가 필요...
+        uint8_t v_days = j_period["days"].is<uint8_t>() ? j_period["days"].as<uint8_t>() : v_item->period.days;
+        if (v_days != v_item->period.days) {
+            v_item->period.days = v_days;
+            v_changed = true;
+        }
+    }
+
+    // =========================================================================
+    // autoOff 패치 (ST_A10_ScheduleAutoOff_t)
+    // =========================================================================
+    if (j_patch["autoOff"].is<JsonObjectConst>()) {
+        JsonObjectConst j_autoOff = j_patch["autoOff"];
         
-        if (v_changed) {
-            _dirty_schedules = true;
-            CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] Schedule ID %u patched. Dirty=true", p_id);
+        if (j_autoOff["enabled"].is<bool>()) {
+            if (j_autoOff["enabled"].as<bool>() != v_item->autoOff.enabled) {
+                v_item->autoOff.enabled = j_autoOff["enabled"];
+                v_changed = true;
+            }
+        }
+        
+        uint16_t v_minutes = j_autoOff["minutes"].is<uint16_t>() ? j_autoOff["minutes"].as<uint16_t>() : v_item->autoOff.minutes;
+        if (v_minutes != v_item->autoOff.minutes) {
+            v_item->autoOff.minutes = v_minutes;
+            v_changed = true;
+        }
+    }
+    
+    // =========================================================================
+    // motion 패치 (ST_A10_ScheduleMotion_t)
+    // =========================================================================
+    if (j_patch["motion"].is<JsonObjectConst>()) {
+        JsonObjectConst j_motion = j_patch["motion"];
+        
+        if (j_motion["enabled"].is<bool>()) {
+            if (j_motion["enabled"].as<bool>() != v_item->motion.enabled) {
+                v_item->motion.enabled = j_motion["enabled"];
+                v_changed = true;
+            }
         }
 
-        xSemaphoreGive(s_configMutex);
-        return v_changed;
+        uint16_t v_on = j_motion["onMinutes"].is<uint16_t>() ? j_motion["onMinutes"].as<uint16_t>() : v_item->motion.on_minutes;
+        if (v_on != v_item->motion.on_minutes) {
+            v_item->motion.on_minutes = v_on;
+            v_changed = true;
+        }
+
+        uint16_t v_off = j_motion["offMinutes"].is<uint16_t>() ? j_motion["offMinutes"].as<uint16_t>() : v_item->motion.off_minutes;
+        if (v_off != v_item->motion.off_minutes) {
+            v_item->motion.off_minutes = v_off;
+            v_changed = true;
+        }
+    }
+
+    // =========================================================================
+    // segments 패치 (배열 전체 덮어쓰기) - 오류 수정 및 누락 필드 추가 반영
+    // =========================================================================
+    JsonArrayConst j_segs = j_patch["segments"].as<JsonArrayConst>();
+    if (!j_segs.isNull()) {
+        v_item->seg_count = 0; // 기존 세그먼트 초기화
+        for (JsonObjectConst jseg : j_segs) {
+            if (v_item->seg_count >= A10_Const::MAX_SEGMENTS_PER_SCHEDULE) {
+                CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Max segments reached for Schedule ID %u.", p_id);
+                break;
+            }
+            ST_A10_ScheduleSegment_t& sg = v_item->segments[v_item->seg_count++];
+
+            // 기본 필드 로드
+            sg.segId         = jseg["segId"] | 0;
+            sg.segNo         = jseg["segNo"] | 0;
+            sg.on_minutes    = jseg["on_minutes"].is<uint16_t>() ? jseg["on_minutes"].as<uint16_t>() : 10;
+            sg.off_minutes   = jseg["off_minutes"].is<uint16_t>() ? jseg["off_minutes"].as<uint16_t>() : 0;
+            
+            // mode 로드 및 변환
+            const char* v_mode = jseg["mode"] | "PRESET";
+            sg.mode = A10_modeFromString(v_mode); 
+
+            // windProfileId 대신 presetCode와 styleCode 사용 (컴파일 오류 수정)
+            A10_safe_strlcpy(sg.presetCode, jseg["presetCode"] | "", sizeof(sg.presetCode));
+            A10_safe_strlcpy(sg.styleCode, jseg["styleCode"] | "", sizeof(sg.styleCode));
+            
+            // fixed_speed
+            sg.fixed_speed = jseg["fixed_speed"].is<float>() ? jseg["fixed_speed"].as<float>() : 0.0f;
+            
+            // adjust (ST_A10_AdjustDelta_t) 로드 (누락된 필드 포함)
+            if (jseg["adjust"].is<JsonObjectConst>()) {
+                JsonObjectConst adj = jseg["adjust"];
+                sg.adjust.wind_intensity           = adj["wind_intensity"].is<float>() ? adj["wind_intensity"].as<float>() : 0.0f;
+                sg.adjust.wind_variability         = adj["wind_variability"].is<float>() ? adj["wind_variability"].as<float>() : 0.0f;
+                sg.adjust.gust_frequency           = adj["gust_frequency"].is<float>() ? adj["gust_frequency"].as<float>() : 0.0f;
+                sg.adjust.fan_limit                = adj["fan_limit"].is<float>() ? adj["fan_limit"].as<float>() : 0.0f;
+                sg.adjust.min_fan                  = adj["min_fan"].is<float>() ? adj["min_fan"].as<float>() : 0.0f;
+                
+                // ST_A10_AdjustDelta_t에 누락되었던 필드 추가 로드
+                sg.adjust.turbulence_length_scale  = adj["turbulence_length_scale"].is<float>() ? adj["turbulence_length_scale"].as<float>() : 0.0f;
+                sg.adjust.turbulence_intensity_sigma = adj["turbulence_intensity_sigma"].is<float>() ? adj["turbulence_intensity_sigma"].as<float>() : 0.0f;
+            } else {
+                // adjust 객체가 없으면 0으로 안전하게 초기화
+                memset(&sg.adjust, 0, sizeof(sg.adjust));
+            }
+        }
+        v_changed = true;
+    }
+    
+    // 3. 변경 사항이 있으면 플래그 설정
+    if (v_changed) {
+        _dirty_schedules = true;
+        CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] Schedule ID %u patched. Dirty=true", p_id);
+    }
+
+    // 4. 뮤텍스 반납
+    xSemaphoreGive(s_configMutex);
+    return v_changed;
 }
+
 
 bool CL_C10_ConfigManager::deleteSchedule(uint16_t p_id) {
         if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
