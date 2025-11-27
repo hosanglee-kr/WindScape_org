@@ -235,3 +235,55 @@ bool CL_C10_ConfigManager::patchMotionFromJson(ST_A10_MotionConfig& p_config,
     xSemaphoreGive(s_configMutex); 
     return v_changed;
 }
+
+// =====================================================
+// 3-1. 목적물별 JSON Export 구현 (Wifi/Motion)
+// =====================================================
+void CL_C10_ConfigManager::toJson_Wifi(const ST_A10_WifiConfig& p, JsonDocument& d) {
+    // [Implementation required: WiFi Config -> JSON]
+    JsonObject j_wifi = d.createNestedObject("wifi");
+    
+    j_wifi["wifiMode"] = p.wifiMode;
+
+    // AP 설정
+    JsonObject j_ap = j_wifi.createNestedObject("ap");
+    j_ap["ssid"] = p.ap.ssid;
+    j_ap["password"] = p.ap.password;
+
+    // STA 목록
+    JsonArray j_sta_arr = j_wifi.createNestedArray("sta");
+    for (uint8_t i = 0; i < p.sta_count; i++) {
+        JsonObject j_sta_item = j_sta_arr.createNestedObject();
+        j_sta_item["ssid"] = p.sta[i].ssid;
+        j_sta_item["pass"] = p.sta[i].pass;
+    }
+}
+
+void CL_C10_ConfigManager::toJson_Motion(const ST_A10_MotionConfig& p, JsonDocument& d) {
+    // [Implementation required: Motion Config -> JSON]
+    JsonObject j_motion = d.createNestedObject("motion");
+    j_motion["enabled"] = p.enabled;
+
+    // PIR 설정
+    JsonObject j_pir = j_motion.createNestedObject("pir");
+    j_pir["enabled"] = p.pir.enabled;
+    j_pir["hold_sec"] = p.pir.hold_sec;
+
+    // BLE 설정
+    JsonObject j_ble = j_motion.createNestedObject("ble");
+    j_ble["enabled"] = p.ble.enabled;
+    
+    JsonObject j_rssi = j_ble.createNestedObject("rssi");
+    j_rssi["on"] = p.ble.rssi.on;
+    j_rssi["off"] = p.ble.rssi.off;
+    // ... (나머지 rssi 필드 복사 로직 생략)
+    
+    // Trusted Devices 목록
+    JsonArray j_dev_arr = j_ble.createNestedArray("trusted_devices");
+    for (uint8_t i = 0; i < p.ble.trusted_count; i++) {
+        JsonObject j_dev_item = j_dev_arr.createNestedObject();
+        j_dev_item["alias"] = p.ble.trusted_devices[i].alias;
+        // ... (나머지 필드 복사 로직 생략)
+    }
+}
+
