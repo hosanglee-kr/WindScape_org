@@ -910,6 +910,38 @@ void CL_C10_ConfigManager::toJson_System(const ST_A10_SystemConfig& p, JsonDocum
 		d["time"]["timezone"]		   = p.time.timezone;
 		d["time"]["sync_interval_min"] = p.time.sync_interval_min;
 }
+/*
+void CL_C10_ConfigManager::toJson_System(const ST_A10_SystemConfig& p, JsonDocument& d) {
+    d["meta"]["version"]	 = p.meta.version;
+		d["meta"]["device_name"] = p.meta.device_name;
+		d["meta"]["last_update"] = p.meta.last_update;
+
+		d["system"]["web"]["html"] = p.system.web.html;
+		d["system"]["web"]["css"]  = p.system.web.css;
+		d["system"]["web"]["js"]   = p.system.web.js;
+
+		d["system"]["logging"]["level"]		  = p.system.logging.level;
+		d["system"]["logging"]["max_entries"] = p.system.logging.max_entries;
+
+		d["hw"]["fan_pwm"]["pin"]	  = p.hw.fan_pwm.pin;
+		d["hw"]["fan_pwm"]["channel"] = p.hw.fan_pwm.channel;
+		d["hw"]["fan_pwm"]["freq"]	  = p.hw.fan_pwm.freq;
+		d["hw"]["fan_pwm"]["res"]	  = p.hw.fan_pwm.res;
+
+		d["hw"]["pir"]["enabled"]	   = p.hw.pir.enabled;
+		d["hw"]["pir"]["pin"]		   = p.hw.pir.pin;
+		d["hw"]["pir"]["debounce_sec"] = p.hw.pir.debounce_sec;
+
+		d["hw"]["ble"]["enabled"]		= p.hw.ble.enabled;
+		d["hw"]["ble"]["scan_interval"] = p.hw.ble.scan_interval;
+
+		d["security"]["api_key"] = p.security.api_key;
+
+		d["time"]["ntp_server"]		   = p.time.ntp_server;
+		d["time"]["timezone"]		   = p.time.timezone;
+		d["time"]["sync_interval_min"] = p.time.sync_interval_min;
+}
+*/
 
 void CL_C10_ConfigManager::toJson_Wifi(const ST_A10_WifiConfig& p, JsonDocument& d) {
 		d["wifi"]["wifiMode"]		= p.wifiMode;
@@ -1262,43 +1294,7 @@ void CL_C10_ConfigManager::toJson_All(
 			includeMotion, includeSchedules,
 			includeUserProfiles);
 }
-
-
-void CL_C10_ConfigManager::toJson_System(const ST_A10_SystemConfig& p, JsonDocument& d) {
-    d["meta"]["version"]	 = p.meta.version;
-		d["meta"]["device_name"] = p.meta.device_name;
-		d["meta"]["last_update"] = p.meta.last_update;
-
-		d["system"]["web"]["html"] = p.system.web.html;
-		d["system"]["web"]["css"]  = p.system.web.css;
-		d["system"]["web"]["js"]   = p.system.web.js;
-
-		d["system"]["logging"]["level"]		  = p.system.logging.level;
-		d["system"]["logging"]["max_entries"] = p.system.logging.max_entries;
-
-		d["hw"]["fan_pwm"]["pin"]	  = p.hw.fan_pwm.pin;
-		d["hw"]["fan_pwm"]["channel"] = p.hw.fan_pwm.channel;
-		d["hw"]["fan_pwm"]["freq"]	  = p.hw.fan_pwm.freq;
-		d["hw"]["fan_pwm"]["res"]	  = p.hw.fan_pwm.res;
-
-		d["hw"]["pir"]["enabled"]	   = p.hw.pir.enabled;
-		d["hw"]["pir"]["pin"]		   = p.hw.pir.pin;
-		d["hw"]["pir"]["debounce_sec"] = p.hw.pir.debounce_sec;
-
-		d["hw"]["ble"]["enabled"]		= p.hw.ble.enabled;
-		d["hw"]["ble"]["scan_interval"] = p.hw.ble.scan_interval;
-
-		d["security"]["api_key"] = p.security.api_key;
-
-		d["time"]["ntp_server"]		   = p.time.ntp_server;
-		d["time"]["timezone"]		   = p.time.timezone;
-		d["time"]["sync_interval_min"] = p.time.sync_interval_min;
-}
-
-
-
-
-
+/*
 // =====================================================
 // 3-2. All Config → JSON Export 구현 (이전 파일과 동일)
 // =====================================================
@@ -1331,8 +1327,7 @@ void CL_C10_ConfigManager::toJson_All(
 			includeMotion, includeSchedules,
 			includeUserProfiles);
 }
-
-
+*/
 
 // =====================================================
 // 8. Factory Reset 구현
