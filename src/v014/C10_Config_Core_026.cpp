@@ -1,4 +1,4 @@
-#include "C10_ConfigManager_V026.h"
+#include "C10_Config_026.h"
 
 // =====================================================
 // Static Private: Reset Default 구현
