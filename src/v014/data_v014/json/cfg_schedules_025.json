@@ -4,6 +4,7 @@
 
   "schedules": [
     {
+      "schId": 1,
       "schNo": 10,
       "name": "Morning Cool Breeze",
       "enabled": true,
@@ -17,6 +18,7 @@
 
       "segments": [
         {
+          "segId": 1,
           "segNo": 10,
           "on_minutes": 20,
           "off_minutes": 10,
@@ -29,6 +31,7 @@
           }
         },
         {
+          "segId": 2,
           "segNo": 20,
           "on_minutes": 15,
           "off_minutes": 5,
@@ -50,6 +53,7 @@
     },
 
     {
+      "schId": 2,
       "schNo": 20,
       "name": "Evening Comfort",
       "enabled": true,
@@ -63,6 +67,7 @@
 
       "segments": [
         {
+          "segId": 1,
           "segNo": 10,
           "on_minutes": 25,
           "off_minutes": 10,
@@ -89,6 +94,7 @@
     },
 
     {
+      "schId": 3,
       "schNo": 30,
       "name": "Night Sleep",
       "enabled": true,
@@ -102,6 +108,7 @@
 
       "segments": [
         {
+          "segId": 1,
           "segNo": 10,
           "on_minutes": 180,
           "off_minutes": 0,
@@ -114,6 +121,7 @@
           }
         },
         {
+          "segId": 2,
           "segNo": 20,
           "on_minutes": 120,
           "off_minutes": 0,
