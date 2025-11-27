@@ -5,12 +5,14 @@
 
     "profiles": [
       {
+        "profileId": 1,
         "profileNo": 1,
         "name": "수면모드",
         "enabled": true,
         "repeatSegments": true,
         "segments": [
           {
+            "seqId": 1,
             "segNo": 10,
             "on_minutes": 40,
             "off_minutes": 0,
@@ -20,6 +22,7 @@
             "adjust": { "wind_intensity": -10, "wind_variability": -20 }
           },
           {
+            "seqId": 2,
             "segNo": 20,
             "on_minutes": 120,
             "off_minutes": 0,
@@ -29,6 +32,7 @@
             "adjust": { "wind_intensity": -20, "wind_variability": -30 }
           },
           {
+            "seqId": 3,
             "segNo": 30,
             "on_minutes": 90,
             "off_minutes": 0,
@@ -48,12 +52,14 @@
       },
 
       {
+        "profileId": 2,
         "profileNo": 2,
         "name": "집중모드",
         "enabled": true,
         "repeatSegments": true,
         "segments": [
           {
+            "seqId": 1,
             "segNo": 10,
             "on_minutes": 60,
             "off_minutes": 0,
@@ -75,12 +81,14 @@
       },
 
       {
+        "profileId": 3,
         "profileNo": 3,
         "name": "휴식모드",
         "enabled": true,
         "repeatSegments": true,
         "segments": [
           {
+            "seqId": 1,
             "segNo": 10,
             "on_minutes": 45,
             "off_minutes": 15,
@@ -102,12 +110,14 @@
       },
 
       {
+        "profileId": 4,
         "profileNo": 4,
         "name": "환기모드",
         "enabled": true,
         "repeatSegments": true,
         "segments": [
           {
+            "seqId": 1,
             "segNo": 10,
             "on_minutes": 20,
             "off_minutes": 5,
@@ -129,12 +139,14 @@
       },
 
       {
+        "profileId": 5,
         "profileNo": 5,
         "name": "활동모드",
         "enabled": true,
         "repeatSegments": true,
         "segments": [
           {
+            "seqId": 1,
             "segNo": 10,
             "on_minutes": 30,
             "off_minutes": 10,
@@ -156,6 +168,7 @@
       },
 
       {
+        "profileId": 6,
         "profileNo": 6,
         "name": "사용자 정의",
         "enabled": false,
