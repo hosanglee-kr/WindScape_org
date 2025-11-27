@@ -91,6 +91,18 @@ bool CL_C10_ConfigManager::patchSchedulesFromJson(ST_A10_SchedulesRoot_t& p_cfg,
 		bool v_changed = false;
 
 		for (JsonObjectConst j_patch : arr) {
+			if (!j_patch["schId"].is<uint8_t>()) continue;
+			uint8_t v_schId = j_patch["schId"];
+			uint16_t v_schNo = j_patch["schNo"];
+
+			ST_A10_ScheduleItem_t* v_item = nullptr;
+			for (uint8_t i = 0; i < p_cfg.count; i++) {
+				if (p_cfg.items[i].schId == v_schId) {
+					v_item = &p_cfg.items[i];
+					break;
+				}
+			}
+			/*
 			if (!j_patch["schNo"].is<uint16_t>()) continue;
 			uint16_t v_schNo = j_patch["schNo"];
 
@@ -101,6 +113,7 @@ bool CL_C10_ConfigManager::patchSchedulesFromJson(ST_A10_SchedulesRoot_t& p_cfg,
 					break;
 				}
 			}
+			*/
 
 			if (!v_item) {
 				CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Schedule patch skipped: ID %u not found", v_schNo);
@@ -165,7 +178,8 @@ bool CL_C10_ConfigManager::patchSchedulesFromJson(ST_A10_SchedulesRoot_t& p_cfg,
 
                     ST_A10_ScheduleSegment_t& sg = v_item->segments[v_item->seg_count++];
                     // 기존 loadSchedules 로직을 사용한 안전한 덮어쓰기
-                    sg.segNo = jseg["segNo"] | 0;
+                    sg.segId = jseg["segId"] | 0
+					sg.segNo = jseg["segNo"] | 0;
                     
                     // on_minutes, off_minutes는 0이 유효할 수 있으므로 is<uint16_t>()로 존재 여부 확인
                     sg.on_minutes = jseg["on_minutes"].is<uint16_t>() ? jseg["on_minutes"].as<uint16_t>() : 10;
@@ -319,6 +333,18 @@ bool CL_C10_ConfigManager::patchUserProfilesFromJson(ST_A10_UserProfilesRoot_t& 
 		bool v_changed = false;
 
 		for (JsonObjectConst j_patch : arr) {
+			if (!j_patch["profileId"].is<uint8_t>()) continue;
+			uint8_t v_profileId = j_patch["profileId"]
+			uint16_t v_profileNo = j_patch["profileNo"];
+
+			ST_A10_UserProfileItem_t* v_item = nullptr;
+			for (uint8_t i = 0; i < p_cfg.count; i++) {
+				if (p_cfg.items[i].profileId == v_profileId) {
+					v_item = &p_cfg.items[i];
+					break;
+				}
+			}
+			/*
 			if (!j_patch["profileNo"].is<uint16_t>()) continue;
 			uint16_t v_profileNo = j_patch["profileNo"];
 
@@ -329,6 +355,7 @@ bool CL_C10_ConfigManager::patchUserProfilesFromJson(ST_A10_UserProfilesRoot_t& 
 					break;
 				}
 			}
+			*/
 
 			if (!v_item) {
 				CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] UserProfile patch skipped: ID %u not found", v_profileNo);
@@ -365,7 +392,8 @@ bool CL_C10_ConfigManager::patchUserProfilesFromJson(ST_A10_UserProfilesRoot_t& 
 
                     ST_A10_UserProfileSegment_t& sg = v_item->segments[v_item->seg_count++];
                     // 기존 loadUserProfiles 로직을 사용한 안전한 덮어쓰기
-                    sg.segNo = jseg["segNo"] | 0;
+                    sg.segId = jseg["segId"] | 0;
+					sg.segNo = jseg["segNo"] | 0;
                     
                     // on_minutes, off_minutes는 0이 유효할 수 있으므로 is<uint16_t>()로 존재 여부 확인
                     sg.on_minutes = jseg["on_minutes"].is<uint16_t>() ? jseg["on_minutes"].as<uint16_t>() : 10;
@@ -675,10 +703,16 @@ bool CL_C10_ConfigManager::updateScheduleFromJson(uint16_t p_id, const JsonDocum
 
         ST_A10_ScheduleItem_t* v_item = nullptr;
         for (uint8_t i = 0; i < v_root->count; i++) {
-            if (v_root->items[i].schNo == p_id) {
+            if (v_root->items[i].schId == p_id) {
                 v_item = &v_root->items[i];
                 break;
             }
+			/*
+			if (v_root->items[i].schNo == p_id) {
+                v_item = &v_root->items[i];
+                break;
+            }
+			*/
         }
 
         if (!v_item) {
@@ -719,7 +753,8 @@ bool CL_C10_ConfigManager::updateScheduleFromJson(uint16_t p_id, const JsonDocum
 					break;
 				}
                 ST_A10_ScheduleSegment_t& sg = v_item->segments[v_item->seg_count++];
-                sg.segNo      = jseg["segNo"] | 0;
+                sg.segId      = jseg["segId"] | 0;
+				sg.segNo      = jseg["segNo"] | 0;
                 sg.on_minutes = jseg["on_minutes"].is<uint16_t>() ? jseg["on_minutes"].as<uint16_t>() : 10;
                 sg.windProfileId = jseg["windProfileId"] | 0;
                 // ... 나머지 세그먼트 필드 복사 로직 ...
@@ -752,10 +787,16 @@ bool CL_C10_ConfigManager::deleteSchedule(uint16_t p_id) {
 
         int v_del_idx = -1;
         for (uint8_t i = 0; i < v_root->count; i++) {
-            if (v_root->items[i].schNo == p_id) {
+            if (v_root->items[i].schId == p_id) {
                 v_del_idx = i;
                 break;
             }
+			/*
+			if (v_root->items[i].schNo == p_id) {
+                v_del_idx = i;
+                break;
+            }
+			*/
         }
 
         if (v_del_idx == -1) {
@@ -841,6 +882,7 @@ void CL_C10_ConfigManager::toJson_Schedules(const ST_A10_SchedulesRoot_t& p,
 			JsonObject js =
 				d["schedules"][i];
 
+			js["schId"]	  = s.schId;
 			js["schNo"]	  = s.schNo;
 			js["name"]	  = s.name;
 			js["enabled"] = s.enabled;
@@ -865,6 +907,7 @@ void CL_C10_ConfigManager::toJson_Schedules(const ST_A10_SchedulesRoot_t& p,
 				JsonObject jseg =
 					js["segments"][k];
 
+				jseg["segId"]		= sg.segId;
 				jseg["segNo"]		= sg.segNo;
 				jseg["on_minutes"]	= sg.on_minutes;
 				jseg["off_minutes"] = sg.off_minutes;
@@ -928,6 +971,7 @@ void CL_C10_ConfigManager::toJson_UserProfiles(const ST_A10_UserProfilesRoot_t& 
 			JsonObject jp =
 				d["userProfiles"]["profiles"][i];
 
+			jp["profileId"]		 = up.profileId;
 			jp["profileNo"]		 = up.profileNo;
 			jp["name"]			 = up.name;
 			jp["enabled"]		 = up.enabled;
@@ -942,6 +986,7 @@ void CL_C10_ConfigManager::toJson_UserProfiles(const ST_A10_UserProfilesRoot_t& 
 				JsonObject jseg =
 					jp["segments"][k];
 
+				jseg["segId"]		= sg.segId;
 				jseg["segNo"]		= sg.segNo;
 				jseg["on_minutes"]	= sg.on_minutes;
 				jseg["off_minutes"] = sg.off_minutes;
