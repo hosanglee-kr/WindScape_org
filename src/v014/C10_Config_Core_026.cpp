@@ -329,8 +329,8 @@ bool CL_C10_ConfigManager::loadSchedules(ST_A10_SchedulesRoot_t& p_cfg) {
 					ST_A10_ScheduleSegment_t& sg =
 						s.segments[s.seg_count++];
 
-					sg.segNo =
-						jseg["segNo"] | 0;
+					sg.segId = jseg["segId"] | 0;
+					sg.segNo = jseg["segNo"] | 0;
 					sg.on_minutes =
 						jseg["on_minutes"] | 10;
 					sg.off_minutes =
@@ -423,8 +423,8 @@ bool CL_C10_ConfigManager::loadUserProfiles(ST_A10_UserProfilesRoot_t& p_cfg) {
 			ST_A10_UserProfileItem_t& up =
 				p_cfg.items[p_cfg.count++];
 
-			up.profileNo =
-				jp["profileNo"] | 0;
+			up.profileId = jp["profileId"] | 0;
+			up.profileNo = jp["profileNo"] | 0;
 			strlcpy(up.name,
 					jp["name"] | "",
 					sizeof(up.name));
@@ -445,8 +445,8 @@ bool CL_C10_ConfigManager::loadUserProfiles(ST_A10_UserProfilesRoot_t& p_cfg) {
 					ST_A10_UserProfileSegment_t& sg =
 						up.segments[up.seg_count++];
 
-					sg.segNo =
-						jseg["segNo"] | 0;
+					sg.segId = jseg["segId"] | 0;
+					sg.segNo = jseg["segNo"] | 0;
 					sg.on_minutes =
 						jseg["on_minutes"] | 10;
 					sg.off_minutes =
@@ -737,11 +737,11 @@ bool CL_C10_ConfigManager::saveSchedules(const ST_A10_SchedulesRoot_t& p_cfg) {
 				JsonObject jseg =
 					js["segments"][v_k];
 
+				jseg["segId"]		= sg.segId;
 				jseg["segNo"]		= sg.segNo;
 				jseg["on_minutes"]	= sg.on_minutes;
 				jseg["off_minutes"] = sg.off_minutes;
-				jseg["mode"] =
-					A10_modeToString(sg.mode);
+				jseg["mode"] = A10_modeToString(sg.mode);
 				jseg["presetCode"] = sg.presetCode;
 				jseg["styleCode"]  = sg.styleCode;
 
@@ -799,6 +799,7 @@ bool CL_C10_ConfigManager::saveUserProfiles(const ST_A10_UserProfilesRoot_t& p_c
 			const ST_A10_UserProfileItem_t& up = p_cfg.items[v_i];
 			JsonObject jp = d["userProfiles"]["profiles"][v_i];
 
+			jp["profileId"]		 = up.profileId;
 			jp["profileNo"]		 = up.profileNo;
 			jp["name"]			 = up.name;
 			jp["enabled"]		 = up.enabled;
@@ -812,6 +813,7 @@ bool CL_C10_ConfigManager::saveUserProfiles(const ST_A10_UserProfilesRoot_t& p_c
 				JsonObject jseg =
 					jp["segments"][v_k];
 
+				jseg["segId"]		= sg.segId;
 				jseg["segNo"]		= sg.segNo;
 				jseg["on_minutes"]	= sg.on_minutes;
 				jseg["off_minutes"] = sg.off_minutes;
@@ -1019,6 +1021,7 @@ void CL_C10_ConfigManager::toJson_Schedules(const ST_A10_SchedulesRoot_t& p, Jso
 				JsonObject jseg =
 					js["segments"][k];
 
+				jseg["segId"]		= sg.segId;
 				jseg["segNo"]		= sg.segNo;
 				jseg["on_minutes"]	= sg.on_minutes;
 				jseg["off_minutes"] = sg.off_minutes;
@@ -1081,6 +1084,7 @@ void CL_C10_ConfigManager::toJson_UserProfiles(const ST_A10_UserProfilesRoot_t& 
 			JsonObject jp =
 				d["userProfiles"]["profiles"][i];
 
+			jp["profileId"]		 = up.profileId;
 			jp["profileNo"]		 = up.profileNo;
 			jp["name"]			 = up.name;
 			jp["enabled"]		 = up.enabled;
@@ -1095,6 +1099,7 @@ void CL_C10_ConfigManager::toJson_UserProfiles(const ST_A10_UserProfilesRoot_t& 
 				JsonObject jseg =
 					jp["segments"][k];
 
+				jseg["segId"]		= sg.segId;
 				jseg["segNo"]		= sg.segNo;
 				jseg["on_minutes"]	= sg.on_minutes;
 				jseg["off_minutes"] = sg.off_minutes;
