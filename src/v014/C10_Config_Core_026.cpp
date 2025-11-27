@@ -296,6 +296,7 @@ bool CL_C10_ConfigManager::loadSchedules(ST_A10_SchedulesRoot_t& p_cfg) {
 			ST_A10_ScheduleItem_t& s =
 				p_cfg.items[p_cfg.count++];
 
+			s.schId = js["schId"] | 0;
 			s.schNo = js["schNo"] | 0;
 			strlcpy(s.name,
 					js["name"] | "",
@@ -712,6 +713,7 @@ bool CL_C10_ConfigManager::saveSchedules(const ST_A10_SchedulesRoot_t& p_cfg) {
 			JsonObject js =
 				d["schedules"][v_i];
 
+			js["schId"]	  = s.schId;
 			js["schNo"]	  = s.schNo;
 			js["name"]	  = s.name;
 			js["enabled"] = s.enabled;
@@ -992,6 +994,7 @@ void CL_C10_ConfigManager::toJson_Schedules(const ST_A10_SchedulesRoot_t& p, Jso
 			JsonObject js =
 				d["schedules"][i];
 
+			js["schId"]	  = s.schId;
 			js["schNo"]	  = s.schNo;
 			js["name"]	  = s.name;
 			js["enabled"] = s.enabled;
