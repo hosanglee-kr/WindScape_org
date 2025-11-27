@@ -615,7 +615,7 @@ bool CL_C10_ConfigManager::loadMotionConfig(ST_A10_MotionConfig& p_cfg) {
 // =====================================================
 // 2-2. 목적물별 Save 구현
 // =====================================================
-void CL_C10_ConfigManager::saveSystemConfig(const ST_A10_SystemConfig& p_cfg) {
+bool CL_C10_ConfigManager::saveSystemConfig(const ST_A10_SystemConfig& p_cfg) {
 		JsonDocument v;
 
 		v["meta"]["version"]	 = p_cfg.meta.version;
@@ -652,7 +652,7 @@ void CL_C10_ConfigManager::saveSystemConfig(const ST_A10_SystemConfig& p_cfg) {
 						  v);
 }
 
-void CL_C10_ConfigManager::saveWifiConfig(const ST_A10_WifiConfig& p_cfg) {
+bool CL_C10_ConfigManager::saveWifiConfig(const ST_A10_WifiConfig& p_cfg) {
 		JsonDocument d;
 
 		d["wifi"]["wifiMode"]		= p_cfg.wifiMode;
@@ -670,7 +670,7 @@ void CL_C10_ConfigManager::saveWifiConfig(const ST_A10_WifiConfig& p_cfg) {
 						  d);
 }
 
-void CL_C10_ConfigManager::saveMotionConfig(const ST_A10_MotionConfig& p_cfg) {
+bool CL_C10_ConfigManager::saveMotionConfig(const ST_A10_MotionConfig& p_cfg) {
 		JsonDocument d;
 
 		d["motion"]["enabled"]		   = p_cfg.enabled;
@@ -703,7 +703,7 @@ void CL_C10_ConfigManager::saveMotionConfig(const ST_A10_MotionConfig& p_cfg) {
 						  d);
 }
 
-void CL_C10_ConfigManager::saveSchedules(const ST_A10_SchedulesRoot_t& p_cfg) {
+bool CL_C10_ConfigManager::saveSchedules(const ST_A10_SchedulesRoot_t& p_cfg) {
 		JsonDocument d;
 
 		for (uint8_t v_i = 0; v_i < p_cfg.count; v_i++) {
@@ -790,7 +790,7 @@ void CL_C10_ConfigManager::saveSchedules(const ST_A10_SchedulesRoot_t& p_cfg) {
 						  d);
 }
 
-void CL_C10_ConfigManager::saveUserProfiles(const ST_A10_UserProfilesRoot_t& p_cfg) {
+bool CL_C10_ConfigManager::saveUserProfiles(const ST_A10_UserProfilesRoot_t& p_cfg) {
 		JsonDocument d;
 
 		for (uint8_t v_i = 0; v_i < p_cfg.count; v_i++) {
@@ -867,7 +867,8 @@ void CL_C10_ConfigManager::saveUserProfiles(const ST_A10_UserProfilesRoot_t& p_c
 						  d);
 }
 
-void CL_C10_ConfigManager::saveWindProfileDict(const ST_A10_WindProfileDict_t& p_cfg) {
+/*
+bool CL_C10_ConfigManager::saveWindProfileDict(const ST_A10_WindProfileDict_t& p_cfg) {
     todo.....saveWindProfileDict
     JsonDocument v_doc;
     // toJson_WindProfileDict 함수가 가정되지 않았으므로, 직접 JsonObject 생성 (더미)
@@ -875,7 +876,7 @@ void CL_C10_ConfigManager::saveWindProfileDict(const ST_A10_WindProfileDict_t& p
     ioSaveJson(A10_Const::CFG_WIND_DICT_FILE, A10_Const::CFG_WIND_DICT_FILE_BAK, v_doc);
     _dirty_windProfile = false;
 }
-
+*/
 
 // =====================================================
 // 3-1. 목적물별 JSON Export 구현
