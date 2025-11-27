@@ -52,8 +52,8 @@
 
 // 외부에서 정의된 헬퍼 함수 (리셋, 모드 변환, 파일 I/O) 선언 가정
 // ConfigManager의 책임 분리를 위해 최소한의 외부 I/O와 기본값만 extern으로 남깁니다.
-extern bool ioLoadJson(const char* p_path, const char* p_bak_path, JsonDocument& p_doc);
-extern bool ioSaveJson(const char* p_path, const char* p_bak_path, const JsonDocument& p_doc);
+//extern bool ioLoadJson(const char* p_path, const char* p_bak_path, JsonDocument& p_doc);
+//extern bool ioSaveJson(const char* p_path, const char* p_bak_path, const JsonDocument& p_doc);
 extern EN_A10_MODE_t A10_modeFromString(const char* p_mode);
 
 // Mutex Timeout 정의 (A10_Const_015.h에 정의되지 않았을 경우를 대비)
@@ -61,6 +61,70 @@ extern EN_A10_MODE_t A10_modeFromString(const char* p_mode);
 #define MUTEX_TIMEOUT pdMS_TO_TICKS(100)
 #endif
 
+
+	/* =====================================================
+	 * 공용: JSON IO Helper
+	 * ===================================================== */
+	static bool ioLoadJson(const char* p_path, const char* p_bak, JsonDocument& p_doc) {
+		if (!LittleFS.exists(p_path)) {
+			if (p_bak && LittleFS.exists(p_bak)) {
+				LittleFS.rename(p_bak, p_path);
+				CL_D10_Logger::log(EN_L10_LOG_WARN,
+								   "[C10] Restored from backup: %s -> %s",
+								   p_bak, p_path);
+			} else {
+				CL_D10_Logger::log(EN_L10_LOG_ERROR,
+								   "[C10] Missing config & no backup: %s",
+								   p_path);
+				return false;
+			}
+		}
+
+		File v_f = LittleFS.open(p_path, "r");
+		if (!v_f) {
+			CL_D10_Logger::log(EN_L10_LOG_ERROR,
+							   "[C10] Open failed: %s", p_path);
+			return false;
+		}
+
+		auto v_e = deserializeJson(p_doc, v_f);
+		v_f.close();
+		if (v_e) {
+			CL_D10_Logger::log(EN_L10_LOG_ERROR,
+							   "[C10] Parse error(%s): %s",
+							   p_path, v_e.c_str());
+			return false;
+		}
+		return true;
+	}
+
+	static bool ioSaveJson(const char*		   p_path,
+						   const char*		   p_bak,
+						   const JsonDocument& p_doc) {
+		if (LittleFS.exists(p_path)) {
+			if (p_bak && LittleFS.exists(p_bak)) {
+				LittleFS.remove(p_bak);
+			}
+			if (p_bak) {
+				LittleFS.rename(p_path, p_bak);
+			}
+		}
+
+		File v_f = LittleFS.open(p_path, "w");
+		if (!v_f) {
+			CL_D10_Logger::log(EN_L10_LOG_ERROR,
+							   "[C10] Save open failed: %s", p_path);
+			return false;
+		}
+		if (serializeJsonPretty(p_doc, v_f) == 0) {
+			CL_D10_Logger::log(EN_L10_LOG_ERROR,
+							   "[C10] Save write failed: %s", p_path);
+			v_f.close();
+			return false;
+		}
+		v_f.close();
+		return true;
+	}
 
 class CL_C10_ConfigManager {
 public:
