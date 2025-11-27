@@ -333,6 +333,51 @@ void CL_C10_ConfigManager::toJson_All(
 }
 
 
+void CL_C10_ConfigManager::toJson_System(const ST_A10_SystemConfig& p, JsonDocument& d) {
+    // [Implementation required: System Config -> JSON]
+    JsonObject j_sys = d.createNestedObject("system");
+    JsonObject j_log = j_sys.createNestedObject("logging");
+    j_log["level"] = p.system.logging.level;
+    j_log["max_entries"] = p.system.logging.max_entries;
+    
+    // 이 외의 system 필드 복사 로직 ...
+    
+    JsonObject j_sec = d.createNestedObject("security");
+    j_sec["api_key"] = p.security.api_key;
+}
+
+
+
+
+
+// =====================================================
+// 3-2. All Config → JSON Export 구현 (이전 파일과 동일)
+// =====================================================
+void CL_C10_ConfigManager::toJson_All(
+    const ST_A10_ConfigRoot_t& p,
+    JsonDocument& d,
+    bool includeSystem,
+    bool includeWifi,
+    bool includeMotion,
+    bool includeSchedules,
+    bool includeUserProfiles) {
+    
+    if (includeSystem && p.system) toJson_System(*p.system, d);
+    if (includeWifi && p.wifi) toJson_Wifi(*p.wifi, d);
+    if (includeMotion && p.motion){ toJson_Motion(*p.motion, d); }
+    if (includeSchedules && p.schedules) toJson_Schedules(*p.schedules, d);
+    if (includeUserProfiles && p.userProfiles) toJson_UserProfiles(*p.userProfiles, d);
+
+    CL_D10_Logger::log(
+        EN_L10_LOG_DEBUG,
+        "[C10] Config export → JSON (sys=%d wifi=%d motion=%d sch=%d up=%d)",
+        includeSystem, includeWifi,
+        includeMotion, includeSchedules,
+        includeUserProfiles);
+}
+
+
+
 // =====================================================
 // 8. Factory Reset 구현
 // =====================================================
