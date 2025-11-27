@@ -86,8 +86,7 @@ bool ioLoadJson(const char* p_path, const char* p_bak, JsonDocument& p_doc) {
 			CL_D10_Logger::log(EN_L10_LOG_ERROR,
 								"[C10] Missing config & no backup: %s",
 								p_path);
-			r
-				eturn false;
+			return false;
 		}
 	}
 
