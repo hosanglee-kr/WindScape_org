@@ -176,6 +176,7 @@ public:
     static void toJson_Motion(const ST_A10_MotionConfig& p, JsonDocument& d);
     static void toJson_Schedules(const ST_A10_SchedulesRoot_t& p, JsonDocument& d);
     static void toJson_UserProfiles(const ST_A10_UserProfilesRoot_t& p, JsonDocument& d);
+    static void toJson_WindProfileDict(const ST_A10_WindProfileDict_t& p, JsonDocument& d);
 
 
     // =====================================================
