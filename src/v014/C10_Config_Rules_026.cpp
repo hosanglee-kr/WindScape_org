@@ -689,7 +689,7 @@ bool CL_C10_ConfigManager::patchUserProfilesFromJson(ST_A10_UserProfilesRoot_t& 
 // 7. Schedules CRUD 구현
 // ===================================================== 
 
-Bool CL_C10_ConfigManager::updateScheduleFromJson(uint16_t p_id, const JsonDocument& p_patch) {
+bool CL_C10_ConfigManager::updateScheduleFromJson(uint16_t p_id, const JsonDocument& p_patch) {
     // 1. 뮤텍스 획득
     if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
         CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] updateScheduleFromJson() Mutex timeout!");
