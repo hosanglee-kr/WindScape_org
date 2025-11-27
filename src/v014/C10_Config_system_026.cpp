@@ -43,8 +43,11 @@
 
 
 #include "C10_Config_026.h"
+
 // g_A10_config_root 전역 변수 사용을 위해 extern 선언
 extern ST_A10_ConfigRoot_t g_A10_config_root; 
+extern bool ioSaveJson(const char* p_path, const char* p_bak, const JsonDocument& p_doc);
+extern bool ioLoadJson(const char* p_path, const char* p_bak, JsonDocument& p_doc);
 
 // =====================================================
 // 4. JSON Patch (System, Wifi, Motion) 구현
@@ -52,280 +55,314 @@ extern ST_A10_ConfigRoot_t g_A10_config_root;
 // =====================================================
 
 bool CL_C10_ConfigManager::patchSystemFromJson(ST_A10_SystemConfig& p_config,
-                                const JsonDocument&	 p_patch) {
-    bool v_changed = false;
+								    const JsonDocument&	 p_patch) {
+	    bool v_changed = false;
 
-    if (xSemaphoreTake(s_configMutex, MUTEX_TIMEOUT) != pdTRUE) {
-        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] patchSystem() Mutex timeout!");
-        return false; 
-    }
-    
-    JsonObjectConst j_sys = p_patch["system"];
-    JsonObjectConst j_sec_root = p_patch["security"];
-
-    if (j_sys.isNull() && j_sec_root.isNull()) {
-        xSemaphoreGive(s_configMutex);
-        return false; 
-    }
-
-    // 1. system.logging 객체 처리
-    if (!j_sys.isNull()) {
-        JsonObjectConst j_log = j_sys["logging"];
-        if (!j_log.isNull()) {
-            const char* v_lv = j_log["level"] | "";
-            if (j_log["max_entries"].is<uint16_t>()) {
-                uint16_t v_max = j_log["max_entries"];
-                if (v_max != p_config.system.logging.max_entries) {
-                    p_config.system.logging.max_entries = v_max;
-                    v_changed = true;
-                }
-            }
-            if (strlen(v_lv) > 0 && strcmp(v_lv, p_config.system.logging.level) != 0) { 
-                strlcpy(p_config.system.logging.level, v_lv, sizeof(p_config.system.logging.level));
-                v_changed = true;
-            }
+		// 💡 Mutex를 사용하여 쓰기 작업 보호
+        if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
+            CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] patchSystem() Mutex timeout!");
+            return false; // Mutex 획득 실패 시 실패 처리
         }
-    }
-
-    // 2. security 객체 처리
-    if (!j_sec_root.isNull()) {
-        const char* v_key = j_sec_root["api_key"] | "";
-        if (strlen(v_key) > 0 && strcmp(v_key, p_config.security.api_key) != 0) {
-            strlcpy(p_config.security.api_key, v_key, sizeof(p_config.security.api_key));
-            v_changed = true;
-        }
-    }
+		
+	    // JSON 패치 데이터의 최상위 "system" 객체를 찾음
+	    JsonObjectConst j_sys = p_patch["system"];
+	    // JSON 패치 데이터의 최상위 "security" 객체를 찾음
+	    JsonObjectConst j_sec_root = p_patch["security"];
     
-    if (v_changed) {
-        _dirty_system = true;
-        CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] System config patched (Memory Only). Dirty=true");
-    }
+	    if (j_sys.isNull() && j_sec_root.isNull()) {
+			xSemaphoreGive(s_configMutex);
+		    return false; 
+	    }
+    
+	    // 1. system.logging 객체 처리
+	    if (!j_sys.isNull()) {
+		    JsonObjectConst j_log = j_sys["logging"];
+		    if (!j_log.isNull()) {
+			    const char* v_lv = j_log["level"] | "";
+			    // 0이 기본값인 경우 | 0을 사용하지 않고, is<int>()로 존재 여부 확인
+			    if (j_log["max_entries"].is<uint16_t>()) {
+					uint16_t v_max = j_log["max_entries"];
+					if (v_max != p_config.system.logging.max_entries) {
+						p_config.system.logging.max_entries = v_max;
+						v_changed = true;
+					}
+				}
+    
+			    // level 필드 패치
+			    if (strlen(v_lv) > 0 && strcmp(v_lv, p_config.system.logging.level) != 0) { 
+				    strlcpy(p_config.system.logging.level, v_lv, sizeof(p_config.system.logging.level));
+				    v_changed = true;
+			    }
+		    }
+	    }
+    
+	    // 2. security 객체 처리
+	    if (!j_sec_root.isNull()) {
+		    const char* v_key = j_sec_root["api_key"] | "";
+		    if (strlen(v_key) > 0 && strcmp(v_key, p_config.security.api_key) != 0) {
+			    strlcpy(p_config.security.api_key, v_key, sizeof(p_config.security.api_key));
+			    v_changed = true;
+		    }
+	    }
+	    
+	    // 3. 변경 사항이 있을 경우에만 Dirty Flag 설정
+		if (v_changed) {
+            _dirty_system = true;
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] System config patched (Memory Only). Dirty=true");
+        }
 
-    xSemaphoreGive(s_configMutex); 
-    return v_changed;
+		xSemaphoreGive(s_configMutex); 
+		
+        return v_changed;
 }
 
 
 bool CL_C10_ConfigManager::patchWifiFromJson(ST_A10_WifiConfig& p_config,
-                                  const JsonDocument&	 p_patch) {
-    bool v_changed = false;
+							      const JsonDocument&	 p_patch) {
+	    bool v_changed = false;
 
-    if (xSemaphoreTake(s_configMutex, MUTEX_TIMEOUT) != pdTRUE) {
-        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] patchWifiFromJson() Mutex timeout!");
-        return false; 
-    }
+		// 💡 Mutex를 사용하여 쓰기 작업 보호
+        if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
+            CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] patchWifiFromJson() Mutex timeout!");
+            return false; 
+        }
+	    
+	    // 1. wifi 객체 접근
+	    JsonObjectConst j_wifi = p_patch["wifi"];
+	    if (j_wifi.isNull()) {
+			xSemaphoreGive(s_configMutex);
+		    return false;
+	    }
+
+		// wifiMode 처리
+		if (j_wifi["wifiMode"].is<uint8_t>()) {
+			uint8_t v_mode = j_wifi["wifiMode"];
+			if (v_mode != p_config.wifiMode) {
+				// 유효한 모드 범위(0, 1, 2) 확인
+				if (v_mode >= EN_A10_WIFI_MODE_AP && v_mode <= EN_A10_WIFI_MODE_AP_STA) { 
+					p_config.wifiMode = (EN_A10_WIFI_MODE_t)v_mode;
+					v_changed = true;
+				} else {
+					CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Invalid wifiMode value: %d", v_mode);
+				}
+			}
+		}
     
-    JsonObjectConst j_wifi = p_patch["wifi"];
-    if (j_wifi.isNull()) {
-        xSemaphoreGive(s_configMutex);
-        return false;
-    }
+	    // 2. ap 객체 처리
+	    JsonObjectConst j_ap = j_wifi["ap"];
+	    if (!j_ap.isNull()) {
+		    // SSID 처리
+		    const char* v_ssid = j_ap["ssid"] | "";
+		    if (strlen(v_ssid) > 0 && strcmp(v_ssid, p_config.ap.ssid) != 0) {
+			    strlcpy(p_config.ap.ssid, v_ssid, sizeof(p_config.ap.ssid));
+			    v_changed = true;
+		    }
+		    
+		    // Password 처리
+		    const char* v_pwd = j_ap["password"] | "";
+		    // 길이가 0이 아니거나, 기존 패스워드와 다른 경우에만 변경 (길이가 0이면 패스워드 미변경)
+		    if (strlen(v_pwd) > 0 && strcmp(v_pwd, p_config.ap.password) != 0) {
+			    strlcpy(p_config.ap.password, v_pwd, sizeof(p_config.ap.password));
+			    v_changed = true;
+		    }
+	    }
+	    
+	    // 3. sta 배열 전체 덮어쓰기 (PUT 방식)
+	    JsonArrayConst j_sta = j_wifi["sta"].as<JsonArrayConst>();
+	    if (!j_sta.isNull()) {
+			// 기존 목록 초기화
+			p_config.sta_count = 0; 
+			// memset(&p_config.sta, 0, sizeof(p_config.sta)); // strlcpy가 덮어쓰므로 불필요
 
-    // wifiMode 처리
-    if (j_wifi["wifiMode"].is<uint8_t>()) {
-        uint8_t v_mode = j_wifi["wifiMode"];
-        constexpr uint8_t EN_A10_WIFI_MODE_AP = 0;
-        constexpr uint8_t EN_A10_WIFI_MODE_AP_STA = 2;
-        
-        if (v_mode != p_config.wifiMode) {
-            if (v_mode >= EN_A10_WIFI_MODE_AP && v_mode <= EN_A10_WIFI_MODE_AP_STA) { 
-                p_config.wifiMode = (EN_A10_WIFI_MODE_t)v_mode;
-                v_changed = true;
-            } else {
-                CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Invalid wifiMode value: %d", v_mode);
-            }
+		    for (JsonObjectConst v_js : j_sta) {
+			    if (p_config.sta_count >= A10_Const::MAX_STA_NETWORKS)
+				    break;
+			    
+				ST_A10_STANetwork_t& v_net = p_config.sta[p_config.sta_count];
+
+			    strlcpy(v_net.ssid,
+					    v_js["ssid"] | "",
+					    sizeof(v_net.ssid));
+			    strlcpy(v_net.pass,
+					    v_js["pass"] | "",
+					    sizeof(v_net.pass));
+			    p_config.sta_count++;
+		    }
+		    v_changed = true;
+		    CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[C10] WiFi STA array fully replaced.");
+	    }
+
+
+	    // 4. 변경 사항이 있을 경우에만 Dirty Flag 설정
+		if (v_changed) {
+            _dirty_wifi = true;
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] WiFi config patched (Memory Only). Dirty=true");
         }
-    }
 
-    // 2. ap 객체 처리
-    JsonObjectConst j_ap = j_wifi["ap"];
-    if (!j_ap.isNull()) {
-        const char* v_ssid = j_ap["ssid"] | "";
-        if (strlen(v_ssid) > 0 && strcmp(v_ssid, p_config.ap.ssid) != 0) {
-            strlcpy(p_config.ap.ssid, v_ssid, sizeof(p_config.ap.ssid));
-            v_changed = true;
-        }
-        const char* v_pwd = j_ap["password"] | "";
-        if (strlen(v_pwd) > 0 && strcmp(v_pwd, p_config.ap.password) != 0) {
-            strlcpy(p_config.ap.password, v_pwd, sizeof(p_config.ap.password));
-            v_changed = true;
-        }
-    }
-    
-    // 3. sta 배열 전체 덮어쓰기 (PUT 방식)
-    JsonArrayConst j_sta = j_wifi["sta"].as<JsonArrayConst>();
-    if (!j_sta.isNull()) {
-        constexpr uint8_t MAX_STA_NETWORKS = 5; 
-
-        p_config.sta_count = 0; 
-
-        for (JsonObjectConst v_js : j_sta) {
-            if (p_config.sta_count >= MAX_STA_NETWORKS)
-                break;
-            
-            strlcpy(p_config.sta[p_config.sta_count].ssid,
-                    v_js["ssid"] | "",
-                    sizeof(p_config.sta[p_config.sta_count].ssid));
-            strlcpy(p_config.sta[p_config.sta_count].pass,
-                    v_js["pass"] | "",
-                    sizeof(p_config.sta[p_config.sta_count].pass));
-            p_config.sta_count++;
-        }
-        v_changed = true;
-        CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[C10] WiFi STA array fully replaced.");
-    }
-
-    if (v_changed) {
-        _dirty_wifi = true;
-        CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] WiFi config patched (Memory Only). Dirty=true");
-    }
-
-    xSemaphoreGive(s_configMutex); 
-    return v_changed;
+		xSemaphoreGive(s_configMutex); 
+		
+        return v_changed;
 }
 
 
 bool CL_C10_ConfigManager::patchMotionFromJson(ST_A10_MotionConfig& p_config,
-                                  const JsonDocument&	 p_patch) {
-    if (xSemaphoreTake(s_configMutex, MUTEX_TIMEOUT) != pdTRUE) {
-        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] patchMotionFromJson() Mutex timeout!");
-        return false; 
-    }
+								    const JsonDocument&	 p_patch) {
+		// 💡 Mutex를 사용하여 쓰기 작업 보호
+        if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
+            CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] patchMotionFromJson() Mutex timeout!");
+            return false; 
+        }
+		
+	    bool v_changed = false;
+	    
+	    JsonObjectConst j_motion = p_patch["motion"];
     
-    bool v_changed = false;
-    JsonObjectConst j_motion = p_patch["motion"];
-
-    if (j_motion.isNull()) {
-        xSemaphoreGive(s_configMutex);
-        return false; 
-    }
-
-    // 1. 최상위 enabled 필드
-    if (j_motion["enabled"].is<bool>() && 
-        j_motion["enabled"].as<bool>() != p_config.enabled) {
-        p_config.enabled = j_motion["enabled"];
-        v_changed = true;
-    }
-
-    // 2. pir 객체 처리
-    JsonObjectConst j_pir = j_motion["pir"];
-    if (!j_pir.isNull()) {
-        if (j_pir["enabled"].is<bool>() &&
-            j_pir["enabled"].as<bool>() != p_config.pir.enabled) {
-            p_config.pir.enabled = j_pir["enabled"];
-            v_changed = true;
-        }
-        if (j_pir["hold_sec"].is<uint16_t>()) { 
-            if (j_pir["hold_sec"].as<uint16_t>() != p_config.pir.hold_sec) {
-                p_config.pir.hold_sec = j_pir["hold_sec"];
-                v_changed = true;
-            }
-        }
-    }
+	    if (j_motion.isNull()) {
+			xSemaphoreGive(s_configMutex);
+		    return false; 
+	    }
     
-    // 3. ble 객체 및 중첩된 rssi 객체 처리
-    JsonObjectConst j_ble = j_motion["ble"];
-    if (!j_ble.isNull()) {
-        if (j_ble["enabled"].is<bool>() &&
-            j_ble["enabled"].as<bool>() != p_config.ble.enabled) {
-            p_config.ble.enabled = j_ble["enabled"];
-            v_changed = true;
+	    // 1. 최상위 enabled 필드
+	    if (j_motion["enabled"].is<bool>() && 
+		    j_motion["enabled"].as<bool>() != p_config.enabled) {
+		    p_config.enabled = j_motion["enabled"];
+		    v_changed = true;
+	    }
+    
+	    // 2. pir 객체 처리
+	    JsonObjectConst j_pir = j_motion["pir"];
+	    if (!j_pir.isNull()) {
+		    if (j_pir["enabled"].is<bool>() &&
+			    j_pir["enabled"].as<bool>() != p_config.pir.enabled) {
+			    p_config.pir.enabled = j_pir["enabled"];
+			    v_changed = true;
+		    }
+		    if (j_pir["hold_sec"].is<uint16_t>()) { // 0이 유효할 수 있으므로 is<uint16_t>()로 존재 여부 확인
+			    if (j_pir["hold_sec"].as<uint16_t>() != p_config.pir.hold_sec) {
+					p_config.pir.hold_sec = j_pir["hold_sec"];
+					v_changed = true;
+				}
+		    }
+	    }
+	    
+	    // 3. ble 객체 및 중첩된 rssi 객체 처리
+	    JsonObjectConst j_ble = j_motion["ble"];
+	    if (!j_ble.isNull()) {
+		    if (j_ble["enabled"].is<bool>() &&
+			    j_ble["enabled"].as<bool>() != p_config.ble.enabled) {
+			    p_config.ble.enabled = j_ble["enabled"];
+			    v_changed = true;
+		    }
+		    
+		    // rssi 객체
+		    JsonObjectConst j_rssi = j_ble["rssi"];
+		    if (!j_rssi.isNull()) {
+			    if (j_rssi["on"].is<int8_t>() &&
+				    j_rssi["on"].as<int8_t>() != p_config.ble.rssi.on) {
+				    p_config.ble.rssi.on = j_rssi["on"];
+				    v_changed = true;
+			    }
+			    if (j_rssi["off"].is<int8_t>() &&
+				    j_rssi["off"].as<int8_t>() != p_config.ble.rssi.off) {
+				    p_config.ble.rssi.off = j_rssi["off"];
+				    v_changed = true;
+			    }
+			    if (j_rssi["avg_count"].is<uint8_t>() &&
+				    j_rssi["avg_count"].as<uint8_t>() != p_config.ble.rssi.avg_count) {
+				    p_config.ble.rssi.avg_count = j_rssi["avg_count"];
+				    v_changed = true;
+			    }
+			    if (j_rssi["persist_count"].is<uint8_t>() &&
+				    j_rssi["persist_count"].as<uint8_t>() != p_config.ble.rssi.persist_count) {
+				    p_config.ble.rssi.persist_count = j_rssi["persist_count"];
+				    v_changed = true;
+			    }
+			    if (j_rssi["exit_delay_sec"].is<uint16_t>()) { // 0이 유효할 수 있으므로 is<uint16_t>()로 존재 여부 확인
+					if (j_rssi["exit_delay_sec"].as<uint16_t>() != p_config.ble.rssi.exit_delay_sec) {
+						p_config.ble.rssi.exit_delay_sec = j_rssi["exit_delay_sec"];
+						v_changed = true;
+					}
+			    }
+		    }
+    
+		    // trusted_devices 배열 전체 덮어쓰기(PUT) 방식으로 처리합니다.
+		    JsonArrayConst j_devices = j_ble["trusted_devices"].as<JsonArrayConst>();
+		    if (!j_devices.isNull()) {
+			    p_config.ble.trusted_count = 0; // 기존 목록 초기화
+			    // memset(&p_config.ble.trusted_devices, 0, sizeof(p_config.ble.trusted_devices)); // strlcpy가 덮어쓰므로 불필요
+			    for (JsonObjectConst j_dev : j_devices) {
+				    if (p_config.ble.trusted_count >= A10_Const::MAX_BLE_DEVICES)
+					    break;
+				    
+				    ST_A10_BLETrustedDevice& v_d = p_config.ble.trusted_devices[p_config.ble.trusted_count];
+    
+				    strlcpy(v_d.alias, j_dev["alias"] | "", sizeof(v_d.alias));
+				    strlcpy(v_d.name, j_dev["name"] | "", sizeof(v_d.name));
+				    strlcpy(v_d.mac, j_dev["mac"] | "", sizeof(v_d.mac));
+				    strlcpy(v_d.manuf_prefix, j_dev["manuf_prefix"] | "", sizeof(v_d.manuf_prefix));
+				    v_d.prefix_len = j_dev["prefix_len"] | 0;
+				    v_d.enabled	   = j_dev["enabled"] | true;
+					
+					p_config.ble.trusted_count++;
+			    }
+			    v_changed = true;
+			    CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[C10] Motion Trusted Devices array fully replaced.");
+		    }
+	    }
+
+
+	    // 4. 변경 사항이 있을 경우에만 Dirty Flag 설정
+		if (v_changed) {
+            _dirty_motion = true;
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] motion config patched (Memory Only). Dirty=true");
         }
-        
-        JsonObjectConst j_rssi = j_ble["rssi"];
-        if (!j_rssi.isNull()) {
-            if (j_rssi["on"].is<int8_t>() &&
-                j_rssi["on"].as<int8_t>() != p_config.ble.rssi.on) {
-                p_config.ble.rssi.on = j_rssi["on"];
-                v_changed = true;
-            }
-            if (j_rssi["off"].is<int8_t>() &&
-                j_rssi["off"].as<int8_t>() != p_config.ble.rssi.off) {
-                p_config.ble.rssi.off = j_rssi["off"];
-                v_changed = true;
-            }
-            // ... (나머지 rssi 필드 패치 로직 생략)
-        }
 
-        // trusted_devices 배열 전체 덮어쓰기(PUT)
-        JsonArrayConst j_devices = j_ble["trusted_devices"].as<JsonArrayConst>();
-        if (!j_devices.isNull()) {
-            constexpr uint8_t MAX_BLE_DEVICES = 5; 
-
-            p_config.ble.trusted_count = 0; 
-            for (JsonObjectConst j_dev : j_devices) {
-                if (p_config.ble.trusted_count >= MAX_BLE_DEVICES)
-                    break;
-                
-                strlcpy(p_config.ble.trusted_devices[p_config.ble.trusted_count].alias, 
-                        j_dev["alias"] | "", 
-                        sizeof(p_config.ble.trusted_devices[p_config.ble.trusted_count].alias));
-                // ... (나머지 필드 복사 로직 생략)
-                
-                p_config.ble.trusted_count++;
-            }
-            v_changed = true;
-            CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[C10] Motion Trusted Devices array fully replaced.");
-        }
-    }
-
-    if (v_changed) {
-        _dirty_motion = true;
-        CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] motion config patched (Memory Only). Dirty=true");
-    }
-
-    xSemaphoreGive(s_configMutex); 
-    return v_changed;
+		xSemaphoreGive(s_configMutex); 
+		
+        return v_changed;
 }
 
 // =====================================================
 // 3-1. 목적물별 JSON Export 구현 (Wifi/Motion)
 // =====================================================
-void CL_C10_ConfigManager::toJson_Wifi(const ST_A10_WifiConfig& p, JsonDocument& d) {
-    // [Implementation required: WiFi Config -> JSON]
-    JsonObject j_wifi = d.createNestedObject("wifi");
-    
-    j_wifi["wifiMode"] = p.wifiMode;
+void CL_C10_ConfigManager::toJson_Wifi(const ST_A10_WifiConfig& p,
+							JsonDocument&			 d) {
+		d["wifi"]["wifiMode"]		= p.wifiMode;
+		d["wifi"]["wifiModeDesc"]	= p.wifiModeDesc;
+		d["wifi"]["ap"]["ssid"]		= p.ap.ssid;
+		d["wifi"]["ap"]["password"] = p.ap.password;
 
-    // AP 설정
-    JsonObject j_ap = j_wifi.createNestedObject("ap");
-    j_ap["ssid"] = p.ap.ssid;
-    j_ap["password"] = p.ap.password;
-
-    // STA 목록
-    JsonArray j_sta_arr = j_wifi.createNestedArray("sta");
-    for (uint8_t i = 0; i < p.sta_count; i++) {
-        JsonObject j_sta_item = j_sta_arr.createNestedObject();
-        j_sta_item["ssid"] = p.sta[i].ssid;
-        j_sta_item["pass"] = p.sta[i].pass;
-    }
+		for (uint8_t i = 0; i < p.sta_count; i++) {
+			d["wifi"]["sta"][i]["ssid"] = p.sta[i].ssid;
+			d["wifi"]["sta"][i]["pass"] = p.sta[i].pass;
+		}
 }
 
-void CL_C10_ConfigManager::toJson_Motion(const ST_A10_MotionConfig& p, JsonDocument& d) {
-    // [Implementation required: Motion Config -> JSON]
-    JsonObject j_motion = d.createNestedObject("motion");
-    j_motion["enabled"] = p.enabled;
+void CL_C10_ConfigManager::toJson_Motion(const ST_A10_MotionConfig& p,
+							  JsonObject&				 d) {
+		d["motion"]["enabled"]		   = p.enabled;
+		d["motion"]["pir"]["enabled"]  = p.pir.enabled;
+		d["motion"]["pir"]["hold_sec"] = p.pir.hold_sec;
 
-    // PIR 설정
-    JsonObject j_pir = j_motion.createNestedObject("pir");
-    j_pir["enabled"] = p.pir.enabled;
-    j_pir["hold_sec"] = p.pir.hold_sec;
+		d["motion"]["ble"]["enabled"]				 = p.ble.enabled;
+		d["motion"]["ble"]["rssi"]["on"]			 = p.ble.rssi.on;
+		d["motion"]["ble"]["rssi"]["off"]			 = p.ble.rssi.off;
+		d["motion"]["ble"]["rssi"]["avg_count"]		 = p.ble.rssi.avg_count;
+		d["motion"]["ble"]["rssi"]["persist_count"]	 = p.ble.rssi.persist_count;
+		d["motion"]["ble"]["rssi"]["exit_delay_sec"] = p.ble.rssi.exit_delay_sec;
 
-    // BLE 설정
-    JsonObject j_ble = j_motion.createNestedObject("ble");
-    j_ble["enabled"] = p.ble.enabled;
-    
-    JsonObject j_rssi = j_ble.createNestedObject("rssi");
-    j_rssi["on"] = p.ble.rssi.on;
-    j_rssi["off"] = p.ble.rssi.off;
-    // ... (나머지 rssi 필드 복사 로직 생략)
-    
-    // Trusted Devices 목록
-    JsonArray j_dev_arr = j_ble.createNestedArray("trusted_devices");
-    for (uint8_t i = 0; i < p.ble.trusted_count; i++) {
-        JsonObject j_dev_item = j_dev_arr.createNestedObject();
-        j_dev_item["alias"] = p.ble.trusted_devices[i].alias;
-        // ... (나머지 필드 복사 로직 생략)
-    }
+		for (uint8_t i = 0; i < p.ble.trusted_count; i++) {
+			const ST_A10_BLETrustedDevice& v_d =
+				p.ble.trusted_devices[i];
+			JsonObject v_td =
+				d["motion"]["ble"]["trusted_devices"][i];
+
+			v_td["alias"]		 = v_d.alias;
+			v_td["name"]		 = v_d.name;
+			v_td["mac"]			 = v_d.mac;
+			v_td["manuf_prefix"] = v_d.manuf_prefix;
+			v_td["prefix_len"]	 = v_d.prefix_len;
+			v_td["enabled"]		 = v_d.enabled;
+		}
 }
 

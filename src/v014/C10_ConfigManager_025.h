@@ -2130,7 +2130,7 @@ class CL_C10_ConfigManager {
             return 0;
         }
 
-        ST_A10_WindProfileDict_t* v_root = g_A10_config_root.windProfileDict;
+        ST_A10_WindProfileDict_t* v_root = g_A10_config_root.windDict;
         if (!v_root || v_root->count >= A10_Const::MAX_WIND_PROFILES) {
             CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] Wind Profile creation failed: Max limit reached or root not ready.");
             xSemaphoreGive(s_configMutex);
@@ -2185,7 +2185,7 @@ class CL_C10_ConfigManager {
             return false;
         }
 
-        ST_A10_WindProfileDict_t* v_root = g_A10_config_root.windProfileDict;
+        ST_A10_WindProfileDict_t* v_root = g_A10_config_root.windDict;
         if (!v_root) {
             xSemaphoreGive(s_configMutex);
             return false;
@@ -2255,7 +2255,7 @@ class CL_C10_ConfigManager {
             return false;
         }
 
-        ST_A10_WindProfileDict_t* v_root = g_A10_config_root.windProfileDict;
+        ST_A10_WindProfileDict_t* v_root = g_A10_config_root.windDict;
         if (!v_root) {
             xSemaphoreGive(s_configMutex);
             return false;

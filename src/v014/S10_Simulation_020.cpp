@@ -14,7 +14,7 @@
 
 // 외부 종속성 헤더 포함 (외부에서 제공되어야 함: 시스템 상수, 설정, 로그, PWM 제어)
 #include "A10_Const_015.h"
-#include "C10_ConfigManager_024.h"
+#include "C10_Config_026.h"
 #include "D10_Logger_016.h"
 #include "P10_PWM_ctrl_014.h"
 
