@@ -1,5 +1,44 @@
-#ifndef CL_C10_CONFIGMANAGER_V026_H
-#define CL_C10_CONFIGMANAGER_V026_H
+#pragma once
+/*
+ * ------------------------------------------------------
+ * 소스명 : C10_Config_026.h
+ * 모듈 약어 : C10
+ * 모듈명 : Smart Nature Wind Configuration Manager
+ * ------------------------------------------------------
+ * 기능 요약:
+ *  - Smart Nature Wind 전체 설정(JSON 기반) 관리 매니저
+ *  - 설정 파일 단위 분리 관리 (system / wifi / motion / schedules / userProfiles / windProfile)
+ *  - 구조체 ↔ JSON 직렬화 및 역직렬화 (ArduinoJson v7 전용)
+ *  - 파일 백업(.bak) / 복구 / 공장초기화(factoryResetFromDefault) 지원
+ *  - PATCH 기반 부분 업데이트(patchConfigFromJson) 지원
+ *  - Lazy-Load 하이브리드 구성 (필요 섹션만 동적 로드)
+ *  - Wi-Fi 등 재초기화 판단 로직 확장 가능
+ * ------------------------------------------------------
+ * [구현 규칙]
+ *  - 항상 소스 시작 주석 체계 유지
+ *  - ArduinoJson v7.x.x 사용 (v6 이하 사용 금지)
+ *  - JsonDocument 단일 타입만 사용
+ *  - createNestedArray/Object/containsKey 사용 금지
+ *  - memset + strlcpy 기반 안전 초기화
+ *  - 주석/필드명은 JSON 구조와 동일하게 유지
+ *  - 모듈별 단일 헤더(h)파일로만 구성 (cpp 없음)
+ * ------------------------------------------------------
+ * [코드 네이밍 규칙]
+ *   - 전역 상수,매크로      : G_모듈약어_ 접두사
+ *   - 전역 변수             : g_모듈약어_ 접두사
+ *   - 전역 함수             : 모듈약어_ 접두사
+ *   - type                  : T_모듈약어_ 접두사
+ *   - typedef               : _t  접미사
+ *   - enum 상수             : EN_모듈약어_ 접두사
+ *   - 구조체                : ST_모듈약어_ 접두사
+ *   - 클래스명              : CL_모듈약어_ 접두사
+ *   - 클래스 private 멤버   : _ 접두사
+ *   - 클래스 멤버(함수/변수) : 모듈약어 접두사 미사용
+ *   - 클래스 정적 멤버      : s_ 접두사
+ *   - 함수 로컬 변수        : v_ 접두사
+ *   - 함수 인자             : p_ 접두사
+ * ------------------------------------------------------
+ */
 
 #include <ArduinoJson.h>
 #include "A10_Const_015.h"        // 사용자 요청 반영
@@ -117,4 +156,3 @@ private:
 // 전역 Config Root (포인터 보관용)
 inline ST_A10_ConfigRoot_t g_A10_config_root;
 
-#endif // CL_C10_CONFIGMANAGER_V026_H
