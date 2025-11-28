@@ -145,7 +145,7 @@ public:
 	static bool loadAll(ST_A10_ConfigRoot_t& p_root);
 	static void freeLazySection(const char* p_section, ST_A10_ConfigRoot_t& p_root);
 	static void freeAll(ST_A10_ConfigRoot_t& p_root);
-	static void saveAll(const ST_A10_ConfigRoot_t& p_root);
+	
     static bool factoryResetFromDefault();
 
 
@@ -159,6 +159,11 @@ public:
     static bool loadWifiConfig(ST_A10_WifiConfig& p_cfg);
     static bool loadMotionConfig(ST_A10_MotionConfig& p_cfg);
 
+
+    static void saveDirtyConfigs();
+    static void getDirtyStatus(JsonDocument& doc);
+
+    static void saveAll(const ST_A10_ConfigRoot_t& p_root);
     static bool saveSystemConfig(const ST_A10_SystemConfig& p_cfg);
     static bool saveWifiConfig(const ST_A10_WifiConfig& p_cfg);
     static bool saveMotionConfig(const ST_A10_MotionConfig& p_cfg);
