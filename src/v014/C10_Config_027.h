@@ -228,7 +228,7 @@ private:
 
 
         // 뮤텍스 관리 헬퍼 함수 정의                   
-    static bool _mutex_Acquire(const char* p_funcName) {
+    inline static bool _mutex_Acquire(const char* p_funcName) {
         
         // 성공 시 디버그 로그
         // CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[C10] Mutex attempt: %s", p_funcName);
@@ -242,7 +242,7 @@ private:
         return true;
     }
     
-    static void _mutex_Release() {
+    inline static void _mutex_Release() {
         xSemaphoreGive(s_configMutex);
     }
 
