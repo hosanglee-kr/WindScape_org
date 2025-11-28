@@ -151,42 +151,6 @@ private:
 	static void routeStaticAssets(); // GET /*: 정적 웹 파일 (HTML, JS, CSS 등) 제공
 	static void routeWebSocket();	 // GET /ws/*: 웹소켓 연결 처리
 
-
-/*
-	static void routeVersion();
-	static void routeState();
-	static void routeSystem();
-	static void routeWifi();
-	static void routeMotion();
-	static void routeWindProfile();
-	static void routeSchedules();
-	static void routeUserProfiles();
-	static void routeControl();
-	static void routeSimulation();
-	static void routeSimState();
-	static void routeControlSummary();
-	static void routeMetrics();
-	static void routeLogs();
-	static void routeReload();
-    static void routeConfigSave(); 
-
-	// --- v012에서 복구된 REST API 라우트 선언 ---
-	static void routeDiag();	  // /api/diag
-	static void routeScan();	  // /api/scan
-	static void routeConfigInit(); // /api/config/init
-	static void routeMotionFeed(); // /api/motion/feed
-
-    static void routeWifiConfig();    // 23. /api/network/wifi/config (POST)
-	static void routeTimeSet();       // 24. /api/system/time/set (POST)
-	static void routeFirmwareCheck(); // 25. /api/system/firmware/check (GET)
-
-	// --- 신규 분리 모듈 라우트 선언 ---
-	static void routeWebSocket();		// (WebSockets.cpp)
-	static void routeStaticAssets();	// (W10_Web_Static_024.cpp)
-	static void routeUpload();			// (W10_Web_Upload_024.cpp - /upload)
-	static void routeUpdate();			// (W10_Web_Upload_024.cpp - /update)
-*/
-
 public:
 	// --------------------------------------------------
 	// 유틸리티 함수
