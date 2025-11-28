@@ -48,21 +48,6 @@ extern ST_A10_ConfigRoot_t g_A10_config_root;
 extern bool ioSaveJson(const char* p_path, const char* p_bak, const JsonDocument& p_doc);
 extern bool ioLoadJson(const char* p_path, const char* p_bak, JsonDocument& p_doc);
 
-// // A10_modeFromString 함수가 외부 모듈에 있다고 가정
-// extern EN_A10_MODE_t A10_modeFromString(const char* p_mode) {
-//     if (strcmp(p_mode, "PRESET") == 0) return (EN_A10_MODE_t)1;
-//     if (strcmp(p_mode, "FIXED") == 0) return (EN_A10_MODE_t)2;
-//     return (EN_A10_MODE_t)0; // Default
-// }
-
-// // 임시 상수 정의 (A10_Const_015.h에 정의되어야 함)
-// namespace A10_Const {
-//     constexpr uint8_t MAX_SEGMENTS_PER_SCHEDULE = 4;
-//     constexpr uint8_t MAX_SEGMENTS_PER_PROFILE = 8;
-//     constexpr uint8_t MAX_WIND_PROFILES = 10;
-// }
-
-
 // =====================================================
 // 5. JSON Patch (Schedules, UserProfiles) 구현
 // (로직은 요청에 따라 이전 응답과 동일하게 유지)
@@ -102,18 +87,6 @@ bool CL_C10_ConfigManager::patchSchedulesFromJson(ST_A10_SchedulesRoot_t& p_cfg,
 					break;
 				}
 			}
-			/*
-			if (!j_patch["schNo"].is<uint16_t>()) continue;
-			uint16_t v_schNo = j_patch["schNo"];
-
-			ST_A10_ScheduleItem_t* v_item = nullptr;
-			for (uint8_t i = 0; i < p_cfg.count; i++) {
-				if (p_cfg.items[i].schNo == v_schNo) {
-					v_item = &p_cfg.items[i];
-					break;
-				}
-			}
-			*/
 
 			if (!v_item) {
 				CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Schedule patch skipped: ID %u not found", v_schNo);
@@ -344,18 +317,6 @@ bool CL_C10_ConfigManager::patchUserProfilesFromJson(ST_A10_UserProfilesRoot_t& 
 					break;
 				}
 			}
-			/*
-			if (!j_patch["profileNo"].is<uint16_t>()) continue;
-			uint16_t v_profileNo = j_patch["profileNo"];
-
-			ST_A10_UserProfileItem_t* v_item = nullptr;
-			for (uint8_t i = 0; i < p_cfg.count; i++) {
-				if (p_cfg.items[i].profileNo == v_profileNo) {
-					v_item = &p_cfg.items[i];
-					break;
-				}
-			}
-			*/
 
 			if (!v_item) {
 				CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] UserProfile patch skipped: ID %u not found", v_profileNo);
@@ -525,165 +486,6 @@ bool CL_C10_ConfigManager::patchUserProfilesFromJson(ST_A10_UserProfilesRoot_t& 
         return v_changed;
 }
 
-// ===================================================== 
-// 6. Wind Profile CRUD 구현
-// ===================================================== 
-
-// int CL_C10_ConfigManager::addWindProfileFromJson(const JsonDocument& p_doc) {
-//         if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
-//             CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] addWindProfileFromJson() Mutex timeout!");
-//             return 0;
-//         }
-
-//         ST_A10_WindProfileDict_t* v_root = g_A10_config_root.windDict;
-//         if (!v_root || v_root->count >= A10_Const::MAX_WIND_PROFILES) {
-//             CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] Wind Profile creation failed: Max limit reached or root not ready.");
-//             xSemaphoreGive(s_configMutex);
-//             return 0;
-//         }
-
-//         // 1. 새 ID 할당 (가장 큰 ID + 1)
-//         uint16_t v_new_id = 0;
-//         for (uint8_t i = 0; i < v_root->count; i++) {
-//             if (v_root->items[i].wpNo > v_new_id) {
-//                 v_new_id = v_root->items[i].wpNo;
-//             }
-//         }
-//         v_new_id++;
-        
-//         // 2. 새 항목에 데이터 복사 (마지막 인덱스)
-//         ST_A10_WindProfileItem_t& v_new_item = v_root->items[v_root->count];
-//         memset(&v_new_item, 0, sizeof(v_new_item));
-        
-//         // 3. JSON 파싱 및 데이터 복사 (Validation 포함해야 함)
-//         v_new_item.wpNo = v_new_id;
-//         JsonObjectConst j_patch = p_doc.as<JsonObjectConst>();
-        
-//         if (j_patch["name"].is<const char*>()) {
-//             strlcpy(v_new_item.name, j_patch["name"], sizeof(v_new_item.name));
-//         }
-        
-//         // 나머지 필드 (speed, variable, gust 등) 복사 로직 추가 필요
-//         v_new_item.speed      = j_patch["speed"] | 0.5f;
-//         v_new_item.variable   = j_patch["variable"] | 0.1f;
-//         v_new_item.gust_freq  = j_patch["gust_freq"] | 0.05f;
-//         v_new_item.gust_range = j_patch["gust_range"] | 0.2f;
-
-//         // 4. 카운트 증가 및 Dirty 플래그 설정
-//         v_root->count++;
-//         _dirty_windProfile = true;
-//         CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] New Wind Profile ID %u added. Dirty=true", v_new_id);
-        
-//         xSemaphoreGive(s_configMutex);
-//         return v_new_id;
-// }
-
-
-// bool CL_C10_ConfigManager::updateWindProfileFromJson(uint16_t p_id, const JsonDocument& p_patch) {
-//         if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
-//             CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] updateWindProfileFromJson() Mutex timeout!");
-//             return false;
-//         }
-
-//         ST_A10_WindProfileDict_t* v_root = g_A10_config_root.windDict;
-//         if (!v_root) {
-//             xSemaphoreGive(s_configMutex);
-//             return false;
-//         }
-
-//         ST_A10_WindProfileItem_t* v_item = nullptr;
-//         for (uint8_t i = 0; i < v_root->count; i++) {
-//             if (v_root->items[i].wpNo == p_id) {
-//                 v_item = &v_root->items[i];
-//                 break;
-//             }
-//         }
-
-//         if (!v_item) {
-//             CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Wind Profile update failed: ID %u not found.", p_id);
-//             xSemaphoreGive(s_configMutex);
-//             return false;
-//         }
-
-//         bool v_changed = false;
-//         JsonObjectConst j_patch = p_patch.as<JsonObjectConst>();
-        
-//         // name
-//         if (j_patch["name"].is<const char*>()) {
-//             const char* v_new = j_patch["name"];
-//             if (strcmp(v_new, v_item->name) != 0) {
-//                 strlcpy(v_item->name, v_new, sizeof(v_item->name));
-//                 v_changed = true;
-//             }
-//         }
-        
-//         // speed (Float)
-//         if (j_patch["speed"].is<float>() || j_patch["speed"].is<int>()) {
-//             float v_new = j_patch["speed"].as<float>();
-//             if (abs(v_new - v_item->speed) > 0.001f) {
-//                 v_item->speed = v_new;
-//                 v_changed = true;
-//             }
-//         }
-        
-//         // 나머지 필드 (variable, gust_freq, gust_range 등)도 비슷한 로직으로 구현...
-//         if (j_patch["variable"].is<float>()) {
-//             float v_new = j_patch["variable"].as<float>();
-//             if (abs(v_new - v_item->variable) > 0.001f) {
-//                 v_item->variable = v_new;
-//                 v_changed = true;
-//             }
-//         }
-        
-//         if (v_changed) {
-//             _dirty_windProfile = true;
-//             CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] Wind Profile ID %u patched. Dirty=true", p_id);
-//         }
-
-//         xSemaphoreGive(s_configMutex);
-//         return v_changed;
-// }
-
-
-// bool CL_C10_ConfigManager::deleteWindProfile(uint16_t p_id) {
-//         if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
-//             CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] deleteWindProfile() Mutex timeout!");
-//             return false;
-//         }
-
-//         ST_A10_WindProfileDict_t* v_root = g_A10_config_root.windDict;
-//         if (!v_root) {
-//             xSemaphoreGive(s_configMutex);
-//             return false;
-//         }
-
-//         int v_del_idx = -1;
-//         for (uint8_t i = 0; i < v_root->count; i++) {
-//             if (v_root->items[i].wpNo == p_id) {
-//                 v_del_idx = i;
-//                 break;
-//             }
-//         }
-
-//         if (v_del_idx == -1) {
-//             CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Wind Profile deletion failed: ID %u not found.", p_id);
-//             xSemaphoreGive(s_configMutex);
-//             return false;
-//         }
-
-//         // 배열에서 항목 제거 (덮어쓰기)
-//         for (uint8_t i = v_del_idx; i < v_root->count - 1; i++) {
-//             v_root->items[i] = v_root->items[i + 1];
-//         }
-
-//         v_root->count--; // 카운트 감소
-
-//         _dirty_windProfile = true;
-//         CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] Wind Profile ID %u deleted. count=%u. Dirty=true", p_id, v_root->count);
-
-//         xSemaphoreGive(s_configMutex);
-//         return true;
-// }
 
 // ===================================================== 
 // 7. Schedules CRUD 구현
