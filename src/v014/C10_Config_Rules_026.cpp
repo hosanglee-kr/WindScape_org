@@ -689,6 +689,7 @@ bool CL_C10_ConfigManager::patchUserProfilesFromJson(ST_A10_UserProfilesRoot_t& 
 // 7. Schedules CRUD 구현
 // ===================================================== 
 
+
 bool CL_C10_ConfigManager::updateScheduleFromJson(uint16_t p_id, const JsonDocument& p_patch) {
     // 1. 뮤텍스 획득
     if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
@@ -738,78 +739,191 @@ bool CL_C10_ConfigManager::updateScheduleFromJson(uint16_t p_id, const JsonDocum
     }
     
     // =========================================================================
-    // period 패치 (ST_A10_SchedulePeriod_t)
+    // period 패치 (ST_A10_SchedulePeriod_t) 
     // =========================================================================
     if (j_patch["period"].is<JsonObjectConst>()) {
         JsonObjectConst j_period = j_patch["period"];
         
-        uint16_t v_start = j_period["start"].is<uint16_t>() ? j_period["start"].as<uint16_t>() : v_item->period.start_minutes;
-        if (v_start != v_item->period.start_minutes) {
-            v_item->period.start_minutes = v_start;
-            v_changed = true;
+        // enabled
+        if (j_period["enabled"].is<bool>()) {
+            if (j_period["enabled"].as<bool>() != v_item->period.enabled) {
+                v_item->period.enabled = j_period["enabled"];
+                v_changed = true;
+            }
         }
 
-        uint16_t v_end = j_period["end"].is<uint16_t>() ? j_period["end"].as<uint16_t>() : v_item->period.end_minutes;
-        if (v_end != v_item->period.end_minutes) {
-            v_item->period.end_minutes = v_end;
-            v_changed = true;
+        // start_time (char[6])
+        if (j_period["start_time"].is<const char*>()) {
+            const char* v_new_start = j_period["start_time"];
+            if (strcmp(v_new_start, v_item->period.start_time) != 0) {
+                A10_safe_strlcpy(v_item->period.start_time, v_new_start, sizeof(v_item->period.start_time));
+                v_changed = true;
+            }
+        }
+
+        // end_time (char[6])
+        if (j_period["end_time"].is<const char*>()) {
+            const char* v_new_end = j_period["end_time"];
+            if (strcmp(v_new_end, v_item->period.end_time) != 0) {
+                A10_safe_strlcpy(v_item->period.end_time, v_new_end, sizeof(v_item->period.end_time));
+                v_changed = true;
+            }
         }
         
-        uint8_t v_days = j_period["days"].is<uint8_t>() ? j_period["days"].as<uint8_t>() : v_item->period.days;
-        if (v_days != v_item->period.days) {
-            v_item->period.days = v_days;
-            v_changed = true;
+        // days (uint8_t[7] 배열)
+        JsonArrayConst j_days = j_period["days"].as<JsonArrayConst>();
+        if (!j_days.isNull()) {
+            bool v_days_changed = false;
+            // 배열 크기 7을 명시적으로 체크
+            if (j_days.size() == 7) { 
+                for (int i = 0; i < 7; i++) {
+                    // JSON에서 uint8_t 값을 읽어오고, 실패 시 0을 사용
+                    uint8_t v_day_val = j_days[i].is<uint8_t>() ? j_days[i].as<uint8_t>() : 0;
+                    if (v_day_val != v_item->period.days[i]) {
+                        v_item->period.days[i] = v_day_val;
+                        v_days_changed = true;
+                    }
+                }
+                if (v_days_changed) v_changed = true;
+            }
         }
     }
 
     // =========================================================================
-    // autoOff 패치 (ST_A10_ScheduleAutoOff_t)
+    // autoOff 패치 (ST_A10_SchAutoOff_t = ST_A10_AutoOff_t) 
+    // timer, offTime, offTemp 서브 구조체를 포함합니다.
     // =========================================================================
     if (j_patch["autoOff"].is<JsonObjectConst>()) {
         JsonObjectConst j_autoOff = j_patch["autoOff"];
         
-        if (j_autoOff["enabled"].is<bool>()) {
-            if (j_autoOff["enabled"].as<bool>() != v_item->autoOff.enabled) {
-                v_item->autoOff.enabled = j_autoOff["enabled"];
+        // 1. timer (minutes/enabled)
+        if (j_autoOff["timer"].is<JsonObjectConst>()) {
+            JsonObjectConst j_timer = j_autoOff["timer"];
+
+            // timer.enabled
+            if (j_timer["enabled"].is<bool>()) {
+                if (j_timer["enabled"].as<bool>() != v_item->autoOff.timer.enabled) {
+                    v_item->autoOff.timer.enabled = j_timer["enabled"];
+                    v_changed = true;
+                }
+            }
+
+            // timer.minutes (uint32_t)
+            uint32_t v_minutes = j_timer["minutes"].is<uint32_t>() ? j_timer["minutes"].as<uint32_t>() : v_item->autoOff.timer.minutes;
+            if (v_minutes != v_item->autoOff.timer.minutes) {
+                v_item->autoOff.timer.minutes = v_minutes;
                 v_changed = true;
             }
         }
         
-        uint16_t v_minutes = j_autoOff["minutes"].is<uint16_t>() ? j_autoOff["minutes"].as<uint16_t>() : v_item->autoOff.minutes;
-        if (v_minutes != v_item->autoOff.minutes) {
-            v_item->autoOff.minutes = v_minutes;
-            v_changed = true;
+        // 2. offTime (enabled/time)
+        if (j_autoOff["offTime"].is<JsonObjectConst>()) {
+            JsonObjectConst j_offTime = j_autoOff["offTime"];
+
+            // offTime.enabled
+            if (j_offTime["enabled"].is<bool>()) {
+                if (j_offTime["enabled"].as<bool>() != v_item->autoOff.offTime.enabled) {
+                    v_item->autoOff.offTime.enabled = j_offTime["enabled"];
+                    v_changed = true;
+                }
+            }
+
+            // offTime.time (char[6] - "HH:MM")
+            if (j_offTime["time"].is<const char*>()) {
+                const char* v_new_time = j_offTime["time"];
+                if (strcmp(v_new_time, v_item->autoOff.offTime.time) != 0) {
+                    A10_safe_strlcpy(v_item->autoOff.offTime.time, v_new_time, sizeof(v_item->autoOff.offTime.time));
+                    v_changed = true;
+                }
+            }
+        }
+
+        // 3. offTemp (enabled/temp)
+        if (j_autoOff["offTemp"].is<JsonObjectConst>()) {
+            JsonObjectConst j_offTemp = j_autoOff["offTemp"];
+
+            // offTemp.enabled
+            if (j_offTemp["enabled"].is<bool>()) {
+                if (j_offTemp["enabled"].as<bool>() != v_item->autoOff.offTemp.enabled) {
+                    v_item->autoOff.offTemp.enabled = j_offTemp["enabled"];
+                    v_changed = true;
+                }
+            }
+
+            // offTemp.temp (float)
+            float v_temp = j_offTemp["temp"].is<float>() ? j_offTemp["temp"].as<float>() : v_item->autoOff.offTemp.temp;
+            if (v_temp != v_item->autoOff.offTemp.temp) {
+                v_item->autoOff.offTemp.temp = v_temp;
+                v_changed = true;
+            }
         }
     }
     
     // =========================================================================
-    // motion 패치 (ST_A10_ScheduleMotion_t)
+    // motion 패치 (ST_A10_Motion_t) 
+    // pir, ble 서브 구조체를 포함합니다.
     // =========================================================================
     if (j_patch["motion"].is<JsonObjectConst>()) {
         JsonObjectConst j_motion = j_patch["motion"];
         
-        if (j_motion["enabled"].is<bool>()) {
-            if (j_motion["enabled"].as<bool>() != v_item->motion.enabled) {
-                v_item->motion.enabled = j_motion["enabled"];
+        // 1. PIR (enabled/hold_sec)
+        if (j_motion["pir"].is<JsonObjectConst>()) {
+            JsonObjectConst j_pir = j_motion["pir"];
+
+            // pir.enabled
+            if (j_pir["enabled"].is<bool>()) {
+                if (j_pir["enabled"].as<bool>() != v_item->motion.pir.enabled) {
+                    v_item->motion.pir.enabled = j_pir["enabled"];
+                    v_changed = true;
+                }
+            }
+
+            // pir.hold_sec (int32_t)
+            int32_t v_hold = j_pir["hold_sec"].is<int32_t>() ? j_pir["hold_sec"].as<int32_t>() : v_item->motion.pir.hold_sec;
+            if (v_hold != v_item->motion.pir.hold_sec) {
+                v_item->motion.pir.hold_sec = v_hold;
                 v_changed = true;
             }
         }
+        
+        // 2. BLE (enabled/rssi_threshold/hold_sec)
+        if (j_motion["ble"].is<JsonObjectConst>()) {
+            JsonObjectConst j_ble = j_motion["ble"];
 
-        uint16_t v_on = j_motion["onMinutes"].is<uint16_t>() ? j_motion["onMinutes"].as<uint16_t>() : v_item->motion.on_minutes;
-        if (v_on != v_item->motion.on_minutes) {
-            v_item->motion.on_minutes = v_on;
-            v_changed = true;
-        }
+            // ble.enabled
+            if (j_ble["enabled"].is<bool>()) {
+                if (j_ble["enabled"].as<bool>() != v_item->motion.ble.enabled) {
+                    v_item->motion.ble.enabled = j_ble["enabled"];
+                    v_changed = true;
+                }
+            }
 
-        uint16_t v_off = j_motion["offMinutes"].is<uint16_t>() ? j_motion["offMinutes"].as<uint16_t>() : v_item->motion.off_minutes;
-        if (v_off != v_item->motion.off_minutes) {
-            v_item->motion.off_minutes = v_off;
-            v_changed = true;
+            // ble.rssi_threshold (int32_t)
+            // Note: ST_A10_Motion_t 구조체 정의에서는 ble에 rssi_threshold, hold_sec 필드가 직접 존재하지 않고,
+            // ST_A10_MotionConfig 구조체에 ble.rssi.on/off/exit_delay_sec 형태로 존재하나, 
+            // ST_A10_ScheduleItem_t의 motion 필드는 ST_A10_Motion_t 타입이며, 이는 pir/ble 서브 구조체만 가지고 있습니다.
+            // ST_A10_Motion_t 정의에 따라 다음과 같이 필드를 찾습니다.
+            // ST_A10_Motion_t { pir:{}, ble:{ enabled, rssi_threshold, hold_sec } }
+            
+            // rssi_threshold
+            int32_t v_rssi = j_ble["rssi_threshold"].is<int32_t>() ? j_ble["rssi_threshold"].as<int32_t>() : v_item->motion.ble.rssi_threshold;
+            if (v_rssi != v_item->motion.ble.rssi_threshold) {
+                v_item->motion.ble.rssi_threshold = v_rssi;
+                v_changed = true;
+            }
+
+            // hold_sec
+            int32_t v_ble_hold = j_ble["hold_sec"].is<int32_t>() ? j_ble["hold_sec"].as<int32_t>() : v_item->motion.ble.hold_sec;
+            if (v_ble_hold != v_item->motion.ble.hold_sec) {
+                v_item->motion.ble.hold_sec = v_ble_hold;
+                v_changed = true;
+            }
         }
     }
 
+
     // =========================================================================
-    // segments 패치 (배열 전체 덮어쓰기) - 오류 수정 및 누락 필드 추가 반영
+    // segments 패치 (배열 전체 덮어쓰기)
     // =========================================================================
     JsonArrayConst j_segs = j_patch["segments"].as<JsonArrayConst>();
     if (!j_segs.isNull()) {
@@ -824,21 +938,21 @@ bool CL_C10_ConfigManager::updateScheduleFromJson(uint16_t p_id, const JsonDocum
             // 기본 필드 로드
             sg.segId         = jseg["segId"] | 0;
             sg.segNo         = jseg["segNo"] | 0;
-            sg.on_minutes    = jseg["on_minutes"].is<uint16_t>() ? jseg["on_minutes"].as<uint16_t>() : 10;
+            sg.on_minutes    = jseg["on_minutes"].is<uint16_t>() ? jseg["on_minutes"].as<uint16_t>() : 0;
             sg.off_minutes   = jseg["off_minutes"].is<uint16_t>() ? jseg["off_minutes"].as<uint16_t>() : 0;
             
             // mode 로드 및 변환
             const char* v_mode = jseg["mode"] | "PRESET";
             sg.mode = A10_modeFromString(v_mode); 
 
-            // windProfileId 대신 presetCode와 styleCode 사용 (컴파일 오류 수정)
+            // presetCode와 styleCode 사용
             A10_safe_strlcpy(sg.presetCode, jseg["presetCode"] | "", sizeof(sg.presetCode));
             A10_safe_strlcpy(sg.styleCode, jseg["styleCode"] | "", sizeof(sg.styleCode));
             
             // fixed_speed
             sg.fixed_speed = jseg["fixed_speed"].is<float>() ? jseg["fixed_speed"].as<float>() : 0.0f;
             
-            // adjust (ST_A10_AdjustDelta_t) 로드 (누락된 필드 포함)
+            // adjust (ST_A10_AdjustDelta_t) 로드
             if (jseg["adjust"].is<JsonObjectConst>()) {
                 JsonObjectConst adj = jseg["adjust"];
                 sg.adjust.wind_intensity           = adj["wind_intensity"].is<float>() ? adj["wind_intensity"].as<float>() : 0.0f;
@@ -846,8 +960,6 @@ bool CL_C10_ConfigManager::updateScheduleFromJson(uint16_t p_id, const JsonDocum
                 sg.adjust.gust_frequency           = adj["gust_frequency"].is<float>() ? adj["gust_frequency"].as<float>() : 0.0f;
                 sg.adjust.fan_limit                = adj["fan_limit"].is<float>() ? adj["fan_limit"].as<float>() : 0.0f;
                 sg.adjust.min_fan                  = adj["min_fan"].is<float>() ? adj["min_fan"].as<float>() : 0.0f;
-                
-                // ST_A10_AdjustDelta_t에 누락되었던 필드 추가 로드
                 sg.adjust.turbulence_length_scale  = adj["turbulence_length_scale"].is<float>() ? adj["turbulence_length_scale"].as<float>() : 0.0f;
                 sg.adjust.turbulence_intensity_sigma = adj["turbulence_intensity_sigma"].is<float>() ? adj["turbulence_intensity_sigma"].as<float>() : 0.0f;
             } else {
