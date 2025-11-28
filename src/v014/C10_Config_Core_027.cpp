@@ -822,38 +822,6 @@ void CL_C10_ConfigManager::toJson_System(const ST_A10_SystemConfig& p, JsonDocum
     d["time"]["timezone"]                 = p.time.timezone;
     d["time"]["sync_interval_min"]        = p.time.sync_interval_min;
 }
-/*
-void CL_C10_ConfigManager::toJson_System(const ST_A10_SystemConfig& p, JsonDocument& d) {
-    d["meta"]["version"]	 = p.meta.version;
-        d["meta"]["device_name"] = p.meta.device_name;
-        d["meta"]["last_update"] = p.meta.last_update;
-
-        d["system"]["web"]["html"] = p.system.web.html;
-        d["system"]["web"]["css"]  = p.system.web.css;
-        d["system"]["web"]["js"]   = p.system.web.js;
-
-        d["system"]["logging"]["level"]		  = p.system.logging.level;
-        d["system"]["logging"]["max_entries"] = p.system.logging.max_entries;
-
-        d["hw"]["fan_pwm"]["pin"]	  = p.hw.fan_pwm.pin;
-        d["hw"]["fan_pwm"]["channel"] = p.hw.fan_pwm.channel;
-        d["hw"]["fan_pwm"]["freq"]	  = p.hw.fan_pwm.freq;
-        d["hw"]["fan_pwm"]["res"]	  = p.hw.fan_pwm.res;
-
-        d["hw"]["pir"]["enabled"]	   = p.hw.pir.enabled;
-        d["hw"]["pir"]["pin"]		   = p.hw.pir.pin;
-        d["hw"]["pir"]["debounce_sec"] = p.hw.pir.debounce_sec;
-
-        d["hw"]["ble"]["enabled"]		= p.hw.ble.enabled;
-        d["hw"]["ble"]["scan_interval"] = p.hw.ble.scan_interval;
-
-        d["security"]["api_key"] = p.security.api_key;
-
-        d["time"]["ntp_server"]		   = p.time.ntp_server;
-        d["time"]["timezone"]		   = p.time.timezone;
-        d["time"]["sync_interval_min"] = p.time.sync_interval_min;
-}
-*/
 
 
 // =====================================================
@@ -1045,40 +1013,7 @@ void CL_C10_ConfigManager::toJson_All(
         includeMotion, includeSchedules,
         includeUserProfiles);
 }
-/*
-// =====================================================
-// 3-2. All Config → JSON Export 구현 (이전 파일과 동일)
-// =====================================================
-void CL_C10_ConfigManager::toJson_All(
-    const ST_A10_ConfigRoot_t& p,
-        JsonDocument&			   d,
-        bool					   includeSystem	   = true,
-        bool					   includeWifi		   = true,
-        bool					   includeMotion	   = true,
-        bool					   includeSchedules	   = true,
-        bool					   includeUserProfiles = true) {
-        if (includeSystem && p.system)
-            toJson_System(*p.system, d);
-        // Wi-Fi 설정은 최상위가 "wifi" 필드이기 때문에 to<JsonObject>() 불필요 (toJson_Wifi 내부에서 처리)
-        if (includeWifi && p.wifi)
-            toJson_Wifi(*p.wifi, d);
-        if (includeMotion && p.motion){
-            // Motion 설정은 최상위가 "motion" 필드이기 때문에 to<JsonObject>() 불필요 (toJson_Motion 내부에서 처리)
-            toJson_Motion(*p.motion, d);
-        }
-        if (includeSchedules && p.schedules)
-            toJson_Schedules(*p.schedules, d);
-        if (includeUserProfiles && p.userProfiles)
-            toJson_UserProfiles(*p.userProfiles, d);
 
-        CL_D10_Logger::log(
-            EN_L10_LOG_DEBUG,
-            "[C10] Config export → JSON (sys=%d wifi=%d motion=%d sch=%d up=%d)",
-            includeSystem, includeWifi,
-            includeMotion, includeSchedules,
-            includeUserProfiles);
-}
-*/
 
 // =====================================================
 // 8. Factory Reset 구현
