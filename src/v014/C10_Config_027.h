@@ -196,6 +196,7 @@ public:
     static bool deleteWindProfile(uint16_t p_id);
 
     // Schedules CRUD
+    static int addScheduleFromJson(const JsonDocument& p_doc);
     static bool updateScheduleFromJson(uint16_t p_id, const JsonDocument& p_patch);
     static bool deleteSchedule(uint16_t p_id);
     
