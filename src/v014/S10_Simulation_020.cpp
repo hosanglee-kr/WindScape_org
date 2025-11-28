@@ -290,7 +290,36 @@ void CL_S10_Simulation::applyResolvedWind(const ST_A10_ResolvedWind_t& p_resolve
 /**
  * @brief 현재 시뮬레이션 상태 변수들을 JSON Object에 직렬화합니다.
  */
-void CL_S10_Simulation::toJson(JsonObject& p_obj) {
+
+void CL_S10_Simulation::toJson(JsonDocument& p_doc) {
+    portENTER_CRITICAL(&_simMutex); // 상태 읽기 중 변수 변경 방지
+
+    JsonObject v_objSim = p_doc["sim"].to<JsonObject>();
+    
+    v_objSim["active"]        = active;
+    v_objSim["phase"]         = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
+    v_objSim["windSpeed"]     = currentWindSpeed;
+    v_objSim["targetWind"]    = targetWindSpeed;
+    v_objSim["gustActive"]    = gustActive;
+    v_objSim["thermalActive"] = thermalActive;
+    v_objSim["pwmDuty"]       = _pwm ? _pwm->P10_getDutyPercent() : 0.0f;
+    v_objSim["presetCode"]    = presetCode;
+    v_objSim["styleCode"]     = styleCode;
+    v_objSim["intensity"]     = userIntensity;
+    v_objSim["variability"]   = userVariability;
+    v_objSim["gustFreq"]      = userGustFreq;
+    v_objSim["fan_limit"]     = fanLimitPct;
+    v_objSim["min_fan"]       = minFanPct;
+    v_objSim["turbSigma"]     = turbSigma;
+    v_objSim["turbScale"]     = turbLenScale;
+    v_objSim["thermalPower"]  = thermalStrength;
+    v_objSim["thermalRadius"] = thermalRadius;
+
+    portEXIT_CRITICAL(&_simMutex);
+}
+
+/*
+void CL_S10_Simulation::toJson_old(JsonObject& p_obj) {
     portENTER_CRITICAL(&_simMutex); // 상태 읽기 중 변수 변경 방지
     
     p_obj["active"]        = active;
@@ -314,6 +343,8 @@ void CL_S10_Simulation::toJson(JsonObject& p_obj) {
 
     portEXIT_CRITICAL(&_simMutex);
 }
+
+*/
 
 // ==================================================
 // 차트 데이터 JSON Export (/api/sim/chart)
