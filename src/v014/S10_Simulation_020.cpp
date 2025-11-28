@@ -284,6 +284,151 @@ void CL_S10_Simulation::applyResolvedWind(const ST_A10_ResolvedWind_t& p_resolve
     generateTarget(); // 새로운 목표 풍속 생성
 }
 
+
+
+/**
+ * @brief 주어진 JSON 문서로부터 시뮬레이션 설정(사용자 파라미터/물리 파라미터)을 패치(부분 업데이트)합니다.
+ * * @param p_doc 시뮬레이션 설정 업데이트 데이터가 포함된 JsonDocument (ArduinoJson V7.x)
+ * @return 설정이 변경되었으면 true, 아니면 false를 반환합니다.
+ */
+bool CL_S10_Simulation::patchFromJson(const JsonDocument& p_doc) {
+    // 1. 뮤텍스 획득 (Critical Section 시작)
+    // S10_Simulation_020.cpp의 tick() 함수와 동일하게 _simMutex 사용
+    portENTER_CRITICAL(&_simMutex);
+
+    bool v_changed = false;
+    // 클라이언트가 전달하는 최상위 객체는 { "sim": { ... } } 형태이므로, "sim" 내부로 들어갑니다.
+    JsonObjectConst j_sim = p_doc["sim"].as<JsonObjectConst>();
+    if (j_sim.isNull()) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[S10] patchFromJson failed: 'sim' object not found in JSON.");
+        portEXIT_CRITICAL(&_simMutex);
+        return false;
+    }
+
+    // -------------------------------------------------------------------------
+    // 2. 사용자 설정 (userIntensity, fanLimitPct 등) 패치
+    // -------------------------------------------------------------------------
+    
+    // preset (문자열)
+    if (j_sim["preset"].is<const char*>()) {
+        const char* v_new = j_sim["preset"];
+        if (strcasecmp(v_new, this->presetCode) != 0) {
+            strlcpy(this->presetCode, v_new, sizeof(this->presetCode));
+            // Preset이 변경되면 Core Wind Params를 즉시 재적용
+            applyPresetCore(this->presetCode); 
+            initPhaseFromBase(); // Phase도 재설정
+            CL_D10_Logger::log(EN_L10_LOG_INFO, "[S10] Preset changed to %s", this->presetCode);
+            v_changed = true;
+        }
+    }
+
+    // intensity (userIntensity, 0.0f ~ 100.0f)
+    if (j_sim["intensity"].is<float>()) {
+        float v_new = constrain(j_sim["intensity"].as<float>(), 0.0f, 100.0f);
+        if (v_new != this->userIntensity) {
+            this->userIntensity = v_new;
+            v_changed = true;
+        }
+    }
+    
+    // gust_freq (userGustFreq, 0.0f ~ 100.0f)
+    if (j_sim["gust_freq"].is<float>()) {
+        float v_new = constrain(j_sim["gust_freq"].as<float>(), 0.0f, 100.0f);
+        if (v_new != this->userGustFreq) {
+            this->userGustFreq = v_new;
+            v_changed = true;
+        }
+    }
+    
+    // variability (userVariability, 0.0f ~ 100.0f)
+    if (j_sim["variability"].is<float>()) {
+        float v_new = constrain(j_sim["variability"].as<float>(), 0.0f, 100.0f);
+        if (v_new != this->userVariability) {
+            this->userVariability = v_new;
+            // variability 변경 시 windChangeRate 즉시 갱신
+            float v_varNorm = this->userVariability / 100.0f;
+            this->windChangeRate = constrain(0.10f + v_varNorm * 0.20f, 0.06f, 0.34f);
+            v_changed = true;
+        }
+    }
+    
+    // fan_limit (fanLimitPct, 0.0f ~ 100.0f)
+    if (j_sim["fan_limit"].is<float>()) {
+        float v_new = constrain(j_sim["fan_limit"].as<float>(), 0.0f, 100.0f);
+        if (v_new != this->fanLimitPct) {
+            this->fanLimitPct = v_new;
+            v_changed = true;
+        }
+    }
+    
+    // min_fan (minFanPct, 0.0f ~ 100.0f)
+    if (j_sim["min_fan"].is<float>()) {
+        float v_new = constrain(j_sim["min_fan"].as<float>(), 0.0f, 100.0f);
+        if (v_new != this->minFanPct) {
+            this->minFanPct = v_new;
+            v_changed = true;
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // 3. 물리 파라미터 (turbLenScale, thermalStrength 등) 패치
+    // -------------------------------------------------------------------------
+
+    // turb_len (turbLenScale, 난류 길이 스케일)
+    if (j_sim["turb_len"].is<float>()) {
+        float v_new = max(1.0f, j_sim["turb_len"].as<float>());
+        if (v_new != this->turbLenScale) {
+            this->turbLenScale = v_new;
+            v_changed = true;
+        }
+    }
+
+    // turb_sig (turbSigma, 난류 세기)
+    if (j_sim["turb_sig"].is<float>()) {
+        float v_new = max(0.0f, j_sim["turb_sig"].as<float>());
+        if (v_new != this->turbSigma) {
+            this->turbSigma = v_new;
+            v_changed = true;
+        }
+    }
+
+    // therm_str (thermalStrength, 열기포 강도)
+    if (j_sim["therm_str"].is<float>()) {
+        float v_new = max(1.0f, j_sim["therm_str"].as<float>());
+        if (v_new != this->thermalStrength) {
+            this->thermalStrength = v_new;
+            v_changed = true;
+        }
+    }
+
+    // therm_rad (thermalRadius, 열기포 반경)
+    if (j_sim["therm_rad"].is<float>()) {
+        float v_new = max(0.0f, j_sim["therm_rad"].as<float>());
+        if (v_new != this->thermalRadius) {
+            this->thermalRadius = v_new;
+            v_changed = true;
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // 4. 변경 사항 처리 및 뮤텍스 반납
+    // -------------------------------------------------------------------------
+    
+    if (v_changed) {
+        CL_D10_Logger::log(EN_L10_LOG_INFO, "[S10] Simulation parameters patched. Intensity: %.1f, TurbSigma: %.2f", 
+                           this->userIntensity, this->turbSigma);
+        
+        // 시뮬레이션 상태가 변경되었으므로, ConfigManager를 통해 Dirty 플래그 설정 필요
+        // (W10_Web_Routes_027.cpp의 API 핸들러에서 이 함수 호출 후 Dirty 플래그를 설정하는 것이 더 일반적입니다.)
+    }
+
+    // 뮤텍스 반납 (Critical Section 종료)
+    portEXIT_CRITICAL(&_simMutex); 
+    
+    return v_changed;
+}
+
+
 // ==================================================
 // JSON Export (현재 시뮬레이션 상태)
 // ==================================================
