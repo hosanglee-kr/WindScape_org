@@ -1193,20 +1193,3 @@ void CL_W10_WebAPI::routeFirmwareCheck() {
 				 });
 }
 
-/*
-// --------------------------------------------------
-// 22. 라우트 더미 함수 (실제 구현은 다른 파일에 있음)
-// --------------------------------------------------
-void CL_W10_WebAPI::routeWebSocket() {
-	// WebSockets.cpp 파일에 구현됨
-}
-void CL_W10_WebAPI::routeStaticAssets() {
-	// W10_Web_Static_024.cpp 파일에 구현됨
-}
-void CL_W10_WebAPI::routeUpload() {
-	// W10_Web_Upload_024.cpp 파일에 구현됨
-}
-void CL_W10_WebAPI::routeUpdate() {
-	// W10_Web_Upload_024.cpp 파일에 구현됨
-}
-*/
