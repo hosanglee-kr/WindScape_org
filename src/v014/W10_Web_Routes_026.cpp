@@ -175,11 +175,13 @@ void CL_W10_WebAPI::routeState() {
 					 JsonDocument v_doc;
 					 s_control->toJson(v_doc);
 
+					 /* todo 포함여부 재검토
 					 // Motion 상태 직렬화 추가
 					 if (g_A10_config_root.motion) {
 						 JsonObject v_motion = v_doc["motion"].to<JsonObject>();
 						 CL_C10_ConfigManager::toJson_Motion(*g_A10_config_root.motion, v_motion);
 					 }
+					 */
 
 					 sendJson(p_request, v_doc);
 				 });
@@ -291,8 +293,9 @@ void CL_W10_WebAPI::routeMotion() {
 					 }
 					 JsonDocument v_doc;
 					 if (g_A10_config_root.motion) {
-						 JsonObject v_motion = v_doc["motion"].to<JsonObject>();
-						 CL_C10_ConfigManager::toJson_Motion(*g_A10_config_root.motion, v_motion);
+						 CL_C10_ConfigManager::toJson_Motion(*g_A10_config_root.motion, v_doc);
+						 // JsonObject v_motion = v_doc["motion"].to<JsonObject>();
+						 //CL_C10_ConfigManager::toJson_Motion(*g_A10_config_root.motion, v_motion);
 					 }
 					 sendJson(p_request, v_doc);
 				 });
