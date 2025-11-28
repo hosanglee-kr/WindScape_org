@@ -689,6 +689,314 @@ bool CL_C10_ConfigManager::patchUserProfilesFromJson(ST_A10_UserProfilesRoot_t& 
 // 7. Schedules CRUD 구현
 // ===================================================== 
 
+/**
+ * @brief JSON 문서로부터 새로운 스케줄 항목을 추가합니다.
+ * @param p_doc 스케줄 데이터가 포함된 JsonDocument (ArduinoJson V7.x)
+ * @return 새로 추가된 스케줄의 ID (성공 시), 또는 -1 (실패 시)
+ */
+int CL_C10_ConfigManager::addScheduleFromJson(const JsonDocument& p_doc) {
+    // 1. 뮤텍스 획득
+    if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] addScheduleFromJson() Mutex timeout!");
+        return -1;
+    }
+
+    ST_A10_SchedulesRoot_t* v_root = g_A10_config_root.schedules;
+    if (!v_root) {
+        xSemaphoreGive(s_configMutex);
+        return -1;
+    }
+
+    // 2. 용량 확인
+    if (v_root->count >= A10_Const::MAX_SCHEDULES) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] Schedule add failed: Max schedules (%u) reached.", A10_Const::MAX_SCHEDULES);
+        xSemaphoreGive(s_configMutex);
+        return -1;
+    }
+
+    // 3. Schedule Item의 인덱스 및 새 ID 할당
+    uint8_t v_new_idx = v_root->count;
+    uint16_t v_new_id = 0;
+
+    // 현재 사용 중인 ID들 중 가장 작은 사용 가능 ID를 찾거나, 단순히 최대 ID + 1을 사용 (간소화를 위해 후자 사용)
+    for (uint8_t i = 0; i < v_root->count; i++) {
+        if (v_root->items[i].schId >= v_new_id) {
+            v_new_id = v_root->items[i].schId + 1;
+        }
+    }
+    // ID가 0인 경우는 보통 유효하지 않으므로 최소 1부터 시작하도록 보장 (선택적)
+    if (v_new_id == 0) v_new_id = 1;
+
+
+    // 4. 새 항목 초기화 및 ID 설정
+    ST_A10_ScheduleItem_t& v_item = v_root->items[v_new_idx];
+    memset(&v_item, 0, sizeof(ST_A10_ScheduleItem_t));
+    v_item.schId = v_new_id;
+    // 기본값 설정 (예: name 기본값, enabled=false 등)
+    A10_safe_strlcpy(v_item.name, "New Schedule", sizeof(v_item.name));
+    v_item.enabled = false;
+
+
+    // 5. JSON 데이터 적용 (updateScheduleFromJson 로직 재활용)
+    // NOTE: 새로운 스케줄을 추가할 때는 전체 데이터를 덮어쓰는 개념이므로, 
+    // update 함수에서 사용된 패치 로직을 그대로 사용해도 무방합니다.
+    bool v_changed = false;
+    JsonObjectConst j_patch = p_doc.as<JsonObjectConst>();
+
+    // name 패치
+    if (j_patch["name"].is<const char*>()) {
+        const char* v_new = j_patch["name"];
+        if (strcmp(v_new, v_item.name) != 0) {
+            A10_safe_strlcpy(v_item.name, v_new, sizeof(v_item.name));
+            v_changed = true;
+        }
+    }
+    
+    // enabled 패치
+    if (j_patch["enabled"].is<bool>()) {
+        if (j_patch["enabled"].as<bool>() != v_item.enabled) {
+            v_item.enabled = j_patch["enabled"];
+            v_changed = true;
+        }
+    }
+    
+    // =========================================================================
+    // period 패치 (ST_A10_SchedulePeriod_t) 
+    // =========================================================================
+    if (j_patch["period"].is<JsonObjectConst>()) {
+        JsonObjectConst j_period = j_patch["period"];
+        
+        // enabled
+        if (j_period["enabled"].is<bool>()) {
+            if (j_period["enabled"].as<bool>() != v_item.period.enabled) {
+                v_item.period.enabled = j_period["enabled"];
+                v_changed = true;
+            }
+        }
+
+        // start_time (char[6])
+        if (j_period["start_time"].is<const char*>()) {
+            const char* v_new_start = j_period["start_time"];
+            if (strcmp(v_new_start, v_item.period.start_time) != 0) {
+                A10_safe_strlcpy(v_item.period.start_time, v_new_start, sizeof(v_item.period.start_time));
+                v_changed = true;
+            }
+        }
+
+        // end_time (char[6])
+        if (j_period["end_time"].is<const char*>()) {
+            const char* v_new_end = j_period["end_time"];
+            if (strcmp(v_new_end, v_item.period.end_time) != 0) {
+                A10_safe_strlcpy(v_item.period.end_time, v_new_end, sizeof(v_item.period.end_time));
+                v_changed = true;
+            }
+        }
+        
+        // days (uint8_t[7] 배열)
+        JsonArrayConst j_days = j_period["days"].as<JsonArrayConst>();
+        if (!j_days.isNull()) {
+            bool v_days_changed = false;
+            if (j_days.size() == 7) { 
+                for (int i = 0; i < 7; i++) {
+                    uint8_t v_day_val = j_days[i].is<uint8_t>() ? j_days[i].as<uint8_t>() : 0;
+                    if (v_day_val != v_item.period.days[i]) {
+                        v_item.period.days[i] = v_day_val;
+                        v_days_changed = true;
+                    }
+                }
+                if (v_days_changed) v_changed = true;
+            }
+        }
+    }
+
+    // =========================================================================
+    // autoOff 패치 (ST_A10_SchAutoOff_t) 
+    // =========================================================================
+    if (j_patch["autoOff"].is<JsonObjectConst>()) {
+        JsonObjectConst j_autoOff = j_patch["autoOff"];
+        
+        // 1. timer (minutes/enabled)
+        if (j_autoOff["timer"].is<JsonObjectConst>()) {
+            JsonObjectConst j_timer = j_autoOff["timer"];
+
+            // timer.enabled
+            if (j_timer["enabled"].is<bool>()) {
+                if (j_timer["enabled"].as<bool>() != v_item.autoOff.timer.enabled) {
+                    v_item.autoOff.timer.enabled = j_timer["enabled"];
+                    v_changed = true;
+                }
+            }
+
+            // timer.minutes (uint32_t)
+            uint32_t v_minutes = j_timer["minutes"].is<uint32_t>() ? j_timer["minutes"].as<uint32_t>() : v_item.autoOff.timer.minutes;
+            if (v_minutes != v_item.autoOff.timer.minutes) {
+                v_item.autoOff.timer.minutes = v_minutes;
+                v_changed = true;
+            }
+        }
+        
+        // 2. offTime (enabled/time)
+        if (j_autoOff["offTime"].is<JsonObjectConst>()) {
+            JsonObjectConst j_offTime = j_autoOff["offTime"];
+
+            // offTime.enabled
+            if (j_offTime["enabled"].is<bool>()) {
+                if (j_offTime["enabled"].as<bool>() != v_item.autoOff.offTime.enabled) {
+                    v_item.autoOff.offTime.enabled = j_offTime["enabled"];
+                    v_changed = true;
+                }
+            }
+
+            // offTime.time (char[6] - "HH:MM")
+            if (j_offTime["time"].is<const char*>()) {
+                const char* v_new_time = j_offTime["time"];
+                if (strcmp(v_new_time, v_item.autoOff.offTime.time) != 0) {
+                    A10_safe_strlcpy(v_item.autoOff.offTime.time, v_new_time, sizeof(v_item.autoOff.offTime.time));
+                    v_changed = true;
+                }
+            }
+        }
+
+        // 3. offTemp (enabled/temp)
+        if (j_autoOff["offTemp"].is<JsonObjectConst>()) {
+            JsonObjectConst j_offTemp = j_autoOff["offTemp"];
+
+            // offTemp.enabled
+            if (j_offTemp["enabled"].is<bool>()) {
+                if (j_offTemp["enabled"].as<bool>() != v_item.autoOff.offTemp.enabled) {
+                    v_item.autoOff.offTemp.enabled = j_offTemp["enabled"];
+                    v_changed = true;
+                }
+            }
+
+            // offTemp.temp (float)
+            float v_temp = j_offTemp["temp"].is<float>() ? j_offTemp["temp"].as<float>() : v_item.autoOff.offTemp.temp;
+            if (v_temp != v_item.autoOff.offTemp.temp) {
+                v_item.autoOff.offTemp.temp = v_temp;
+                v_changed = true;
+            }
+        }
+    }
+    
+    // =========================================================================
+    // motion 패치 (ST_A10_Motion_t) 
+    // =========================================================================
+    if (j_patch["motion"].is<JsonObjectConst>()) {
+        JsonObjectConst j_motion = j_patch["motion"];
+        
+        // 1. PIR (enabled/hold_sec)
+        if (j_motion["pir"].is<JsonObjectConst>()) {
+            JsonObjectConst j_pir = j_motion["pir"];
+
+            // pir.enabled
+            if (j_pir["enabled"].is<bool>()) {
+                if (j_pir["enabled"].as<bool>() != v_item.motion.pir.enabled) {
+                    v_item.motion.pir.enabled = j_pir["enabled"];
+                    v_changed = true;
+                }
+            }
+
+            // pir.hold_sec (int32_t)
+            int32_t v_hold = j_pir["hold_sec"].is<int32_t>() ? j_pir["hold_sec"].as<int32_t>() : v_item.motion.pir.hold_sec;
+            if (v_hold != v_item.motion.pir.hold_sec) {
+                v_item.motion.pir.hold_sec = v_hold;
+                v_changed = true;
+            }
+        }
+        
+        // 2. BLE (enabled/rssi_threshold/hold_sec)
+        if (j_motion["ble"].is<JsonObjectConst>()) {
+            JsonObjectConst j_ble = j_motion["ble"];
+
+            // ble.enabled
+            if (j_ble["enabled"].is<bool>()) {
+                if (j_ble["enabled"].as<bool>() != v_item.motion.ble.enabled) {
+                    v_item.motion.ble.enabled = j_ble["enabled"];
+                    v_changed = true;
+                }
+            }
+
+            // rssi_threshold
+            int32_t v_rssi = j_ble["rssi_threshold"].is<int32_t>() ? j_ble["rssi_threshold"].as<int32_t>() : v_item.motion.ble.rssi_threshold;
+            if (v_rssi != v_item.motion.ble.rssi_threshold) {
+                v_item.motion.ble.rssi_threshold = v_rssi;
+                v_changed = true;
+            }
+
+            // hold_sec
+            int32_t v_ble_hold = j_ble["hold_sec"].is<int32_t>() ? j_ble["hold_sec"].as<int32_t>() : v_item.motion.ble.hold_sec;
+            if (v_ble_hold != v_item.motion.ble.hold_sec) {
+                v_item.motion.ble.hold_sec = v_ble_hold;
+                v_changed = true;
+            }
+        }
+    }
+
+
+    // =========================================================================
+    // segments 패치 (배열 전체 덮어쓰기)
+    // =========================================================================
+    JsonArrayConst j_segs = j_patch["segments"].as<JsonArrayConst>();
+    if (!j_segs.isNull()) {
+        v_item.seg_count = 0; // 기존 세그먼트 초기화
+        // v_changed = true; // 세그먼트가 존재하면 무조건 변경으로 간주
+
+        for (JsonObjectConst jseg : j_segs) {
+            if (v_item.seg_count >= A10_Const::MAX_SEGMENTS_PER_SCHEDULE) {
+                CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Max segments reached for new Schedule ID %u.", v_new_id);
+                break;
+            }
+            ST_A10_ScheduleSegment_t& sg = v_item.segments[v_item.seg_count++];
+
+            // 기본 필드 로드
+            sg.segId         = jseg["segId"] | 0;
+            sg.segNo         = jseg["segNo"] | 0;
+            sg.on_minutes    = jseg["on_minutes"].is<uint16_t>() ? jseg["on_minutes"].as<uint16_t>() : 0;
+            sg.off_minutes   = jseg["off_minutes"].is<uint16_t>() ? jseg["off_minutes"].as<uint16_t>() : 0;
+            
+            // mode 로드 및 변환
+            const char* v_mode = jseg["mode"] | "PRESET";
+            sg.mode = A10_modeFromString(v_mode); 
+
+            // presetCode와 styleCode 사용
+            A10_safe_strlcpy(sg.presetCode, jseg["presetCode"] | "", sizeof(sg.presetCode));
+            A10_safe_strlcpy(sg.styleCode, jseg["styleCode"] | "", sizeof(sg.styleCode));
+            
+            // fixed_speed
+            sg.fixed_speed = jseg["fixed_speed"].is<float>() ? jseg["fixed_speed"].as<float>() : 0.0f;
+            
+            // adjust (ST_A10_AdjustDelta_t) 로드
+            if (jseg["adjust"].is<JsonObjectConst>()) {
+                JsonObjectConst adj = jseg["adjust"];
+                sg.adjust.wind_intensity           = adj["wind_intensity"].is<float>() ? adj["wind_intensity"].as<float>() : 0.0f;
+                sg.adjust.wind_variability         = adj["wind_variability"].is<float>() ? adj["wind_variability"].as<float>() : 0.0f;
+                sg.adjust.gust_frequency           = adj["gust_frequency"].is<float>() ? adj["gust_frequency"].as<float>() : 0.0f;
+                sg.adjust.fan_limit                = adj["fan_limit"].is<float>() ? adj["fan_limit"].as<float>() : 0.0f;
+                sg.adjust.min_fan                  = adj["min_fan"].is<float>() ? adj["min_fan"].as<float>() : 0.0f;
+                sg.adjust.turbulence_length_scale  = adj["turbulence_length_scale"].is<float>() ? adj["turbulence_length_scale"].as<float>() : 0.0f;
+                sg.adjust.turbulence_intensity_sigma = adj["turbulence_intensity_sigma"].is<float>() ? adj["turbulence_intensity_sigma"].as<float>() : 0.0f;
+            } else {
+                // adjust 객체가 없으면 0으로 안전하게 초기화
+                memset(&sg.adjust, 0, sizeof(sg.adjust));
+            }
+        }
+        v_changed = true;
+    }
+    
+    // 6. 새로운 항목 추가 및 변경 사항 플래그 설정
+    v_root->count++;
+    _dirty_schedules = true; // 새 항목 추가는 무조건 Dirty 플래그를 설정해야 함
+    
+    CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] New Schedule ID %u added. Dirty=true", v_new_id);
+    
+
+    // 7. 뮤텍스 반납
+    xSemaphoreGive(s_configMutex);
+    
+    // 8. 새로 할당된 ID 반환
+    return v_new_id;
+}
+
 
 bool CL_C10_ConfigManager::updateScheduleFromJson(uint16_t p_id, const JsonDocument& p_patch) {
     // 1. 뮤텍스 획득
