@@ -1141,7 +1141,7 @@ void CL_C10_ConfigManager::freeAll(ST_A10_ConfigRoot_t& p_root) {
 // 공통: 변경 사항 파일 저장 (Commit)
 // =====================================================
 void CL_C10_ConfigManager::saveDirtyConfigs() {
-		if (xSemaphoreTake(s_configMutex, MUTEX_TIMEOUT) != pdTRUE) {
+		if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
             CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] saveDirtyConfigs() Mutex timeout!");
             return; 
         }
