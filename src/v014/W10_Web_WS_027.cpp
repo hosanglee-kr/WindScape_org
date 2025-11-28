@@ -63,25 +63,6 @@ void CL_W10_WebAPI::_broadcast(AsyncWebSocket* p_ws, JsonDocument& p_doc, bool p
 	}
 }
 
-/*
-namespace {
-void W10_broadcast(AsyncWebSocket* p_ws, JsonDocument& p_doc, bool p_diffOnly) {
-	if (!p_ws || !p_ws->count())
-		return;
-
-	String v_json;
-	// Unicode 공백문자 제거됨
-	serializeJson(p_doc, v_json);
-
-	// p_diffOnly=true 이면, JSON 길이가 5 이하인(변화가 미미한) 브로드캐스트는 억제 (규칙)
-	if (!p_diffOnly || v_json.length() > 5) {
-		p_ws->textAll(v_json);
-	}
-}
-} // namespace
-
-*/
-
 // -----------------------------------
 
 // WebSocket 초기화 및 라우팅
