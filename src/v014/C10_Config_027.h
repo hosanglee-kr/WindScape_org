@@ -75,7 +75,7 @@ extern EN_A10_segment_mode_t A10_modeFromString(const char* p_mode);
 /* =====================================================
 	* 공용: JSON IO Helper
 	* ===================================================== */
-bool ioLoadJson(const char* p_path, const char* p_bak, JsonDocument& p_doc) {
+inline bool ioLoadJson(const char* p_path, const char* p_bak, JsonDocument& p_doc) {
 	if (!LittleFS.exists(p_path)) {
 		if (p_bak && LittleFS.exists(p_bak)) {
 			LittleFS.rename(p_bak, p_path);
@@ -109,7 +109,7 @@ bool ioLoadJson(const char* p_path, const char* p_bak, JsonDocument& p_doc) {
 }
 
 
-bool ioSaveJson(const char*		   p_path,
+inline bool ioSaveJson(const char*		   p_path,
 						const char*		   p_bak,
 						const JsonDocument& p_doc) {
 	if (LittleFS.exists(p_path)) {
