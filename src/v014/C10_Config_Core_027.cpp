@@ -855,44 +855,8 @@ void CL_C10_ConfigManager::toJson_System(const ST_A10_SystemConfig& p, JsonDocum
 }
 */
 
-void CL_C10_ConfigManager::toJson_Wifi(const ST_A10_WifiConfig& p, JsonDocument& d) {
-    d["wifi"]["wifiMode"]       = p.wifiMode;
-    d["wifi"]["wifiModeDesc"]   = p.wifiModeDesc;
-    d["wifi"]["ap"]["ssid"]     = p.ap.ssid;
-    d["wifi"]["ap"]["password"] = p.ap.password;
 
-    for (uint8_t i = 0; i < p.sta_count; i++) {
-        d["wifi"]["sta"][i]["ssid"] = p.sta[i].ssid;
-        d["wifi"]["sta"][i]["pass"] = p.sta[i].pass;
-    }
-}
 
-void CL_C10_ConfigManager::toJson_Motion(const ST_A10_MotionConfig& p, JsonDocument& d) {
-    d["motion"]["enabled"]                       = p.enabled;
-    d["motion"]["pir"]["enabled"]                = p.pir.enabled;
-    d["motion"]["pir"]["hold_sec"]               = p.pir.hold_sec;
-
-    d["motion"]["ble"]["enabled"]                = p.ble.enabled;
-    d["motion"]["ble"]["rssi"]["on"]             = p.ble.rssi.on;
-    d["motion"]["ble"]["rssi"]["off"]            = p.ble.rssi.off;
-    d["motion"]["ble"]["rssi"]["avg_count"]      = p.ble.rssi.avg_count;
-    d["motion"]["ble"]["rssi"]["persist_count"]  = p.ble.rssi.persist_count;
-    d["motion"]["ble"]["rssi"]["exit_delay_sec"] = p.ble.rssi.exit_delay_sec;
-
-    for (uint8_t i = 0; i < p.ble.trusted_count; i++) {
-        const ST_A10_BLETrustedDevice& v_d =
-            p.ble.trusted_devices[i];
-        JsonObject v_td =
-            d["motion"]["ble"]["trusted_devices"][i];
-
-        v_td["alias"]        = v_d.alias;
-        v_td["name"]         = v_d.name;
-        v_td["mac"]          = v_d.mac;
-        v_td["manuf_prefix"] = v_d.manuf_prefix;
-        v_td["prefix_len"]   = v_d.prefix_len;
-        v_td["enabled"]      = v_d.enabled;
-    }
-}
 
 void CL_C10_ConfigManager::toJson_Schedules(const ST_A10_SchedulesRoot_t& p, JsonDocument& d) {
     d["schedules_count"] = p.count;
