@@ -160,6 +160,18 @@ void CL_W10_WebAPI::routeState() {
 						 p_request->send(500, "application/json", "{\"error\":\"control not ready\"}");
 						 return;
 					 }
+
+					 /*  Todo: 예전 소스 ws로 통합/삭제 여부 검토 필요
+					      JsonDocument v_doc;
+						 // 시뮬레이션 상태 + 요약 통합
+						 JsonObject v_sim = v_doc["sim"].to<JsonObject>();
+						 s_control->sim.toJson(v_sim);	// ✅ v019 구조 호환
+
+						 s_control->toSummaryJson(v_doc);  // ✅ v022에서 공식 지원 함수
+						 s_control->toMetricsJson(v_doc);  // ✅ /api/metrics 연동 시 사용
+
+						 sendJson(p_request, v_doc);
+					 */
 					 JsonDocument v_doc;
 					 s_control->toJson(v_doc);
 
