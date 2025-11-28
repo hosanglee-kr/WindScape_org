@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------
- * 소스명 : W10_Web_Routes_026.cpp
+ * 소스명 : W10_Web_Routes_027.cpp
  * 모듈 약어 : W10
  * 모듈명 : Smart Nature Wind Web API (v025) - Routes Implementation
  * ------------------------------------------------------
@@ -31,9 +31,9 @@
  * ------------------------------------------------------
  */
 
-#include "W10_Web_025.h"
+#include "W10_Web_027.h"
 #include "M10_MotionLogic_016.h"
-#include "CT10_ControlManager_023.h"
+#include "CT10_ControlManager_024.h"
 #include "WF10_WiFiManager_023.h"
 
 // ------------------------------------------------------

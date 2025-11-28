@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ------------------------------------------------------
- * 소스명 : CT10_ControlManager_023.h
+ * 소스명 : CT10_ControlManager_024.h
  * 모듈약어 : CT10
  * 모듈명 : Smart Nature Wind 제어 통합 Manager (v021)
  * ------------------------------------------------------
@@ -50,7 +50,7 @@
 
 // 종속성 모듈 헤더
 #include "A10_Const_015.h"
-#include "C10_Config_026.h"
+#include "C10_Config_027.h"
 #include "D10_Logger_016.h"
 #include "M10_MotionLogic_016.h"
 #include "P10_PWM_ctrl_014.h"

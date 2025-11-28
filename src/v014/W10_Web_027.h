@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------
- * 소스명 : W10_Web_025.h
+ * 소스명 : W10_Web_027.h
  * 모듈약어 : W10
  * 모듈명 : Smart Nature Wind Web API Manager (v024)
  * ------------------------------------------------------
@@ -42,9 +42,9 @@
 #include <Update.h>    // OTA를 위해 추가
 
 #include "A10_Const_015.h"
-#include "C10_Config_026.h"
+#include "C10_Config_027.h"
 #include "D10_Logger_016.h"
-#include "CT10_ControlManager_023.h"
+#include "CT10_ControlManager_024.h"
 #include "N10_NvsManager_019.h"
 #include "WF10_WiFiManager_023.h"
 

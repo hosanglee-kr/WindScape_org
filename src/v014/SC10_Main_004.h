@@ -24,15 +24,15 @@
 #include <esp_task_wdt.h>
 
 #include "A10_Const_015.h"
-#include "C10_Config_026.h"
-#include "CT10_ControlManager_023.h"
+#include "C10_Config_027.h"
+#include "CT10_ControlManager_024.h"
 #include "D10_Logger_016.h"
 #include "M10_MotionLogic_016.h"
 #include "N10_NvsManager_019.h"
 #include "P10_PWM_ctrl_014.h"
 #include "S10_Simulation_020.h"
 #include "S20_WindSolver_021.h"
-#include "W10_Web_025.h"
+#include "W10_Web_027.h"
 #include "WF10_WiFiManager_023.h"
 
 

@@ -47,7 +47,7 @@
 #include <string.h>
 
 #include "A10_Const_015.h"
-#include "C10_Config_026.h"
+#include "C10_Config_027.h"
 #include "D10_Logger_016.h"
 
 // ------------------------------------------------------
