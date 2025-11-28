@@ -177,6 +177,9 @@ class CL_S10_Simulation {
         // C10_ConfigManager에서 해석된 최종 풍속 파라미터를 적용
         void applyResolvedWind(const ST_A10_ResolvedWind_t& p_resolved);
 
+
+        bool patchFromJson(const JsonDocument& p_doc);
+
         // ==================================================
         // JSON Export
         // ==================================================
