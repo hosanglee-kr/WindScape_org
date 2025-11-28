@@ -180,7 +180,8 @@ class CL_S10_Simulation {
     // ==================================================
     // JSON Export
     // ==================================================
-    void toJson(JsonObject& p_obj); // 현재 시뮬레이션 상태를 JSON 객체로 직렬화 (WebAPI 상태 응답용)
+    void toJson(JsonDocument& p_doc);  //현재 시뮬레이션 상태를 JSON 객체로 직렬화 (WebAPI 상태 응답용)
+    //void toJson_old(JsonObject& p_obj); // 현재 시뮬레이션 상태를 JSON 객체로 직렬화 (WebAPI 상태 응답용)
     void toChartJson(JsonDocument& p_doc, bool p_diffOnly = false); // 차트 이력 데이터를 JSON 배열로 직렬화
 
     private:
