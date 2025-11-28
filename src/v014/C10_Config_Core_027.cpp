@@ -996,7 +996,7 @@ void CL_C10_ConfigManager::toJson_UserProfiles(const ST_A10_UserProfilesRoot_t& 
         jp["repeatSegments"]               = up.repeatSegments;
         jp["seg_count"]                    = up.seg_count;
 
-        for (uint8_t k = 0; k < up.seg_count; ++) {
+        for (uint8_t k = 0; k < up.seg_count; k++) {
             const ST_A10_UserProfileSegment_t& sg   = up.segments[k];
             JsonObject                         jseg = jp["segments"][k];
 
