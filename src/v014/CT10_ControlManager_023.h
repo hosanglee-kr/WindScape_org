@@ -516,8 +516,10 @@ class CL_CT10_ControlManager {
 		    v_o["pwmDuty"] = pwm ? pwm->P10_getDutyPercent() : 0.0f;
     
 		    // sim 상태 포함
-		    JsonObject v_sim = p_doc["sim"].to<JsonObject>();
-		    sim.toJson(v_sim);
+
+			sim.toJson(p_doc);
+		    // JsonObject v_sim = p_doc["sim"].to<JsonObject>();
+		    // sim.toJson(v_sim);
 	    }
     
 	    // 외부용: 시뮬레이션 차트 Export (S10에 위임 + 메타만 추가)

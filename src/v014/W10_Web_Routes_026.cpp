@@ -788,9 +788,11 @@ void CL_W10_WebAPI::routeSimState() {
 						 return;
 					 }
 					 JsonDocument v_doc;
+
 					 // 시뮬레이션 상태 + 요약 통합
-					 JsonObject v_sim = v_doc["sim"].to<JsonObject>();
-					 s_control->sim.toJson(v_sim);
+					 s_control->sim.toJson(v_doc);
+					 // JsonObject v_sim = v_doc["sim"].to<JsonObject>();
+					 // s_control->sim.toJson(v_sim);
 
 					 s_control->toSummaryJson(v_doc);
 					 s_control->toMetricsJson(v_doc);

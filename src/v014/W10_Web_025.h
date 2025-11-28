@@ -186,6 +186,8 @@ private:
 	static void routeUpload();			// (W10_Web_Upload_024.cpp - /upload)
 	static void routeUpdate();			// (W10_Web_Upload_024.cpp - /update)
 */
+
+public:
 	// --------------------------------------------------
 	// 유틸리티 함수
 	// --------------------------------------------------
@@ -241,6 +243,5 @@ private:
 		}
 		return true;
 	}
-
 
 };

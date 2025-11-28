@@ -191,7 +191,7 @@ public:
 
 
     // Wind Profile CRUD
-    static int addWindProfileFromJson(const JsonDocument& p_doc);
+    static int 	addWindProfileFromJson(const JsonDocument& p_doc);
     static bool updateWindProfileFromJson(uint16_t p_id, const JsonDocument& p_patch);
     static bool deleteWindProfile(uint16_t p_id);
 

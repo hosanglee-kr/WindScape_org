@@ -34,9 +34,11 @@
  * ------------------------------------------------------
  */
 
-#include "W10_Web_025.h"
 #include <LittleFS.h> 
 #include <ArduinoJson.h> // ArduinoJson V7.4.x 사용
+
+#include "W10_Web_025.h"
+
 
 // ------------------------------------------------------
 // 정적 페이지 관리 구조체 및 목록
@@ -152,6 +154,7 @@ static void W10_getMenuJson(AsyncWebServerRequest* r) {
 	String v_json_output;
 	if (serializeJson(v_doc, v_json_output) > 0) {
 		auto* v_resp = r->beginResponse(200, "application/json", v_json_output);
+
 		CL_W10_WebAPI::_applyHeaders(v_resp, true); // API 응답은 캐시 방지
 		r->send(v_resp);
 	} else {
@@ -159,6 +162,7 @@ static void W10_getMenuJson(AsyncWebServerRequest* r) {
 		r->send(500, "application/json", "{\"error\":\"Serialization Failed\"}");
 	}
 }
+
 
 
 // ------------------------------------------------------
