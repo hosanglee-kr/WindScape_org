@@ -352,7 +352,7 @@ void CL_W10_WebAPI::routeWindProfile() {
 						 p_request->send(500, "application/json", "{\"error\":\"load failed\"}");
 					 }
 				 });
-	
+	/*////////////
 	// POST: Wind Profile 신규 생성 (Create)
 	s_server->on("/api/windProfile", HTTP_POST, [](AsyncWebServerRequest* p_request) {}, nullptr,
 				 [](AsyncWebServerRequest* p_request, uint8_t* p_data, size_t p_len, size_t p_index, size_t p_total) {
@@ -382,12 +382,14 @@ void CL_W10_WebAPI::routeWindProfile() {
 			sendJson(p_request, v_res, 400);
 		}
 	});
+	*////////////
 }
 
 // --------------------------------------------------
 // 6-1. /api/windProfile/{id} (PUT: 수정, DELETE: 삭제)
 // --------------------------------------------------
 void CL_W10_WebAPI::routeWindProfileID() {
+	/*////////////
 	// PUT: Wind Profile 수정 (Update)
 	s_server->on(
 		"/api/windProfile/([0-9]+)", HTTP_PUT, [](AsyncWebServerRequest* p_request) {}, nullptr,
@@ -433,6 +435,7 @@ void CL_W10_WebAPI::routeWindProfileID() {
 		// 성공 시 200 OK, 실패 시 404 Not Found
 		sendJson(p_request, v_res, v_deleted ? 200 : 404);
 	});
+	*////////////
 }
 
 // --------------------------------------------------
