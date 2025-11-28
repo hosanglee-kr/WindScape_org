@@ -634,7 +634,7 @@ void CL_W10_WebAPI::routeControl() {
 					 
 					 CL_D10_Logger::log(EN_L10_LOG_WARN, "[W10] Factory Reset requested.");
 					 // ConfigManager의 공장 초기화 함수 호출
-					 CL_C10_ConfigManager::factoryReset(); 
+					 CL_C10_ConfigManager::factoryResetFromDefault(); 
 					 
 					 p_request->send(200, "application/json", "{\"result\":\"factory_reset_and_rebooting\"}");
 					 delay(500);
