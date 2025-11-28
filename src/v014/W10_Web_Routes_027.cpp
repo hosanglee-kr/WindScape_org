@@ -799,6 +799,7 @@ void CL_W10_WebAPI::routeSimState() {
 
 					 sendJson(p_request, v_doc);
 				 });
+	/*//////////////
 	
 	// POST /api/sim/state/run: 시뮬레이션 시작/정지 (대시보드 RUN 버튼)
 	s_server->on("/api/sim/state/run", HTTP_POST, [](AsyncWebServerRequest* p_request) {}, nullptr,
@@ -830,6 +831,7 @@ void CL_W10_WebAPI::routeSimState() {
 		v_res["success"] = v_result;
 		sendJson(p_request, v_res);
 	});
+	*////////////
 }
 
 // --------------------------------------------------
