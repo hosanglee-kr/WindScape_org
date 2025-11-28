@@ -1137,6 +1137,46 @@ void CL_C10_ConfigManager::freeAll(ST_A10_ConfigRoot_t& p_root) {
                        "[C10] All config objects freed");
 }
 
+// =====================================================
+// 공통: 변경 사항 파일 저장 (Commit)
+// =====================================================
+void CL_C10_ConfigManager::saveDirtyConfigs() {
+		if (xSemaphoreTake(s_configMutex, MUTEX_TIMEOUT) != pdTRUE) {
+            CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] saveDirtyConfigs() Mutex timeout!");
+            return; 
+        }
+		
+        // g_A10_config_root.system는 항상 존재한다고 가정 (loadAll/LazyLoad 외부에서 처리 필요)
+        if (_dirty_system && g_A10_config_root.system) {
+            if (saveSystemConfig(*g_A10_config_root.system)) _dirty_system = false;
+        }
+        if (_dirty_wifi && g_A10_config_root.wifi) {
+            if (saveWifiConfig(*g_A10_config_root.wifi)) _dirty_wifi = false;
+		}
+        if (_dirty_motion && g_A10_config_root.motion) {
+            if (saveMotionConfig(*g_A10_config_root.motion)) _dirty_motion = false;
+        }
+        if (_dirty_schedules && g_A10_config_root.schedules) {
+            if (saveSchedules(*g_A10_config_root.schedules)) _dirty_schedules = false;
+        }
+        if (_dirty_userProfiles && g_A10_config_root.userProfiles) {
+            if (saveUserProfiles(*g_A10_config_root.userProfiles)) _dirty_userProfiles = false;
+        }
+		
+        CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] All dirty configs saved to storage.");
+		
+		xSemaphoreGive(s_configMutex);
+}
+
+// 현재 Dirty 상태 조회
+void CL_C10_ConfigManager::getDirtyStatus(JsonDocument& doc) {
+        doc["system"]       = _dirty_system;
+        doc["wifi"]         = _dirty_wifi;
+        doc["motion"]       = _dirty_motion;
+        doc["schedules"]    = _dirty_schedules;
+        doc["userProfiles"] = _dirty_userProfiles;
+}
+
 void CL_C10_ConfigManager::saveAll(const ST_A10_ConfigRoot_t& p_root) {
     if (p_root.system)
         saveSystemConfig(*p_root.system);
