@@ -36,6 +36,8 @@
 
 #include <LittleFS.h> 
 #include <ArduinoJson.h> 
+#include <algorithm> 
+
 
 #include "W10_Web_027.h"
 
@@ -116,10 +118,24 @@ static bool W10_loadPagesJson() {
         return false;
     }
 
-    // **[정렬 로직 반영]** 'pages' 배열을 'order' 필드를 기준으로 정렬
+
+    // 수정 후 (std::sort 사용):
+    std::sort(
+        v_pages_array.begin(), 
+        v_pages_array.end(),
+        [](const JsonVariant& a, const JsonVariant& b) {
+            // 비교 로직: JsonVariant에서 비교에 필요한 값을 추출합니다.
+            // 예를 들어, JSON 객체의 "order" 필드를 비교한다면:
+            return a["order"].as<int>() < b["order"].as<int>();
+        }
+    );
+
+    /*
+	// **[정렬 로직 반영]** 'pages' 배열을 'order' 필드를 기준으로 정렬
     v_pages_array.sort([](const JsonVariant& a, const JsonVariant& b) {
         return a["order"].as<int>() < b["order"].as<int>();
     });
+	*/
     
     s_page_count = v_pages_array.size();
     s_asset_count = v_assets_array.size(); // assets 배열은 정렬 불필요
@@ -184,7 +200,7 @@ void CL_W10_WebAPI::routeStaticAssets() {
     
     // 1. 페이지 정보 JSON 로드 및 정렬
     if (!W10_loadPagesJson()) {
-        CL_D10_Logger::log(EN_L10_LOG_FATAL, "[W10] Failed to load pages JSON. Cannot register static routes.");
+        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] Failed to load pages JSON. Cannot register static routes.");
         return; // 로드 실패 시 라우팅 등록 중단
     }
 
