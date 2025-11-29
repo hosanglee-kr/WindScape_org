@@ -6,7 +6,7 @@
  * ------------------------------------------------------
  * 기능 요약:
  * - **LittleFS 기반 JSON 파일** (`G_W10_PAGES_JSON`)에서 웹 페이지(`pages`)와 정적 자산(`assets`) 정보를 분리하여 로드.
- * - **`pages` 배열은 `order` 필드**를 기준으로 정렬되어 메뉴 및 라우팅 등록에 사용.
+ * - **`pages` 배열은 `order` 필드**를 기준으로 정렬되어 메뉴 및 라우팅 등록에 사용. (std::vector를 이용해 정렬)
  * - 로드된 JSON 데이터를 기반으로 **모든 정적 자산(HTML, CSS, JS)**의 라우팅 초기화 및 등록.
  * - **Web UI 메뉴 정보를 JSON으로 반환**하는 API (`/api/v1/menu`) 구현.
  * ------------------------------------------------------
@@ -56,6 +56,19 @@ static JsonDocument s_pages_doc; // 전체 JSON (pages, assets 포함)
 static uint16_t s_page_count = 0; // 'pages' 배열의 항목 수
 static uint16_t s_asset_count = 0; // 'assets' 배열의 항목 수
 
+// 정렬을 위해 'pages' JSON 항목을 임시로 담을 구조체
+// 메모리 효율성을 위해 String 대신 const char* 혹은 char 배열을 사용할 수 있으나,
+// 여기서의 목적은 정렬 후 JsonDocument에 재구성하는 것이므로 String을 사용합니다.
+struct ST_W10_PageEntry_t {
+    int order;
+    String uri;
+    String path;
+    String label;
+    String css;
+    String js;
+    bool isMain;
+};
+
 
 // ------------------------------------------------------
 // Static routing table 및 헬퍼 함수
@@ -69,8 +82,7 @@ struct ST_W10_Route_t {
 };
 
 // 정적 라우팅 테이블 배열 크기 정의 (최대 예상 경로 수)
-// (페이지 수 * 3 라우트) + (자산 수 * 2 라우트) + 예비 공간
-#define G_W10_PAGE_ROUTES_MAX 80 
+#define G_W10_PAGE_ROUTES_MAX 20 
 static ST_W10_Route_t s_routes_static[G_W10_PAGE_ROUTES_MAX];
 static uint8_t s_routeCnt_static = 0; // 등록된 라우트 개수
 
@@ -86,7 +98,7 @@ static void W10_pushRoute(const char* p_uri, const char* p_file, const char* p_m
 
 /**
  * @brief LittleFS에서 페이지 정보 JSON 파일을 읽고 파싱합니다.
- * 성공적으로 로드되면 'pages' 배열을 'order' 필드를 기준으로 정렬합니다.
+ * **std::vector를 사용하여 'pages' 배열을 'order' 필드를 기준으로 정렬**합니다.
  * @return 로드 성공 시 true
  */
 static bool W10_loadPagesJson() {
@@ -120,23 +132,47 @@ static bool W10_loadPagesJson() {
     }
 
 
-    // 수정 후 (std::sort 사용):
-    std::sort(
-        v_pages_array.begin(), 
-        v_pages_array.end(),
-        [](const JsonVariant& a, const JsonVariant& b) {
-            // 비교 로직: JsonVariant에서 비교에 필요한 값을 추출합니다.
-            // 예를 들어, JSON 객체의 "order" 필드를 비교한다면:
-            return a["order"].as<int>() < b["order"].as<int>();
+    // ------------------------------------------------------------------
+    // 1. JsonArray의 내용을 std::vector<ST_W10_PageEntry_t>로 복사 (Deserialize)
+    // ------------------------------------------------------------------
+    std::vector<ST_W10_PageEntry_t> v_pages_vector;
+    for (JsonVariantConst v : v_pages_array) {
+        v_pages_vector.push_back({
+            v["order"].as<int>(),
+            v["uri"].as<String>(),
+            v["path"].as<String>(),
+            v["label"].as<String>(),
+            v["css"].as<String>(),
+            v["js"].as<String>(),
+            v["isMain"] | false
+        });
+    }
+    
+    // ------------------------------------------------------------------
+    // 2. std::sort를 사용하여 vector 정렬 (order 필드 기준 오름차순)
+    // ------------------------------------------------------------------
+    std::sort(v_pages_vector.begin(), v_pages_vector.end(), 
+        [](const ST_W10_PageEntry_t& a, const ST_W10_PageEntry_t& b) {
+            return a.order < b.order;
         }
     );
 
-    /*
-	// **[정렬 로직 반영]** 'pages' 배열을 'order' 필드를 기준으로 정렬
-    v_pages_array.sort([](const JsonVariant& a, const JsonVariant& b) {
-        return a["order"].as<int>() < b["order"].as<int>();
-    });
-	*/
+    // ------------------------------------------------------------------
+    // 3. 기존 JsonArray 내용을 지우고 정렬된 vector로 재구성 (Serialize)
+    // ------------------------------------------------------------------
+    v_pages_array.clear(); // 기존 JSON 배열 비우기
+
+    for (const ST_W10_PageEntry_t& entry : v_pages_vector) {
+        // JsonArray에 새 객체 추가 (이미 정렬된 순서대로 추가됨)
+        JsonObject v_item = v_pages_array.add<JsonObject>();
+        v_item["order"] = entry.order;
+        v_item["uri"] = entry.uri;
+        v_item["path"] = entry.path;
+        v_item["label"] = entry.label;
+        v_item["css"] = entry.css;
+        v_item["js"] = entry.js;
+        v_item["isMain"] = entry.isMain;
+    }
     
     s_page_count = v_pages_array.size();
     s_asset_count = v_assets_array.size(); // assets 배열은 정렬 불필요
@@ -160,24 +196,31 @@ static void W10_getMenuJson(AsyncWebServerRequest* r) {
     // 로드되고 정렬된 'pages' 배열을 가져옴
     JsonArray v_pages_array = s_pages_doc["pages"].as<JsonArray>();
 
+    JsonArray v_array_out = v_doc_out.to<JsonArray>();
+
 	// 정렬된 페이지 목록을 순회하며 메뉴 항목 추가
 	for (JsonObject v_page : v_pages_array) { 
 		// isMain=true 인 항목은 메뉴에서 제외
         if (v_page["isMain"] | false) continue; 
         
         // 메뉴 항목 구성 
-        JsonArray v_array_out = v_doc_out.to<JsonArray>();
         JsonObject v_item = v_array_out.add<JsonObject>();
         
         // JSON 필드명 사용: label, path 
-        v_item["label"] = v_page["label"];
+        // JsonVariantConst를 사용하여 복사하는 것이 더 안전합니다.
+        v_item["label"] = v_page["label"].as<JsonVariantConst>();
+        
         // 메뉴 HTML의 상대 경로를 위해 "/html/" 접두사 제거 (예: /html/dashboard.html -> dashboard.html)
-        v_item["path"]  = ((String)v_page["path"]).substring(6); 
+        String v_path = v_page["path"].as<String>();
+        if (v_path.startsWith("/html/")) {
+             v_item["path"] = v_path.substring(6); 
+        } else {
+             v_item["path"] = v_path;
+        }
 	}
     
 	// JSON 직렬화 및 응답 전송
 	String v_json_output;
-	// Unicode 공백문자 제거됨
 	if (serializeJson(v_doc_out, v_json_output) > 0) {
 		auto* v_resp = r->beginResponse(200, "application/json", v_json_output);
 
@@ -205,7 +248,7 @@ void CL_W10_WebAPI::routeStaticAssets() {
         return; // 로드 실패 시 라우팅 등록 중단
     }
 
-	auto& v_web = g_A10_config_root.system->system.web;
+	auto& v_web = g_A10_config_root.system->system.web; // 전역 설정 참조
     
     // -------------------------------------------------
 	// 2. 'pages' (HTML 및 전용 CSS/JS) 목록을 순회하며 라우팅 테이블 구축
@@ -213,10 +256,10 @@ void CL_W10_WebAPI::routeStaticAssets() {
     JsonArray v_pages_array = s_pages_doc["pages"].as<JsonArray>();
 
 	for (JsonObject v_page : v_pages_array) { // 정렬된 순서대로 라우팅 등록
-		const char* v_uri_key = v_page["uri"];
-		const char* v_path_key = v_page["path"]; // HTML 파일 경로
+		const char* v_uri_key = v_page["uri"].as<const char*>();
+		const char* v_path_key = v_page["path"].as<const char*>(); // HTML 파일 경로
         
-        if (!v_uri_key || !v_path_key) continue;
+        if (!v_uri_key || !v_path_key || strlen(v_uri_key) == 0 || strlen(v_path_key) == 0) continue;
 
         bool v_is_main = v_page["isMain"] | false;
         
@@ -235,20 +278,23 @@ void CL_W10_WebAPI::routeStaticAssets() {
 		}
         
         // 2-2. 페이지 전용 CSS/JS 파일 라우팅 등록 (파일 경로를 동적으로 구성하여 등록)
-        const char* v_css_file = v_page["css"];
-        const char* v_js_file  = v_page["js"];
+        const char* v_css_file = v_page["css"].as<const char*>();
+        const char* v_js_file  = v_page["js"].as<const char*>();
         
-        if (v_css_file) {
-            String v_css_path = "/html/";
-            v_css_path += v_css_file; // 예: /html/SC10_dashboard_001.css
-            W10_pushRoute(v_css_file, v_css_path.c_str(), "text/css"); // /SC10_dashboard_001.css -> /html/SC10_dashboard_001.css
-            W10_pushRoute(v_css_path.c_str(), v_css_path.c_str(), "text/css"); // /html/... -> /html/...
+        if (v_css_file && strlen(v_css_file) > 0) {
+            // String 객체를 사용하면 수명이 짧아 위험하므로, 지역 char 배열 사용
+            char v_css_path[64]; // 충분한 크기 확보
+            snprintf(v_css_path, sizeof(v_css_path), "/html/%s", v_css_file); 
+            
+            W10_pushRoute(v_css_file, v_css_path, "text/css"); // /SC10_...css -> /html/SC10_...css
+            W10_pushRoute(v_css_path, v_css_path, "text/css"); // /html/... -> /html/...
         }
-        if (v_js_file) {
-            String v_js_path = "/html/";
-            v_js_path += v_js_file; // 예: /html/SC10_dashboard_001.js
-            W10_pushRoute(v_js_file, v_js_path.c_str(), "application/javascript"); // /SC10_dashboard_001.js -> /html/SC10_dashboard_001.js
-            W10_pushRoute(v_js_path.c_str(), v_js_path.c_str(), "application/javascript"); // /html/... -> /html/...
+        if (v_js_file && strlen(v_js_file) > 0) {
+            char v_js_path[64];
+            snprintf(v_js_path, sizeof(v_js_path), "/html/%s", v_js_file); 
+            
+            W10_pushRoute(v_js_file, v_js_path, "application/javascript"); // /SC10_...js -> /html/SC10_...js
+            W10_pushRoute(v_js_path, v_js_path, "application/javascript"); // /html/... -> /html/...
         }
 
 	} // end for ('pages' array)
@@ -259,10 +305,10 @@ void CL_W10_WebAPI::routeStaticAssets() {
     JsonArray v_assets_array = s_pages_doc["assets"].as<JsonArray>();
     
     for (JsonObject v_asset : v_assets_array) {
-        const char* v_uri_key = v_asset["uri"];
-		const char* v_path_key = v_asset["path"];
+        const char* v_uri_key = v_asset["uri"].as<const char*>();
+		const char* v_path_key = v_asset["path"].as<const char*>();
         
-        if (!v_uri_key || !v_path_key) continue;
+        if (!v_uri_key || !v_path_key || strlen(v_uri_key) == 0 || strlen(v_path_key) == 0) continue;
         
         // MIME 타입 결정
         const char* v_mime = "application/octet-stream";
@@ -288,7 +334,7 @@ void CL_W10_WebAPI::routeStaticAssets() {
         JsonArray v_pages_array = s_pages_doc["pages"].as<JsonArray>();
         for (JsonObject v_page : v_pages_array) {
             if (v_page["isMain"] | false) {
-                v_default_html = v_page["path"] | v_default_html; 
+                v_default_html = v_page["path"].as<const char*>() ? v_page["path"].as<const char*>() : v_default_html; 
                 break;
             }
         }
