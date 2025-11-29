@@ -56,9 +56,10 @@ extern bool ioLoadJson(const char* p_path, const char* p_bak, JsonDocument& p_do
 bool CL_C10_ConfigManager::patchSchedulesFromJson(ST_A10_SchedulesRoot_t& p_cfg,
 									   const JsonDocument&	 p_patch) {
 
-		// 💡 Mutex를 사용하여 쓰기 작업 보호
-	    C10_MUTEX_ACQUIRE()
+		C10_MUTEX_ACQUIRE()  // Mutex 쓰기 작업 보호
+	    // C10_MUTEX_RELEASE()  // Mutex 해제
 	    /*
+		
         if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
             CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] patchSchedulesFromJson() Mutex timeout!");
             return false; // Mutex 획득 실패 시 실패 처리
@@ -69,7 +70,8 @@ bool CL_C10_ConfigManager::patchSchedulesFromJson(ST_A10_SchedulesRoot_t& p_cfg,
 		JsonArrayConst arr = p_patch["schedules"].as<JsonArrayConst>();
 		if (arr.isNull()) {
 			CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Schedules patch: 'schedules' array missing");
-			xSemaphoreGive(s_configMutex);
+			C10_MUTEX_RELEASE()  // Mutex 해제
+            // xSemaphoreGive(s_configMutex);
 			return false;
 		}
 
@@ -280,6 +282,7 @@ bool CL_C10_ConfigManager::patchSchedulesFromJson(ST_A10_SchedulesRoot_t& p_cfg,
             _dirty_schedules = true;
             CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] schedules config patched (Memory Only). Dirty=true");
         }
+			
 	    C10_MUTEX_RELEASE()
 		// xSemaphoreGive(s_configMutex); 
 		
@@ -290,16 +293,21 @@ bool CL_C10_ConfigManager::patchSchedulesFromJson(ST_A10_SchedulesRoot_t& p_cfg,
 bool CL_C10_ConfigManager::patchUserProfilesFromJson(ST_A10_UserProfilesRoot_t& p_cfg,
 										  const JsonDocument&		 p_patch) {
 
-		// 💡 Mutex를 사용하여 쓰기 작업 보호
+		
+	    C10_MUTEX_ACQUIRE()  // Mutex 쓰기 작업 보호
+	    // C10_MUTEX_RELEASE()  // Mutex 해제
+	    /*
         if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
             CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] patchUserProfilesFromJson() Mutex timeout!");
             return false; // Mutex 획득 실패 시 실패 처리
         }
+		*/
 		
 		JsonArrayConst arr = p_patch["userProfiles"]["profiles"].as<JsonArrayConst>();
 		if (arr.isNull()) {
 			CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] UserProfiles patch: 'profiles' array missing");
-			xSemaphoreGive(s_configMutex);
+			C10_MUTEX_RELEASE()  // Mutex 해제
+            // xSemaphoreGive(s_configMutex);
 			return false;
 		}
 
@@ -481,7 +489,9 @@ bool CL_C10_ConfigManager::patchUserProfilesFromJson(ST_A10_UserProfilesRoot_t& 
             CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] userProfiles config patched (Memory Only). Dirty=true");
         }
 
-		xSemaphoreGive(s_configMutex); 
+	
+	    C10_MUTEX_RELEASE()  // Mutex 해제
+	    // xSemaphoreGive(s_configMutex); 
 		
         return v_changed;
 }
@@ -497,22 +507,28 @@ bool CL_C10_ConfigManager::patchUserProfilesFromJson(ST_A10_UserProfilesRoot_t& 
  * @return 새로 추가된 스케줄의 ID (성공 시), 또는 -1 (실패 시)
  */
 int CL_C10_ConfigManager::addScheduleFromJson(const JsonDocument& p_doc) {
-    // 1. 뮤텍스 획득
+
+	C10_MUTEX_ACQUIRE()  // Mutex 쓰기 작업 보호
+
+	/*
     if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
         CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] addScheduleFromJson() Mutex timeout!");
         return -1;
     }
+	*/
 
     ST_A10_SchedulesRoot_t* v_root = g_A10_config_root.schedules;
     if (!v_root) {
-        xSemaphoreGive(s_configMutex);
+        C10_MUTEX_RELEASE()  // Mutex 해제
+        // xSemaphoreGive(s_configMutex);
         return -1;
     }
 
     // 2. 용량 확인
     if (v_root->count >= A10_Const::MAX_SCHEDULES) {
         CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] Schedule add failed: Max schedules (%u) reached.", A10_Const::MAX_SCHEDULES);
-        xSemaphoreGive(s_configMutex);
+        C10_MUTEX_RELEASE()  // Mutex 해제
+        // xSemaphoreGive(s_configMutex);
         return -1;
     }
 
@@ -793,7 +809,8 @@ int CL_C10_ConfigManager::addScheduleFromJson(const JsonDocument& p_doc) {
     
 
     // 7. 뮤텍스 반납
-    xSemaphoreGive(s_configMutex);
+    C10_MUTEX_RELEASE()  // Mutex 해제
+    // xSemaphoreGive(s_configMutex);
     
     // 8. 새로 할당된 ID 반환
     return v_new_id;
@@ -801,15 +818,19 @@ int CL_C10_ConfigManager::addScheduleFromJson(const JsonDocument& p_doc) {
 
 
 bool CL_C10_ConfigManager::updateScheduleFromJson(uint16_t p_id, const JsonDocument& p_patch) {
-    // 1. 뮤텍스 획득
+    C10_MUTEX_ACQUIRE()  // Mutex 쓰기 작업 보호
+
+	/*
     if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
         CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] updateScheduleFromJson() Mutex timeout!");
         return false;
     }
+	*/
 
     ST_A10_SchedulesRoot_t* v_root = g_A10_config_root.schedules;
     if (!v_root) {
-        xSemaphoreGive(s_configMutex);
+        C10_MUTEX_RELEASE()  // Mutex 해제
+        // xSemaphoreGive(s_configMutex);
         return false;
     }
 
@@ -824,7 +845,8 @@ bool CL_C10_ConfigManager::updateScheduleFromJson(uint16_t p_id, const JsonDocum
 
     if (!v_item) {
         CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Schedule update failed: ID %u not found.", p_id);
-        xSemaphoreGive(s_configMutex);
+        C10_MUTEX_RELEASE()  // Mutex 해제
+        // xSemaphoreGive(s_configMutex);
         return false;
     }
 
@@ -1087,20 +1109,26 @@ bool CL_C10_ConfigManager::updateScheduleFromJson(uint16_t p_id, const JsonDocum
     }
 
     // 4. 뮤텍스 반납
-    xSemaphoreGive(s_configMutex);
+    C10_MUTEX_RELEASE()  // Mutex 해제
+        // xSemaphoreGive(s_configMutex);
     return v_changed;
 }
 
 
 bool CL_C10_ConfigManager::deleteSchedule(uint16_t p_id) {
-        if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
+        C10_MUTEX_ACQUIRE()  // Mutex 쓰기 작업 보호
+	    
+	    /*
+		if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
             CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] deleteSchedule() Mutex timeout!");
             return false;
         }
+		*/
 
         ST_A10_SchedulesRoot_t* v_root = g_A10_config_root.schedules;
         if (!v_root) {
-            xSemaphoreGive(s_configMutex);
+            C10_MUTEX_RELEASE()  // Mutex 해제
+            // xSemaphoreGive(s_configMutex);
             return false;
         }
 
@@ -1120,7 +1148,8 @@ bool CL_C10_ConfigManager::deleteSchedule(uint16_t p_id) {
 
         if (v_del_idx == -1) {
             CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] Schedule deletion failed: ID %u not found.", p_id);
-            xSemaphoreGive(s_configMutex);
+            C10_MUTEX_RELEASE()  // Mutex 해제
+            // xSemaphoreGive(s_configMutex);
             return false;
         }
 
@@ -1134,7 +1163,8 @@ bool CL_C10_ConfigManager::deleteSchedule(uint16_t p_id) {
         _dirty_schedules = true;
         CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] Schedule ID %u deleted. count=%u. Dirty=true", p_id, v_root->count);
 
-        xSemaphoreGive(s_configMutex);
+        C10_MUTEX_RELEASE()  // Mutex 해제
+        // xSemaphoreGive(s_configMutex);
         return true;
 }
 
