@@ -66,15 +66,15 @@ struct ST_W10_Route_t {
 };
 
 // 정적 라우팅 테이블 배열 크기 정의 (최대 예상 경로 수)
-#define G_W10_MAX_ROUTES 256 // 충분히 큰 크기로 설정
-static ST_W10_Route_t s_routes_static[G_W10_MAX_ROUTES];
+#define G_W10_PAGE_ROUTES_MAX 20 // 충분히 큰 크기로 설정
+static ST_W10_Route_t s_routes_static[G_W10_PAGE_ROUTES_MAX];
 static uint8_t s_routeCnt_static = 0; // 등록된 라우트 개수
 
 /**
  * @brief 정적 라우팅 테이블에 새 경로를 추가합니다. 배열 크기를 초과하지 않도록 검사합니다.
  */
 static void W10_pushRoute(const char* p_uri, const char* p_file, const char* p_mime) {
-	if (s_routeCnt_static < G_W10_MAX_ROUTES)
+	if (s_routeCnt_static < G_W10_PAGE_ROUTES_MAX)
 		s_routes_static[s_routeCnt_static++] = {p_uri, p_file, p_mime};
 	else
 		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] Max static routes reached!");
