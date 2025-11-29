@@ -80,7 +80,7 @@ bool CL_C10_ConfigManager::patchSchedulesFromJson(ST_A10_SchedulesRoot_t& p_cfg,
 		for (JsonObjectConst j_patch : arr) {
 			if (!j_patch["schId"].is<uint8_t>()) continue;
 			uint8_t v_schId = j_patch["schId"];
-			uint16_t v_schNo = j_patch["schNo"];
+			uint16_t v_schNo = j_patch["schNo"].is<uint16_t>() ? j_patch["schNo"].as<uint16_t>() : 0; // **수정: 유효성 검사**
 
 			ST_A10_ScheduleItem_t* v_item = nullptr;
 			for (uint8_t i = 0; i < p_cfg.count; i++) {
@@ -316,7 +316,7 @@ bool CL_C10_ConfigManager::patchUserProfilesFromJson(ST_A10_UserProfilesRoot_t& 
 		for (JsonObjectConst j_patch : arr) {
 			if (!j_patch["profileId"].is<uint8_t>()) continue;
 			uint8_t v_profileId = j_patch["profileId"];
-			uint16_t v_profileNo = j_patch["profileNo"];
+			uint16_t v_profileNo = j_patch["profileNo"].is<uint16_t>() ? j_patch["profileNo"].as<uint16_t>() : 0; // **수정: 유효성 검사**
 
 			ST_A10_UserProfileItem_t* v_item = nullptr;
 			for (uint8_t i = 0; i < p_cfg.count; i++) {
