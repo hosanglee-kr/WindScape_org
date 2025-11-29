@@ -1,16 +1,14 @@
-
 /*
  * ------------------------------------------------------
  * 소스명 : W10_Web_Static_028.cpp
  * 모듈 약어 : W10
- * 모듈명 : Smart Nature Wind Web API (v025) - Static Assets & Menu API Implementation
+ * 모듈명 : Smart Nature Wind Web API (v025) - Static Assets & Menu Implementation
  * ------------------------------------------------------
  * 기능 요약:
- * - **LittleFS 기반 JSON 파일** (`G_W10_PAGES_JSON`)에서 **웹 페이지 및 공통 자산 목록 정보**를 로드 및 관리.
- * - **JSON 데이터 로드 후 `order` 필드를 기준으로 항목 정렬**을 수행하여 순번 반영.
+ * - **LittleFS 기반 JSON 파일** (`G_W10_PAGES_JSON`)에서 웹 페이지(`pages`)와 정적 자산(`assets`) 정보를 분리하여 로드.
+ * - **`pages` 배열은 `order` 필드**를 기준으로 정렬되어 메뉴 및 라우팅 등록에 사용.
  * - 로드된 JSON 데이터를 기반으로 **모든 정적 자산(HTML, CSS, JS)**의 라우팅 초기화 및 등록.
  * - **Web UI 메뉴 정보를 JSON으로 반환**하는 API (`/api/v1/menu`) 구현.
- * - **루트 경로 (`/`) 요청** 시 설정 경로 또는 JSON에 정의된 기본 홈 페이지로 **리다이렉트**.
  * ------------------------------------------------------
  * [구현 규칙]
  * - 항상 소스 시작 주석 부분 체계 유지 및 내용 업데이트
@@ -47,12 +45,13 @@
 // ------------------------------------------------------
 
 // [JSON 파일 경로]
-constexpr char G_W10_PAGES_JSON[] = "/config/pages.json";
+constexpr char G_W10_PAGES_JSON[] = "/json/cfg_pages_028.json";
 
 // [페이지 데이터 저장]
 // JSON 파일에서 로드한 페이지 목록 (전역 JsonDocument 사용)
-static JsonDocument s_pages_doc;
-static uint16_t s_page_count = 0;
+static JsonDocument s_pages_doc; // 전체 JSON (pages, assets 포함)
+static uint16_t s_page_count = 0; // 'pages' 배열의 항목 수
+static uint16_t s_asset_count = 0; // 'assets' 배열의 항목 수
 
 
 // ------------------------------------------------------
@@ -67,7 +66,8 @@ struct ST_W10_Route_t {
 };
 
 // 정적 라우팅 테이블 배열 크기 정의 (최대 예상 경로 수)
-#define G_W10_PAGE_ROUTES_MAX 20 
+// (페이지 수 * 3 라우트) + (자산 수 * 2 라우트) + 예비 공간
+#define G_W10_PAGE_ROUTES_MAX 80 
 static ST_W10_Route_t s_routes_static[G_W10_PAGE_ROUTES_MAX];
 static uint8_t s_routeCnt_static = 0; // 등록된 라우트 개수
 
@@ -83,7 +83,7 @@ static void W10_pushRoute(const char* p_uri, const char* p_file, const char* p_m
 
 /**
  * @brief LittleFS에서 페이지 정보 JSON 파일을 읽고 파싱합니다.
- * 성공적으로 로드되면 'order' 필드를 기준으로 배열을 정렬합니다.
+ * 성공적으로 로드되면 'pages' 배열을 'order' 필드를 기준으로 정렬합니다.
  * @return 로드 성공 시 true
  */
 static bool W10_loadPagesJson() {
@@ -102,22 +102,30 @@ static bool W10_loadPagesJson() {
 		return false;
 	}
     
-    // 로드된 데이터가 JsonArray인지 확인하고 카운트 업데이트
-    if (s_pages_doc.is<JsonArray>()) {
-        JsonArray v_array = s_pages_doc.as<JsonArray>();
-        s_page_count = v_array.size();
-        
-        // **[정렬 로직 반영]** 'order' 필드를 기준으로 배열 정렬
-        v_array.sort([](const JsonVariant& a, const JsonVariant& b) {
-            return a["order"].as<int>() < b["order"].as<int>();
-        });
-        
-        CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] Pages JSON loaded and sorted successfully (%u items)", s_page_count);
-        return true;
+    // 로드된 데이터가 JsonObject이고 'pages' 배열을 포함하는지 확인
+    if (!s_pages_doc.is<JsonObject>()) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] Pages JSON is not a valid object.");
+        return false;
+    }
+    
+    JsonArray v_pages_array = s_pages_doc["pages"].as<JsonArray>();
+    JsonArray v_assets_array = s_pages_doc["assets"].as<JsonArray>();
+
+    if (v_pages_array.isNull()) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] Pages array missing or invalid in JSON.");
+        return false;
     }
 
-	CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] Pages JSON is not a valid array.");
-    return false;
+    // **[정렬 로직 반영]** 'pages' 배열을 'order' 필드를 기준으로 정렬
+    v_pages_array.sort([](const JsonVariant& a, const JsonVariant& b) {
+        return a["order"].as<int>() < b["order"].as<int>();
+    });
+    
+    s_page_count = v_pages_array.size();
+    s_asset_count = v_assets_array.size(); // assets 배열은 정렬 불필요
+    
+    CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] JSON loaded (Pages: %u, Assets: %u), Pages sorted.", s_page_count, s_asset_count);
+    return true;
 }
 
 
@@ -132,23 +140,21 @@ static void W10_getMenuJson(AsyncWebServerRequest* r) {
 	
     JsonDocument v_doc_out; 
     
-    // 로드되고 정렬된 페이지 JSON Document를 JsonArray로 가져옴
-    JsonArray v_pages_array = s_pages_doc.as<JsonArray>();
+    // 로드되고 정렬된 'pages' 배열을 가져옴
+    JsonArray v_pages_array = s_pages_doc["pages"].as<JsonArray>();
 
 	// 정렬된 페이지 목록을 순회하며 메뉴 항목 추가
-	for (JsonObject v_page : v_pages_array) {
-		// isMain=true 또는 isAsset=true 인 항목은 메뉴에서 제외
+	for (JsonObject v_page : v_pages_array) { 
+		// isMain=true 인 항목은 메뉴에서 제외
         if (v_page["isMain"] | false) continue; 
-        if (v_page["isAsset"] | false) continue;
         
-        // 메뉴 항목 구성 (정렬 순서는 로드 시 이미 반영됨)
-        // JsonDocument 단일 타입 사용 및 createNestedObject 사용 금지 규칙 준수
+        // 메뉴 항목 구성 
         JsonArray v_array_out = v_doc_out.to<JsonArray>();
         JsonObject v_item = v_array_out.add<JsonObject>();
         
-        // JSON 필드명 사용: label, path (path는 HTML 파일 경로)
+        // JSON 필드명 사용: label, path 
         v_item["label"] = v_page["label"];
-        // 메뉴 HTML의 상대 경로를 위해 "/html/" 접두사 제거 
+        // 메뉴 HTML의 상대 경로를 위해 "/html/" 접두사 제거 (예: /html/dashboard.html -> dashboard.html)
         v_item["path"]  = ((String)v_page["path"]).substring(6); 
 	}
     
@@ -183,63 +189,88 @@ void CL_W10_WebAPI::routeStaticAssets() {
     }
 
 	auto& v_web = g_A10_config_root.system->system.web;
-
-	// 2. 로드되고 정렬된 JSON 페이지 목록을 순회하며 라우팅 테이블 구축
-    JsonArray v_pages_array = s_pages_doc.as<JsonArray>();
+    
+    // -------------------------------------------------
+	// 2. 'pages' (HTML 및 전용 CSS/JS) 목록을 순회하며 라우팅 테이블 구축
+    // -------------------------------------------------
+    JsonArray v_pages_array = s_pages_doc["pages"].as<JsonArray>();
 
 	for (JsonObject v_page : v_pages_array) { // 정렬된 순서대로 라우팅 등록
-		// 필수 필드 확인
 		const char* v_uri_key = v_page["uri"];
-		const char* v_path_key = v_page["path"];
+		const char* v_path_key = v_page["path"]; // HTML 파일 경로
         
-        if (!v_uri_key || !v_path_key) {
-            CL_D10_Logger::log(EN_L10_LOG_WARN, "[W10] Skip page: Missing uri or path field in JSON.");
-            continue;
-        }
+        if (!v_uri_key || !v_path_key) continue;
 
         bool v_is_main = v_page["isMain"] | false;
         
-		// 파일 경로에서 확장자 추출 (MIME 타입 결정을 위해 필요)
-        String v_path_str = v_path_key;
-        int v_ext_idx = v_path_str.lastIndexOf('.');
-        int v_type_idx = v_path_str.lastIndexOf('/');
-        
-        String v_file_ext = (v_ext_idx != -1 && v_ext_idx > v_type_idx) ? v_path_str.substring(v_ext_idx + 1) : "";
-        
-        const char* v_mime = "application/octet-stream";
-        if (v_file_ext == "html") {
-            v_mime = "text/html";
-        } else if (v_file_ext == "css") {
-            v_mime = "text/css";
-        } else if (v_file_ext == "js") {
-            v_mime = "application/javascript";
-        }
-        
-		// 2-1. HTML/Asset 파일 라우팅 등록
+        // 2-1. HTML 파일 라우팅 등록
+		const char* v_mime_html = "text/html"; 
 		if (v_is_main) {
 			// 메인 페이지: 설정값 오버라이드 로직 적용
 			const char* v_cfg_html = v_web.html;
 			if (strlen(v_cfg_html) > 0)
-				W10_pushRoute(v_cfg_html, v_cfg_html, v_mime); // 설정 오버라이드 경로 등록
-			W10_pushRoute(v_path_key, v_path_key, v_mime); // 기본 파일 경로 등록
+				W10_pushRoute(v_cfg_html, v_cfg_html, v_mime_html); // 설정 오버라이드 경로 등록
+			W10_pushRoute(v_path_key, v_path_key, v_mime_html); // 기본 파일 경로 등록
 		} else {
-			// 그 외 페이지 및 일반 자산: 단축 URI와 파일 경로 모두 등록
-			W10_pushRoute(v_uri_key, v_path_key, v_mime);
-			W10_pushRoute(v_path_key, v_path_key, v_mime);
+			// 그 외 페이지: 단축 URI와 파일 경로 모두 등록
+			W10_pushRoute(v_uri_key, v_path_key, v_mime_html);
+			W10_pushRoute(v_path_key, v_path_key, v_mime_html);
 		}
-	} // end for
+        
+        // 2-2. 페이지 전용 CSS/JS 파일 라우팅 등록 (파일 경로를 동적으로 구성하여 등록)
+        const char* v_css_file = v_page["css"];
+        const char* v_js_file  = v_page["js"];
+        
+        if (v_css_file) {
+            String v_css_path = "/html/";
+            v_css_path += v_css_file; // 예: /html/SC10_dashboard_001.css
+            W10_pushRoute(v_css_file, v_css_path.c_str(), "text/css"); // /SC10_dashboard_001.css -> /html/SC10_dashboard_001.css
+            W10_pushRoute(v_css_path.c_str(), v_css_path.c_str(), "text/css"); // /html/... -> /html/...
+        }
+        if (v_js_file) {
+            String v_js_path = "/html/";
+            v_js_path += v_js_file; // 예: /html/SC10_dashboard_001.js
+            W10_pushRoute(v_js_file, v_js_path.c_str(), "application/javascript"); // /SC10_dashboard_001.js -> /html/SC10_dashboard_001.js
+            W10_pushRoute(v_js_path.c_str(), v_js_path.c_str(), "application/javascript"); // /html/... -> /html/...
+        }
 
-	// 3. 루트 경로 '/' 리다이렉트 핸들러 등록
+	} // end for ('pages' array)
+    
+    // -------------------------------------------------
+	// 3. 'assets' (공통 자산) 목록을 순회하며 라우팅 테이블 구축
+    // -------------------------------------------------
+    JsonArray v_assets_array = s_pages_doc["assets"].as<JsonArray>();
+    
+    for (JsonObject v_asset : v_assets_array) {
+        const char* v_uri_key = v_asset["uri"];
+		const char* v_path_key = v_asset["path"];
+        
+        if (!v_uri_key || !v_path_key) continue;
+        
+        // MIME 타입 결정
+        const char* v_mime = "application/octet-stream";
+        if (strstr(v_path_key, ".css")) {
+            v_mime = "text/css";
+        } else if (strstr(v_path_key, ".js")) {
+            v_mime = "application/javascript";
+        }
+        
+        // 자산 파일 라우팅 등록: 단축 URI와 파일 경로 모두 등록 
+        W10_pushRoute(v_uri_key, v_path_key, v_mime);
+        W10_pushRoute(v_path_key, v_path_key, v_mime);
+    } // end for ('assets' array)
+
+
+	// 4. 루트 경로 '/' 리다이렉트 핸들러 등록
 	s_server->on("/", HTTP_GET, [](AsyncWebServerRequest* r) {
 		const char* f = g_A10_config_root.system->system.web.html;
         
         // JSON 데이터에서 isMain=true인 페이지의 path를 가져옴
         const char* v_default_html = "/html/SC10_main_019.html"; // 기본값
         
-        JsonArray v_pages_array = s_pages_doc.as<JsonArray>();
+        JsonArray v_pages_array = s_pages_doc["pages"].as<JsonArray>();
         for (JsonObject v_page : v_pages_array) {
             if (v_page["isMain"] | false) {
-                // v_page["path"]가 없는 경우를 대비해 기본값 사용
                 v_default_html = v_page["path"] | v_default_html; 
                 break;
             }
@@ -251,7 +282,7 @@ void CL_W10_WebAPI::routeStaticAssets() {
 			r->redirect(v_default_html); // JSON에서 로드한 기본 HTML 경로로 리다이렉트
 	});
 
-	// 4. 등록된 정적 파일 경로 마운트 (HTTP GET 핸들러 등록)
+	// 5. 등록된 정적 파일 경로 마운트 (HTTP GET 핸들러 등록)
     for (uint8_t v_i = 0; v_i < s_routeCnt_static; v_i++) {
         s_server->on(s_routes_static[v_i].uri, HTTP_GET, [v_i](AsyncWebServerRequest* r) {
             const char* v_file = s_routes_static[v_i].file;
@@ -272,127 +303,10 @@ void CL_W10_WebAPI::routeStaticAssets() {
         });
     }
     
-    // 5. 메뉴 API 라우팅 등록
+    // 6. 메뉴 API 라우팅 등록
     s_server->on("/api/v1/menu", HTTP_GET, W10_getMenuJson);
 
 
-	CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] Web routing initialized (%d routes, %u pages)", s_routeCnt_static, s_page_count);
+	CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] Web routing initialized (%d routes, Pages: %u, Assets: %u)", 
+        s_routeCnt_static, s_page_count, s_asset_count);
 }
-
-📄 pages.json 파일 예시 (순번 order 추가)
-pages.json 파일에 order 필드를 추가했습니다. 이 값이 낮을수록 메뉴에 먼저 표시되고 라우팅이 먼저 등록됩니다.
-[
-  {
-    "uri": "/",
-    "path": "/html/SC10_main_019.html",
-    "label": "Home",
-    "isMain": true,
-    "isAsset": false,
-    "order": 10
-  },
-  {
-    "uri": "/dashboard",
-    "path": "/html/SC10_dashboard_001.html",
-    "label": "대시보드",
-    "isMain": false,
-    "isAsset": false,
-    "order": 20
-  },
-  {
-    "uri": "/chart_t1",
-    "path": "/html/SC10_chart_t1_006.html",
-    "label": "차트 모니터링 T1",
-    "isMain": false,
-    "isAsset": false,
-    "order": 30
-  },
-  {
-    "uri": "/chart_t2",
-    "path": "/html/SC10_chart_t2_007.html",
-    "label": "차트 모니터링 T2",
-    "isMain": false,
-    "isAsset": false,
-    "order": 40
-  },
-  {
-    "uri": "/sim_details",
-    "path": "/html/SC10_sim_details_001.html",
-    "label": "시뮬 설정",
-    "isMain": false,
-    "isAsset": false,
-    "order": 50
-  },
-  {
-    "uri": "/profiles",
-    "path": "/html/SC10_profile_001.html",
-    "label": "프로파일 관리",
-    "isMain": false,
-    "isAsset": false,
-    "order": 60
-  },
-  {
-    "uri": "/schedules_t1",
-    "path": "/html/SC30_schedules_t1_005.html",
-    "label": "스케줄 관리 T1",
-    "isMain": false,
-    "isAsset": false,
-    "order": 70
-  },
-  {
-    "uri": "/schedules_t2",
-    "path": "/html/SC10_schedules_t2_001.html",
-    "label": "스케줄 관리 T2",
-    "isMain": false,
-    "isAsset": false,
-    "order": 80
-  },
-  {
-    "uri": "/user_profiles",
-    "path": "/html/SC10_user_001.html",
-    "label": "사용자 프로필",
-    "isMain": false,
-    "isAsset": false,
-    "order": 90
-  },
-  {
-    "uri": "/settings",
-    "path": "/html/SC10_settings_001.html",
-    "label": "시스템 설정",
-    "isMain": false,
-    "isAsset": false,
-    "order": 100
-  },
-  {
-    "uri": "/config",
-    "path": "/html/SC10_config_025.html",
-    "label": "Config 설정",
-    "isMain": false,
-    "isAsset": false,
-    "order": 110
-  },
-  {
-    "uri": "/diag",
-    "path": "/html/SC10_diag_025.html",
-    "label": "시스템 진단",
-    "isMain": false,
-    "isAsset": false,
-    "order": 120
-  },
-  {
-    "uri": "/SC10_common_001.css",
-    "path": "/html/SC10_common_001.css",
-    "label": "Common CSS",
-    "isMain": false,
-    "isAsset": true,
-    "order": 900
-  },
-  {
-    "uri": "/SC10_common_001.js",
-    "path": "/html/SC10_common_001.js",
-    "label": "Common JS",
-    "isMain": false,
-    "isAsset": true,
-    "order": 910
-  }
-]
-
