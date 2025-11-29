@@ -1,0 +1,114 @@
+[
+  {
+    "uri": "/",
+    "path": "/html/SC10_main_019.html",
+    "label": "Home",
+    "isMain": true,
+    "isAsset": false,
+    "order": 10
+  },
+  {
+    "uri": "/dashboard",
+    "path": "/html/SC10_dashboard_001.html",
+    "label": "대시보드",
+    "isMain": false,
+    "isAsset": false,
+    "order": 20
+  },
+  {
+    "uri": "/chart_t1",
+    "path": "/html/SC10_chart_t1_006.html",
+    "label": "차트 모니터링 T1",
+    "isMain": false,
+    "isAsset": false,
+    "order": 30
+  },
+  {
+    "uri": "/chart_t2",
+    "path": "/html/SC10_chart_t2_007.html",
+    "label": "차트 모니터링 T2",
+    "isMain": false,
+    "isAsset": false,
+    "order": 40
+  },
+  {
+    "uri": "/sim_details",
+    "path": "/html/SC10_sim_details_001.html",
+    "label": "시뮬 설정",
+    "isMain": false,
+    "isAsset": false,
+    "order": 50
+  },
+  {
+    "uri": "/profiles",
+    "path": "/html/SC10_profile_001.html",
+    "label": "프로파일 관리",
+    "isMain": false,
+    "isAsset": false,
+    "order": 60
+  },
+  {
+    "uri": "/schedules_t1",
+    "path": "/html/SC30_schedules_t1_005.html",
+    "label": "스케줄 관리 T1",
+    "isMain": false,
+    "isAsset": false,
+    "order": 70
+  },
+  {
+    "uri": "/schedules_t2",
+    "path": "/html/SC10_schedules_t2_001.html",
+    "label": "스케줄 관리 T2",
+    "isMain": false,
+    "isAsset": false,
+    "order": 80
+  },
+  {
+    "uri": "/user_profiles",
+    "path": "/html/SC10_user_001.html",
+    "label": "사용자 프로필",
+    "isMain": false,
+    "isAsset": false,
+    "order": 90
+  },
+  {
+    "uri": "/settings",
+    "path": "/html/SC10_settings_001.html",
+    "label": "시스템 설정",
+    "isMain": false,
+    "isAsset": false,
+    "order": 100
+  },
+  {
+    "uri": "/config",
+    "path": "/html/SC10_config_025.html",
+    "label": "Config 설정",
+    "isMain": false,
+    "isAsset": false,
+    "order": 110
+  },
+  {
+    "uri": "/diag",
+    "path": "/html/SC10_diag_025.html",
+    "label": "시스템 진단",
+    "isMain": false,
+    "isAsset": false,
+    "order": 120
+  },
+  {
+    "uri": "/SC10_common_001.css",
+    "path": "/html/SC10_common_001.css",
+    "label": "Common CSS",
+    "isMain": false,
+    "isAsset": true,
+    "order": 900
+  },
+  {
+    "uri": "/SC10_common_001.js",
+    "path": "/html/SC10_common_001.js",
+    "label": "Common JS",
+    "isMain": false,
+    "isAsset": true,
+    "order": 910
+  }
+]
