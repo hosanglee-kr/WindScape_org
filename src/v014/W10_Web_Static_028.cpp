@@ -36,8 +36,9 @@
 
 #include <LittleFS.h> 
 #include <ArduinoJson.h> 
-#include <algorithm> 
 
+#include <algorithm> // std::sort 사용
+#include <vector>    // std::vector 사용
 
 #include "W10_Web_027.h"
 
