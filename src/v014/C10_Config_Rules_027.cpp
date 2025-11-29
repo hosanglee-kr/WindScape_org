@@ -543,13 +543,14 @@ int CL_C10_ConfigManager::addScheduleFromJson(const JsonDocument& p_doc) {
         }
     }
     // ID가 0인 경우는 보통 유효하지 않으므로 최소 1부터 시작하도록 보장 (선택적)
-    if (v_new_id == 0) v_new_id = 1;
+    // if (v_new_id == 0) v_new_id = 1;
 
 
     // 4. 새 항목 초기화 및 ID 설정
     ST_A10_ScheduleItem_t& v_item = v_root->items[v_new_idx];
     memset(&v_item, 0, sizeof(ST_A10_ScheduleItem_t));
     v_item.schId = v_new_id;
+	v_item.schNo = 0; 
     // 기본값 설정 (예: name 기본값, enabled=false 등)
     A10_safe_strlcpy(v_item.name, "New Schedule", sizeof(v_item.name));
     v_item.enabled = false;
@@ -850,6 +851,8 @@ bool CL_C10_ConfigManager::updateScheduleFromJson(uint16_t p_id, const JsonDocum
         return false;
     }
 
+	v_item->schNo = 0;
+
     bool v_changed = false;
     JsonObjectConst j_patch = p_patch.as<JsonObjectConst>();
     
@@ -1138,12 +1141,6 @@ bool CL_C10_ConfigManager::deleteSchedule(uint16_t p_id) {
                 v_del_idx = i;
                 break;
             }
-			/*
-			if (v_root->items[i].schNo == p_id) {
-                v_del_idx = i;
-                break;
-            }
-			*/
         }
 
         if (v_del_idx == -1) {
@@ -1159,6 +1156,9 @@ bool CL_C10_ConfigManager::deleteSchedule(uint16_t p_id) {
         }
 
         v_root->count--; // 카운트 감소
+	     // 마지막 항목에 대한 안전 초기화 (선택적이지만 안전성을 위해 추가)
+        memset(&v_root->items[v_root->count], 0, sizeof(ST_A10_ScheduleItem_t)); // **추가/수정**
+
 
         _dirty_schedules = true;
         CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] Schedule ID %u deleted. count=%u. Dirty=true", p_id, v_root->count);
