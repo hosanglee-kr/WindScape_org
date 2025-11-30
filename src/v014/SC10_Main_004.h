@@ -33,7 +33,7 @@
 #include "S10_Simulation_020.h"
 #include "S20_WindSolver_021.h"
 #include "W10_Web_029.h"
-#include "WF10_WiFiManager_023.h"
+#include "WF10_WiFiManager_024.h"
 
 
 // [main.cpp] 또는 [MotionLogic.cpp] 파일에 추가
