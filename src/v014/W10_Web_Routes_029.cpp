@@ -1238,7 +1238,7 @@ void CL_W10_WebAPI::routeTimeSet() {
 					 if (v_changed && g_A10_config_root.system) {
 						 CL_C10_ConfigManager::saveDirtyConfigs();
 						 // 외부 TimeManager에 설정 적용 (별도 모듈에서 구현 필요)
-						 T10_applyTimeConfigFromSystem(*g_A10_config_root.system);
+						 WF10_applyTimeConfigFromSystem(*g_A10_config_root.system);
 						 v_res["status"] = "applied";
 						 CL_D10_Logger::log(EN_L10_LOG_INFO,
 											"[W10] Time config updated and applied via TimeManager.");
