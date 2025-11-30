@@ -55,7 +55,7 @@
 #include <deque> // 차트 데이터 관리를 위한 덱(양방향 큐) 컨테이너
 
 #include "A10_Const_015.h" // 공통 상수 및 타입 정의
-#include "C10_Config_027.h" // 설정 관리 모듈
+#include "C10_Config_029.h" // 설정 관리 모듈
 #include "D10_Logger_016.h"        // 로거 모듈
 #include "P10_PWM_ctrl_014.h"      // PWM 제어 모듈
 
