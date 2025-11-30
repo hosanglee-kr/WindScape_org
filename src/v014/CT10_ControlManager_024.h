@@ -50,7 +50,7 @@
 
 // 종속성 모듈 헤더
 #include "A10_Const_015.h"
-#include "C10_Config_027.h"
+#include "C10_Config_029.h"
 #include "D10_Logger_016.h"
 #include "M10_MotionLogic_016.h"
 #include "P10_PWM_ctrl_014.h"
