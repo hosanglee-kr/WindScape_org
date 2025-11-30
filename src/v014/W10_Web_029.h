@@ -45,7 +45,7 @@
 #include "D10_Logger_016.h"
 #include "CT10_ControlManager_024.h"
 #include "N10_NvsManager_019.h"
-#include "WF10_WiFiManager_024.h"
+#include "WF10_WiFiManager_025.h"
 
 // (선택 사항) 시간 설정 적용용 TimeManager 존재 가정 시 외부에서 구현
 // 필요 시 별도 모듈에서 구현: void T10_applyTimeConfigFromSystem(const ST_A10_SystemConfig&);
