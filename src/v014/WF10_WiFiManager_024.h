@@ -44,7 +44,7 @@
 #include "A10_Const_015.h"
 #include "D10_Logger_016.h"
 // g_A10_config_root.wifi가 ST_A10_WiFiConfig* 타입이라고 가정
-#include "A10_Config_027.h" 
+#include "A10_Config_029.h" 
 
 // Mutex 보호 매크로 정의
 #define WF10_MUTEX_ACQUIRE() xSemaphoreTake(CL_WF10_WiFiManager::s_wifiMutex, portMAX_DELAY)
