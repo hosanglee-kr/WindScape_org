@@ -34,7 +34,7 @@
 #include "W10_Web_029.h"
 #include "M10_MotionLogic_016.h"
 #include "CT10_ControlManager_024.h"
-#include "WF10_WiFiManager_023.h"
+#include "WF10_WiFiManager_024.h"
 
 // ------------------------------------------------------
 // 정적 멤버 정의
