@@ -232,7 +232,6 @@ class CL_WF10_WiFiManager {
 			return false;
 		}
 
-		p_multi.cleanAPlist(); // 기존 목록 정리
 		for (uint8_t v_i = 0; v_i < p_cfg_wifi.sta_count; v_i++) {
 			const char* v_ssid = p_cfg_wifi.sta[v_i].ssid;
 			const char* v_pass = p_cfg_wifi.sta[v_i].pass;
@@ -313,13 +312,10 @@ class CL_WF10_WiFiManager {
 		WF10_MUTEX_ACQUIRE(); // Mutex 시작
 		// JsonObject v = p_doc["wifi"]["state"].to<JsonObject>(); // createNestedObject/Array 금지 규칙 준수
 
-		// to<>() 체이닝으로 객체 생성
-		JsonObject v = p_doc.to<JsonObject>()
-							.set("wifi", JsonObject())
-							.as<JsonObject>()["wifi"]
-							.set("state", JsonObject())
-							.as<JsonObject>()["state"]
-							.as<JsonObject>();
+		JsonObject v_root = p_doc.to<JsonObject>();
+		JsonObject v_wifi = v_root["wifi"].to<JsonObject>();
+		JsonObject v = v_wifi["state"].to<JsonObject>(); // 최종 결과 객체
+
 		
 		v["mode"]			   = (int)WiFi.getMode();
 		v["mode_name"]		   = (WiFi.getMode() == WIFI_STA ? "STA" : WiFi.getMode() == WIFI_AP ? "AP"
@@ -342,13 +338,9 @@ class CL_WF10_WiFiManager {
 	static void scanNetworksToJson(JsonDocument& p_doc) {
 		int		  v_found = WiFi.scanNetworks(false, true);
 		
-		// to<>() 체이닝으로 배열 생성
-		JsonArray arr = p_doc.to<JsonObject>()
-							.set("wifi", JsonObject())
-							.as<JsonObject>()["wifi"]
-							.set("scan", JsonArray())
-							.as<JsonObject>()["scan"]
-							.as<JsonArray>();
+		JsonObject v_root = p_doc.to<JsonObject>();
+		JsonObject v_wifi = v_root["wifi"].to<JsonObject>();
+		JsonArray arr = v_wifi["scan"].to<JsonArray>(); // 최종 결과 배열
 
 		for (int i = 0; i < v_found; i++) {
 			JsonObject o = arr.add<JsonObject>();
