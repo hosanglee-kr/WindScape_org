@@ -42,7 +42,7 @@
 #include <Update.h>    // OTA를 위해 추가
 
 #include "A10_Const_015.h"
-#include "C10_Config_027.h"
+#include "C10_Config_029.h"
 #include "D10_Logger_016.h"
 #include "CT10_ControlManager_024.h"
 #include "N10_NvsManager_019.h"
