@@ -98,6 +98,30 @@ function extractPagesArray(rawData) {
 	return null;
 }
 
+// --------------------------------------------------
+// 🚨 추가된 기능: 로고 링크 설정
+// --------------------------------------------------
+/**
+ * @brief nav-logo의 href를 isMain:true인 페이지 경로로 설정합니다.
+ * @param {Array} pagesArray 
+ */
+function setLogoLink(pagesArray) {
+    const logoLink = document.querySelector(".nav-logo");
+    if (!logoLink || !pagesArray) return;
+
+    // isMain: true인 항목을 찾습니다.
+    const mainPageItem = pagesArray.find(item => item.isMain === true);
+
+    if (mainPageItem && mainPageItem.path) {
+        const newPath = mainPageItem.path;
+        logoLink.href = newPath;
+        console.log(`[Logo] Logo link set to: ${newPath}`);
+    } else {
+        console.warn("[Logo] Main page item (isMain: true) not found or path is missing. Using default link.");
+    }
+}
+
+
 /**
  * @brief 메뉴 데이터를 기반으로 내비게이션 메뉴를 생성합니다.
  * @param {Array} pagesArray cfg_pages_029.json의 pages 항목과 동일한 배열
@@ -192,6 +216,10 @@ async function loadMenuAndSetMode() {
 	}
 
 	window.currentMode = currentMode;
+
+	// 로고 링크 설정
+    setLogoLink(pagesData);
+
 	renderMenu(pagesData);
 }
 
