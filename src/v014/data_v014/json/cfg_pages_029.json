@@ -53,7 +53,7 @@
     },
     {
       "uri": "/dashboard",
-      "path": "/html/P040_dashboard_002.html",
+      "path": "/html_v2/P040_dashboard_002.html",
       "label": "Dashboard",
       "isMain": false,
       "order": 40,
@@ -70,7 +70,7 @@
     },
     {
       "uri": "/chart_t2",
-      "path": "/html/P050_chart_t2_007.html",
+      "path": "/html_v2/P050_chart_t2_007.html",
       "label": "Chart T2",
       "isMain": false,
       "order": 50,
