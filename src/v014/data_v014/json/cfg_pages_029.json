@@ -2,10 +2,12 @@
   "pages": [
     {
       "uri": "/",
-      "path": "/html/SC10_main_019.html",
+      "path": "/html_v2/P010_main_021.html",
       "label": "Home",
       "isMain": true,
-      "order": 10
+      "order": 10,
+      "css": "/html_v2/P010_main_021.css",
+      "js": "/html_v2/P010_main_021.js"
     },
     {
       "uri": "/dashboard",
@@ -109,13 +111,13 @@
   ],
   "assets": [
     {
-      "uri": "/SC10_common_001.css",
-      "path": "/html/SC10_common_001.css",
+      "uri": "/P000_common_001.css",
+      "path": "/html_v2/P000_common_001.css",
       "isCommon": true
     },
     {
-      "uri": "/SC10_common_001.js",
-      "path": "/html/SC10_common_001.js",
+      "uri": "/P000_common_003.js",
+      "path": "/html_v2/P000_common_003.js",
       "isCommon": true
     }
   ]
