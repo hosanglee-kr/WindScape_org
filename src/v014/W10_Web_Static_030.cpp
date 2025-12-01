@@ -205,6 +205,9 @@ static void W10_getMenuJson(AsyncWebServerRequest* r) {
 		JsonObject v_item = v_array_out.add<JsonObject>();
 		v_item["label"]   = v_entry.label;
 		v_item["path"]    = v_entry.path; // "/html_v2/..." 또는 "/html/..." 그대로 반환
+		v_item["uri"]    = v_entry.uri;
+		v_item["order"]    = v_entry.order;
+		v_item["isMain"]    = v_entry.isMain;
 	}
 
 	String v_json_output;
