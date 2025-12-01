@@ -143,6 +143,48 @@ function setLogoLink(pagesArray) {
  * @param {Array} pagesArray cfg_pages_029.json의 pages 항목과 동일한 배열
  */
 function renderMenu(pagesArray) {
+  const navMenu = document.getElementById("navMenu");
+  if (!navMenu || !Array.isArray(pagesArray) || pagesArray.length === 0) {
+    console.warn("[MenuLoader] Navigation menu element not found or pages data is empty.");
+    return;
+  }
+
+  const currentPath = (window.location.pathname || "/").split("?")[0];
+
+  navMenu.innerHTML = "";
+
+  pagesArray
+    // 메뉴에서는 isMain(true) 페이지는 제외
+    .filter((item) => !item.isMain)
+    // order 기준 정렬 (API/JSON 혼용 대비)
+    .sort((a, b) => {
+      const oa = typeof a.order === "number" ? a.order : 0;
+      const ob = typeof b.order === "number" ? b.order : 0;
+      return oa - ob;
+    })
+    .forEach((item) => {
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+
+      const href = item.uri || item.path || "#";   // ← 우선 uri 사용
+      a.href = href;
+      a.textContent = item.label || item.path || "(no label)";
+
+      // 현재 페이지와 일치하는지 검사 (uri/path 둘 다 후보로)
+      const candidates = [item.uri, item.path]
+        .filter(Boolean)
+        .map((p) => p.split("?")[0]);
+
+      if (candidates.includes(currentPath)) {
+        a.classList.add("active");
+      }
+
+      li.appendChild(a);
+      navMenu.appendChild(li);
+    });
+}
+/*
+function renderMenu(pagesArray) {
 	const navMenu = document.getElementById("navMenu");
 	if (!navMenu || !pagesArray || pagesArray.length === 0) {
 		console.warn(
@@ -189,6 +231,7 @@ function renderMenu(pagesArray) {
 			navMenu.appendChild(li);
 		});
 }
+*/
 
 /**
  * @brief ONLINE / OFFLINE 모드 판별 및 메뉴 로딩
