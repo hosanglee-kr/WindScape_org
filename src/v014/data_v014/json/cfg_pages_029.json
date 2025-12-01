@@ -20,12 +20,12 @@
     },
     {
       "uri": "/chart_t1",
-      "path": "/html/SC10_chart_t1_006.html",
+      "path": "/html_v2/P020_chart_t1_007.html",
       "label": "차트 모니터링 T1",
       "isMain": false,
       "order": 30,
-      "css": "SC10_chart_t1_006.css",
-      "js": "SC10_chart_t1_006.js"
+      "css": "/html_v2/P020_chart_t1_007.css",
+      "js": "/html_v2/P020_chart_t1_007.js"
     },
     {
       "uri": "/chart_t2",
