@@ -1,7 +1,7 @@
-/* SC10_common_002.js */
+/* P000_common_002.js */
 
 /**
- * @file SC10_common_002.js
+ * @file P000_common_002.js
  * @brief 웹 UI 공통 기능 및 메뉴 로딩 처리
  * * * 기능 요약:
  * 1. 온라인/오프라인 모드 판별 및 메뉴 데이터 로드 (JSON 구조 변경 반영).
