@@ -106,6 +106,22 @@ function extractPagesArray(rawData) {
  * @param {Array} pagesArray 
  */
 function setLogoLink(pagesArray) {
+  const logoLink = document.querySelector(".nav-logo");
+  if (!logoLink || !Array.isArray(pagesArray)) return;
+
+  // isMain: true인 첫 페이지 찾기
+  const mainPageItem = pagesArray.find((item) => item.isMain === true);
+
+  if (mainPageItem) {
+    const href = mainPageItem.uri || mainPageItem.path || "/";
+    logoLink.setAttribute("href", href);
+    console.log(`[Logo] Logo link set to: ${href}`);
+  } else {
+    console.warn("[Logo] Main page item (isMain:true) not found. Keeping default href.");
+  }
+}
+/*
+function setLogoLink(pagesArray) {
     const logoLink = document.querySelector(".nav-logo");
     if (!logoLink || !pagesArray) return;
 
@@ -120,7 +136,7 @@ function setLogoLink(pagesArray) {
         console.warn("[Logo] Main page item (isMain: true) not found or path is missing. Using default link.");
     }
 }
-
+*/
 
 /**
  * @brief 메뉴 데이터를 기반으로 내비게이션 메뉴를 생성합니다.
