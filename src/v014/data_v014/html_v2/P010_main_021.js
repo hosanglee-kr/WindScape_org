@@ -18,8 +18,9 @@
  * 0. 상수 정의
  * ============================== */
 
-// REST API 기본 prefix (환경에 따라 "/api/v1" 등으로 변경 가능)
-const API_BASE = "/api";
+// REST API 기본 prefix
+const API_BASE = "/api/v1";
+
 
 // 주요 엔드포인트 정의 (필요 시 여기만 고쳐 쓰면 됨)
 const API_STATE          = `${API_BASE}/state`;
@@ -41,7 +42,7 @@ const API_UPLOAD_OTA     = "/update";
 // WebSocket 엔드포인트 (필요시 "/ws/logs", "/ws/state" 로 수정)
 const WS_LOG_URL   = () => {
 	const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-	return `${protocol}://${window.location.host}/ws/log`;
+	return `${protocol}://${window.location.host}/ws/logs`;
 };
 const WS_STATE_URL = () => {
 	const protocol = window.location.protocol === "https:" ? "wss" : "ws";
