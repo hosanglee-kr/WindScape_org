@@ -42,19 +42,18 @@
       "order": 30,
       "pageAssets": [
         {
-          "uri": "./P030_schedules_t1_005.css",
+          "uri": "./P030_schedules_t1_006.css",
           "path": "/html_v2/P030_schedules_t1_006.css"
         },
         {
-          "uri": "./P030_schedules_t1_005.js",
+          "uri": "./P030_schedules_t1_006.js",
           "path": "/html_v2/P030_schedules_t1_006.js"
         }
       ]
     },
-    
     {
       "uri": "/dashboard",
-      "path": "/html/P040_dashboard_001.html",
+      "path": "/html/P040_dashboard_002.html",
       "label": "대시보드",
       "isMain": false,
       "order": 40,
@@ -120,7 +119,6 @@
         }
       ]
     },
-
     {
       "uri": "/schedules_t2",
       "path": "/html_v2/P080_schedules_t2_001.html",
@@ -167,8 +165,8 @@
           "path": "/html_v2/P100_settings_001.css"
         },
         {
-          "uri": "./P100_settings_001.js",
-          "path": "/html_v2/P100_settings_001.js"
+          "uri": "./P100_settings_002.js",
+          "path": "/html_v2/P100_settings_002.js"
         }
       ]
     },
@@ -214,10 +212,9 @@
       "isCommon": true
     },
     {
-      "uri": "/P000_common_003.js",
-      "path": "/html_v2/P000_common_003.js",
+      "uri": "/P000_common_004.js",
+      "path": "/html_v2/P000_common_004.js",
       "isCommon": true
     }
   ]
 }
-

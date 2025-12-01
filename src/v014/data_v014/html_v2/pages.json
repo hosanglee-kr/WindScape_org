@@ -109,13 +109,13 @@
   ],
   "assets": [
     {
-      "uri": "/SC10_common_001.css",
-      "path": "/html/SC10_common_001.css",
+      "uri": "/P000_common_004.js",
+      "path": "/html/P000_common_004.js",
       "isCommon": true
     },
     {
-      "uri": "/SC10_common_001.js",
-      "path": "/html/SC10_common_001.js",
+      "uri": "/P000_common_004.js",
+      "path": "/html/P000_common_004.js",
       "isCommon": true
     }
   ]
