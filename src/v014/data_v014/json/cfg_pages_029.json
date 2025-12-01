@@ -36,18 +36,18 @@
     },
     {
       "uri": "/schedules_t1",
-      "path": "/html_v2/P030_schedules_t1_005.html",
+      "path": "/html_v2/P030_schedules_t1_006.html",
       "label": "스케줄 관리 T1",
       "isMain": false,
       "order": 30,
       "pageAssets": [
         {
           "uri": "./P030_schedules_t1_005.css",
-          "path": "/html_v2/P030_schedules_t1_005.css"
+          "path": "/html_v2/P030_schedules_t1_006.css"
         },
         {
           "uri": "./P030_schedules_t1_005.js",
-          "path": "/html_v2/P030_schedules_t1_005.js"
+          "path": "/html_v2/P030_schedules_t1_006.js"
         }
       ]
     },
