@@ -124,5 +124,244 @@
     const wifi = (data.wifi && data.wifi.state) ? data.wifi.state : data.wifi || {};
 
     const simActive = sim.active !== undefined ? sim.active : sim.simActive;
-    const wind = sim.wind !== undefined
+    const wind = sim.wind !== undefined ? sim.wind : sim.wind_ms;
+    const pwm = sim.pwm !== undefined ? sim.pwm : sim.pwm_val;
 
+    // 1) 풍속 / PWM
+    const windVal = wind != null ? Number(wind) : 0;
+    const pwmVal = pwm != null ? Number(pwm) : 0;
+
+    text(elWindSpeed, windVal.toFixed(2));
+    text(elPWMDuty, String(Math.round(pwmVal)));
+
+    // 2) 시뮬레이션 상태: active 여부 + override 등 추가 플래그가 있으면 확장 가능
+    let stateText = "STOPPED";
+    let stateClass = "stopped";
+
+    if (simActive === true || simActive === 1 || simActive === "on" || simActive === "ACTIVE") {
+      stateText = "RUNNING";
+      stateClass = "running";
+    }
+
+    // 추후 override / offline 등 추가 상태가 있으면 여기서 분기 확장
+    if (elSimState) {
+      elSimState.className = `large-value status-text ${stateClass}`;
+      elSimState.textContent = stateText;
+    }
+
+    // 3) 네트워크 정보: mode_name / mode + ip
+    const modeName = wifi.mode_name || wifi.mode || "-";
+    const ip = wifi.ip || wifi.ip_address || "-";
+    text(elNetworkInfo, `${modeName} | ${ip}`);
+  }
+
+  function appendLog(record) {
+    if (!elLogConsole || !record) return;
+
+    const { t, level, message } = record;
+    if (!message) return;
+
+    const el = document.createElement("div");
+    el.className = "log-message";
+
+    let levelClass = "log-info";
+    const lv = (level || "INFO").toUpperCase();
+    if (lv === "ERROR" || lv === "ERR") levelClass = "log-error";
+    else if (lv === "WARN" || lv === "WARNING") levelClass = "log-warn";
+
+    const timeStr = new Date(t || Date.now()).toLocaleTimeString();
+
+    el.innerHTML = `<span class="${levelClass}">[${timeStr}] [${lv}]</span> ${message}`;
+    elLogConsole.appendChild(el);
+
+    // 로그 개수 제한 (50개)
+    while (elLogConsole.children.length > 50) {
+      elLogConsole.removeChild(elLogConsole.firstChild);
+    }
+
+    elLogConsole.scrollTop = elLogConsole.scrollHeight;
+  }
+
+  // ======================= 4. 초기 상태 로드 =======================
+
+  async function refreshInitialState() {
+    const state = await fetchApi("/api/state", "GET", null, "초기 상태 로드");
+    if (state) {
+      applyStateJson(state);
+      appendLog({
+        t: Date.now(),
+        level: "INFO",
+        message: "초기 상태 로드 완료 (/api/state)."
+      });
+    } else {
+      if (!getStoredApiKey()) {
+        notify(
+          "API Key가 비어 있습니다. System / Config 페이지에서 API Key를 설정해 주세요.",
+          "warn"
+        );
+      }
+    }
+  }
+
+  // ======================= 5. WebSocket (state / log) =======================
+
+  function initWsState() {
+    const url = buildWsUrl("/ws/state");
+    let ws;
+
+    try {
+      ws = new WebSocket(url);
+    } catch (e) {
+      appendLog({
+        t: Date.now(),
+        level: "ERROR",
+        message: `WS State 연결 실패: ${e.message}`
+      });
+      return;
+    }
+
+    ws.onopen = () => {
+      appendLog({
+        t: Date.now(),
+        level: "INFO",
+        message: "WS State 연결 성공."
+      });
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        applyStateJson(data);
+      } catch (e) {
+        appendLog({
+          t: Date.now(),
+          level: "ERROR",
+          message: `WS State 파싱 오류: ${e.message}`
+        });
+      }
+    };
+
+    ws.onclose = () => {
+      appendLog({
+        t: Date.now(),
+        level: "WARN",
+        message: "WS State 연결 끊김. 5초 후 재시도."
+      });
+      setTimeout(initWsState, 5000);
+    };
+
+    ws.onerror = (e) => {
+      appendLog({
+        t: Date.now(),
+        level: "ERROR",
+        message: `WS State 오류: ${e.message || e}`
+      });
+    };
+  }
+
+  function initWsLog() {
+    const url = buildWsUrl("/ws/log");
+    let ws;
+
+    try {
+      ws = new WebSocket(url);
+    } catch (e) {
+      appendLog({
+        t: Date.now(),
+        level: "ERROR",
+        message: `WS Log 연결 실패: ${e.message}`
+      });
+      return;
+    }
+
+    ws.onopen = () => {
+      appendLog({
+        t: Date.now(),
+        level: "INFO",
+        message: "WS Log 연결 성공."
+      });
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        // 백엔드에서 {t, level, message} JSON으로 보내준다고 가정
+        const data = JSON.parse(event.data);
+        appendLog(data);
+      } catch (e) {
+        // 로그 파싱 오류는 조용히 무시 (문자열 로그일 수도 있음)
+      }
+    };
+
+    ws.onclose = () => {
+      appendLog({
+        t: Date.now(),
+        level: "WARN",
+        message: "WS Log 연결 끊김."
+      });
+      // 복잡도 줄이기 위해 자동 재연결은 생략
+    };
+
+    ws.onerror = (e) => {
+      appendLog({
+        t: Date.now(),
+        level: "ERROR",
+        message: `WS Log 오류: ${e.message || e}`
+      });
+    };
+  }
+
+  // ======================= 6. 버튼 이벤트 (시뮬 제어 / 진단 / 로그) =======================
+
+  function bindEvents() {
+    // 시뮬 시작: 기본 프로필 id=1 가정
+    $("#btnStartSim")?.addEventListener("click", async () => {
+      await fetchApi(
+        "/api/control/profile/select",
+        "POST",
+        { id: 1 },
+        "시뮬레이션 시작"
+      );
+    });
+
+    // 시뮬 중지
+    $("#btnStopSim")?.addEventListener("click", async () => {
+      await fetchApi(
+        "/api/control/profile/stop",
+        "POST",
+        {},
+        "시뮬레이션 중지"
+      );
+    });
+
+    // 시스템 진단
+    $("#btnDiag")?.addEventListener("click", async () => {
+      const diag = await fetchApi("/api/diag", "GET", null, "시스템 진단 정보 로드");
+      if (diag) {
+        appendLog({
+          t: Date.now(),
+          level: "INFO",
+          message: `[Diag] Heap: ${diag.heap} bytes, FS Used: ${diag.fs_used} / ${diag.fs_total} bytes`
+        });
+      }
+    });
+
+    // 로그 지우기
+    $("#btnClearLog")?.addEventListener("click", () => {
+      if (elLogConsole) elLogConsole.innerHTML = "";
+      appendLog({
+        t: Date.now(),
+        level: "INFO",
+        message: "로그 콘솔이 지워졌습니다."
+      });
+    });
+  }
+
+  // ======================= 7. 초기화 =======================
+
+  document.addEventListener("DOMContentLoaded", () => {
+    bindEvents();
+    refreshInitialState();
+    initWsState();
+    initWsLog();
+  });
+})();
