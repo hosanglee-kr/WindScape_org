@@ -8,10 +8,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Wind 스케줄 관리</title>
-    
+
+	<link rel="stylesheet" href="./P000_common_001.css">    
     <link rel="stylesheet" href="P030_schedules_t1_006.css">
 </head>
 <body class="p-4 sm:p-8">
+    <header class="nav-bar">
+		<div class="nav-container">
+			<a href="./P040_dashboard_002.html" class="nav-logo">Smart Wind</a>
+			<nav>
+				<ul class="nav-menu" id="navMenu">
+					</ul>
+			</nav>
+		</div>
+	</header>
+
     <div id="toastContainer"></div>
     <div id="loadingOverlay" class="hidden">
         <div class="spinner"></div>
@@ -196,8 +207,9 @@
         </section>
 
     </div>
-    
-<script type="module" src="P030_schedules_t1_006.js"></script>
+
+	<script src="./P000_common_004.js" defer></script>    
+    <script type="module" src="P030_schedules_t1_006.js"></script>
 </body>
 </html>
 

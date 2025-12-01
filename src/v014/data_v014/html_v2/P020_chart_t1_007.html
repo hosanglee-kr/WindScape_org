@@ -10,11 +10,22 @@
 	<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.1/dist/chartjs-adapter-date-fns.umd.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
-	
+
+	<link rel="stylesheet" href="./P000_common_001.css">    	
 	<link rel="stylesheet" href="./P020_chart_t1_007.css">
 </head>
 
 <body>
+	<header class="nav-bar">
+		<div class="nav-container">
+			<a href="./P040_dashboard_002.html" class="nav-logo">Smart Wind</a>
+			<nav>
+				<ul class="nav-menu" id="navMenu">
+					</ul>
+			</nav>
+		</div>
+	</header>
+
 	<div class="wrap">
 		<h1>Smart Nature Wind 차트 모니터링</h1>
 
@@ -149,6 +160,7 @@
 	</div>
 	<div id="toastContainer"></div>
 
+	<script src="./P000_common_004.js" defer></script>    
 	<script src="./P020_chart_t1_007.js" defer></script>
 </body>
 

@@ -20,7 +20,7 @@
     {
       "uri": "/chart_t1",
       "path": "/html_v2/P020_chart_t1_007.html",
-      "label": "차트 모니터링 T1",
+      "label": "Chart T1",
       "isMain": false,
       "order": 20,
       "pageAssets": [
@@ -37,7 +37,7 @@
     {
       "uri": "/schedules_t1",
       "path": "/html_v2/P030_schedules_t1_006.html",
-      "label": "스케줄 관리 T1",
+      "label": "Schedule T1",
       "isMain": false,
       "order": 30,
       "pageAssets": [
@@ -54,7 +54,7 @@
     {
       "uri": "/dashboard",
       "path": "/html/P040_dashboard_002.html",
-      "label": "대시보드",
+      "label": "Dashboard",
       "isMain": false,
       "order": 40,
       "pageAssets": [
@@ -71,7 +71,7 @@
     {
       "uri": "/chart_t2",
       "path": "/html/P050_chart_t2_007.html",
-      "label": "차트 모니터링 T2",
+      "label": "Chart T2",
       "isMain": false,
       "order": 50,
       "pageAssets": [
@@ -88,7 +88,7 @@
     {
       "uri": "/sim_details",
       "path": "/html_v2/P060_sim_details_001.html",
-      "label": "시뮬 설정",
+      "label": "Simulate",
       "isMain": false,
       "order": 60,
       "pageAssets": [
@@ -105,7 +105,7 @@
     {
       "uri": "/profiles",
       "path": "/html_v2/P070_profile_001.html",
-      "label": "프로파일 관리",
+      "label": "Profiles",
       "isMain": false,
       "order": 70,
       "pageAssets": [
@@ -122,7 +122,7 @@
     {
       "uri": "/schedules_t2",
       "path": "/html_v2/P080_schedules_t2_001.html",
-      "label": "스케줄 관리 T2",
+      "label": "Schedule T2",
       "isMain": false,
       "order": 80,
       "pageAssets": [
@@ -139,7 +139,7 @@
     {
       "uri": "/user_profiles",
       "path": "/html_v2/P090_user_001.html",
-      "label": "사용자 프로필",
+      "label": "User Profile",
       "isMain": false,
       "order": 90,
       "pageAssets": [
@@ -156,7 +156,7 @@
     {
       "uri": "/settings",
       "path": "/html_v2/P100_settings_001.html",
-      "label": "시스템 설정",
+      "label": "System",
       "isMain": false,
       "order": 100,
       "pageAssets": [
@@ -173,7 +173,7 @@
     {
       "uri": "/config",
       "path": "/html_v2/P110_config_025.html",
-      "label": "Config 설정",
+      "label": "Config",
       "isMain": false,
       "order": 110,
       "pageAssets": [
@@ -190,7 +190,7 @@
     {
       "uri": "/diag",
       "path": "/html_v2/P120_diag_025.html",
-      "label": "시스템 진단",
+      "label": "System Diag.",
       "isMain": false,
       "order": 120,
       "pageAssets": [

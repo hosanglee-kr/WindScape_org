@@ -130,12 +130,15 @@ function renderMenu(pagesArray) {
 			const li = document.createElement("li");
 			const a = document.createElement("a");
 
+			// const v_uri = item.uri || "";
 			const fullPath = item.path || "";
 			// path에서 파일명만 추출해 active 판별
 			const targetFile = fullPath.split("/").pop();
 
 			// href는 cfg_pages_029.json에 정의된 path 그대로 사용
-			a.href = fullPath || "#";
+			// a.href = v_uri	|| "#";		
+			a.href = "./" + targetFile || "#";
+
 			a.textContent = item.label || fullPath || "(no label)";
 
 			if (targetFile === currentFile) {

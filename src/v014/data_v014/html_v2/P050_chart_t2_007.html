@@ -14,25 +14,33 @@
 	<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
 
 	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
-
 	
 	<!-- 
-	<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script> 
+		<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script> 
 	-->
-
 
 	<link rel="stylesheet" href="./P000_common_001.css">
 	<link rel="stylesheet" href="./P050_chart_t2_007.css">
 </head>
 
 <body>
-	
+
 	<header class="nav-bar">
 		<div class="nav-container">
-			<a href="./SC10_dashboard_001.html" class="nav-logo">Smart Wind 🌬️</a>
+			<a href="./P040_dashboard_002.html" class="nav-logo">Smart Wind</a>
+			<nav>
+				<ul class="nav-menu" id="navMenu">
+					</ul>
+			</nav>
+		</div>
+	</header>
+
+	<!-- <header class="nav-bar">
+		<div class="nav-container">
+			<a href="./SC10_dashboard_001.html" class="nav-logo">Smart Wind</a>
 			<nav>
 				<ul class="nav-menu">
 					<li><a href="./SC10_dashboard_001.html">대시보드</a></li>
@@ -45,7 +53,8 @@
 				</ul>
 			</nav>
 		</div>
-	</header>
+	</header> -->
+	
 	
 	<div class="wrap">
 		<h1>차트 모니터링 (실시간 데이터)</h1>
@@ -136,6 +145,7 @@
 	</div>
 	<div id="toastContainer"></div>
 
+	<script src="./P000_common_004.js" defer></script>
 	<script src="./P050_chart_t2_007.js" defer></script>
 </body>
 
