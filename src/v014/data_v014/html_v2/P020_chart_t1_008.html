@@ -1,0 +1,213 @@
+<!-- P020_chart_t1_008.html -->
+
+<!doctype html>
+<html lang="ko">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>🌬️ Smart Nature Wind 차트 모니터링</title>
+
+	<!-- Chart.js & plugins -->
+	<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.1/dist/chartjs-adapter-date-fns.umd.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+
+	<!-- 공통 스타일 + Chart 전용 스타일 -->
+	<link rel="stylesheet" href="./P000_common_001.css">
+	<link rel="stylesheet" href="./P020_chart_t1_007.css">
+</head>
+
+<body>
+	<!-- 공통 네비게이션 바 (Main 페이지와 구조 통일) -->
+	<nav class="nav-bar">
+		<div class="nav-container">
+			<!-- 실제 href는 P000_common_004.js → cfg_pages_029.json의 isMain:true 기준으로 덮어쓰기 -->
+			<a href="/" class="nav-logo">Smart Nature Wind</a>
+			<ul class="nav-menu" id="navMenu"></ul>
+		</div>
+	</nav>
+
+	<div class="wrap">
+		<h1>Smart Nature Wind 차트 모니터링</h1>
+
+		<!-- 실시간 모니터링 제어 -->
+		<section class="card control-panel">
+			<div class="row">
+				<div class="flex section-title">실시간 모니터링</div>
+				<div class="right tight">
+					<span class="info-label" id="refreshInfo">🕒 WebSocket 연결 중...</span>
+					<button class="btn ok"   id="btnResume">▶ 재개</button>
+					<button class="btn warn" id="btnPause">⏸ 일시정지</button>
+					<button class="btn"      id="btnResetZoomAll">🔍 줌 초기화</button>
+				</div>
+			</div>
+		</section>
+
+		<!-- 풍속 시뮬레이션 설정 -->
+		<section class="card config-panel">
+			<div class="row">
+				<strong class="section-title">풍속 시뮬레이션 설정</strong>
+				<div class="right tight">
+					<button class="btn"    id="btnPreviewPreset">프리셋 미리보기</button>
+					<button class="btn ok" id="btnSaveSim">시뮬 설정 (메모리 패치)</button>
+					<!-- v29 Dirty 상태 UI와 일관되게 초기 텍스트 조정 -->
+					<button class="btn ok" id="btnSaveAllConfig">✅ 전체 Config 저장 완료</button>
+					<button class="btn warn" id="btnConfigInit">시스템 전체 초기화</button>
+				</div>
+			</div>
+
+			<div class="grid">
+				<div class="col-6">
+					<label>프리셋</label>
+					<select id="preset"></select>
+				</div>
+				<div class="col-6">
+					<label>강도 (intensity %)</label>
+					<input type="number" id="intensity" min="0" max="200" step="1">
+				</div>
+
+				<div class="col-4">
+					<label>가변성 (variability %)</label>
+					<input type="number" id="variability" min="0" max="100" step="1">
+				</div>
+				<div class="col-4">
+					<label>돌풍 빈도 (gust_freq %)</label>
+					<input type="number" id="gust_freq" min="0" max="200" step="1">
+				</div>
+				<div class="col-4">
+					<label>팬 최대 (fan_limit %)</label>
+					<input type="number" id="fan_limit" min="0" max="100" step="1">
+				</div>
+				<div class="col-4">
+					<label>팬 최소 (min_fan %)</label>
+					<input type="number" id="min_fan" min="0" max="100" step="1">
+				</div>
+
+				<div class="col-4">
+					<label>난류 길이 (turb_len)</label>
+					<input type="number" id="turb_len" min="1" max="200" step="1">
+				</div>
+				<div class="col-4">
+					<label>난류 시그마 (turb_sig)</label>
+					<input type="number" id="turb_sig" min="0" max="5" step="0.01">
+				</div>
+				<div class="col-4">
+					<label>열기포 세기 (therm_str)</label>
+					<input type="number" id="therm_str" min="0" max="5" step="0.01">
+				</div>
+				<div class="col-4">
+					<label>열기포 반경 (therm_rad)</label>
+					<input type="number" id="therm_rad" min="0" max="100" step="1">
+				</div>
+			</div>
+		</section>
+
+		<!-- 타이밍 설정 -->
+		<section class="card config-panel">
+			<div class="row">
+				<strong class="section-title">타이밍 (TIMING) 설정</strong>
+				<div class="right tight">
+					<button class="btn ok" id="btnSaveTiming">타이밍 설정 (메모리 패치)</button>
+				</div>
+			</div>
+			<div class="grid">
+				<div class="col-4">
+					<label>시뮬 간격(sim_int ms)</label>
+					<input type="number" id="sim_int" min="10" step="1">
+				</div>
+				<div class="col-4">
+					<label>돌풍 체크(gust_int ms)</label>
+					<input type="number" id="gust_int" min="10" step="1">
+				</div>
+				<div class="col-4">
+					<label>열기포 체크(thermal_int ms)</label>
+					<input type="number" id="thermal_int" min="10" step="1">
+				</div>
+			</div>
+		</section>
+
+		<!-- 차트 그리드 -->
+		<section class="chart-section">
+			<div class="grid chart-grid">
+
+				<div class="chart-container col-6">
+					<div class="chart-header">
+						<h3>풍속 (Wind Speed) / PWM 듀티</h3>
+						<button class="btn-toggle">▲</button>
+					</div>
+					<div class="chart-content">
+						<canvas id="chartWind"></canvas>
+					</div>
+				</div>
+
+				<div class="chart-container col-6">
+					<div class="chart-header">
+						<h3>핵심 매개변수 (Params)</h3>
+						<button class="btn-toggle">▲</button>
+					</div>
+					<div class="chart-content">
+						<canvas id="chartParams"></canvas>
+					</div>
+				</div>
+
+				<div class="chart-container col-6">
+					<div class="chart-header">
+						<h3>난류/열기포 설정값 (Turb/Therm Sig/Len)</h3>
+						<button class="btn-toggle">▲</button>
+					</div>
+					<div class="chart-content">
+						<canvas id="chartTurbThermSig"></canvas>
+					</div>
+				</div>
+
+				<div class="chart-container col-6">
+					<div class="chart-header">
+						<h3>이벤트 발생 (Gust/Thermal)</h3>
+						<button class="btn-toggle">▲</button>
+					</div>
+					<div class="chart-content">
+						<canvas id="chartEvents"></canvas>
+					</div>
+				</div>
+
+				<div class="chart-container col-6">
+					<div class="chart-header">
+						<h3>현재 적용 프리셋 인덱스</h3>
+						<button class="btn-toggle">▲</button>
+					</div>
+					<div class="chart-content">
+						<canvas id="chartPreset"></canvas>
+					</div>
+				</div>
+
+				<div class="chart-container col-6">
+					<div class="chart-header">
+						<h3>시뮬레이션 타이밍 설정값</h3>
+						<button class="btn-toggle">▲</button>
+					</div>
+					<div class="chart-content">
+						<canvas id="chartTiming"></canvas>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<div class="hr"></div>
+		<div class="muted">© 2540.kr SmartNatureWind (v007 Chart UI)</div>
+	</div>
+
+	<!-- 로딩 / 토스트 -->
+	<div id="loadingOverlay">
+		<div class="spinner"></div>
+	</div>
+	<div id="toastContainer"></div>
+
+	<!-- 공통 스크립트 (메뉴/모드 관리) -->
+	<script src="./P000_common_004.js" defer></script>
+
+	<!-- Chart T1 전용 스크립트 -->
+	<script src="./P020_chart_t1_008.js" defer></script>
+</body>
+
+</html>
