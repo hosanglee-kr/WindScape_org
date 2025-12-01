@@ -199,8 +199,8 @@ static void W10_getMenuJson(AsyncWebServerRequest* r) {
 	W10_buildSortedPages(v_pages_sorted);
 
 	for (const auto& v_entry : v_pages_sorted) {
-		if (v_entry.isMain)
-			continue;
+		// if (v_entry.isMain)
+		// 	continue;
 
 		JsonObject v_item = v_array_out.add<JsonObject>();
 		v_item["label"]   = v_entry.label;
