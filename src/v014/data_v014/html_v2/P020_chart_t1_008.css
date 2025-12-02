@@ -1,0 +1,273 @@
+/*
+ * ------------------------------------------------------
+ * 소스명 : P020_chart_t1_008.css
+ * 모듈 약어 : SC10
+ * 모듈명 : Smart Nature Wind Chart UI Style (v006)
+ * ------------------------------------------------------
+ * 주요 내용:
+ * - Chart.js 컨테이너 및 헤더 스타일링
+ * - 6개 차트를 위한 Grid 레이아웃 (col-6)
+ * - 설정 패널 및 제어 버튼 스타일링
+ * ------------------------------------------------------
+ */
+
+/* 폰트 설정 및 기본 스타일 */
+body {
+    font-family: "Pretendard", "Noto Sans KR", sans-serif;
+    background-color: #f0f4f8; 
+    color: #2c3e50;
+    margin: 0;
+    padding: 20px;
+    line-height: 1.6;
+}
+
+.wrap {
+    max-width: 1200px; /* Chart 페이지는 Main보다 넓게 설정 */
+    margin: 0 auto;
+}
+
+h1 {
+    color: #1a5276;
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 2em;
+}
+
+/* 폼 요소 및 섹션 기본 스타일 (Main 페이지와 유사) */
+label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+    color: #4a637a;
+    display: block;
+}
+
+input, select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #c8d4e0;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+    background-color: #fcfdfe;
+    transition: border-color 0.2s;
+}
+
+input:focus, select:focus {
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+/* 카드 및 섹션 스타일 */
+.card {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 15px 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    margin-bottom: 15px;
+    border: 1px solid #e0e6ed;
+}
+
+.section-title {
+    border-left: 4px solid #3498db;
+    padding-left: 8px;
+    font-size: 1.2em;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+/* 그리드 시스템 (설정 섹션) */
+.grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.col-6 {
+    flex: 1 1 calc(50% - 6px);
+    display: flex;
+    flex-direction: column;
+}
+.col-4 {
+    flex: 1 1 calc(33.333% - 8px); 
+    display: flex;
+    flex-direction: column;
+}
+.col-12 { flex: 1 1 100%; }
+
+/* 유틸리티 */
+.row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.row.tight { gap: 8px; }
+.row .flex { display: flex; align-items: center; gap: 10px; }
+.right { margin-left: auto; }
+.hr { border-top: 1px solid #e0e6ed; margin: 20px 0; }
+.muted { color: #7f8c8d; font-size: 0.9em; }
+
+/* 버튼 스타일 */
+.btn {
+    background-color: #f1f6f9;
+    color: #4a637a;
+    border: 1px solid #c8d4e0;
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.btn:hover { background-color: #e5edf3; }
+.btn.ok { background-color: #2ecc71; color: #fff; border-color: #27ae60; }
+.btn.ok:hover { background-color: #27ae60; }
+.btn.warn { background-color: #f39c12; color: #fff; border-color: #e67e22; }
+.btn.warn:hover { background-color: #e67e22; }
+
+/* 정보 레이블 (업데이트 시간) */
+.info-label {
+    font-size: 0.9em;
+    font-weight: 500;
+    color: #555;
+    padding: 0 10px;
+}
+
+/* ======================= 차트 섹션 스타일 ======================= */
+
+.chart-section {
+    margin-top: 20px;
+}
+
+.chart-grid {
+    /* 차트 컨테이너 간 간격 */
+    gap: 20px;
+}
+
+.chart-container {
+    flex: 1 1 calc(50% - 10px); /* 2x3 레이아웃 */
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* 캔버스 그림자 효과를 위해 */
+    border: 1px solid #e0e6ed;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: #f7f9fb;
+    border-bottom: 1px solid #e0e6ed;
+    cursor: pointer; /* 토글 기능이 있음을 암시 */
+}
+
+.chart-header h3 {
+    margin: 0;
+    font-size: 1.1em;
+    color: #34495e;
+    font-weight: 600;
+}
+
+.btn-toggle {
+    background: none;
+    border: none;
+    font-size: 1.2em;
+    color: #34495e;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.chart-content {
+    padding: 15px;
+    background-color: #fff;
+    flex-grow: 1;
+}
+
+/* 로딩 오버레이 및 토스트 스타일 (Main 페이지와 동일) */
+#loadingOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(44, 62, 80, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+.spinner {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+#toastContainer {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1001;
+}
+.toast {
+    background-color: #333;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-top: 10px;
+    opacity: 0.9;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+.toast.ok { background-color: #2ecc71; }
+.toast.warn { background-color: #f39c12; }
+.toast.err { background-color: #e74c3c; }
+
+
+/* 반응형 디자인 */
+@media (max-width: 992px) {
+    .wrap { max-width: 90%; }
+}
+
+@media (max-width: 768px) {
+    /* 차트 레이아웃 2열 -> 1열 변경 */
+    .chart-container {
+        flex: 1 1 100%;
+    }
+    .col-6, .col-4 {
+        flex: 1 1 calc(50% - 6px);
+    }
+    .row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .right {
+        margin-left: 0;
+        width: 100%;
+        justify-content: stretch;
+    }
+    .right .btn, .right .info-label {
+        flex-grow: 1;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .col-6, .col-4 {
+        flex: 1 1 100%;
+    }
+    .chart-content { padding: 8px; }
+}
+

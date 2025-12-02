@@ -25,8 +25,8 @@
       "order": 20,
       "pageAssets": [
         {
-          "uri": "./P020_chart_t1_007.css",
-          "path": "/html_v2/P020_chart_t1_007.css"
+          "uri": "./P020_chart_t1_008.css",
+          "path": "/html_v2/P020_chart_t1_008.css"
         },
         {
           "uri": "./P020_chart_t1_008.js",
@@ -192,7 +192,7 @@
     {
       "uri": "/config",
       "path": "/html_v2/P110_config_025.html",
-      "label": "Config",
+      "label": "Config(미구현)",
       "isMain": false,
       "order": 110,
       "pageAssets": [
@@ -209,7 +209,7 @@
     {
       "uri": "/diag",
       "path": "/html_v2/P120_diag_025.html",
-      "label": "System Diag.",
+      "label": "System Diag.(미구현)",
       "isMain": false,
       "order": 120,
       "pageAssets": [
@@ -230,10 +230,10 @@
       "uriTo": "/P010_main_021.html"
     },
     {
-      "uriFrom": "/index.html"
+      "uriFrom": "/index.html",
       "uriTo": "/P010_main_021.html"
     }
-  ]
+  ],
   
   "assets": [
     {

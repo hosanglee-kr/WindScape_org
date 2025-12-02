@@ -27,7 +27,7 @@
     if (el) el.style.display = flag ? "flex" : "none";
   };
 
-  // P000_common_004.js 의 showToast가 있으면 우선 사용
+  // P000_common_005.js 의 showToast가 있으면 우선 사용
   const showToast = (msg, type = "ok") => {
     if (typeof window.showToast === "function" && window.showToast !== showToast) {
       window.showToast(msg, type);
