@@ -58,7 +58,9 @@ void SC10_markDirty(const char* key) {
 
 AsyncWebServer		   g_SC10_server(80);
 static WiFiMulti	   g_SC10_wifiMulti;
-CL_CT10_ControlManager g_SC10_control; // *인스턴스 선언 유지*
+
+CL_CT10_ControlManager& g_SC10_control = CL_CT10_ControlManager::instance();
+// CL_CT10_ControlManager g_SC10_control; // *인스턴스 선언 유지*
 CL_P10_PWM             g_P10_pwm;
 
 // ------------------------------------------------------
@@ -148,7 +150,7 @@ void SC10_init() {
 	// 7. Web API + Web UI
     CL_W10_WebAPI::begin(g_SC10_server, g_SC10_control, g_SC10_wifiMulti);
 	
-	g_SC10_server.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
+	//g_SC10_server.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
 	g_SC10_server.begin();
 
 	// 8. Watchdog 초기화 (10초)
@@ -185,7 +187,8 @@ void SC10_run() {
 	// --------------------------------------------------
 	// ✅ 추가: CT10 Dirty 플래그 기반 브로드캐스트 (책임 위임)
 	// --------------------------------------------------
-	CL_CT10_ControlManager& v_ctrl = CL_CT10_ControlManager::instance();
+    CL_CT10_ControlManager& v_ctrl = g_SC10_control;
+	// CL_CT10_ControlManager& v_ctrl = CL_CT10_ControlManager::instance();
 	
 	// 1. 상태 브로드캐스트 (상태 변경 발생 시)
 	if (v_ctrl.consumeDirtyState()) {
