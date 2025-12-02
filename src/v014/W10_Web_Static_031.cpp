@@ -1,4 +1,3 @@
-
 /*
  * ------------------------------------------------------
  * 소스명 : W10_Web_Static_031.cpp
@@ -6,13 +5,13 @@
  * 모듈명 : Smart Nature Wind Web API (v029) - Static Assets & Menu Implementation
  * ------------------------------------------------------
  * 기능 요약:
- * - LittleFS 기반 JSON 파일(`/json/cfg_pages_030.json`)에서 웹 페이지(`pages`), 리다이렉트(`reDirect`),
- *   및 정적 자산(`assets`) 정보 로드.
- * - `pages` 배열은 `order` 필드를 기준으로 정렬한 뷰를 생성하여 메뉴 및 라우팅 등록에 사용.
+ * - LittleFS 기반 JSON 파일(`/json/cfg_pages_030.json`)에서
+ *   웹 페이지(`pages`), 정적 자산(`assets`), 리다이렉트(`reDirect`) 정보 로드.
+ * - `pages` 배열은 `order` 필드를 기준으로 정렬한 뷰를 생성하여
+ *   메뉴(` /api/v1/menu `) 및 라우팅 등록에 사용.
  * - 각 페이지의 `pageAssets` 배열을 사용해 HTML별 전용 CSS/JS 라우팅을 등록.
  * - `assets` 배열을 통해 공통 정적 자산(CSS/JS 등)의 라우팅 초기화 및 등록.
  * - Web UI 메뉴 정보를 JSON으로 반환하는 API (`/api/v1/menu`) 구현.
- * - `pages[].enable` 필드를 통해 메뉴 활성/비활성 상태를 API에 반영(비활성 페이지는 메뉴에서 제외).
  * ------------------------------------------------------
  * [구현 규칙]
  * - 항상 소스 시작 주석 부분 체계 유지 및 내용 업데이트
@@ -65,7 +64,7 @@ struct ST_W10_PageEntry_t {
 	String path;
 	String label;
 	bool   isMain;
-	bool   enable;   // ▼ 메뉴 활성 여부 (pages[].enable)
+	bool   enable;
 };
 
 // 정적 라우트 테이블
@@ -114,19 +113,24 @@ static const char* W10_guessMime(const char* p_path) {
 static bool W10_loadPagesJson() {
 	File v_file = LittleFS.open(G_W10_PAGES_JSON, "r");
 	if (!v_file) {
-		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] Failed to open pages JSON: %s", G_W10_PAGES_JSON);
+		CL_D10_Logger::log(EN_L10_LOG_ERROR,
+						   "[W10] Failed to open pages JSON: %s",
+						   G_W10_PAGES_JSON);
 		return false;
 	}
 
 	DeserializationError v_err = deserializeJson(s_pages_doc, v_file);
 	v_file.close();
 	if (v_err) {
-		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] Pages JSON deserialize failed: %s", v_err.c_str());
+		CL_D10_Logger::log(EN_L10_LOG_ERROR,
+						   "[W10] Pages JSON deserialize failed: %s",
+						   v_err.c_str());
 		return false;
 	}
 
 	if (!s_pages_doc.is<JsonObject>()) {
-		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] Pages JSON is not a valid object.");
+		CL_D10_Logger::log(EN_L10_LOG_ERROR,
+						   "[W10] Pages JSON is not a valid object.");
 		return false;
 	}
 
@@ -134,7 +138,8 @@ static bool W10_loadPagesJson() {
 	JsonArray v_assets_array = s_pages_doc["assets"].as<JsonArray>();
 
 	if (v_pages_array.isNull()) {
-		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] Pages array missing or invalid in JSON.");
+		CL_D10_Logger::log(EN_L10_LOG_ERROR,
+						   "[W10] Pages array missing or invalid in JSON.");
 		return false;
 	}
 
@@ -163,8 +168,13 @@ static void W10_buildSortedPages(std::vector<ST_W10_PageEntry_t>& p_out) {
 		v_e.path   = v_page["path"].as<String>();
 		v_e.label  = v_page["label"].as<String>();
 		v_e.isMain = v_page["isMain"] | false;
-		// enable 필드: 없으면 true로 간주 (기본 활성)
-		v_e.enable = v_page["enable"].is<bool>() ? v_page["enable"].as<bool>() : true;
+		// enable 필드 추가 (기본값 true)
+		bool v_enable = true;
+		if (!v_page["enable"].isNull()) {
+			v_enable = v_page["enable"].as<bool>();
+		}
+		v_e.enable = v_enable;
+
 		p_out.push_back(v_e);
 	}
 
@@ -191,9 +201,9 @@ static JsonObject W10_findPageObjectByUri(const char* p_uri) {
 
 // ------------------------------------------------------
 // 메뉴 Web API 구현 (/api/v1/menu)
-//  - cfg_pages_030.json의 pages를 order순으로 정렬 후,
-//    enable == true 인 항목만 반환 (메뉴 비활성 페이지는 제외)
-//  - path/uri/isMain/enable 정보를 그대로 전달 (프론트에서 추가 필터링 가능)
+//  - cfg_pages_030.json의 pages를 order순으로 정렬 후
+//    그대로 응답 (isMain, enable 필드 포함)
+//  - 프론트에서 isMain/enable 조건으로 필터링
 // ------------------------------------------------------
 static void W10_getMenuJson(AsyncWebServerRequest* r) {
 	JsonDocument v_doc_out;
@@ -203,18 +213,13 @@ static void W10_getMenuJson(AsyncWebServerRequest* r) {
 	W10_buildSortedPages(v_pages_sorted);
 
 	for (const auto& v_entry : v_pages_sorted) {
-		// enable == false 인 페이지는 메뉴에서 제외
-		if (!v_entry.enable) {
-			continue;
-		}
-
 		JsonObject v_item = v_array_out.add<JsonObject>();
 		v_item["label"]  = v_entry.label;
 		v_item["path"]   = v_entry.path;   // "/html_v2/..." 그대로
-		v_item["uri"]    = v_entry.uri;    // "/dashboard", "/P010_main_021.html" 등
+		v_item["uri"]    = v_entry.uri;    // "/P040_dashboard_003.html" 같은 short html path
 		v_item["order"]  = v_entry.order;
 		v_item["isMain"] = v_entry.isMain;
-		v_item["enable"] = v_entry.enable;
+		v_item["enable"] = v_entry.enable; // 새 필드
 	}
 
 	String v_json_output;
@@ -223,62 +228,34 @@ static void W10_getMenuJson(AsyncWebServerRequest* r) {
 		CL_W10_WebAPI::_applyHeaders(v_resp, true);
 		r->send(v_resp);
 	} else {
-		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] Menu API serialization failed.");
-		r->send(500, "application/json", "{\"error\":\"Serialization Failed\"}");
-	}
-}
-
-// ------------------------------------------------------
-// reDirect 배열 처리
-//  - cfg_pages_030.json의 reDirect[]를 읽어
-//    uriFrom → uriTo 리다이렉트 라우트 등록
-//  - 예: "/chart_t1" → "/P020_chart_t1_008.html"
-// ------------------------------------------------------
-static void W10_registerRedirectRoutes() {
-	JsonArray v_redirect_array = s_pages_doc["reDirect"].as<JsonArray>();
-	if (v_redirect_array.isNull()) {
-		return;
-	}
-
-	for (JsonObject v_redir : v_redirect_array) {
-		const char* v_from = v_redir["uriFrom"].as<const char*>();
-		const char* v_to   = v_redir["uriTo"].as<const char*>();
-
-		if (!v_from || !v_to || v_from[0] == '\0' || v_to[0] == '\0') {
-			continue;
-		}
-
-		// 간단한 302 Redirect
-		s_server->on(v_from, HTTP_GET,
-					 [v_to](AsyncWebServerRequest* r) {
-						 r->redirect(v_to);
-					 });
-
-		CL_D10_Logger::log(EN_L10_LOG_INFO,
-						   "[W10] Redirect route registered: %s -> %s",
-						   v_from, v_to);
+		CL_D10_Logger::log(EN_L10_LOG_ERROR,
+						   "[W10] Menu API serialization failed.");
+		r->send(500, "application/json",
+				"{\"error\":\"Serialization Failed\"}");
 	}
 }
 
 // ------------------------------------------------------
 // 정적 자산 라우팅 등록
 //  - pages[].path        → HTML 라우트
-//  - pages[].uri         → HTML에 대한 alias 라우트 (shortname 등)
+//  - pages[].uri         → HTML 라우트 (short html path)
 //  - pages[].pageAssets[]→ 페이지 전용 CSS/JS 라우트
 //  - assets[]            → 공통 CSS/JS 라우트
-//  - reDirect[]          → 별도 Redirect 라우트
+//  - reDirect[]          → 단축 URI 리다이렉트
 // ------------------------------------------------------
 void CL_W10_WebAPI::routeStaticAssets() {
 	s_routeCnt_static = 0;
 
 	if (!W10_loadPagesJson()) {
-		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] Failed to load pages JSON. Cannot register static routes.");
+		CL_D10_Logger::log(EN_L10_LOG_ERROR,
+						   "[W10] Failed to load pages JSON. Cannot register static routes.");
 		return;
 	}
 
 	auto& v_web = g_A10_config_root.system->system.web;
 
-	JsonArray v_assets_array = s_pages_doc["assets"].as<JsonArray>();
+	JsonArray v_assets_array   = s_pages_doc["assets"].as<JsonArray>();
+	JsonArray v_redirect_array = s_pages_doc["reDirect"].as<JsonArray>();
 
 	// 1) pages 기반 정렬 리스트 생성
 	std::vector<ST_W10_PageEntry_t> v_pages_sorted;
@@ -295,20 +272,27 @@ void CL_W10_WebAPI::routeStaticAssets() {
 
 		const char* v_mime_html = "text/html";
 
-		// 메인 페이지인 경우:
-		// - 설정된 web.html 경로가 있으면 해당 경로도 라우팅
-		// - path에 정의된 HTML도 직접 접근 가능하게 라우팅
 		if (v_is_main) {
-			const char* v_cfg_html = v_web.html; // 예: "/html_v2/P010_main_021.html" 등
+			// 메인 페이지:
+			// - system.web.html이 설정되어 있으면 해당 경로도 라우팅
+			// - path에 정의된 HTML도 직접 접근 가능하게 라우팅
+			const char* v_cfg_html = v_web.html; // 예: "/html_v2/P010_main_021.html"
 			if (v_cfg_html && strlen(v_cfg_html) > 0) {
 				W10_pushRoute(v_cfg_html, v_cfg_html, v_mime_html);
 			}
 			W10_pushRoute(v_path_key, v_path_key, v_mime_html);
+
+			// 메인 페이지도 uri로 직접 접근 가능하게 (예: "/P010_main_021.html")
+			if (strlen(v_uri_key) > 0) {
+				W10_pushRoute(v_uri_key, v_path_key, v_mime_html);
+			}
 		} else {
 			// 일반 페이지:
-			// - uri("/dashboard", "/chart_t2" 등) → path(HTML)
-			// - path 자체("/html_v2/..." 등)도 직접 접근 가능하게
-			W10_pushRoute(v_uri_key, v_path_key, v_mime_html);
+			// - uri("/P040_dashboard_003.html" 등) → path(HTML)
+			// - path 자체("/html_v2/..." 등)도 직접 접근 가능
+			if (strlen(v_uri_key) > 0) {
+				W10_pushRoute(v_uri_key, v_path_key, v_mime_html);
+			}
 			W10_pushRoute(v_path_key, v_path_key, v_mime_html);
 		}
 
@@ -321,7 +305,8 @@ void CL_W10_WebAPI::routeStaticAssets() {
 					const char* v_a_uri  = v_asset["uri"].as<const char*>();
 					const char* v_a_path = v_asset["path"].as<const char*>();
 
-					if (!v_a_uri || !v_a_path || strlen(v_a_uri) == 0 || strlen(v_a_path) == 0)
+					if (!v_a_uri || !v_a_path ||
+						strlen(v_a_uri) == 0 || strlen(v_a_path) == 0)
 						continue;
 
 					const char* v_mime = W10_guessMime(v_a_path);
@@ -341,7 +326,8 @@ void CL_W10_WebAPI::routeStaticAssets() {
 			const char* v_uri_key  = v_asset["uri"].as<const char*>();
 			const char* v_path_key = v_asset["path"].as<const char*>();
 
-			if (!v_uri_key || !v_path_key || strlen(v_uri_key) == 0 || strlen(v_path_key) == 0)
+			if (!v_uri_key || !v_path_key ||
+				strlen(v_uri_key) == 0 || strlen(v_path_key) == 0)
 				continue;
 
 			const char* v_mime = W10_guessMime(v_path_key);
@@ -351,32 +337,53 @@ void CL_W10_WebAPI::routeStaticAssets() {
 		}
 	}
 
-	// 3) 루트 "/" 리다이렉트 (isMain 페이지 또는 system.web.html 기준)
-	s_server->on("/", HTTP_GET, [](AsyncWebServerRequest* r) {
-		const char* f = g_A10_config_root.system->system.web.html;
+	// 3) 루트 및 단축 URI 리다이렉트 (reDirect 배열)
+	bool v_root_redirect_defined = false;
+	if (!v_redirect_array.isNull()) {
+		for (JsonObject v_redir : v_redirect_array) {
+			const char* v_from = v_redir["uriFrom"].as<const char*>();
+			const char* v_to   = v_redir["uriTo"].as<const char*>();
 
-		// 기본값: v030 메인 페이지 경로
-		const char* v_default_html = "/html_v2/P010_main_021.html";
+			if (!v_from || !v_to || strlen(v_from) == 0 || strlen(v_to) == 0)
+				continue;
 
-		JsonArray v_pages_array = s_pages_doc["pages"].as<JsonArray>();
-		if (!v_pages_array.isNull()) {
-			for (JsonObject v_page : v_pages_array) {
-				if (v_page["isMain"] | false) {
-					const char* v_p = v_page["path"].as<const char*>();
-					if (v_p && v_p[0] != '\0') {
-						v_default_html = v_p;
+			if (strcmp(v_from, "/") == 0) {
+				v_root_redirect_defined = true;
+			}
+
+			// 예: "/chart_t1" → "/P020_chart_t1_008.html"
+			s_server->on(v_from, HTTP_GET,
+						 [v_to](AsyncWebServerRequest* r) {
+							 r->redirect(v_to);
+						 });
+		}
+	}
+
+	// 3-1) reDirect에 "/"가 정의되지 않은 경우, 기존 root fallback 유지
+	if (!v_root_redirect_defined) {
+		s_server->on("/", HTTP_GET, [](AsyncWebServerRequest* r) {
+			const char* v_cfg_html = g_A10_config_root.system->system.web.html;
+			const char* v_default_html = "/html_v2/P010_main_021.html";
+
+			JsonArray v_pages_array = s_pages_doc["pages"].as<JsonArray>();
+			if (!v_pages_array.isNull()) {
+				for (JsonObject v_page : v_pages_array) {
+					if (v_page["isMain"] | false) {
+						const char* v_p = v_page["path"].as<const char*>();
+						if (v_p && v_p[0] != '\0') {
+							v_default_html = v_p;
+						}
+						break;
 					}
-					break;
 				}
 			}
-		}
 
-		// system.web.html 설정이 있고 실제 파일이 존재하면 그쪽으로 리다이렉트
-		if (f && strlen(f) > 0 && LittleFS.exists(f))
-			r->redirect(f);
-		else
-			r->redirect(v_default_html);
-	});
+			if (v_cfg_html && strlen(v_cfg_html) > 0 && LittleFS.exists(v_cfg_html))
+				r->redirect(v_cfg_html);
+			else
+				r->redirect(v_default_html);
+		});
+	}
 
 	// 4) 정적 파일 GET 핸들러 등록
 	for (uint8_t v_i = 0; v_i < s_routeCnt_static; v_i++) {
@@ -399,14 +406,10 @@ void CL_W10_WebAPI::routeStaticAssets() {
 					 });
 	}
 
-	// 5) reDirect[] 기반 Redirect 라우트 등록
-	W10_registerRedirectRoutes();
-
-	// 6) 메뉴 API
+	// 5) 메뉴 API
 	s_server->on("/api/v1/menu", HTTP_GET, W10_getMenuJson);
 
 	CL_D10_Logger::log(EN_L10_LOG_INFO,
 					   "[W10] Web routing initialized (%d routes, Pages: %u, Assets: %u)",
 					   s_routeCnt_static, s_page_count, s_asset_count);
 }
-
