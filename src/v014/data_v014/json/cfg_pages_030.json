@@ -70,18 +70,18 @@
     },
     {
       "uri": "/chart_t2",
-      "path": "/html_v2/P050_chart_t2_007.html",
+      "path": "/html_v2/P050_chart_t2_008.html",
       "label": "Chart T2",
       "isMain": false,
       "order": 50,
       "pageAssets": [
         {
-          "uri": "./P050_chart_t2_007.css",
-          "path": "/html_v2/P050_chart_t2_007.css"
+          "uri": "./P050_chart_t2_008.css",
+          "path": "/html_v2/P050_chart_t2_008.css"
         },
         {
-          "uri": "./P050_chart_t2_007.js",
-          "path": "/html_v2/P050_chart_t2_007.js"
+          "uri": "./P050_chart_t2_008.js",
+          "path": "/html_v2/P050_chart_t2_008.js"
         }
       ]
     },
@@ -121,18 +121,18 @@
     },
     {
       "uri": "/schedules_t2",
-      "path": "/html_v2/P080_schedules_t2_001.html",
+      "path": "/html_v2/P080_schedules_t2_002.html",
       "label": "Schedule T2",
       "isMain": false,
       "order": 80,
       "pageAssets": [
         {
-          "uri": "./P080_schedules_t2_001.css",
-          "path": "/html_v2/P080_schedules_t2_001.css"
+          "uri": "./P080_schedules_t2_002.css",
+          "path": "/html_v2/P080_schedules_t2_002.css"
         },
         {
-          "uri": "./P080_schedules_t2_001.js",
-          "path": "/html_v2/P080_schedules_t2_001.js"
+          "uri": "./P080_schedules_t2_002.js",
+          "path": "/html_v2/P080_schedules_t2_002.js"
         }
       ]
     },
