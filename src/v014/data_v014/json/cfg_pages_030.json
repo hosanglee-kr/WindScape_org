@@ -224,6 +224,17 @@
       ]
     }
   ],
+  "reDirect": [
+    {
+      "uri": "/P000_common_001.css",
+      "path": "/html_v2/P000_common_001.css"
+    },
+    {
+      "uri": "/P000_common_004.js",
+      "path": "/html_v2/P000_common_004.js"
+    }
+  ]
+  
   "assets": [
     {
       "uri": "/P000_common_001.css",
