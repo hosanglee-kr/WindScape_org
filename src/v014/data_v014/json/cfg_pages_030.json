@@ -136,6 +136,25 @@
         }
       ]
     },
+
+    {
+      "uri": "/userProfile_t2",
+      "path": "/html_v2/P085_userProfiles_t2_002.html",
+      "label": "UserProfile T2",
+      "isMain": false,
+      "order": 85,
+      "pageAssets": [
+        {
+          "uri": "./P085_userProfiles_t2_002.css",
+          "path": "/html_v2/P085_userProfiles_t2_002.css"
+        },
+        {
+          "uri": "./P085_userProfiles_t2_002.js",
+          "path": "/html_v2/P085_userProfiles_t2_002.js"
+        }
+      ]
+    },
+
     {
       "uri": "/user_profiles",
       "path": "/html_v2/P090_user_001.html",
