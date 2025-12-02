@@ -252,8 +252,6 @@ void CL_W10_WebAPI::routeStaticAssets() {
 		return;
 	}
 
-	auto& v_web = g_A10_config_root.system->system.web;
-
 	JsonArray v_assets_array   = s_pages_doc["assets"].as<JsonArray>();
 	JsonArray v_redirect_array = s_pages_doc["reDirect"].as<JsonArray>();
 
@@ -274,22 +272,17 @@ void CL_W10_WebAPI::routeStaticAssets() {
 
 		if (v_is_main) {
 			// 메인 페이지:
-			// - system.web.html이 설정되어 있으면 해당 경로도 라우팅
-			// - path에 정의된 HTML도 직접 접근 가능하게 라우팅
-			const char* v_cfg_html = v_web.html; // 예: "/html_v2/P010_main_021.html"
-			if (v_cfg_html && strlen(v_cfg_html) > 0) {
-				W10_pushRoute(v_cfg_html, v_cfg_html, v_mime_html);
-			}
+			// - pages[].path 에 정의된 HTML만 기준으로 사용
+			// - path 직접 접근 + uri(예: "/P010_main_021.html") 접근 모두 허용
 			W10_pushRoute(v_path_key, v_path_key, v_mime_html);
 
-			// 메인 페이지도 uri로 직접 접근 가능하게 (예: "/P010_main_021.html")
 			if (strlen(v_uri_key) > 0) {
 				W10_pushRoute(v_uri_key, v_path_key, v_mime_html);
 			}
 		} else {
 			// 일반 페이지:
-			// - uri("/P040_dashboard_003.html" 등) → path(HTML)
-			// - path 자체("/html_v2/..." 등)도 직접 접근 가능
+			// - uri("/P040_dashboard_003.html") → path(HTML)
+			// - path("/html_v2/...") 직접 접근도 허용
 			if (strlen(v_uri_key) > 0) {
 				W10_pushRoute(v_uri_key, v_path_key, v_mime_html);
 			}
@@ -344,7 +337,8 @@ void CL_W10_WebAPI::routeStaticAssets() {
 			const char* v_from = v_redir["uriFrom"].as<const char*>();
 			const char* v_to   = v_redir["uriTo"].as<const char*>();
 
-			if (!v_from || !v_to || strlen(v_from) == 0 || strlen(v_to) == 0)
+			if (!v_from || !v_to ||
+				strlen(v_from) == 0 || strlen(v_to) == 0)
 				continue;
 
 			if (strcmp(v_from, "/") == 0) {
@@ -359,12 +353,13 @@ void CL_W10_WebAPI::routeStaticAssets() {
 		}
 	}
 
-	// 3-1) reDirect에 "/"가 정의되지 않은 경우, 기존 root fallback 유지
+	// 3-1) reDirect에 "/"가 정의되지 않은 경우, isMain 기반 root fallback
 	if (!v_root_redirect_defined) {
 		s_server->on("/", HTTP_GET, [](AsyncWebServerRequest* r) {
-			const char* v_cfg_html = g_A10_config_root.system->system.web.html;
+			// 기본값
 			const char* v_default_html = "/html_v2/P010_main_021.html";
 
+			// pages[]에서 isMain == true 인 첫 항목의 path 사용
 			JsonArray v_pages_array = s_pages_doc["pages"].as<JsonArray>();
 			if (!v_pages_array.isNull()) {
 				for (JsonObject v_page : v_pages_array) {
@@ -378,10 +373,11 @@ void CL_W10_WebAPI::routeStaticAssets() {
 				}
 			}
 
-			if (v_cfg_html && strlen(v_cfg_html) > 0 && LittleFS.exists(v_cfg_html))
-				r->redirect(v_cfg_html);
-			else
+			// 파일 존재 여부 확인 후 리다이렉트
+			if (LittleFS.exists(v_default_html))
 				r->redirect(v_default_html);
+			else
+				r->redirect("/"); // 최악의 경우 루프지만, JSON/FS 구성이 잘못된 상황
 		});
 	}
 
