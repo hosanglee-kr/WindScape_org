@@ -226,12 +226,12 @@
   ],
   "reDirect": [
     {
-      "uri": "/P000_common_001.css",
-      "path": "/html_v2/P000_common_001.css"
+      "uriFrom": "/",
+      "uriTo": "/P010_main_021.html"
     },
     {
-      "uri": "/P000_common_004.js",
-      "path": "/html_v2/P000_common_004.js"
+      "uriFrom": "/index.html
+      "uriTo": "/P010_main_021.html"
     }
   ]
   
