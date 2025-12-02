@@ -6,7 +6,7 @@
  * ------------------------------------------------------
  * 기능 요약:
  * 1. ONLINE / OFFLINE 모드 판별 및 메뉴 데이터 로드
- * 2. cfg_pages_029.json 구조(pages[], assets[]) 기반 동적 내비게이션 렌더링
+ * 2. cfg_pages_030.json 구조(pages[], assets[]) 기반 동적 내비게이션 렌더링
  * 3. 현재 페이지에 active 클래스 적용
  * 4. 현재 동작 모드(G_MODE_ONLINE / G_MODE_OFFLINE)를 window.currentMode로 노출
  * ------------------------------------------------------
