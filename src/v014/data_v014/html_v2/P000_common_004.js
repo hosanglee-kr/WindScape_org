@@ -20,7 +20,7 @@ const MODE_OFFLINE = "OFFLINE";
 // - ONLINE: C++ 백엔드 W10_getMenuJson() → /api/v1/menu
 // - OFFLINE: LittleFS cfg_pages_029.json → /config/cfg_pages_029.json
 const API_MENU_PATH = "/api/v1/menu";
-const LOCAL_JSON_PATH = "../json/cfg_pages_029.json";
+const LOCAL_JSON_PATH = "../json/cfg_pages_030.json";
 
 let currentMode = MODE_OFFLINE;
 window.currentMode = currentMode;
