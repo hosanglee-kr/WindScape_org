@@ -124,6 +124,17 @@ void SC10_init() {
 	CL_C10_ConfigManager::loadAll(g_A10_config_root);
 	CL_N10_NvsManager::begin();
 
+	if (!g_A10_config_root.system || !g_A10_config_root.wifi) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                           "[SC10] Config root invalid (system or wifi is null).");
+        // 필요에 따라 FactoryReset 시도 or 안전 모드 진입
+        // 예: FactoryReset 후 재부팅:
+        // CL_D10_Logger::log(EN_L10_LOG_WARN, "[SC10] Trying factory reset due to invalid config.");
+        // CL_C10_ConfigManager::factoryResetFromDefault();
+        // ESP.restart();
+        return; // 일단 초기화 중단
+    }
+
 	// 4. Wi-Fi 초기화
 	const ST_A10_WifiConfig&   v_wifi	= *g_A10_config_root.wifi;
 	const ST_A10_SystemConfig& v_sys 	= *g_A10_config_root.system;
