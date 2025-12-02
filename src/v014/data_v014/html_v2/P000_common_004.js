@@ -149,6 +149,78 @@ function renderMenu(pagesArray) {
     return;
   }
 
+  // 변경 시작
+  // 현재 경로 판별을 위해 URL에서 쿼리스트링 제거
+  const currentPath = (window.location.pathname || "/").split("?")[0];
+  // OFFLINE 모드 활성화를 위한 파일명 추출
+  const currentFile = currentPath.split("/").pop() || "";
+  // 변경 끝
+
+
+  navMenu.innerHTML = "";
+
+  pagesArray
+    // 메뉴에서는 isMain(true) 페이지는 제외
+    .filter((item) => !item.isMain)
+    // order 기준 정렬 (API/JSON 혼용 대비)
+    .sort((a, b) => {
+      const oa = typeof a.order === "number" ? a.order : 0;
+      const ob = typeof b.order === "number" ? b.order : 0;
+      return oa - ob;
+    })
+    .forEach((item) => {
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      
+      // 변경 시작
+      let href = "#";
+      let activeTarget = "";
+
+      if (window.currentMode === MODE_OFFLINE) {
+        // 🚨 오프라인 모드: path에서 파일명만 추출하여 현재 경로에 대한 상대 경로로 사용
+        const targetFile = (item.path || "").split("/").pop();
+        href = "./" + targetFile;
+        activeTarget = targetFile; // 활성 클래스 판별은 파일명 기준
+      } else {
+        // ONLINE 모드 (또는 기본값): uri 또는 path 사용
+        href = item.uri || item.path || "#";
+        activeTarget = (href.split("?")[0]); // 활성 클래스 판별은 전체 URI/Path 기준
+      }
+      
+      a.href = href;
+      a.textContent = item.label || item.path || "(no label)";
+
+      // 활성(Active) 클래스 적용
+      if (window.currentMode === MODE_OFFLINE) {
+          // 오프라인: 현재 페이지 파일명과 타겟 파일명이 일치하는지 확인
+          if (activeTarget && activeTarget === currentFile) {
+              a.classList.add("active");
+          }
+      } else {
+          // 온라인: 현재 경로(currentPath)가 uri/path와 일치하는지 확인 (기존 온라인 로직)
+          const candidates = [item.uri, item.path]
+            .filter(Boolean)
+            .map((p) => p.split("?")[0]);
+
+          if (candidates.includes(currentPath)) {
+            a.classList.add("active");
+          }
+      }
+      // 변경 끝
+
+      li.appendChild(a);
+      navMenu.appendChild(li);
+    });
+}
+
+/*
+function renderMenu(pagesArray) {
+  const navMenu = document.getElementById("navMenu");
+  if (!navMenu || !Array.isArray(pagesArray) || pagesArray.length === 0) {
+    console.warn("[MenuLoader] Navigation menu element not found or pages data is empty.");
+    return;
+  }
+
   const currentPath = (window.location.pathname || "/").split("?")[0];
 
   navMenu.innerHTML = "";
@@ -183,6 +255,8 @@ function renderMenu(pagesArray) {
       navMenu.appendChild(li);
     });
 }
+*/
+
 /*
 function renderMenu(pagesArray) {
 	const navMenu = document.getElementById("navMenu");
