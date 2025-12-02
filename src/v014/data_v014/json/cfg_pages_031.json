@@ -1,7 +1,7 @@
 {
   "pages": [
     {
-      "uri": "/",
+      "uri": "/P010_main_021.html",
       "path": "/html_v2/P010_main_021.html",
       "label": "Main",
       "isMain": true,
@@ -18,7 +18,7 @@
       ]
     },
     {
-      "uri": "/chart_t1",
+      "uri": "/P020_chart_t1_008.html",
       "path": "/html_v2/P020_chart_t1_008.html",
       "label": "Chart T1",
       "isMain": false,
@@ -232,7 +232,12 @@
     {
       "uriFrom": "/index.html",
       "uriTo": "/P010_main_021.html"
+    },
+    {
+      "uriFrom": "/chart_t1",
+      "uriTo": "/P020_chart_t1_008.html"
     }
+
   ],
   
   "assets": [
