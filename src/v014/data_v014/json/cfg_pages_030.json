@@ -156,11 +156,11 @@
     },
 
     {
-      "uri": "/user_profiles",
+      "uri": "/info",
       "path": "/html_v2/P090_user_001.html",
-      "label": "User Profile",
+      "label": "Info. & Help",
       "isMain": false,
-      "order": 90,
+      "order": 200,
       "pageAssets": [
         {
           "uri": "./P090_user_001.css",
