@@ -19,7 +19,7 @@
     },
     {
       "uri": "/chart_t1",
-      "path": "/html_v2/P020_chart_t1_007.html",
+      "path": "/html_v2/P020_chart_t1_008.html",
       "label": "Chart T1",
       "isMain": false,
       "order": 20,
@@ -53,18 +53,18 @@
     },
     {
       "uri": "/dashboard",
-      "path": "/html_v2/P040_dashboard_002.html",
+      "path": "/html_v2/P040_dashboard_003.html",
       "label": "Dashboard",
       "isMain": false,
       "order": 40,
       "pageAssets": [
         {
-          "uri": "./P040_dashboard_001.css",
-          "path": "/html_v2/P040_dashboard_001.css"
+          "uri": "./P040_dashboard_003.css",
+          "path": "/html_v2/P040_dashboard_003.css"
         },
         {
-          "uri": "./P040_dashboard_001.js",
-          "path": "/html_v2/P040_dashboard_001.js"
+          "uri": "./P040_dashboard_003.js",
+          "path": "/html_v2/P040_dashboard_003.js"
         }
       ]
     },
