@@ -47,10 +47,6 @@
 #include "N10_NvsManager_019.h"
 #include "WF10_WiFiManager_025.h"
 
-// (선택 사항) 시간 설정 적용용 TimeManager 존재 가정 시 외부에서 구현
-// 필요 시 별도 모듈에서 구현: void T10_applyTimeConfigFromSystem(const ST_A10_SystemConfig&);
-// 여기서는 extern 선언만 두고, 구현 여부는 사용자가 결정
-extern void T10_applyTimeConfigFromSystem(const ST_A10_SystemConfig&);
 
 // ------------------------------------------------------
 // WebAPI Manager
