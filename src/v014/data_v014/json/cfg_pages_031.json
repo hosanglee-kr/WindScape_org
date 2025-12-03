@@ -147,7 +147,7 @@
       "uri": "/P110_config_025.html",
       "path": "/html_v2/P110_config_025.html",
       "label": "Config(미구현)",
-      "enable": true,
+      "enable": false,
       "isMain": false,
       "order": 110,
       "pageAssets": [
@@ -160,7 +160,7 @@
       "uri": "/P120_diag_025.html",
       "path": "/html_v2/P120_diag_025.html",
       "label": "System Diag.(미구현)",
-      "enable": true,
+      "enable": false,
       "isMain": false,
       "order": 120,
       "pageAssets": [
