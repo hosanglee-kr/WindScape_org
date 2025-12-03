@@ -114,7 +114,7 @@ void CL_W10_WebAPI::begin(AsyncWebServer& p_server,
 	routeWebSocket();
 
 	// s_server.serveStatic(uriPath, fs, filePath);
-	s_server->serveStatic("/html", LittleFS, "/html_v2");
+	s_server->serveStatic("/html_v2", LittleFS, "/html_v2");
 
 	CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WebAPI initialized (v029)");
 }
