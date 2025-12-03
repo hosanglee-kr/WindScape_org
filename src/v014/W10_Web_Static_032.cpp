@@ -422,8 +422,7 @@ void CL_W10_WebAPI::routeStaticAssets() {
 	
     // s_server.serveStatic(uriPath, fs, filePath);
 	s_server->serveStatic("/html_v2", LittleFS, "/html_v2");
-	s_server->serveStatic("/", LittleFS, "/html_v2");
-
+	
 
 
 
