@@ -188,6 +188,7 @@ static void W10_registerStaticRoute(const char* p_uri, const char* p_file, const
 		return;
 	}
 
+	
 	s_server->on(v_uri, HTTP_GET,
 				 [v_file, v_mime](AsyncWebServerRequest* r) {
 					 if (LittleFS.exists(v_file)) {
