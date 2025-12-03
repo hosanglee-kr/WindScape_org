@@ -36,6 +36,8 @@
 #include "WF10_WiFiManager_025.h"
 
 
+#define G_SC10_METRICS_DEBUG_LOG
+
 // [main.cpp] 또는 [MotionLogic.cpp] 파일에 추가
 CL_M10_MotionLogic* g_M10_motionLogic = nullptr;
 
@@ -167,6 +169,8 @@ void SC10_init() {
 // 메인 루프
 // ------------------------------------------------------
 void SC10_run() {
+	
+	
 	static uint32_t v_lastMetricsMs = 0; // 메트릭/차트 브로드캐스트 주기 관리
 	static uint32_t v_lastLedMs = 0;
 	static uint32_t v_lastFlush = 0;
@@ -178,13 +182,28 @@ void SC10_run() {
 	CL_CT10_ControlManager::tick();
 
 	// CT10 Dirty 플래그 기반 브로드캐스트 (책임 위임)
-  CL_CT10_ControlManager& v_ctrl = g_SC10_control;
+    CL_CT10_ControlManager& v_ctrl = g_SC10_control;
+
+	#if defined(G_SC10_METRICS_DEBUG_LOG)
+        static uint32_t v_lastMetricsLogMs = 0;
+        static uint32_t v_lastChartLogMs   = 0;
+        static uint32_t v_lastStateLogMs   = 0;
+    #endif
+    
 	
 	// 1. 상태 브로드캐스트 (상태 변경 발생 시)
 	if (v_ctrl.consumeDirtyState()) {
 		JsonDocument v_doc;
 		v_ctrl.toJson(v_doc);
 		SC10_broadcastState(v_doc, true);
+
+		#if defined(G_SC10_METRICS_DEBUG_LOG)
+            uint32_t v_now_ms = millis();
+            CL_D10_Logger::log(EN_L10_LOG_DEBUG,
+                               "[SC10] State broadcast at %u ms (Δ=%u)",
+                               v_now_ms, v_now_ms - v_lastStateLogMs);
+            v_lastStateLogMs = v_now_ms;
+        #endif
 	}
 
 	// 2. 메트릭/차트 브로드캐스트 (CT10 내부에서 1.5초 주기로 Dirty 설정)
@@ -192,12 +211,28 @@ void SC10_run() {
 		JsonDocument v_doc;
 		v_ctrl.toMetricsJson(v_doc);
 		SC10_broadcastMetrics(v_doc, true);
+
+		#if defined(G_SC10_METRICS_DEBUG_LOG)
+            uint32_t v_now_ms = millis();
+            CL_D10_Logger::log(EN_L10_LOG_DEBUG,
+                               "[SC10] Metrics broadcast at %u ms (Δ=%u)",
+                               v_now_ms, v_now_ms - v_lastMetricsLogMs);
+            v_lastMetricsLogMs = v_now_ms;
+        #endif
 	}
 	
 	if (v_ctrl.consumeDirtyChart()) {
 		JsonDocument v_doc;
 		v_ctrl.toChartJson(v_doc, true);
 		SC10_broadcastChart(v_doc, true);
+
+		#if defined(G_SC10_METRICS_DEBUG_LOG)
+            uint32_t v_now_ms = millis();
+            CL_D10_Logger::log(EN_L10_LOG_DEBUG,
+                               "[SC10] Chart broadcast at %u ms (Δ=%u)",
+                               v_now_ms, v_now_ms - v_lastChartLogMs);
+            v_lastChartLogMs = v_now_ms;
+        #endif
 	}
 	
 	// 3. 요약 상태 브로드캐스트 (필요 시)
