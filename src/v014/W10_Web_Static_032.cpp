@@ -51,7 +51,7 @@
 // ------------------------------------------------------
 
 // JSON 파일 경로 (v031)
-constexpr char G_W10_PAGES_JSON[] = "/json/cfg_pages_031.json";
+constexpr char G_W10_PAGES_JSON[] = "/json/cfg_pages_032.json";
 
 // ------------------------------------------------------
 // 메뉴/페이지용 구조체 정의
@@ -67,12 +67,6 @@ struct ST_W10_PageEntry_t {
 	bool   enable;
 };
 
-// 정적 자산 라우트 구조체 (필요시 확장용, 현재는 메뉴에는 사용 X)
-struct ST_W10_Route_t {
-	const char* uri;
-	const char* file;
-	const char* mime;
-};
 
 // 메뉴 API에 필요한 전역 상태만 구조체로 보관
 struct ST_W10_MenuState_t {
