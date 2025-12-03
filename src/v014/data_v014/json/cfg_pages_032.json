@@ -164,6 +164,6 @@
 
   "assets": [
     { "uri": "/P000_common_001.css", "path": "/html_v2/P000_common_001.css", "isCommon": true },
-    { "uri": "/P000_common_005.js",  "path": "/html_v2/P000_common_005.js",  "isCommon": true }
+    { "uri": "/P000_common_006.js",  "path": "/html_v2/P000_common_006.js",  "isCommon": true }
   ]
 }
