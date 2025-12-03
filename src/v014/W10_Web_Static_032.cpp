@@ -168,7 +168,7 @@ static bool W10_loadPagesJson(JsonDocument& p_doc, uint16_t& p_page_count, uint1
 
 // 정적 파일 라우트 등록 (등록 시점에 URI/FILE/MIME 문자열을 복사해서 평생 유지)
 // - 라우팅 등록 후 따로 전역 테이블을 유지할 필요 없음
-static void W10_registerStaticRoute(const char* p_uri, const char* p_file, const char* p_mime) {
+void CL_W10_WebAPI::registerStaticRoute(const char* p_uri, const char* p_file, const char* p_mime) {
 	if (!p_uri || !p_file || !p_mime)
 		return;
 
@@ -188,7 +188,6 @@ static void W10_registerStaticRoute(const char* p_uri, const char* p_file, const
 		return;
 	}
 
-	
 	s_server->on(v_uri, HTTP_GET,
 				 [v_file, v_mime](AsyncWebServerRequest* r) {
 					 if (LittleFS.exists(v_file)) {
@@ -215,14 +214,14 @@ static void W10_getMenuJson(AsyncWebServerRequest* r) {
 	JsonArray    v_array_out = v_doc_out.to<JsonArray>();
 
 	for (const auto& v_entry : s_w10_menu_state.pages_sorted) {
-		JsonObject v_item = v_array_out.add<JsonObject>();
-		v_item["label"]  = v_entry.label;
-		v_item["path"]   = v_entry.path;   // "/html_v2/..." 그대로
-		v_item["uri"]    = v_entry.uri;    // "/P040_dashboard_003.html" 같은 short html path
-		v_item["order"]  = v_entry.order;
-		v_item["isMain"] = v_entry.isMain;
-		v_item["enable"] = v_entry.enable; // 새 필드
-	}
+        JsonObject v_item = v_array_out.add<JsonObject>();
+        v_item["label"]   = v_entry.label;
+        v_item["path"]    = v_entry.path;  // "/html_v2/..." 그대로
+        v_item["uri"]     = v_entry.uri;   // "/P040_dashboard_003.html" 같은 short html path
+        v_item["order"]   = v_entry.order;
+        v_item["isMain"]  = v_entry.isMain;
+        v_item["enable"]  = v_entry.enable;  // 새 필드
+    }
 
 	String v_json_output;
 	if (serializeJson(v_doc_out, v_json_output) > 0) {
@@ -262,11 +261,11 @@ void CL_W10_WebAPI::routeStaticAssets() {
 		return;
 	}
 
-	JsonArray v_pages_array   = v_doc["pages"].as<JsonArray>();
-	JsonArray v_assets_array  = v_doc["assets"].as<JsonArray>();
-	JsonArray v_redirect_array = v_doc["reDirect"].as<JsonArray>();
+    JsonArray v_pages_array    = v_doc["pages"].as<JsonArray>();
+    JsonArray v_assets_array   = v_doc["assets"].as<JsonArray>();
+    JsonArray v_redirect_array = v_doc["reDirect"].as<JsonArray>();
 
-	// 1) pages 기반 HTML + 페이지별 전용 자산(pageAssets) 라우트 등록
+    // 1) pages 기반 HTML + 페이지별 전용 자산(pageAssets) 라우트 등록
 	if (!v_pages_array.isNull()) {
 		for (JsonObject v_page : v_pages_array) {
 			ST_W10_PageEntry_t v_entry{};
@@ -302,25 +301,25 @@ void CL_W10_WebAPI::routeStaticAssets() {
 			if (!v_uri_key || !v_path_key || strlen(v_path_key) == 0)
 				continue;
 
-			const char* v_mime_html = "text/html";
+			const char*	v_mime_html = "text/html";
 
 			if (v_is_main) {
 				// 메인 페이지:
 				// - pages[].path 에 정의된 HTML만 기준으로 사용
 				// - path 직접 접근 + uri(예: "/P010_main_021.html") 접근 모두 허용
-				W10_registerStaticRoute(v_path_key, v_path_key, v_mime_html);
+				registerStaticRoute(v_path_key, v_path_key, v_mime_html);
 
 				if (strlen(v_uri_key) > 0) {
-					W10_registerStaticRoute(v_uri_key, v_path_key, v_mime_html);
+					registerStaticRoute(v_uri_key, v_path_key, v_mime_html);
 				}
 			} else {
 				// 일반 페이지:
 				// - uri("/P040_dashboard_003.html") → path(HTML)
 				// - path("/html_v2/...") 직접 접근도 허용
 				if (strlen(v_uri_key) > 0) {
-					W10_registerStaticRoute(v_uri_key, v_path_key, v_mime_html);
+					registerStaticRoute(v_uri_key, v_path_key, v_mime_html);
 				}
-				W10_registerStaticRoute(v_path_key, v_path_key, v_mime_html);
+				registerStaticRoute(v_path_key, v_path_key, v_mime_html);
 			}
 
 			// 각 페이지의 pageAssets 처리 (CSS/JS 등)
@@ -337,9 +336,9 @@ void CL_W10_WebAPI::routeStaticAssets() {
 					const char* v_mime = W10_guessMime(v_a_path);
 
 					// "/P010_main_021.css" → "/html_v2/P010_main_021.css"
-					W10_registerStaticRoute(v_a_uri, v_a_path, v_mime);
+					registerStaticRoute(v_a_uri, v_a_path, v_mime);
 					// 절대 경로로 직접 접근도 허용
-					W10_registerStaticRoute(v_a_path, v_a_path, v_mime);
+					registerStaticRoute(v_a_path, v_a_path, v_mime);
 				}
 			}
 		}
@@ -364,8 +363,8 @@ void CL_W10_WebAPI::routeStaticAssets() {
 
 			const char* v_mime = W10_guessMime(v_path_key);
 
-			W10_registerStaticRoute(v_uri_key, v_path_key, v_mime);
-			W10_registerStaticRoute(v_path_key, v_path_key, v_mime);
+			registerStaticRoute(v_uri_key, v_path_key, v_mime);
+			registerStaticRoute(v_path_key, v_path_key, v_mime);
 		}
 	}
 

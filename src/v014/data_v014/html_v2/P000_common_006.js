@@ -26,7 +26,7 @@ const G_MODE_OFFLINE = "OFFLINE";
 //  데이터 경로
 // -------------------------------
 const G_API_MENU_PATH = "/api/v1/menu";          // ONLINE
-const G_LOCAL_JSON_PATH = "../json/cfg_pages_030.json"; // OFFLINE
+const G_LOCAL_JSON_PATH = "../json/cfg_pages_032.json"; // OFFLINE
 
 let g_currentMode = G_MODE_OFFLINE;
 window.currentMode = g_currentMode;

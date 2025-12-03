@@ -132,6 +132,7 @@ private:
 	static void routeSchedulesID();   // PUT/DELETE /api/schedules/{id}
 
 	// 9. 정적 파일 및 웹소켓
+	static void registerStaticRoute(const char* p_uri, const char* p_file, const char* p_mime);
 	static void routeStaticAssets();  // JSON 기반 static routes
 	static void routeWebSocket();	  // WS 라우트 초기화
 
