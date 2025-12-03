@@ -74,7 +74,7 @@ struct ST_W10_Route_t {
 	const char* mime;
 };
 
-#define G_W10_PAGE_ROUTES_MAX 40
+#define G_W10_PAGE_ROUTES_MAX 128
 static ST_W10_Route_t s_routes_static[G_W10_PAGE_ROUTES_MAX];
 static uint8_t        s_routeCnt_static = 0;
 
