@@ -89,7 +89,7 @@ private:
 	// --------------------------------------------------
 
 	// JSON 파일 경로 (v032)
-	static constexpr const char* G_W10_PAGES_JSON;
+    static const char* G_W10_PAGES_JSON;
 
 	// 페이지 엔트리 구조체 (메뉴 및 메타 정보용)
 	struct ST_W10_PageEntry_t {
