@@ -155,6 +155,10 @@ void CL_W10_WebAPI::W10_registerStaticRoute(const char* p_uri,
 	char* v_mime = W10_allocCString(p_mime);
 
 	if (!v_uri || !v_file || !v_mime) {
+		if (v_uri)  delete[] v_uri;
+        if (v_file) delete[] v_file;
+        if (v_mime) delete[] v_mime;
+		
 		CL_D10_Logger::log(EN_L10_LOG_ERROR,
 						   "[W10] Route alloc failed (uri:%s, file:%s)",
 						   p_uri, p_file);
