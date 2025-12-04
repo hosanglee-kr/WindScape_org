@@ -73,7 +73,9 @@ private:
 	static AsyncWebServer*		   s_server;
 	static CL_CT10_ControlManager* s_control;
 	static WiFiMulti*			   s_multi;
-	static File					   s_upFile;
+
+    static fs::File                s_upFile;
+	//static File					   s_upFile;
 
 	// WebSocket Servers
 	static AsyncWebSocket* s_wsServerState;

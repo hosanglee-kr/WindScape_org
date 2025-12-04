@@ -8,8 +8,8 @@
       "isMain": true,
       "order": 10,
       "pageAssets": [
-        { "uri": "/html_v2/P010_main_021.css", "path": "/html_v2/P010_main_021.css" },
-        { "uri": "/html_v2/P010_main_021.js",  "path": "/html_v2/P010_main_021.js" }
+        { "uri": "/P010_main_021.css", "path": "/html_v2/P010_main_021.css" },
+        { "uri": "/P010_main_021.js",  "path": "/html_v2/P010_main_021.js" }
       ]
     },
 
@@ -150,8 +150,12 @@
   "reDirect": [
     { "uriFrom": "/",               "uriTo": "/P010_main_021.html" },
     { "uriFrom": "/index.html",     "uriTo": "/P010_main_021.html" },
+    { "uriFrom": "/P010_main",     "uriTo": "/P010_main_021.html" },
 
+    
     { "uriFrom": "/dashboard",      "uriTo": "/P040_dashboard_003.html" },
+    { "uriFrom": "/P040_dashboard", "uriTo": "/P040_dashboard_003.html" },
+    
     { "uriFrom": "/chart_t1",       "uriTo": "/P020_chart_t1_008.html" },
     { "uriFrom": "/chart_t2",       "uriTo": "/P050_chart_t2_008.html" },
     { "uriFrom": "/profiles",       "uriTo": "/P070_profile_001.html" },
@@ -165,6 +169,6 @@
 
   "assets": [
     { "uri": "/P000_common_001.css", "path": "/html_v2/P000_common_001.css", "isCommon": true },
-    { "uri": "/P000_common_005.js",  "path": "/html_v2/P000_common_005.js",  "isCommon": true }
+    { "uri": "/P000_common_006.js",  "path": "/html_v2/P000_common_006.js",  "isCommon": true }
   ]
 }
