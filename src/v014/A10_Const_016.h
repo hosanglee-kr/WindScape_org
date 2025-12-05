@@ -458,6 +458,8 @@ typedef struct {
 	ST_A10_SchedulePeriod_t	 period;  // period.enabled=false면 시간대 무시(항상 활성)
 	uint8_t					 seg_count = 0;
 	ST_A10_ScheduleSegment_t segments[A10_Const::MAX_SEGMENTS_PER_SCHEDULE];
+    bool	repeatSegments				  = true;
+    uint8_t repeatCount                   = 0;
 
 	ST_A10_SchAutoOff_t autoOff;  // schedules도 userProfiles와 동일 구조 사용
 	ST_A10_Motion_t		motion;
@@ -493,7 +495,7 @@ typedef struct {
 	char	name[A10_Const::MAX_NAME_LEN] = {0};
 	bool	enabled						  = true;
 	bool	repeatSegments				  = true;
-
+    uint8_t repeatCount                   = 0;
 	uint8_t						seg_count = 0;
 	ST_A10_UserProfileSegment_t segments[A10_Const::MAX_SEGMENTS_PER_PROFILE];
 
