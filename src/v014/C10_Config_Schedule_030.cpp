@@ -50,6 +50,9 @@ static void C10_fromJson_ScheduleItem(
             p_js["name"] | "",
             sizeof(p_s.name));
     p_s.enabled = p_js["enabled"] | true;
+    
+    p_s.repeatSegments = p_js["repeatSegments"] | true;
+    p_s.repeatCount    = p_js["repeatCount"]    | 0;
 
     // period
     p_s.period.enabled =
@@ -110,6 +113,9 @@ static void C10_fromJson_ScheduleItem(
                     adj["fan_limit"] | 0.0f;
                 sg.adjust.min_fan =
                     adj["min_fan"] | 0.0f;
+                sg.adjust.turbulence_length_scale = adj["turbulence_length_scale"]    | 0.0f;
+                sg.adjust.turbulence_intensity_sigma = adj["turbulence_intensity_sigma"] | 0.0f;
+                
             }
 
             sg.fixed_speed =
@@ -159,7 +165,9 @@ static void C10_fromJson_UserProfile(
             p_jp["name"] | "",
             sizeof(p_up.name));
     p_up.enabled        = p_jp["enabled"] | true;
+    
     p_up.repeatSegments = p_jp["repeatSegments"] | true;
+    p_up.repeatCount    = p_jp["repeatCount"]    | 0;
 
     // segments
     p_up.seg_count = 0;
@@ -192,18 +200,14 @@ static void C10_fromJson_UserProfile(
             memset(&sg.adjust, 0,
                    sizeof(sg.adjust));
             if (jseg["adjust"].is<JsonObjectConst>()) {
-                JsonObjectConst adj =
-                    jseg["adjust"];
-                sg.adjust.wind_intensity =
-                    adj["wind_intensity"] | 0.0f;
-                sg.adjust.wind_variability =
-                    adj["wind_variability"] | 0.0f;
-                sg.adjust.gust_frequency =
-                    adj["gust_frequency"] | 0.0f;
-                sg.adjust.fan_limit =
-                    adj["fan_limit"] | 0.0f;
-                sg.adjust.min_fan =
-                    adj["min_fan"] | 0.0f;
+                JsonObjectConst adj = jseg["adjust"];
+                sg.adjust.wind_intensity = adj["wind_intensity"] | 0.0f;
+                sg.adjust.wind_variability = adj["wind_variability"] | 0.0f;
+                sg.adjust.gust_frequency = adj["gust_frequency"] | 0.0f;
+                sg.adjust.fan_limit = adj["fan_limit"] | 0.0f;
+                sg.adjust.min_fan = adj["min_fan"] | 0.0f;
+                sg.adjust.turbulence_length_scale = adj["turbulence_length_scale"]    | 0.0f;
+                sg.adjust.turbulence_intensity_sigma = adj["turbulence_intensity_sigma"] | 0.0f;
             }
 
             sg.fixed_speed =
@@ -392,9 +396,10 @@ bool CL_C10_ConfigManager::saveSchedules(const ST_A10_SchedulesRoot_t& p_cfg) {
         js["schNo"]   = s.schNo;
         js["name"]    = s.name;
         js["enabled"] = s.enabled;
+        js["repeatSegments"] = s.repeatSegments;
+        js["repeatCount"]    = s.repeatCount;
 
-        js["period"]["enabled"] =
-            s.period.enabled;
+        js["period"]["enabled"] = s.period.enabled;
         for (uint8_t v_d = 0; v_d < 7; v_d++) {
             js["period"]["days"][v_d] =
                 s.period.days[v_d];
@@ -479,6 +484,7 @@ bool CL_C10_ConfigManager::saveUserProfiles(const ST_A10_UserProfilesRoot_t& p_c
         jp["name"]           = up.name;
         jp["enabled"]        = up.enabled;
         jp["repeatSegments"] = up.repeatSegments;
+        jp["repeatCount"]    = up.repeatCount;
 
         for (uint8_t v_k = 0; v_k < up.seg_count; v_k++) {
             const ST_A10_UserProfileSegment_t& sg =
@@ -608,6 +614,9 @@ void CL_C10_ConfigManager::toJson_Schedules(
         js["name"]    = s.name;
         js["enabled"] = s.enabled;
 
+        js["repeatSegments"] = s.repeatSegments;
+        js["repeatCount"]    = s.repeatCount;
+
         js["period"]["enabled"] =
             s.period.enabled;
         for (uint8_t v_d = 0; v_d < 7; v_d++) {
@@ -640,8 +649,10 @@ void CL_C10_ConfigManager::toJson_Schedules(
             adj["fan_limit"]        = sg.adjust.fan_limit;
             adj["min_fan"]          = sg.adjust.min_fan;
 
-            jseg["fixed_speed"] =
-                sg.fixed_speed;
+            adj["turbulence_length_scale"] = sg.adjust.turbulence_length_scale;
+            adj["turbulence_intensity_sigma"] = sg.adjust.turbulence_intensity_sigma;
+
+            jseg["fixed_speed"] = sg.fixed_speed;
         }
 
         JsonObject ao = js["autoOff"];
@@ -686,6 +697,7 @@ void CL_C10_ConfigManager::toJson_UserProfiles(
         jp["name"]           = up.name;
         jp["enabled"]        = up.enabled;
         jp["repeatSegments"] = up.repeatSegments;
+        jp["repeatCount"]    = up.repeatCount;
 
         for (uint8_t v_k = 0; v_k < up.seg_count; v_k++) {
             const ST_A10_UserProfileSegment_t& sg =
@@ -708,8 +720,10 @@ void CL_C10_ConfigManager::toJson_UserProfiles(
             adj["fan_limit"]        = sg.adjust.fan_limit;
             adj["min_fan"]          = sg.adjust.min_fan;
 
-            jseg["fixed_speed"] =
-                sg.fixed_speed;
+            adj["turbulence_length_scale"] = sg.adjust.turbulence_length_scale;
+            adj["turbulence_intensity_sigma"] = sg.adjust.turbulence_intensity_sigma;
+            
+            jseg["fixed_speed"] = sg.fixed_speed;
         }
 
         JsonObject ao =
