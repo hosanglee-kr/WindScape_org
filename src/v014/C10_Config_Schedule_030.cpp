@@ -422,6 +422,7 @@ bool CL_C10_ConfigManager::saveSchedules(const ST_A10_SchedulesRoot_t& p_cfg) {
             jseg["mode"]        = A10_modeToString(sg.mode);
             jseg["presetCode"]  = sg.presetCode;
             jseg["styleCode"]   = sg.styleCode;
+            
 
             JsonObject adj      = jseg["adjust"];
             adj["wind_intensity"] =
@@ -434,6 +435,8 @@ bool CL_C10_ConfigManager::saveSchedules(const ST_A10_SchedulesRoot_t& p_cfg) {
                 sg.adjust.fan_limit;
             adj["min_fan"] =
                 sg.adjust.min_fan;
+            adj["turbulence_length_scale"]    = sg.adjust.turbulence_length_scale;      // ★ 추가
+            adj["turbulence_intensity_sigma"] = sg.adjust.turbulence_intensity_sigma;   // ★ 추가
 
             jseg["fixed_speed"] =
                 sg.fixed_speed;
@@ -500,48 +503,32 @@ bool CL_C10_ConfigManager::saveUserProfiles(const ST_A10_UserProfilesRoot_t& p_c
             jseg["presetCode"]  = sg.presetCode;
             jseg["styleCode"]   = sg.styleCode;
 
-            JsonObject adj      =
-                jseg["adjust"];
-            adj["wind_intensity"] =
-                sg.adjust.wind_intensity;
-            adj["wind_variability"] =
-                sg.adjust.wind_variability;
-            adj["gust_frequency"] =
-                sg.adjust.gust_frequency;
-            adj["fan_limit"] =
-                sg.adjust.fan_limit;
-            adj["min_fan"] =
-                sg.adjust.min_fan;
+            JsonObject adj      = jseg["adjust"];
+            adj["wind_intensity"] =  sg.adjust.wind_intensity;
+            adj["wind_variability"] = sg.adjust.wind_variability;
+            adj["gust_frequency"] = sg.adjust.gust_frequency;
+            adj["fan_limit"] = sg.adjust.fan_limit;
+            adj["min_fan"] = sg.adjust.min_fan;
+            adj["turbulence_length_scale"]    = sg.adjust.turbulence_length_scale;      // ★ 추가
+            adj["turbulence_intensity_sigma"] = sg.adjust.turbulence_intensity_sigma;   // ★ 추가
 
-            jseg["fixed_speed"] =
-                sg.fixed_speed;
+
+            jseg["fixed_speed"] = sg.fixed_speed;
         }
 
-        JsonObject ao =
-            jp["autoOff"];
-        ao["timer"]["enabled"] =
-            up.autoOff.timer.enabled;
-        ao["timer"]["minutes"] =
-            up.autoOff.timer.minutes;
-        ao["offTime"]["enabled"] =
-            up.autoOff.offTime.enabled;
-        ao["offTime"]["time"] =
-            up.autoOff.offTime.time;
-        ao["offTemp"]["enabled"] =
-            up.autoOff.offTemp.enabled;
-        ao["offTemp"]["temp"] =
-            up.autoOff.offTemp.temp;
+        JsonObject ao = jp["autoOff"];
+        ao["timer"]["enabled"] =  up.autoOff.timer.enabled;
+        ao["timer"]["minutes"] =  up.autoOff.timer.minutes;
+        ao["offTime"]["enabled"] = up.autoOff.offTime.enabled;
+        ao["offTime"]["time"] = up.autoOff.offTime.time;
+        ao["offTemp"]["enabled"] = up.autoOff.offTemp.enabled;
+        ao["offTemp"]["temp"] = up.autoOff.offTemp.temp;
 
-        jp["motion"]["pir"]["enabled"] =
-            up.motion.pir.enabled;
-        jp["motion"]["pir"]["hold_sec"] =
-            up.motion.pir.hold_sec;
-        jp["motion"]["ble"]["enabled"] =
-            up.motion.ble.enabled;
-        jp["motion"]["ble"]["rssi_threshold"] =
-            up.motion.ble.rssi_threshold;
-        jp["motion"]["ble"]["hold_sec"] =
-            up.motion.ble.hold_sec;
+        jp["motion"]["pir"]["enabled"] =  up.motion.pir.enabled;
+        jp["motion"]["pir"]["hold_sec"] =   up.motion.pir.hold_sec;
+        jp["motion"]["ble"]["enabled"] =  up.motion.ble.enabled;
+        jp["motion"]["ble"]["rssi_threshold"] =  up.motion.ble.rssi_threshold;
+        jp["motion"]["ble"]["hold_sec"] =    up.motion.ble.hold_sec;
     }
 
     return ioSaveJson(A10_Const::CFG_USER_PROFILES_FILE,
