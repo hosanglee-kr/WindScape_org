@@ -796,7 +796,92 @@ class CL_CT10_ControlManager {
 			    v_s.seg_count,
 			    scheduleSegRt);
 	    }
-    
+
+        // ==================================================
+        // Segment 시퀀스 처리 (Template 함수)
+        //  - repeatSegments + repeatCount 지원
+        //    * p_repeat == false        → 1회만 실행
+        //    * p_repeat == true,
+        //        p_repeatCount == 0     → 무한 반복
+        //        p_repeatCount > 0      → p_repeatCount회 반복 후 정지
+        // ==================================================
+        template <typename T_segment>
+        bool _tickSegmentSequence(
+            bool                         p_repeat,
+            uint8_t                      p_repeatCount,   // ★ 반복 횟수 (0이면 무한 반복)
+            T_segment*                   p_segs,
+            uint8_t                      p_count,
+            ST_CT10_SegmentRuntime_t&    p_rt)
+        {
+            unsigned long v_now = millis();
+        
+            // 1. 초기 시작 (-1 상태)
+            if (p_rt.index < 0) {
+                p_rt.index        = 0;
+                p_rt.onPhase      = true;
+                p_rt.phaseStartMs = v_now;
+                p_rt.loopCount    = 0;   // ★ 루프 카운트 초기화
+                _applySegmentOn(p_segs[0]);
+                return true;
+            }
+        
+            // 2. 유효하지 않은 설정 방어
+            if ((uint8_t)p_rt.index >= p_count || p_count == 0) {
+                sim.stop();
+                return false;
+            }
+        
+            T_segment& v_seg = p_segs[p_rt.index];
+        
+            // 분 단위를 밀리초로 변환
+            uint32_t v_onMs  = v_seg.on_minutes  * 60000UL;
+            uint32_t v_offMs = v_seg.off_minutes * 60000UL;
+        
+            // 3. On → Off 전환
+            if (p_rt.onPhase && v_onMs > 0 && v_now - p_rt.phaseStartMs >= v_onMs) {
+                p_rt.onPhase      = false;
+                p_rt.phaseStartMs = v_now;
+                _applySegmentOff();
+            }
+            // 4. Off → 다음 Segment On (또는 루프 종료/재시작)
+            else if (!p_rt.onPhase && v_offMs > 0 && v_now - p_rt.phaseStartMs >= v_offMs) {
+                // 다음 세그먼트로 이동
+                p_rt.index++;
+        
+                // 시퀀스 끝 도달
+                if ((uint8_t)p_rt.index >= p_count) {
+                    // 4-1) 반복 안 함 → 한 번만 실행
+                    if (!p_repeat) {
+                        sim.stop();
+                        return true;
+                    }
+        
+                    // 4-2) 반복 + repeatCount 사용
+                    if (p_repeatCount > 0) {
+                        // 이번 루프까지 포함해서 repeatCount번 채우면 종료
+                        if (p_rt.loopCount + 1 >= p_repeatCount) {
+                            sim.stop();
+                            return true;
+                        }
+                        // 아직 남았으면 루프 카운트 증가
+                        p_rt.loopCount++;
+                    }
+                    // p_repeatCount == 0 이면 무한 반복
+        
+                    // 다음 루프 첫 세그먼트로 복귀
+                    p_rt.index = 0;
+                }
+        
+                // 다음 세그먼트 On
+                p_rt.onPhase      = true;
+                p_rt.phaseStartMs = v_now;
+                _applySegmentOn(p_segs[p_rt.index]);
+            }
+        
+            return true;
+        }
+
+        /*
 	    // ==================================================
 	    // Segment 시퀀스 처리 (Template 함수)
 	    // =================================================
@@ -874,6 +959,8 @@ class CL_CT10_ControlManager {
 		    }
 		    return true;
 	    }
+
+        */
     
     
 	    // Segment On (바람 파라미터 적용)
