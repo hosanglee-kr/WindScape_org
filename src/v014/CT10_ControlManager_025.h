@@ -797,9 +797,11 @@ class CL_CT10_ControlManager {
     
 	    // ==================================================
 	    // Segment 시퀀스 처리 (Template 함수)
-	    // ==================================================
+	    // =================================================
 	    template <typename T_segment>
-	    bool _tickSegmentSequence(bool						p_repeat,
+	    bool _tickSegmentSequence(
+                                  bool						p_repeat,
+                                  uint8_t                   p_repeatCount,   // ★ 추가
 							      T_segment*				p_segs,
 							      uint8_t					p_count,
 							      ST_CT10_SegmentRuntime_t& p_rt) {
@@ -810,6 +812,7 @@ class CL_CT10_ControlManager {
 			    p_rt.index		  = 0;
 			    p_rt.onPhase	  = true;
 			    p_rt.phaseStartMs = v_now;
+				p_rt.loopCount    = 0;   
 			    _applySegmentOn(p_segs[0]);
 			    return true;
 		    }
