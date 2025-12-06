@@ -729,6 +729,7 @@ class CL_CT10_ControlManager {
 		    // 3. Segment 시퀀스 실행
 		    return _tickSegmentSequence(
 			    v_p.repeatSegments, // 반복 설정
+				v_p.repeatCount,   
 			    v_p.segments,
 			    v_p.seg_count,
 			    profileSegRt);
@@ -789,7 +790,8 @@ class CL_CT10_ControlManager {
     
 		    // Segment 시퀀스 실행 (Schedule은 항상 반복)
 		    return _tickSegmentSequence(
-			    true,
+			    v_s.repeatSegments,   // bool repeatSegments
+                v_s.repeatCount,      //
 			    v_s.segments,
 			    v_s.seg_count,
 			    scheduleSegRt);
@@ -823,6 +825,19 @@ class CL_CT10_ControlManager {
 				    sim.stop();
 				    return true;
 			    }
+
+				// 반복 + repeatCount 사용
+                if (p_repeatCount > 0) {
+                    // 이번 루프까지 포함해서 repeatCount번 채우면 종료
+                    if (p_rt.loopCount + 1 >= p_repeatCount) {
+                        sim.stop();
+                        return true;
+                    }
+                    // 아직 남았으면 루프 카운트 증가
+                    p_rt.loopCount++;
+                }
+                // p_repeatCount == 0 이면 무한 반복
+				
 			    // 반복이면 첫 세그먼트로 복귀
 			    p_rt.index		  = 0;
 			    p_rt.onPhase	  = true;
