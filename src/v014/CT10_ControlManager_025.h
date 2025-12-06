@@ -49,7 +49,7 @@
 #include <time.h> // AutoOff 시간 체크용
 
 // 종속성 모듈 헤더
-#include "A10_Const_015.h"
+#include "A10_Const_016.h"
 #include "C10_Config_029.h"
 #include "D10_Logger_016.h"
 #include "M10_MotionLogic_016.h"
