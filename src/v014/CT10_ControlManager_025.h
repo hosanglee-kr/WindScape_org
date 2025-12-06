@@ -85,7 +85,7 @@ typedef struct {
 	int8_t		  index;		 // 현재 seg index (-1이면 아직 시작 전)
 	bool		  onPhase;		 // true: On 구간(팬 작동), false: Off 구간(팬 정지)
 	unsigned long phaseStartMs;	 // 현재 phase 시작 시간 (Millis 기준)
-    uint16_t      loopCount;      // ★ 반복 횟수 카운트 (0부터 시작)
+    uint8_t      loopCount;      // ★ 반복 횟수 카운트 (0부터 시작)
 } ST_CT10_SegmentRuntime_t;
 
 // AutoOff 런타임 상태 (현재 적용된 AutoOff 조건)
