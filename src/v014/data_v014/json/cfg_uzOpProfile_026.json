@@ -117,7 +117,7 @@
         "profileNo": 4,
         "name": "환기모드",
         "enabled": true,
-        "repeatSegments": false
+        "repeatSegments": false,
         "repeatCount": 0,
         "segments": [
           {
