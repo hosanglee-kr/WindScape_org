@@ -81,8 +81,8 @@
     },
 
     {
-      "uri": "/P080_schedules_t2_002.html",
-      "path": "/html_v2/P080_schedules_t2_002.html",
+      "uri": "/P080_schedules_t2_003.html",
+      "path": "/html_v2/P080_schedules_t2_003.html",
       "label": "Schedule T2",
       "enable": true,
       "isMain": false,
@@ -92,8 +92,8 @@
     },
 
     {
-      "uri": "/P085_userProfiles_t2_002.html",
-      "path": "/html_v2/P085_userProfiles_t2_002.html",
+      "uri": "/P085_userProfiles_t2_003.html",
+      "path": "/html_v2/P085_userProfiles_t2_003.html",
       "label": "UserProfile T2",
       "enable": true,
       "isMain": false,
@@ -160,8 +160,8 @@
     { "uriFrom": "/chart_t2",       "uriTo": "/P050_chart_t2_008.html" },
     { "uriFrom": "/profiles",       "uriTo": "/P070_profile_001.html" },
     { "uriFrom": "/schedules_t1",   "uriTo": "/P030_schedules_t1_006.html" },
-    { "uriFrom": "/schedules_t2",   "uriTo": "/P080_schedules_t2_002.html" },
-    { "uriFrom": "/userProfile_t2", "uriTo": "/P085_userProfiles_t2_002.html" },
+    { "uriFrom": "/schedules_t2",   "uriTo": "/P080_schedules_t2_003.html" },
+    { "uriFrom": "/userProfile_t2", "uriTo": "/P085_userProfiles_t2_003.html" },
     { "uriFrom": "/settings",       "uriTo": "/P100_settings_001.html" },
     { "uriFrom": "/sim_details",    "uriTo": "/P060_sim_details_001.html" },
     { "uriFrom": "/info",           "uriTo": "/P090_user_001.html" }
