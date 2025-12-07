@@ -1,0 +1,239 @@
+/*
+ * ------------------------------------------------------
+ * 소스명 : P080_schedules_t2_003.css
+ * 모듈명 : Smart Nature Wind Schedule Manager UI Style (v003)
+ * ------------------------------------------------------
+ * 주요 내용:
+ * - P000_common_001.css에 의존 (그리드/카드/버튼/모달 기본 스타일)
+ * - 스케줄 목록 테이블 스타일
+ * - 기간 요일 선택 / 세그먼트 테이블 / 서브 카드 스타일
+ * ------------------------------------------------------
+ */
+
+/* ======================= 1. 스케줄 테이블 ======================= */
+
+.schedule-list-container {
+  margin-top: 15px;
+  overflow-x: auto;
+}
+
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.schedule-table th,
+.schedule-table td {
+  padding: 10px 8px;
+  text-align: left;
+  border-bottom: 1px solid #e0e6ed;
+  font-size: 0.9em;
+}
+
+.schedule-table th {
+  background-color: #f7f9fb;
+  color: #34495e;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.schedule-table td:last-child {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.schedule-table .action-buttons {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.schedule-table .btn-small {
+  padding: 4px 8px;
+  font-size: 0.8em;
+}
+
+/* 스케줄 상태 라벨 */
+.schedule-status-label {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 0.75em;
+  font-weight: 600;
+}
+.schedule-status-label.on {
+  background-color: #16a34a;
+  color: #ffffff;
+}
+.schedule-status-label.off {
+  background-color: #cccccc;
+  color: #333333;
+}
+
+/* ======================= 2. 요약 텍스트 ======================= */
+
+.text-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  font-size: 0.85em;
+}
+
+/* ======================= 3. 반복 요일 선택 ======================= */
+
+.repeat-days-group {
+  padding-top: 5px;
+}
+
+.day-checkboxes {
+  display: flex;
+  gap: 8px;
+  padding: 6px 0;
+  flex-wrap: wrap;
+}
+
+.day-checkboxes label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  cursor: pointer;
+  font-weight: normal;
+  background-color: #f0f4f8;
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid #c8d4e0;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+/* 실제 체크박스는 숨기고 라벨로만 표현 */
+.day-checkboxes input[type="checkbox"] {
+  display: none;
+}
+
+/* JS에서 label에 .checked 클래스를 토글 */
+.day-checkboxes label.checked {
+  background-color: #3498db;
+  color: #ffffff;
+  border-color: #2980b9;
+}
+
+/* ======================= 4. 그리드 / 섹션 ======================= */
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+}
+
+@media (max-width: 900px) {
+  .grid-3 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+.section-block {
+  margin-top: 18px;
+}
+
+.section-subtitle {
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+
+.toggle-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ======================= 5. 세그먼트 테이블 ======================= */
+
+.segment-list-container {
+  margin-top: 8px;
+  overflow-x: auto;
+}
+
+.segment-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.segment-table th,
+.segment-table td {
+  padding: 6px 6px;
+  border-bottom: 1px solid #e0e6ed;
+  font-size: 0.8em;
+  text-align: left;
+}
+
+.segment-table th {
+  background-color: #f7f9fb;
+  color: #34495e;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.segment-table td input,
+.segment-table td select {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.8em;
+}
+
+.segment-table td:last-child {
+  white-space: nowrap;
+  text-align: center;
+}
+
+.segment-table .btn-small {
+  padding: 3px 6px;
+  font-size: 0.75em;
+}
+
+/* ======================= 6. AutoOff / Motion 서브 카드 ======================= */
+
+.schedule-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+@media (max-width: 900px) {
+  .schedule-sections {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+.form-subcard {
+  background-color: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  padding: 10px 12px;
+}
+
+.form-subcard h4 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+/* ======================= 7. 모달 사이즈 ======================= */
+
+.modal-large {
+  max-width: 1100px;
+  width: 95%;
+}
+
+/* ======================= 8. 기타 ======================= */
+
+.info-label {
+  font-size: 0.8em;
+  color: #6b7280;
+}
+
+/* config dirty 버튼 하이라이트는 JS에서 인라인 스타일로 설정 */
+
