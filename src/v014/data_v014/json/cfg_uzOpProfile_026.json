@@ -13,7 +13,7 @@
         "repeatCount": 1,
         "segments": [
           {
-            "seqId": 1,
+            "segId": 1,
             "segNo": 10,
             "on_minutes": 40,
             "off_minutes": 0,
@@ -23,7 +23,7 @@
             "adjust": { "wind_intensity": -10, "wind_variability": -20 }
           },
           {
-            "seqId": 2,
+            "segId": 2,
             "segNo": 20,
             "on_minutes": 120,
             "off_minutes": 0,
@@ -33,7 +33,7 @@
             "adjust": { "wind_intensity": -20, "wind_variability": -30 }
           },
           {
-            "seqId": 3,
+            "segId": 3,
             "segNo": 30,
             "on_minutes": 90,
             "off_minutes": 0,
@@ -61,7 +61,7 @@
         "repeatCount": 2,
         "segments": [
           {
-            "seqId": 1,
+            "segId": 1,
             "segNo": 10,
             "on_minutes": 60,
             "off_minutes": 0,
@@ -91,7 +91,7 @@
         "repeatCount": 2,
         "segments": [
           {
-            "seqId": 1,
+            "segId": 1,
             "segNo": 10,
             "on_minutes": 45,
             "off_minutes": 15,
@@ -121,7 +121,7 @@
         "repeatCount": 0,
         "segments": [
           {
-            "seqId": 1,
+            "segId": 1,
             "segNo": 10,
             "on_minutes": 20,
             "off_minutes": 5,
@@ -151,7 +151,7 @@
         "repeatCount": 3,
         "segments": [
           {
-            "seqId": 1,
+            "segId": 1,
             "segNo": 10,
             "on_minutes": 30,
             "off_minutes": 10,
