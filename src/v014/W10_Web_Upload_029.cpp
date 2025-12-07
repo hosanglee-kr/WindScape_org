@@ -34,6 +34,99 @@
 #include "W10_Web_030.h"
 
 // ------------------------------------------------------
+// 파일 저장 경로를 결정하는 내부 함수 (클래스 내부에 정의)
+// ------------------------------------------------------
+String CL_W10_WebAPI::getUploadPath(const String& p_filename) {
+    // 1. 파일명에서 마지막 '.' 위치를 찾습니다.
+    int v_dotIndex = p_filename.lastIndexOf('.');
+    
+    // 2. '.'이 없거나, 파일명 시작에 있다면 확장자가 없다고 간주하고 루트 폴더를 반환합니다.
+    if (v_dotIndex == -1 || v_dotIndex == 0) {
+        return "/" + p_filename;
+    }
+
+    // 3. 확장자를 추출하고 소문자로 변환합니다.
+    String v_extension = p_filename.substring(v_dotIndex + 1);
+    v_extension.toLowerCase();
+    
+    // 4. 확장자에 따라 저장 폴더를 결정합니다.
+    String v_folderPath;
+    if (v_extension == "json") {
+        v_folderPath = "/json/";
+    } else if (v_extension == "html" || v_extension == "js" || v_extension == "css") {
+        v_folderPath = "/html_v2/";
+    } else {
+        // 지정된 확장자가 아니면 루트 폴더에 저장합니다.
+        v_folderPath = "/";
+    }
+
+    // 5. 최종 경로를 반환합니다. (예: "/json/config.json", "/html_v2/index.html")
+    return v_folderPath + p_filename;
+}
+
+
+// ------------------------------------------------------
+// /upload (LittleFS 파일 업로드)
+// ------------------------------------------------------
+void CL_W10_WebAPI::routeUpload() {
+	s_server->on(
+		"/upload",
+		HTTP_POST,
+		[](AsyncWebServerRequest* p_request) {
+			if (!checkApiKey(p_request)) {
+				p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+				return;
+			}
+			CL_W10_WebAPI::sendText(p_request, "{\"done\":true}");
+		},
+		[](AsyncWebServerRequest* p_request, const String& p_filename,
+		   size_t p_index, uint8_t* p_data, size_t p_len, bool p_final) {
+            
+            // 변경된 부분 시작 ------------------------------------------------------
+            // 1. 최종 저장될 파일 경로를 결정합니다.
+            String v_finalPath = CL_W10_WebAPI::getUploadPath(p_filename);
+            // 2. 파일 경로를 저장할 전역/정적 변수가 필요하다면, s_upFileName을 선언하고 사용해야 합니다.
+            //    현재 로직은 p_filename을 그대로 사용하고 있어, 첫 번째 청크에서 경로를 결정한 후
+            //    이 경로를 이후 청크에서도 사용할 수 있도록 변수가 필요합니다.
+            //    임시 방편으로 파일 열기/삭제에 v_finalPath를 사용하고, 로그에는 원래 파일명을 사용했습니다.
+
+			if (!checkApiKey(p_request))
+				return;
+
+			if (p_index == 0) {
+				if (LittleFS.exists(v_finalPath)) {
+					LittleFS.remove(v_finalPath);
+					CL_D10_Logger::log(EN_L10_LOG_INFO,
+									   "[W10] Removing existing file: %s",
+									   v_finalPath.c_str());
+				}
+				s_upFile = LittleFS.open(v_finalPath, "w");
+				CL_D10_Logger::log(EN_L10_LOG_INFO,
+								   "[W10] Starting file upload: %s (to %s)",
+								   p_filename.c_str(), v_finalPath.c_str());
+			}
+
+			if (s_upFile) {
+				s_upFile.write(p_data, p_len);
+			} else {
+				CL_D10_Logger::log(EN_L10_LOG_ERROR,
+								   "[W10] File open failed for upload: %s",
+								   v_finalPath.c_str());
+			}
+
+			if (p_final) {
+				if (s_upFile) {
+					s_upFile.close();
+					CL_D10_Logger::log(EN_L10_LOG_INFO,
+									   "[W10] File upload finished: %s (at %s)",
+									   p_filename.c_str(), v_finalPath.c_str());
+				}
+			}
+            // 변경된 부분 끝 --------------------------------------------------------
+		});
+}
+/*
+// ------------------------------------------------------
 // /upload (LittleFS 파일 업로드)
 // ------------------------------------------------------
 void CL_W10_WebAPI::routeUpload() {
@@ -83,7 +176,7 @@ void CL_W10_WebAPI::routeUpload() {
 			}
 		});
 }
-
+*/
 // ------------------------------------------------------
 // /update (OTA 펌웨어 업데이트)
 // ------------------------------------------------------
