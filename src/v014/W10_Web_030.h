@@ -125,6 +125,9 @@ private:
 											   const char* p_mime);
 	static void        W10_getMenuJson(AsyncWebServerRequest* r);
 
+    static String      getUploadPath(const String& p_filename);
+
+
 	// --------------------------------------------------
 	// 라우팅 선언 (Routes.cpp)
 	// --------------------------------------------------
