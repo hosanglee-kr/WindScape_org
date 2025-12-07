@@ -1,0 +1,240 @@
+/*
+ * ------------------------------------------------------
+ * 소스명 : P085_userProfiles_t2_003.css
+ * 모듈명 : Smart Nature Wind User Profile Manager UI Style (v003)
+ * ------------------------------------------------------
+ * 주요 내용:
+ * - v003 프로파일/세그먼트 관리 UI 전체 스타일
+ * - Segment 카드 / Foldable UI / Button / Table 스타일
+ * ------------------------------------------------------
+ */
+
+/* 기본 컨테이너 */
+.profile-list-container {
+  margin-top: 15px;
+  overflow-x: auto;
+}
+
+/* 프로파일 테이블 */
+.profile-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.profile-table th,
+.profile-table td {
+  padding: 10px 8px;
+  text-align: left;
+  border-bottom: 1px solid #e0e6ed;
+  font-size: 0.9em;
+}
+
+.profile-table th {
+  background-color: #f7f9fb;
+  color: #34495e;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.profile-table td:last-child {
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ===================== Modal ======================== */
+
+.wide-modal {
+  width: 900px;
+  max-width: 95%;
+}
+
+.modal-content .card {
+  margin-bottom: 15px;
+}
+
+/* ===================== Foldable Sections ======================== */
+
+.fold {
+  margin-top: 15px;
+}
+
+.fold-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 5px;
+  cursor: pointer;
+  background-color: #f1f3f6;
+  border-radius: 6px;
+  user-select: none;
+}
+
+.fold-header:hover {
+  background-color: #e8ebf0;
+}
+
+.fold-icon {
+  font-size: 13px;
+}
+
+.fold-body {
+  margin-top: 10px;
+  padding: 10px 5px;
+  border-left: 3px solid #d0d7de;
+  display: none;
+}
+
+.fold-body.active {
+  display: block;
+}
+
+/* ===================== Segment 카드 ======================== */
+
+.segment-card {
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 15px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.segment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.segment-header strong {
+  font-size: 1.05em;
+  color: #2d3a4a;
+}
+
+/* Segment 내부 그리드 */
+.segment-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.segment-grid .form-group label {
+  font-weight: 600;
+}
+
+.segment-inline {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.segment-inline label {
+  font-weight: 600;
+}
+
+/* Segment Mode 전환 버튼 */
+.mode-toggle {
+  padding: 5px 10px;
+  background-color: #eef2f6;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+
+.mode-toggle.active {
+  background-color: #c7d4e3;
+  font-weight: bold;
+}
+
+/* Segment 조작 버튼 */
+.segment-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-small {
+  padding: 4px 8px;
+  font-size: 0.8em;
+}
+
+/* REMOVABLE segment fold */
+.segment-fold {
+  margin-top: 10px;
+  padding: 10px;
+  border-left: 3px solid #cdd4de;
+  background-color: #f9fafb;
+  border-radius: 4px;
+}
+
+/* ===================== Adjust Fold ======================== */
+
+.adjust-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.adjust-grid .form-group label {
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+.adjust-note {
+  font-size: 0.8em;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+/* ===================== AutoOff / Motion ======================== */
+
+.grid .form-group label {
+  font-weight: 600;
+}
+
+/* ===================== Buttons ======================== */
+
+.btn {
+  cursor: pointer;
+}
+
+.btn.ok {
+  background-color: #4f8ef7;
+  color: #fff;
+}
+
+.btn.ok:hover {
+  background-color: #3c7de0;
+}
+
+.btn.danger {
+  background-color: #e35d5d;
+  color: #fff;
+}
+
+.btn.danger:hover {
+  background-color: #cc4c4c;
+}
+
+.btn-neutral {
+  background-color: #e2e8f0;
+  color: #1a202c;
+}
+
+.btn-neutral:hover {
+  background-color: #cbd5e0;
+}
+
+/* ===================== 기타 ======================== */
+
+.divider {
+  height: 1px;
+  margin: 12px 0;
+  background-color: #d9dde2;
+}
+
+.muted {
+  color: #6b7280;
+}
