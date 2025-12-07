@@ -46,7 +46,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "A10_Const_015.h"     // ST_A10_ConfigRoot_t, ST_A10_* 구조체, 상수 정의
+#include "A10_Const_016.h"     // ST_A10_ConfigRoot_t, ST_A10_* 구조체, 상수 정의
 #include "D10_Logger_016.h"    // CL_D10_Logger, EN_L10_LOG_*
 
 // ------------------------------------------------------
