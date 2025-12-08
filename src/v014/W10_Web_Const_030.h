@@ -106,7 +106,7 @@ namespace W10_Const {
     constexpr const char* PATH_STATIC_ROOT        = "/html_v2";
     constexpr const char* FOLDER_JSON             = "/json/";
     constexpr const char* FOLDER_HTML             = "/html_v2/";
-    constexpr const char* FILE_PAGES_JSON         = "/json/cfg_pages_032.json";
+    // constexpr const char* FILE_PAGES_JSON         = "/json/cfg_pages_032.json";
 
 } // namespace W10_Const
 
