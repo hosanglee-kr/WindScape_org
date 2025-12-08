@@ -99,12 +99,12 @@ bool CL_W10_WebAPI::W10_loadPagesJson(JsonDocument& p_doc,
 
 	
 
-	File v_file = LittleFS.open(g_A10_config_root.system.webPagesJson, "r");
+	File v_file = LittleFS.open(g_A10_config_root.system->webPagesJson, "r");
 	// File v_file = LittleFS.open(G_W10_PAGES_JSON, "r");
 	if (!v_file) {
 		CL_D10_Logger::log(EN_L10_LOG_ERROR,
 						   "[W10] Failed to open pages JSON: %s",
-						   g_A10_config_root.system.webPagesJson);
+						   g_A10_config_root.system->webPagesJson);
 		                   // G_W10_PAGES_JSON);
 		return false;
 	}
