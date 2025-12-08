@@ -76,7 +76,7 @@ String CL_W10_WebAPI::getUploadPath(const String& p_filename) {
 // ------------------------------------------------------
 void CL_W10_WebAPI::routeUpload() {
 	s_server->on(
-		"/upload",
+		W10_Const::HTTP_API_FILE_UPLOAD, // "/upload",
 		HTTP_POST,
 		[](AsyncWebServerRequest* p_request) {
 			if (!checkApiKey(p_request)) {
@@ -137,7 +137,7 @@ void CL_W10_WebAPI::routeUpload() {
 // ------------------------------------------------------
 void CL_W10_WebAPI::routeUpdate() {
 	s_server->on(
-		"/update",
+		W10_Const::HTTP_API_FW_UPDATE, // "/update",
 		HTTP_POST,
 		[](AsyncWebServerRequest* p_request) {
 			if (!checkApiKey(p_request)) {
