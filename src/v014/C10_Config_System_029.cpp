@@ -62,7 +62,7 @@ bool CL_C10_ConfigManager::loadSystemConfig(ST_A10_SystemConfig& p_cfg) {
 
     strlcpy(p_cfg.system.webPagesJson,
             j["system"]["webPageJson"] | "/html/main.html",
-            sizeof(p_cfg.system.webPageJson));
+            sizeof(p_cfg.system.webPagesJson));
     /*
     strlcpy(p_cfg.system.web.html,
             j["system"]["web"]["html"] | "/html/main.html",
@@ -587,7 +587,7 @@ void CL_C10_ConfigManager::toJson_System(
     d["meta"]["device_name"]              = p.meta.device_name;
     d["meta"]["last_update"]              = p.meta.last_update;
 
-    d["system"]["webPagesJson"]           p.system.webPagesJson;
+    d["system"]["webPagesJson"]           = p.system.webPagesJson;
     /*
     d["system"]["web"]["html"]            = p.system.web.html;
     d["system"]["web"]["css"]             = p.system.web.css;
