@@ -222,9 +222,13 @@ bool CL_C10_ConfigManager::saveSystemConfig(const ST_A10_SystemConfig& p_cfg) {
     v["meta"]["device_name"]              = p_cfg.meta.device_name;
     v["meta"]["last_update"]              = p_cfg.meta.last_update;
 
+    
+    v["system"]["webPagesJson"]            = p_cfg.system.webPagesJson;
+    /*
     v["system"]["web"]["html"]            = p_cfg.system.web.html;
     v["system"]["web"]["css"]             = p_cfg.system.web.css;
     v["system"]["web"]["js"]              = p_cfg.system.web.js;
+    */
 
     v["system"]["logging"]["level"]       = p_cfg.system.logging.level;
     v["system"]["logging"]["max_entries"] = p_cfg.system.logging.max_entries;
