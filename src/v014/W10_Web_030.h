@@ -48,6 +48,7 @@
 #include "N10_NvsManager_019.h"
 #include "WF10_WiFiManager_025.h"
 
+#include "W10_Web_Const_030.h"
 
 // ------------------------------------------------------
 // WebAPI Manager
