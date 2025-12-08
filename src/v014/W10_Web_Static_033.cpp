@@ -51,7 +51,7 @@
 
 // JSON 파일 경로 (v032)
 // CL_W10_WebAPI::G_W10_PAGES_JSON 정의
-const char* CL_W10_WebAPI::G_W10_PAGES_JSON = "/json/cfg_pages_032.json";
+// const char* CL_W10_WebAPI::G_W10_PAGES_JSON = "/json/cfg_pages_032.json";
 
 // 메뉴 상태
 CL_W10_WebAPI::ST_W10_MenuState_t CL_W10_WebAPI::s_menu_state;
