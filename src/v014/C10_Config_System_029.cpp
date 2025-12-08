@@ -60,6 +60,10 @@ bool CL_C10_ConfigManager::loadSystemConfig(ST_A10_SystemConfig& p_cfg) {
             j["meta"]["last_update"] | "",
             sizeof(p_cfg.meta.last_update));
 
+    strlcpy(p_cfg.system.webPagesJson,
+            j["system"]["webPageJson"] | "/html/main.html",
+            sizeof(p_cfg.system.webPageJson));
+    /*
     strlcpy(p_cfg.system.web.html,
             j["system"]["web"]["html"] | "/html/main.html",
             sizeof(p_cfg.system.web.html));
@@ -69,6 +73,7 @@ bool CL_C10_ConfigManager::loadSystemConfig(ST_A10_SystemConfig& p_cfg) {
     strlcpy(p_cfg.system.web.js,
             j["system"]["web"]["js"] | "/html/main.js",
             sizeof(p_cfg.system.web.js));
+    */
 
     strlcpy(p_cfg.system.logging.level,
             j["system"]["logging"]["level"] | "INFO",
@@ -97,8 +102,8 @@ bool CL_C10_ConfigManager::loadSystemConfig(ST_A10_SystemConfig& p_cfg) {
     p_cfg.hw.ble.scan_interval =
         j["hw"]["ble"]["scan_interval"] | 5;
 
-    strlcpy(p_cfg.security.api_key,
-            j["security"]["api_key"] | "",
+    strlcpy(p_cfg.security.api_key, 
+        j["security"]["api_key"] | "",
             sizeof(p_cfg.security.api_key));
 
     strlcpy(p_cfg.time.ntp_server,
