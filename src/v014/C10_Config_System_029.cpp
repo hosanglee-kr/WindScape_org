@@ -587,9 +587,12 @@ void CL_C10_ConfigManager::toJson_System(
     d["meta"]["device_name"]              = p.meta.device_name;
     d["meta"]["last_update"]              = p.meta.last_update;
 
+    d["system"]["webPagesJson"]           p.system.webPagesJson;
+    /*
     d["system"]["web"]["html"]            = p.system.web.html;
     d["system"]["web"]["css"]             = p.system.web.css;
     d["system"]["web"]["js"]              = p.system.web.js;
+   v*/
 
     d["system"]["logging"]["level"]       = p.system.logging.level;
     d["system"]["logging"]["max_entries"] = p.system.logging.max_entries;
