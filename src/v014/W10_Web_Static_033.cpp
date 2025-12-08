@@ -397,7 +397,11 @@ void CL_W10_WebAPI::routeStaticAssets() {
 	s_server->serveStatic("/html_v2", LittleFS, "/html_v2");
 
 	// 5) 메뉴 API
-	s_server->on("/api/v1/menu", HTTP_GET, W10_getMenuJson);
+	
+	s_server->on(W10_Const::HTTP_API_MENU, HTTP_GET, W10_getMenuJson);
+    // s_server->on("/api/v1/menu", HTTP_GET, W10_getMenuJson);
+
+	// s_server->on("/api/v1/menu", HTTP_GET, W10_getMenuJson);
 
 	CL_D10_Logger::log(EN_L10_LOG_INFO,
 					   "[W10] Web routing initialized (Pages: %u, Assets: %u)",
