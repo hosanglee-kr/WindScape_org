@@ -44,10 +44,17 @@ CL_CT10_ControlManager* CL_W10_WebAPI::s_control		= nullptr;
 WiFiMulti*				CL_W10_WebAPI::s_multi			= nullptr;
 File					CL_W10_WebAPI::s_upFile;
 
+AsyncWebSocket          s_wsLogs(W10_Const::WS_API_LOG);
+AsyncWebSocket          s_wsState(W10_Const::WS_API_STATE);
+AsyncWebSocket          s_wsChart(W10_Const::WS_API_CHART);
+AsyncWebSocket          s_wsMetrics(W10_Const::WS_API_METRICS);
+
+/*
 AsyncWebSocket          s_wsLogs("/ws/log");
 AsyncWebSocket          s_wsState("/ws/state");
 AsyncWebSocket          s_wsChart("/ws/chart");
 AsyncWebSocket          s_wsMetrics("/ws/metrics");
+*/
 
 AsyncWebSocket* CL_W10_WebAPI::s_wsServerState  = &s_wsState;
 AsyncWebSocket* CL_W10_WebAPI::s_wsServerLogs   = &s_wsLogs;
