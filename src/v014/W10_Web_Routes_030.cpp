@@ -332,7 +332,8 @@ void CL_W10_WebAPI::routeMotion() {
 // --------------------------------------------------
 void CL_W10_WebAPI::routeWindProfile() {
 	// GET: 전체 목록 조회
-	s_server->on(W10_Const::HTTP_API_WIND_PROFILE, HTTP_GET,
+	s_server->on(
+		         W10_Const::HTTP_API_WIND_PROFILE, HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -352,7 +353,8 @@ void CL_W10_WebAPI::routeWindProfile() {
 				 });
 
 	// POST: 신규 생성
-	s_server->on(W10_Const::HTTP_API_WIND_PROFILE, HTTP_POST,
+	s_server->on(
+		         W10_Const::HTTP_API_WIND_PROFILE, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {},
 				 nullptr,
 				 [](AsyncWebServerRequest* p_request, uint8_t* p_data,
@@ -392,7 +394,7 @@ void CL_W10_WebAPI::routeWindProfile() {
 void CL_W10_WebAPI::routeWindProfileID() {
 	// PUT: 수정
 	s_server->on(
-		W10_Const::HTTP_API_WIND_PROFILE "/([0-9]+)", HTTP_PUT,
+		(String(W10_Const::HTTP_API_WIND_PROFILE) + "/([0-9]+)").c_str(), HTTP_PUT,
 		// "/api/windProfile/([0-9]+)", HTTP_PUT,
 		[](AsyncWebServerRequest* p_request) {},
 		nullptr,
@@ -425,7 +427,8 @@ void CL_W10_WebAPI::routeWindProfileID() {
 		});
 
 	// DELETE: 삭제
-	s_server->on("/api/windProfile/([0-9]+)", HTTP_DELETE,
+	s_server->on(
+		         (String(W10_Const::HTTP_API_WIND_PROFILE) + "/([0-9]+)").c_str(), HTTP_DELETE,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -448,7 +451,8 @@ void CL_W10_WebAPI::routeWindProfileID() {
 // --------------------------------------------------
 void CL_W10_WebAPI::routeSchedules() {
 	// GET
-	s_server->on("/api/schedules", HTTP_GET,
+	s_server->on(
+		         W10_Const::HTTP_API_SCHEDULES, HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -462,7 +466,8 @@ void CL_W10_WebAPI::routeSchedules() {
 				 });
 
 	// POST: 신규 생성
-	s_server->on("/api/schedules", HTTP_POST,
+	s_server->on(
+		         W10_Const::HTTP_API_SCHEDULES, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {},
 				 nullptr,
 				 [](AsyncWebServerRequest* p_request, uint8_t* p_data,
@@ -501,7 +506,7 @@ void CL_W10_WebAPI::routeSchedules() {
 void CL_W10_WebAPI::routeSchedulesID() {
 	// PUT
 	s_server->on(
-		"/api/schedules/([0-9]+)", HTTP_PUT,
+		 (String(W10_Const::HTTP_API_SCHEDULES) + "/([0-9]+)").c_str(), HTTP_PUT,
 		[](AsyncWebServerRequest* p_request) {},
 		nullptr,
 		[](AsyncWebServerRequest* p_request, uint8_t* p_data,
@@ -532,7 +537,8 @@ void CL_W10_WebAPI::routeSchedulesID() {
 		});
 
 	// DELETE
-	s_server->on("/api/schedules/([0-9]+)", HTTP_DELETE,
+	s_server->on(
+		          (String(W10_Const::HTTP_API_SCHEDULES) + "/([0-9]+)").c_str(), HTTP_DELETE,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -555,7 +561,8 @@ void CL_W10_WebAPI::routeSchedulesID() {
 // --------------------------------------------------
 void CL_W10_WebAPI::routeUserProfiles() {
 	// GET: 전체 목록
-	s_server->on("/api/user_profiles", HTTP_GET,
+	s_server->on(
+		         W10_Const::HTTP_API_USER_PROFILES, HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -569,7 +576,8 @@ void CL_W10_WebAPI::routeUserProfiles() {
 				 });
 
 	// POST: 신규 생성
-	s_server->on("/api/user_profiles", HTTP_POST,
+	s_server->on(
+		         W10_Const::HTTP_API_USER_PROFILES, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {},
 				 nullptr,
 				 [](AsyncWebServerRequest* p_request, uint8_t* p_data,
@@ -610,7 +618,7 @@ void CL_W10_WebAPI::routeUserProfiles() {
 void CL_W10_WebAPI::routeUserProfilesID() {
 	// PUT: 수정
 	s_server->on(
-		"/api/user_profiles/([0-9]+)", HTTP_PUT,
+		(String(W10_Const::HTTP_API_USER_PROFILES) + "/([0-9]+)").c_str(), HTTP_PUT,
 		[](AsyncWebServerRequest* p_request) {},
 		nullptr,
 		[](AsyncWebServerRequest* p_request, uint8_t* p_data,
@@ -642,7 +650,8 @@ void CL_W10_WebAPI::routeUserProfilesID() {
 		});
 
 	// DELETE: 삭제
-	s_server->on("/api/user_profiles/([0-9]+)", HTTP_DELETE,
+	s_server->on(
+		         (String(W10_Const::HTTP_API_USER_PROFILES) + "/([0-9]+)").c_str(), HTTP_DELETE,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
