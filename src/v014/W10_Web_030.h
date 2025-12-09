@@ -149,8 +149,8 @@ private:
 	static void routeUserProfilesPatch(); // POST /api/user_profiles/patch (배치 패치)
 
 	// 3. 설정 관리 및 저장/적용 (POST/GET)
-	static void routeConfigSave();    // POST /api/config/save
-	static void routeConfigDirty();   // GET /api/config/dirty
+	//static void routeConfigSave();    // POST /api/config/save
+	static void routeConfigDirtySave();   // GET /api/config/dirty
 	static void routeReload();        // POST /api/reload
 	static void routeConfigInit();    // POST /api/config/init
 
