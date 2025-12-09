@@ -33,7 +33,7 @@ namespace W10_Const {
 
     // constexpr const char* HTTP_API_WIFI           = HTTP_API_BASE "/wifi";
     constexpr const char* HTTP_API_WIFI_SCAN      = HTTP_API_BASE "/wifi/scan";
-    constexpr const char* HTTP_API_WIFI_CONFIG    = HTTP_API_BASE "/network/wifi/config";
+    constexpr const char* HTTP_API_WIFI_CONFIG    = HTTP_API_BASE "/wifi/config";
 
     constexpr const char* HTTP_API_DIAG           = HTTP_API_BASE "/diag";
     constexpr const char* HTTP_API_AUTH_TEST      = HTTP_API_BASE "/auth/test";
