@@ -60,7 +60,7 @@ namespace W10_Const {
     constexpr const char* HTTP_API_WIND_PROFILE   = HTTP_API_BASE "/windProfile";
     constexpr const char* HTTP_API_SCHEDULES      = HTTP_API_BASE "/schedules";
     constexpr const char* HTTP_API_USER_PROFILES  = HTTP_API_BASE "/user_profiles";
-    constexpr const char* HTTP_API_USER_PATCH     = HTTP_API_BASE "/user_profiles/patch";
+    constexpr const char* HTTP_API_USER_PROFILES_PATCH     = HTTP_API_BASE "/user_profiles/patch";
 
     // --------------------------------------------------
     // 5. 하드웨어 직접 제어 (Direct HW Control)
