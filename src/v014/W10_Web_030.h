@@ -142,7 +142,7 @@ private:
 
 	// 2. 설정 조회 및 패치/CRUD (GET/POST/PUT/DELETE)
 	static void routeSystem();        // GET/POST /api/system
-	static void routeWifi();          // GET/POST /api/wifi
+	// static void routeWifi();          // GET/POST /api/wifi
 	static void routeMotion();        // GET/POST /api/motion
 	static void routeUserProfiles();  // GET/POST /api/user_profiles (목록조회/신규생성)
 	static void routeUserProfilesID();// PUT/DELETE /api/user_profiles/{id}
