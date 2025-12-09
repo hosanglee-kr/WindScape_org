@@ -673,7 +673,8 @@ void CL_W10_WebAPI::routeUserProfilesID() {
 // 8-2. /api/user_profiles/patch (배치 패치, 기존 patch 유지)
 // --------------------------------------------------
 void CL_W10_WebAPI::routeUserProfilesPatch() {
-	s_server->on("/api/user_profiles/patch", HTTP_POST,
+	s_server->on(
+		         W10_Const::HTTP_API_USER_PROFILES_PATCH, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {},
 				 nullptr,
 				 [](AsyncWebServerRequest* p_request, uint8_t* p_data,
@@ -713,7 +714,8 @@ void CL_W10_WebAPI::routeUserProfilesPatch() {
 // --------------------------------------------------
 void CL_W10_WebAPI::routeControl() {
 	// profile/select
-	s_server->on("/api/control/profile/select", HTTP_POST,
+	s_server->on(
+		        W10_Const::HTTP_API_CTL_PROF_SEL, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {},
 				 nullptr,
 				 [](AsyncWebServerRequest* p_request, uint8_t* p_data,
@@ -746,7 +748,8 @@ void CL_W10_WebAPI::routeControl() {
 				 });
 
 	// reboot
-	s_server->on("/api/control/reboot", HTTP_POST,
+	s_server->on(
+		         W10_Const::HTTP_API_CTL_REBOOT, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -758,7 +761,8 @@ void CL_W10_WebAPI::routeControl() {
 				 });
 
 	// factoryReset + reboot (ConfigManager 사용)
-	s_server->on("/api/control/factoryReset", HTTP_POST,
+	s_server->on(
+		         W10_Const::HTTP_API_CTL_FACTORY, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -778,7 +782,8 @@ void CL_W10_WebAPI::routeControl() {
 				 });
 
 	// profile/stop
-	s_server->on("/api/control/profile/stop", HTTP_POST,
+	s_server->on(
+		         W10_Const::HTTP_API_CTL_PROF_STOP, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -793,7 +798,8 @@ void CL_W10_WebAPI::routeControl() {
 				 });
 
 	// override/fixed
-	s_server->on("/api/control/override/fixed", HTTP_POST,
+	s_server->on(
+		         W10_Const::HTTP_API_CTL_OVR_FIXED, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -813,7 +819,8 @@ void CL_W10_WebAPI::routeControl() {
 				 });
 
 	// override/preset (JSON Body)
-	s_server->on("/api/control/override/preset", HTTP_POST,
+	s_server->on(
+		         W10_Const::HTTP_API_CTL_OVR_PRESET, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {},
 				 nullptr,
 				 [](AsyncWebServerRequest* p_request, uint8_t* p_data,
@@ -853,7 +860,8 @@ void CL_W10_WebAPI::routeControl() {
 				 });
 
 	// override/clear
-	s_server->on("/api/control/override/clear", HTTP_POST,
+	s_server->on(
+		         W10_Const::HTTP_API_CTL_OVR_CLEAR, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -870,7 +878,8 @@ void CL_W10_WebAPI::routeControl() {
 // 10. /api/simulation
 // --------------------------------------------------
 void CL_W10_WebAPI::routeSimulation() {
-	s_server->on("/api/simulation", HTTP_GET,
+	s_server->on(
+		         W10_Const::HTTP_API_SIMULATION, HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -883,7 +892,8 @@ void CL_W10_WebAPI::routeSimulation() {
 					 sendJson(p_request, v_doc);
 				 });
 
-	s_server->on("/api/simulation", HTTP_POST,
+	s_server->on(
+		         W10_Const::HTTP_API_SIMULATION, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {},
 				 nullptr,
 				 [](AsyncWebServerRequest* p_request, uint8_t* p_data,
@@ -916,7 +926,8 @@ void CL_W10_WebAPI::routeSimulation() {
 // 11. /api/control/summary
 // --------------------------------------------------
 void CL_W10_WebAPI::routeControlSummary() {
-	s_server->on("/api/control/summary", HTTP_GET,
+	s_server->on(
+		         W10_Const::HTTP_API_CONTROL_SUMMARY, HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -935,7 +946,8 @@ void CL_W10_WebAPI::routeControlSummary() {
 // 12. /api/sim/state
 // --------------------------------------------------
 void CL_W10_WebAPI::routeSimState() {
-	s_server->on("/api/sim/state", HTTP_GET,
+	s_server->on(
+		         W10_Const::HTTP_API_SIM_STATE, HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -955,7 +967,8 @@ void CL_W10_WebAPI::routeSimState() {
 // 13. /api/metrics
 // --------------------------------------------------
 void CL_W10_WebAPI::routeMetrics() {
-	s_server->on("/api/metrics", HTTP_GET,
+	s_server->on(
+		         W10_Const::HTTP_API_METRICS, HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -975,7 +988,8 @@ void CL_W10_WebAPI::routeMetrics() {
 // 14. /api/logs
 // --------------------------------------------------
 void CL_W10_WebAPI::routeLogs() {
-	s_server->on("/api/logs", HTTP_GET,
+	s_server->on(
+		         W10_Const::HTTP_API_LOGS, HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -991,7 +1005,8 @@ void CL_W10_WebAPI::routeLogs() {
 // 15. /api/reload
 // --------------------------------------------------
 void CL_W10_WebAPI::routeReload() {
-	s_server->on("/api/reload", HTTP_POST,
+	s_server->on(
+		         W10_Const::HTTP_API_RELOAD, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -1012,7 +1027,8 @@ void CL_W10_WebAPI::routeReload() {
 // 16. /api/diag
 // --------------------------------------------------
 void CL_W10_WebAPI::routeDiag() {
-	s_server->on("/api/diag", HTTP_GET,
+	s_server->on(
+		         W10_Const::HTTP_API_DIAG, HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -1030,7 +1046,8 @@ void CL_W10_WebAPI::routeDiag() {
 // 17. /api/scan
 // --------------------------------------------------
 void CL_W10_WebAPI::routeScan() {
-	s_server->on("/api/scan", HTTP_GET,
+	s_server->on(
+		         W10_Const::HTTP_API_WIFI_SCAN, HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
