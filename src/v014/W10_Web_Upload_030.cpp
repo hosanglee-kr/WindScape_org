@@ -33,8 +33,8 @@
 
 #include "W10_Web_030.h"
 
-#define   G_W10_UPLOAD_FOLDPATH_JSON   "/json/"
-#define   G_W10_UPLOAD_FOLDPATH_WEB   "/html_v2/"
+#define   G_W10_UPLOAD_FOLDPATH_JSON   "/json"
+#define   G_W10_UPLOAD_FOLDPATH_WEB   "/html_v2"
 
 
 // ------------------------------------------------------
@@ -63,11 +63,11 @@ String CL_W10_WebAPI::getUploadPath(const String& p_filename) {
         // v_folderPath = "/html_v2/";
     } else {
         // 지정된 확장자가 아니면 루트 폴더에 저장합니다.
-        v_folderPath = "/";
+        v_folderPath = "";
     }
 
     // 5. 최종 경로를 반환합니다. (예: "/json/config.json", "/html_v2/index.html")
-    return v_folderPath + p_filename;
+    return v_folderPath + "/" + p_filename;
 }
 
 
