@@ -75,7 +75,7 @@ void CL_W10_WebAPI::begin(AsyncWebServer& p_server,
 	routeVersion();
 	routeState();
 	routeSystem();
-	routeWifi();
+	// routeWifi();
 	routeDiag();
 	routeScan();
 	routeAuthTest();
@@ -217,7 +217,7 @@ void CL_W10_WebAPI::routeSystem() {
 					 sendJson(p_request, v_res);
 				 });
 }
-
+/*
 // --------------------------------------------------
 // 4. /api/wifi
 // --------------------------------------------------
@@ -276,6 +276,7 @@ void CL_W10_WebAPI::routeWifi() {
 					 sendJson(p_request, v_res);
 				 });
 }
+*/
 
 // --------------------------------------------------
 // 5. /api/motion
@@ -1191,6 +1192,73 @@ void CL_W10_WebAPI::routeConfigDirty() {
 				 });
 }
 
+
+
+// --------------------------------------------------
+// 통합된 /api/network/wifi/config (GET/POST)
+// --------------------------------------------------
+void CL_W10_WebAPI::routeWifiConfig() {
+    // GET: 현재 설정 조회 (기존 routeWifi의 GET 기능 통합)
+    s_server->on(W10_Const::HTTP_API_WIFI_CONFIG, HTTP_GET,
+                 [](AsyncWebServerRequest* p_request) {
+                     if (!checkApiKey(p_request)) {
+                         p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+                         return;
+                     }
+                     JsonDocument v_doc;
+                     if (g_A10_config_root.wifi) {
+                         CL_C10_ConfigManager::toJson_Wifi(*g_A10_config_root.wifi, v_doc);
+                     }
+                     sendJson(p_request, v_doc);
+                 });
+
+    // POST: 설정 변경 및 시스템 즉시 적용 (기존 routeWifiConfig의 POST)
+    s_server->on(W10_Const::HTTP_API_WIFI_CONFIG, HTTP_POST,
+                 [](AsyncWebServerRequest* p_request) {},
+                 nullptr,
+                 [](AsyncWebServerRequest* p_request, uint8_t* p_data,
+                    size_t p_len, size_t p_index, size_t p_total) {
+                     if (!checkApiKey(p_request)) {
+                         p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
+                         return;
+                     }
+                     if (p_index + p_len != p_total) return;
+
+                     JsonDocument v_doc;
+                     if (!parseJsonBody(p_request, p_data, p_len, v_doc)) {
+                         p_request->send(400, "application/json", "{\"error\":\"json parse\"}");
+                         return;
+                     }
+
+                     bool v_changed = false;
+                     if (g_A10_config_root.wifi) {
+                         v_changed = CL_C10_ConfigManager::patchWifiFromJson(
+                             *g_A10_config_root.wifi, v_doc);
+                     }
+
+                     JsonDocument v_res;
+                     v_res["updated"] = v_changed;
+
+                     if (v_changed) {
+                         // 1. 변경된 설정을 비휘발성 메모리에 마킹(Save)
+                         CL_C10_ConfigManager::saveDirtyConfigs();
+                         // 2. WiFiManager 모듈에 실제 설정 즉시 투입
+                         CL_WF10_WiFiManager::applyConfig(*g_A10_config_root.wifi);
+                         
+                         v_res["status"]      = "applied";
+                         v_res["need_reboot"] = true;
+                         CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WiFi config integrated & applied via config endpoint.");
+                     } else {
+                         v_res["status"]      = "no_change";
+                         v_res["need_reboot"] = false;
+                     }
+
+                     sendJson(p_request, v_res);
+                 });
+}
+
+
+/*
 // --------------------------------------------------
 // 22. /api/network/wifi/config (WiFi 설정 저장 + WiFiManager 적용)
 // --------------------------------------------------
@@ -1239,7 +1307,7 @@ void CL_W10_WebAPI::routeWifiConfig() {
 					 sendJson(p_request, v_res);
 				 });
 }
-
+*/
 // --------------------------------------------------
 // 23. /api/system/time/set (시간 설정 저장 + TimeManager 적용)
 // --------------------------------------------------
