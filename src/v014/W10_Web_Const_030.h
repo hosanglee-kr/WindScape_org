@@ -30,11 +30,14 @@ namespace W10_Const {
     constexpr const char* HTTP_API_VERSION        = HTTP_API_BASE "/version";
     constexpr const char* HTTP_API_STATE          = HTTP_API_BASE "/state";
     constexpr const char* HTTP_API_SYSTEM         = HTTP_API_BASE "/system";
+
     constexpr const char* HTTP_API_WIFI           = HTTP_API_BASE "/wifi";
-    constexpr const char* HTTP_API_DIAG           = HTTP_API_BASE "/diag";
-    constexpr const char* HTTP_API_SCAN           = HTTP_API_BASE "/scan";
-    constexpr const char* HTTP_API_AUTH_TEST      = HTTP_API_BASE "/auth/test";
+    constexpr const char* HTTP_API_WIFI_SCAN      = HTTP_API_BASE "/wifi/scan";
     constexpr const char* HTTP_API_WIFI_CONFIG    = HTTP_API_BASE "/network/wifi/config";
+
+    constexpr const char* HTTP_API_DIAG           = HTTP_API_BASE "/diag";
+    constexpr const char* HTTP_API_AUTH_TEST      = HTTP_API_BASE "/auth/test";
+    
     constexpr const char* HTTP_API_TIME_SET       = HTTP_API_BASE "/system/time/set";
     constexpr const char* HTTP_API_FW_CHECK       = HTTP_API_BASE "/system/firmware/check";
 
