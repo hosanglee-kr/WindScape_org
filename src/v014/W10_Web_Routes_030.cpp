@@ -130,7 +130,7 @@ void CL_W10_WebAPI::begin(AsyncWebServer& p_server,
 // 1. /api/version
 // --------------------------------------------------
 void CL_W10_WebAPI::routeVersion() {
-	s_server->on("/api/version", HTTP_GET,
+	s_server->on(W10_Const::HTTP_API_VERSION, HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -152,7 +152,7 @@ void CL_W10_WebAPI::routeVersion() {
 // 2. /api/state
 // --------------------------------------------------
 void CL_W10_WebAPI::routeState() {
-	s_server->on("/api/state", HTTP_GET,
+	s_server->on(W10_Const::HTTP_API_STATE , HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -173,7 +173,7 @@ void CL_W10_WebAPI::routeState() {
 // --------------------------------------------------
 void CL_W10_WebAPI::routeSystem() {
 	// GET
-	s_server->on("/api/system", HTTP_GET,
+	s_server->on(W10_Const::HTTP_API_SYSTEM, HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -187,7 +187,7 @@ void CL_W10_WebAPI::routeSystem() {
 				 });
 
 	// POST (패치)
-	s_server->on("/api/system", HTTP_POST,
+	s_server->on(W10_Const::HTTP_API_SYSTEM, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {},
 				 nullptr,
 				 [](AsyncWebServerRequest* p_request, uint8_t* p_data,
@@ -223,7 +223,7 @@ void CL_W10_WebAPI::routeSystem() {
 // --------------------------------------------------
 void CL_W10_WebAPI::routeWifi() {
 	// GET
-	s_server->on("/api/wifi", HTTP_GET,
+	s_server->on(W10_Const::HTTP_API_WIFI, HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -237,7 +237,7 @@ void CL_W10_WebAPI::routeWifi() {
 				 });
 
 	// POST (패치)
-	s_server->on("/api/wifi", HTTP_POST,
+	s_server->on(W10_Const::HTTP_API_WIFI, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {},
 				 nullptr,
 				 [](AsyncWebServerRequest* p_request, uint8_t* p_data,
@@ -282,7 +282,7 @@ void CL_W10_WebAPI::routeWifi() {
 // --------------------------------------------------
 void CL_W10_WebAPI::routeMotion() {
 	// GET
-	s_server->on("/api/motion", HTTP_GET,
+	s_server->on(W10_Const::HTTP_API_MOTION , HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -296,7 +296,7 @@ void CL_W10_WebAPI::routeMotion() {
 				 });
 
 	// POST
-	s_server->on("/api/motion", HTTP_POST,
+	s_server->on(W10_Const::HTTP_API_MOTION , HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {},
 				 nullptr,
 				 [](AsyncWebServerRequest* p_request, uint8_t* p_data,
@@ -332,7 +332,7 @@ void CL_W10_WebAPI::routeMotion() {
 // --------------------------------------------------
 void CL_W10_WebAPI::routeWindProfile() {
 	// GET: 전체 목록 조회
-	s_server->on("/api/windProfile", HTTP_GET,
+	s_server->on(W10_Const::HTTP_API_WIND_PROFILE, HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -352,7 +352,7 @@ void CL_W10_WebAPI::routeWindProfile() {
 				 });
 
 	// POST: 신규 생성
-	s_server->on("/api/windProfile", HTTP_POST,
+	s_server->on(W10_Const::HTTP_API_WIND_PROFILE, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {},
 				 nullptr,
 				 [](AsyncWebServerRequest* p_request, uint8_t* p_data,
@@ -392,7 +392,8 @@ void CL_W10_WebAPI::routeWindProfile() {
 void CL_W10_WebAPI::routeWindProfileID() {
 	// PUT: 수정
 	s_server->on(
-		"/api/windProfile/([0-9]+)", HTTP_PUT,
+		W10_Const::HTTP_API_WIND_PROFILE "/([0-9]+)", HTTP_PUT,
+		// "/api/windProfile/([0-9]+)", HTTP_PUT,
 		[](AsyncWebServerRequest* p_request) {},
 		nullptr,
 		[](AsyncWebServerRequest* p_request, uint8_t* p_data,
