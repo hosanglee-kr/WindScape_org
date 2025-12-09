@@ -1064,7 +1064,8 @@ void CL_W10_WebAPI::routeScan() {
 // 18. /api/config/init  (factoryResetFromDefault 통일)
 // --------------------------------------------------
 void CL_W10_WebAPI::routeConfigInit() {
-	s_server->on("/api/config/init", HTTP_POST,
+	s_server->on(
+		        W10_Const::HTTP_API_CONFIG_INIT, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -1090,7 +1091,8 @@ void CL_W10_WebAPI::routeConfigInit() {
 // --------------------------------------------------
 void CL_W10_WebAPI::routeMotionFeed() {
 	// PIR
-	s_server->on("/api/motion/pir/feed", HTTP_POST,
+	s_server->on(
+		         W10_Const::HTTP_API_FEED_PIR, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {},
 				 nullptr,
 				 [](AsyncWebServerRequest* p_request, uint8_t* p_data,
@@ -1120,7 +1122,8 @@ void CL_W10_WebAPI::routeMotionFeed() {
 				 });
 
 	// BLE
-	s_server->on("/api/motion/ble/feed", HTTP_POST,
+	s_server->on(
+		         W10_Const::HTTP_API_FEED_BLE, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {},
 				 nullptr,
 				 [](AsyncWebServerRequest* p_request, uint8_t* p_data,
@@ -1154,7 +1157,8 @@ void CL_W10_WebAPI::routeMotionFeed() {
 // 20. /api/auth/test
 // --------------------------------------------------
 void CL_W10_WebAPI::routeAuthTest() {
-	s_server->on("/api/auth/test", HTTP_GET,
+	s_server->on(
+		          W10_Const::HTTP_API_AUTH_TEST, HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"result\":\"unauthorized\"}");
