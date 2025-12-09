@@ -91,8 +91,8 @@ void CL_W10_WebAPI::begin(AsyncWebServer& p_server,
 	routeControlSummary();
 
 	// 3. 설정 관리
-	routeConfigSave();
-	routeConfigDirty();
+	// routeConfigSave();
+	routeConfigDirtySave();
 	routeConfigInit();
 	routeReload();
 
@@ -1171,8 +1171,13 @@ void CL_W10_WebAPI::routeAuthTest() {
 // --------------------------------------------------
 // 21. /api/config/save & /api/config/dirty
 // --------------------------------------------------
-void CL_W10_WebAPI::routeConfigSave() {
-	s_server->on("/api/config/save", HTTP_POST,
+//void CL_W10_WebAPI::routeConfigSave() {
+	
+//}
+
+void CL_W10_WebAPI::routeConfigDirtySave() {
+	s_server->on(
+		         W10_Const::HTTP_API_CONFIG_SAVE, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -1181,10 +1186,9 @@ void CL_W10_WebAPI::routeConfigSave() {
 					 CL_C10_ConfigManager::saveDirtyConfigs();
 					 p_request->send(200, "application/json", "{\"result\":\"saved\",\"status\":\"clean\"}");
 				 });
-}
-
-void CL_W10_WebAPI::routeConfigDirty() {
-	s_server->on("/api/config/dirty", HTTP_GET,
+	
+	s_server->on(
+		         W10_Const::HTTP_API_CONFIG_DIRTY, HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -1203,7 +1207,8 @@ void CL_W10_WebAPI::routeConfigDirty() {
 // --------------------------------------------------
 void CL_W10_WebAPI::routeWifiConfig() {
     // GET: 현재 설정 조회 (기존 routeWifi의 GET 기능 통합)
-    s_server->on(W10_Const::HTTP_API_WIFI_CONFIG, HTTP_GET,
+    s_server->on(
+		         W10_Const::HTTP_API_WIFI_CONFIG, HTTP_GET,
                  [](AsyncWebServerRequest* p_request) {
                      if (!checkApiKey(p_request)) {
                          p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -1217,7 +1222,8 @@ void CL_W10_WebAPI::routeWifiConfig() {
                  });
 
     // POST: 설정 변경 및 시스템 즉시 적용 (기존 routeWifiConfig의 POST)
-    s_server->on(W10_Const::HTTP_API_WIFI_CONFIG, HTTP_POST,
+    s_server->on(
+		         W10_Const::HTTP_API_WIFI_CONFIG, HTTP_POST,
                  [](AsyncWebServerRequest* p_request) {},
                  nullptr,
                  [](AsyncWebServerRequest* p_request, uint8_t* p_data,
@@ -1316,7 +1322,8 @@ void CL_W10_WebAPI::routeWifiConfig() {
 // 23. /api/system/time/set (시간 설정 저장 + TimeManager 적용)
 // --------------------------------------------------
 void CL_W10_WebAPI::routeTimeSet() {
-	s_server->on("/api/system/time/set", HTTP_POST,
+	s_server->on(
+		         W10_Const::HTTP_API_TIME_SET, HTTP_POST,
 				 [](AsyncWebServerRequest* p_request) {},
 				 nullptr,
 				 [](AsyncWebServerRequest* p_request, uint8_t* p_data,
@@ -1363,7 +1370,8 @@ void CL_W10_WebAPI::routeTimeSet() {
 // 24. /api/system/firmware/check
 // --------------------------------------------------
 void CL_W10_WebAPI::routeFirmwareCheck() {
-	s_server->on("/api/system/firmware/check", HTTP_GET,
+	s_server->on(
+		         W10_Const::HTTP_API_FW_CHECK, HTTP_GET,
 				 [](AsyncWebServerRequest* p_request) {
 					 if (!checkApiKey(p_request)) {
 						 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
