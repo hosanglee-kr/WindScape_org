@@ -398,7 +398,8 @@ void CL_W10_WebAPI::routeStaticAssets() {
 
 	// 4) 정적 폴더 매핑
 	// - "/html_v2/..." 경로는 모두 LittleFS의 "/html_v2" 폴더에서 정적 서빙
-	s_server->serveStatic("/html_v2", LittleFS, "/html_v2");
+	s_server->serveStatic(W10_Const::PATH_STATIC_HTML, LittleFS, W10_Const::PATH_STATIC_HTML);
+	// s_server->serveStatic("/html_v2", LittleFS, "/html_v2");
 
 	// 5) 메뉴 API
 	

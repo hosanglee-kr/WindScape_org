@@ -33,8 +33,8 @@
 
 #include "W10_Web_030.h"
 
-#define   G_W10_UPLOAD_FOLDPATH_JSON   "/json"
-#define   G_W10_UPLOAD_FOLDPATH_WEB   "/html_v2"
+// #define   G_W10_UPLOAD_FOLDPATH_JSON   "/json"
+// #define   G_W10_UPLOAD_FOLDPATH_WEB   "/html_v2"
 
 
 // ------------------------------------------------------
@@ -55,11 +55,14 @@ String CL_W10_WebAPI::getUploadPath(const String& p_filename) {
     
     // 4. 확장자에 따라 저장 폴더를 결정합니다.
     String v_folderPath;
+
     if (v_extension == "json") {
-        v_folderPath = G_W10_UPLOAD_FOLDPATH_JSON;
-        //v_folderPath = "/json/";
+		v_folderPath 	= W10_Const::PATH_STATIC_JSON;
+        // v_folderPath = G_W10_UPLOAD_FOLDPATH_JSON;
+        // v_folderPath = "/json/";
     } else if (v_extension == "html" || v_extension == "js" || v_extension == "css") {
-        v_folderPath = G_W10_UPLOAD_FOLDPATH_WEB;
+		v_folderPath 	= W10_Const::PATH_STATIC_HTML;
+        //v_folderPath 	= G_W10_UPLOAD_FOLDPATH_WEB;
         // v_folderPath = "/html_v2/";
     } else {
         // 지정된 확장자가 아니면 루트 폴더에 저장합니다.
