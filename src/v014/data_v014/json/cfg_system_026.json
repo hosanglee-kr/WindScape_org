@@ -20,9 +20,9 @@
 			"res": 10
 		},
 		 "fanConfig": {
-            "StartPercentMin": 18,
-            "ComfortPercentMin": 22,
-            "ComfortPercentMax": 65,
+            "startPercentMin": 18,
+            "comfortPercentMin": 22,
+            "comfortPercentMax": 65,
             "hardPercentMax": 90
         },
 		"pir": {
