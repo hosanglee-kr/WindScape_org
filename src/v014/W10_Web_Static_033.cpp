@@ -77,17 +77,17 @@ char* CL_W10_WebAPI::W10_allocCString(const char* p_src) {
 }
 
 const char* CL_W10_WebAPI::W10_guessMime(const char* p_path) {
-	if (!p_path)
-		return "application/octet-stream";
+    if (!p_path)
+        return "application/octet-stream";
 
-	if (strstr(p_path, ".html"))
-		return "text/html";
-	if (strstr(p_path, ".css"))
-		return "text/css";
-	if (strstr(p_path, ".js"))
-		return "application/javascript";
+    if (strstr(p_path, ".html"))
+        return "text/html; charset=utf-8";
+    if (strstr(p_path, ".css"))
+        return "text/css; charset=utf-8";
+    if (strstr(p_path, ".js"))
+        return "application/javascript; charset=utf-8";
 
-	return "application/octet-stream";
+    return "application/octet-stream";
 }
 
 // JSON 로딩 (로컬 JsonDocument 사용)
