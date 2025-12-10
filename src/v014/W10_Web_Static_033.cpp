@@ -206,17 +206,7 @@ void CL_W10_WebAPI::W10_getMenuJson(AsyncWebServerRequest* r) {
 		v_item["enable"] = v_entry.enable; // enable 필드
 	}
 
-	String v_json_output;
-	if (serializeJson(v_doc_out, v_json_output) > 0) {
-		auto* v_resp = r->beginResponse(200, "application/json", v_json_output);
-		CL_W10_WebAPI::_applyHeaders(v_resp, true);
-		r->send(v_resp);
-	} else {
-		CL_D10_Logger::log(EN_L10_LOG_ERROR,
-						   "[W10] Menu API serialization failed.");
-		r->send(500, "application/json",
-				"{\"error\":\"Serialization Failed\"}");
-	}
+	sendJson(r, v_doc_out);
 }
 
 // ------------------------------------------------------
