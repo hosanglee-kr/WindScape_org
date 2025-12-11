@@ -62,6 +62,94 @@ SemaphoreHandle_t CL_C10_ConfigManager::s_configMutex = xSemaphoreCreateMutex();
 // ------------------------------------------------------
 // JSON IO Helper 구현
 // ------------------------------------------------------
+
+bool ioLoadJson(const char* p_path, const char* p_bak, JsonDocument& p_doc) {
+    if (!p_path || !p_path[0]) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                           "[C10] ioLoadJson: invalid path (null/empty)");
+        return false;
+    }
+
+    // p_bak == nullptr 이면 자동으로 ".bak" 경로 생성
+    const char* v_bakPath = p_bak;
+    String      v_bakStr;
+    if (!v_bakPath) {
+        v_bakStr  = String(p_path) + ".bak";
+        v_bakPath = v_bakStr.c_str();
+    }
+
+    if (!LittleFS.exists(p_path)) {
+        if (v_bakPath && LittleFS.exists(v_bakPath)) {
+            LittleFS.rename(v_bakPath, p_path);
+            CL_D10_Logger::log(EN_L10_LOG_WARN,
+                               "[C10] Restored from backup: %s -> %s",
+                               v_bakPath, p_path);
+        } else {
+            CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                               "[C10] Missing config & no backup: %s",
+                               p_path);
+            return false;
+        }
+    }
+
+    File v_f = LittleFS.open(p_path, "r");
+    if (!v_f) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                           "[C10] Open failed: %s", p_path);
+        return false;
+    }
+
+    auto v_e = deserializeJson(p_doc, v_f);
+    v_f.close();
+    if (v_e) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                           "[C10] Parse error(%s): %s",
+                           p_path, v_e.c_str());
+        return false;
+    }
+    return true;
+}
+bool ioSaveJson(const char* p_path, const char* p_bak, const JsonDocument& p_doc) {
+    if (!p_path || !p_path[0]) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                           "[C10] ioSaveJson: invalid path (null/empty)");
+        return false;
+    }
+
+    // p_bak == nullptr 이면 자동으로 ".bak" 경로 생성
+    const char* v_bakPath = p_bak;
+    String      v_bakStr;
+    if (!v_bakPath) {
+        v_bakStr  = String(p_path) + ".bak";
+        v_bakPath = v_bakStr.c_str();
+    }
+
+    if (LittleFS.exists(p_path)) {
+        if (v_bakPath) {
+            if (LittleFS.exists(v_bakPath)) {
+                LittleFS.remove(v_bakPath);
+            }
+            LittleFS.rename(p_path, v_bakPath);
+        }
+    }
+
+    File v_f = LittleFS.open(p_path, "w");
+    if (!v_f) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                           "[C10] Save open failed: %s", p_path);
+        return false;
+    }
+    if (serializeJsonPretty(p_doc, v_f) == 0) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                           "[C10] Save write failed: %s", p_path);
+        v_f.close();
+        return false;
+    }
+    v_f.close();
+    return true;
+}
+
+/*
 bool ioLoadJson(const char* p_path, const char* p_bak, JsonDocument& p_doc) {
     if (!LittleFS.exists(p_path)) {
         if (p_bak && LittleFS.exists(p_bak)) {
@@ -120,6 +208,7 @@ bool ioSaveJson(const char* p_path, const char* p_bak, const JsonDocument& p_doc
     v_f.close();
     return true;
 }
+*/
 
 // ------------------------------------------------------
 // Mutex Helper 구현
