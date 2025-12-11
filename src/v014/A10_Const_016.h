@@ -51,6 +51,8 @@ namespace A10_Const {
 // 펌웨어/파일버전
 constexpr char FW_VERSION[] = "SC10_FW_1.0.0";
 
+constexpr char CFG_JSON_FILE[] = "10_cfg_jsonFile.json";
+
 // JSON config files (최신 합의안)
 #define G_A10_CFG_JSON_FILE_VER "025"
 
