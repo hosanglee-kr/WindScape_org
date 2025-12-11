@@ -1,7 +1,7 @@
 {
 	"meta": {
 		"version": "SC10_FW_1.0.0",
-    "jsonFile": "cfg_system_025.json",
+        "jsonFile": "cfg_system_025.json",
 		"device_name": "WindScape_2540_v001",
 		"last_update": "2025-10-24T13:00:00+09:00"
 	},
