@@ -172,6 +172,14 @@ static const char* g_A10_PRESET_MODE_NAMES_Arr[] = {
 // ======================================================
 
 typedef struct {
+    char aaa;
+    char ccc;
+    char ddd;
+    char fff:
+} ST_A10_cfg_jsonFile_t;
+
+
+typedef struct {
     uint8_t startPercentMin;    // 시동이 확실히 거는 최소 구간 (예: 18)
     uint8_t comfortPercentMin;  // “편안한 바람” 구간 시작 (예: 22), “체감 바람” 시작점 (예: 22%)
     uint8_t comfortPercentMax;  // “편안한 바람” 구간 끝   (예: 65)  소음/체감 균형 좋은 상한 (예: 65%)
