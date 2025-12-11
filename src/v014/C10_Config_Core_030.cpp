@@ -57,6 +57,9 @@ bool CL_C10_ConfigManager::_dirty_schedules    = false;
 bool CL_C10_ConfigManager::_dirty_userProfiles = false;
 bool CL_C10_ConfigManager::_dirty_windProfile  = false;
 
+// cfg_jsonFile.json 매핑 초기값 (비어있는 상태)
+ST_A10_cfg_jsonFile_t CL_C10_ConfigManager::s_cfgJsonFileMap{};
+
 SemaphoreHandle_t CL_C10_ConfigManager::s_configMutex = xSemaphoreCreateMutex();
 
 // ------------------------------------------------------
@@ -149,6 +152,54 @@ bool ioSaveJson(const char* p_path, const char* p_bak, const JsonDocument& p_doc
     return true;
 }
 
+bool CL_C10_ConfigManager::_loadCfgJsonFile() {
+    JsonDocument v_doc;
+
+    // A10_Const::CFG_JSON_FILE = "10_cfg_jsonFile.json"
+    if (!ioLoadJson(A10_Const::CFG_JSON_FILE, nullptr, v_doc)) {
+        CL_D10_Logger::log(
+            EN_L10_LOG_ERROR,
+            "[C10] Failed to load cfg json map: %s",
+            A10_Const::CFG_JSON_FILE);
+        return false;   // 옵션 A: 로드 실패시 에러로 종료
+    }
+
+    JsonObjectConst v_root = v_doc["configJsonFile"].as<JsonObjectConst>();
+    if (v_root.isNull()) {
+        CL_D10_Logger::log(
+            EN_L10_LOG_ERROR,
+            "[C10] Invalid cfg json map: missing 'configJsonFile'");
+        return false;
+    }
+
+    auto loadStr = [&](std::string& p_dst, const char* p_key) {
+        if (v_root[p_key].is<const char*>()) {
+            const char* v_val = v_root[p_key].as<const char*>();
+            p_dst.assign(v_val ? v_val : "");
+        }
+    };
+
+    loadStr(s_cfgJsonFileMap.system,         "system");
+    loadStr(s_cfgJsonFileMap.wifi,           "wifi");
+    loadStr(s_cfgJsonFileMap.motion,         "motion");
+    loadStr(s_cfgJsonFileMap.nvsSpec,        "nvsSpec");
+    loadStr(s_cfgJsonFileMap.schedules,      "schedules");
+    loadStr(s_cfgJsonFileMap.uzOpProfile,    "uzOpProfile");
+    loadStr(s_cfgJsonFileMap.dft_windProfile,"dft_windProfile");
+    loadStr(s_cfgJsonFileMap.webPages,       "webPages");
+
+    CL_D10_Logger::log(
+        EN_L10_LOG_INFO,
+        "[C10] cfg_jsonFile loaded: sys=%s wifi=%s sch=%s up=%s wind=%s",
+        s_cfgJsonFileMap.system.c_str(),
+        s_cfgJsonFileMap.wifi.c_str(),
+        s_cfgJsonFileMap.schedules.c_str(),
+        s_cfgJsonFileMap.uzOpProfile.c_str(),
+        s_cfgJsonFileMap.dft_windProfile.c_str());
+
+    return true;
+}
+
 /*
 bool ioLoadJson(const char* p_path, const char* p_bak, JsonDocument& p_doc) {
     if (!LittleFS.exists(p_path)) {
@@ -232,6 +283,60 @@ void CL_C10_ConfigManager::_mutex_Release() {
 bool CL_C10_ConfigManager::loadAll(ST_A10_ConfigRoot_t& p_root) {
     bool v_ok = true;
 
+    // 0) cfg_jsonFile.json 먼저 로드 (옵션 A)
+    if (!_loadCfgJsonFile()) {
+        CL_D10_Logger::log(
+            EN_L10_LOG_ERROR,
+            "[C10] loadAll: cfg_jsonFile load failed.");
+        return false;  // 바로 실패 리턴
+    }
+
+    // 1) 섹션 객체 확보
+    if (!p_root.system)
+        p_root.system = new ST_A10_SystemConfig();
+    if (!p_root.windDict)
+        p_root.windDict = new ST_A10_WindProfileDict_t();
+    if (!p_root.schedules)
+        p_root.schedules = new ST_A10_SchedulesRoot_t();
+    if (!p_root.userProfiles)
+        p_root.userProfiles = new ST_A10_UserProfilesRoot_t();
+    if (!p_root.wifi)
+        p_root.wifi = new ST_A10_WifiConfig();
+    if (!p_root.motion)
+        p_root.motion = new ST_A10_MotionConfig();
+
+    // 2) 기본값 초기화
+    A10_resetSystemDefault(*p_root.system);
+    A10_resetWindProfileDictDefault(*p_root.windDict);
+    A10_resetSchedulesDefault(*p_root.schedules);
+    A10_resetUserProfilesDefault(*p_root.userProfiles);
+    A10_resetWifiDefault(*p_root.wifi);
+    A10_resetMotionDefault(*p_root.motion);
+
+    // 3) 실제 파일 로드 (섹션별 loadXxx 안에서 s_cfgJsonFileMap 사용 예정)
+    if (!loadSystemConfig(*p_root.system))
+        v_ok = false;
+    if (!loadWindProfileDict(*p_root.windDict))
+        v_ok = false;
+    if (!loadWifiConfig(*p_root.wifi))
+        v_ok = false;
+    if (!loadMotionConfig(*p_root.motion))
+        v_ok = false;
+    if (!loadSchedules(*p_root.schedules))
+        v_ok = false;
+    if (!loadUserProfiles(*p_root.userProfiles))
+        v_ok = false;
+
+    CL_D10_Logger::log(
+        EN_L10_LOG_INFO,
+        "[C10] Config loaded (all sections, result=%d)",
+        v_ok);
+    return v_ok;
+}
+/*
+bool CL_C10_ConfigManager::loadAll(ST_A10_ConfigRoot_t& p_root) {
+    bool v_ok = true;
+
     // 섹션 객체 확보
     if (!p_root.system)
         p_root.system = new ST_A10_SystemConfig();
@@ -274,6 +379,7 @@ bool CL_C10_ConfigManager::loadAll(ST_A10_ConfigRoot_t& p_root) {
         v_ok);
     return v_ok;
 }
+*/
 
 void CL_C10_ConfigManager::freeLazySection(const char* p_section, ST_A10_ConfigRoot_t& p_root) {
     if (strcmp(p_section, "wifi") == 0 && p_root.wifi) {
