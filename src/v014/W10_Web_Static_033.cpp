@@ -77,17 +77,17 @@ char* CL_W10_WebAPI::W10_allocCString(const char* p_src) {
 }
 
 const char* CL_W10_WebAPI::W10_guessMime(const char* p_path) {
-	if (!p_path)
-		return "application/octet-stream";
+    if (!p_path)
+        return "application/octet-stream";
 
-	if (strstr(p_path, ".html"))
-		return "text/html";
-	if (strstr(p_path, ".css"))
-		return "text/css";
-	if (strstr(p_path, ".js"))
-		return "application/javascript";
+    if (strstr(p_path, ".html"))
+        return "text/html; charset=utf-8";
+    if (strstr(p_path, ".css"))
+        return "text/css; charset=utf-8";
+    if (strstr(p_path, ".js"))
+        return "application/javascript; charset=utf-8";
 
-	return "application/octet-stream";
+    return "application/octet-stream";
 }
 
 // JSON 로딩 (로컬 JsonDocument 사용)
@@ -206,17 +206,7 @@ void CL_W10_WebAPI::W10_getMenuJson(AsyncWebServerRequest* r) {
 		v_item["enable"] = v_entry.enable; // enable 필드
 	}
 
-	String v_json_output;
-	if (serializeJson(v_doc_out, v_json_output) > 0) {
-		auto* v_resp = r->beginResponse(200, "application/json", v_json_output);
-		CL_W10_WebAPI::_applyHeaders(v_resp, true);
-		r->send(v_resp);
-	} else {
-		CL_D10_Logger::log(EN_L10_LOG_ERROR,
-						   "[W10] Menu API serialization failed.");
-		r->send(500, "application/json",
-				"{\"error\":\"Serialization Failed\"}");
-	}
+	sendJson(r, v_doc_out);
 }
 
 // ------------------------------------------------------

@@ -182,13 +182,6 @@ typedef struct {
 
 	struct {
         char webPagesJson[A10_Const::LEN_PATH];
-        /*
-		struct {
-			char html[A10_Const::LEN_PATH];
-			char css[A10_Const::LEN_PATH];
-			char js[A10_Const::LEN_PATH];
-		} web;
-		*/
 		struct {
 			char	 level[A10_Const::LEN_LEVEL];
 			uint16_t max_entries;
@@ -202,6 +195,14 @@ typedef struct {
 			uint32_t freq;
 			uint8_t	 res;
 		} fan_pwm;
+        //  팬 특성 모델
+        struct {
+            uint8_t startPercentMin;     // 이 값 미만은 모터가 돌지 않음 (실제 시동 한계)
+            uint8_t comfortPercentMin;   // “체감 바람” 시작점 (예: 22%)
+            uint8_t comfortPercentMax;   // 소음/체감 균형 좋은 상한 (예: 65%)
+            uint8_t hardPercentMax;      // 안전상 절대 넘지 않는 상한 (예: 90%)
+       } fanConfig;
+
 		struct {
 			bool	 enabled;
 			int16_t	 pin;
@@ -606,13 +607,6 @@ inline void A10_resetSystemDefault(ST_A10_SystemConfig& p_cfg) {
 
     A10_safe_strlcpy(p_cfg.system.webPagesJson, "", sizeof(p_cfg.system.webPagesJson));
 
-    
-	/*
-    A10_safe_strlcpy(p_cfg.system.web.html, "/html/main.html", sizeof(p_cfg.system.web.html));
-	A10_safe_strlcpy(p_cfg.system.web.css, "/html/main.css", sizeof(p_cfg.system.web.css));
-	A10_safe_strlcpy(p_cfg.system.web.js, "/html/main.js", sizeof(p_cfg.system.web.js));
-	*/
-
 	A10_safe_strlcpy(p_cfg.system.logging.level, "INFO", sizeof(p_cfg.system.logging.level));
 	p_cfg.system.logging.max_entries = 300;
 
@@ -621,6 +615,12 @@ inline void A10_resetSystemDefault(ST_A10_SystemConfig& p_cfg) {
 	p_cfg.hw.fan_pwm.channel = 0;
 	p_cfg.hw.fan_pwm.freq	 = 25000;
 	p_cfg.hw.fan_pwm.res	 = 10;
+
+	   // ★ HW: fanConfig 기본값
+    p_cfg.hw.fanConfig.startPercentMin   = 10;  // 모터 시동 하한
+    p_cfg.hw.fanConfig.comfortPercentMin = 20;  // 체감 바람 시작
+    p_cfg.hw.fanConfig.comfortPercentMax = 80;  // 체감/소음 밸런스 상한
+    p_cfg.hw.fanConfig.hardPercentMax    = 95;  // 안전상 절대 상한
 
 	// HW: PIR
 	p_cfg.hw.pir.enabled	  = true;

@@ -147,6 +147,42 @@ class CL_P10_PWM {
 		return _state.initialized;
 	}
 
+    // 논리 duty% → 팬 H/W특성 반영된 실제 PWM % 변환
+    float applyFanConfigCurve(const ST_A10_SystemConfig& p_sys,
+                                     float p_reqPercent) {
+        float v_req = A10_clampf(p_reqPercent, 0.0f, 100.0f);
+        const auto& v_fc = p_sys.hw.fanConfig;
+
+        // 완전 OFF
+        if (v_req <= 0.1f) {
+            return 0.0f;
+        }
+
+        // 시동 최소 구간 미만이면 0으로 보냄 (모터 떨림 방지)
+        if (v_req < (float)v_fc.startPercentMin) {
+            return 0.0f;
+        }
+
+        // 절대 상한
+        if (v_req > (float)v_fc.hardPercentMax) {
+            v_req = (float)v_fc.hardPercentMax;
+        }
+
+        // comfort 구간으로 리맵핑 (선택사항)
+        float v_span = (float)v_fc.comfortPercentMax - (float)v_fc.comfortPercentMin;
+        if (v_span < 1.0f) {
+            // 설정 이상 시: 그냥 클램프된 v_req 그대로 사용
+            return v_req;
+        }
+
+        float v_norm = v_req / 100.0f; // 0~1
+        float v_out  = (float)v_fc.comfortPercentMin + v_norm * v_span;
+
+        // hardMax 한 번 더 방어
+        v_out = A10_clampf(v_out, 0.0f, (float)v_fc.hardPercentMax);
+        return v_out;
+    }
+
 	// ==================================================
 	// 듀티 설정 (0.0 ~ 100.0)
 	// ==================================================

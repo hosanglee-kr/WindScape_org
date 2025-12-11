@@ -19,6 +19,12 @@
 			"freq": 25000,
 			"res": 10
 		},
+		 "fanConfig": {
+            "startPercentMin": 18,
+            "comfortPercentMin": 22,
+            "comfortPercentMax": 65,
+            "hardPercentMax": 90
+        },
 		"pir": {
 			"enabled": true,
 			"pin": 13,

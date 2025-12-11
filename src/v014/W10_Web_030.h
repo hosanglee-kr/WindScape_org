@@ -200,19 +200,31 @@ public:
 		p_response->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
 	}
 
-	static inline void sendJson(AsyncWebServerRequest* p_request, JsonDocument& p_doc, int p_code = 200) {
-		String v_out;
-		serializeJson(p_doc, v_out);
-		auto* v_resp = p_request->beginResponse(p_code, "application/json", v_out);
-		_applyHeaders(v_resp, true);
-		p_request->send(v_resp);
-	}
+	static inline void sendJson(AsyncWebServerRequest* p_request, JsonDocument& p_doc, int p_code = 200) {  
+    String v_out;  
+    serializeJson(p_doc, v_out);  
 
-	static inline void sendText(AsyncWebServerRequest* p_request, const String& p_msg, int p_code = 200) {
-		auto* v_resp = p_request->beginResponse(p_code, "application/json", p_msg);
-		_applyHeaders(v_resp, true);
-		p_request->send(v_resp);
-	}
+    // ✅ UTF-8 강제
+    auto* v_resp = p_request->beginResponse(
+        p_code,
+        "application/json; charset=utf-8",
+        v_out
+    );  
+
+    _applyHeaders(v_resp, true);  
+    p_request->send(v_resp);  
+}
+
+// W10_Web_030.h 안에서 기존 sendText 교체
+static inline void sendText(AsyncWebServerRequest* p_request,
+                            const String& p_msg,
+                            int p_code = 200,
+                            const char* p_mime = "text/plain; charset=utf-8") {
+    auto* v_resp = p_request->beginResponse(p_code, p_mime, p_msg);  
+    _applyHeaders(v_resp, true);  
+    p_request->send(v_resp);  
+}
+
 
 	// API Key 검사
 	static inline bool checkApiKey(AsyncWebServerRequest* p_request) {
