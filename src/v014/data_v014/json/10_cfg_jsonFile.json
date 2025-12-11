@@ -1,7 +1,15 @@
 {
 	"configJsonFile": {
-        "webPagesJson": "/json/cfg_pages_032.json",
+		"systemJson"          : "/json/cfg_system_026.json",
+		"wifiJson"            : "/json/cfg_wifi_025.json",
+		"motionJson"          : "/json/cfg_motion_025.json",
+		"nvsSpecJson"         : "/json/cfg_nvsSpec_025.json",
+		"schedulesJson"       : "/json/cfg_schedules_026.json",
+		"uzOpProfileJson"     : "/json/cfg_uzOpProfile_026.json",
+		"dft_windProfile_Json": "/json/cfg_dft_windProfile_025.json",
 
+
+        "webPagesJson": "/json/cfg_pages_032.json"
   }
 }
     
