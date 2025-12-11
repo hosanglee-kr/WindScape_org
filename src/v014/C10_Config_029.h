@@ -101,6 +101,12 @@ public:
     // =====================================================
     // 1. 전체 관리 (Load/Free/Save)
     // =====================================================
+
+    // cfg_jsonFile.json 로드 상태 확인용 (필요 시 사용)
+    static const ST_A10_cfg_jsonFile_t& getCfgJsonFileMap() {
+        return s_cfgJsonFileMap;
+    }
+
     static bool loadAll(ST_A10_ConfigRoot_t& p_root);
     static void freeLazySection(const char* p_section, ST_A10_ConfigRoot_t& p_root);
     static void freeAll(ST_A10_ConfigRoot_t& p_root);
@@ -185,6 +191,12 @@ private:
     static bool _dirty_schedules;
     static bool _dirty_userProfiles;
     static bool _dirty_windProfile;
+
+    // cfg_jsonFile.json 매핑 (옵션 A)
+    static ST_A10_cfg_jsonFile_t s_cfgJsonFileMap;
+    
+    // cfg_jsonFile.json 로더
+    static bool _loadCfgJsonFile();
 
     // Mutex
     static SemaphoreHandle_t s_configMutex;
