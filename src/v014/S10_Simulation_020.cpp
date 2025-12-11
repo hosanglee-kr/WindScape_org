@@ -463,33 +463,6 @@ void CL_S10_Simulation::toJson(JsonDocument& p_doc) {
     portEXIT_CRITICAL(&_simMutex);
 }
 
-/*
-void CL_S10_Simulation::toJson_old(JsonObject& p_obj) {
-    portENTER_CRITICAL(&_simMutex); // 상태 읽기 중 변수 변경 방지
-    
-    p_obj["active"]        = active;
-    p_obj["phase"]         = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
-    p_obj["windSpeed"]     = currentWindSpeed;
-    p_obj["targetWind"]    = targetWindSpeed;
-    p_obj["gustActive"]    = gustActive;
-    p_obj["thermalActive"] = thermalActive;
-    p_obj["pwmDuty"]       = _pwm ? _pwm->P10_getDutyPercent() : 0.0f;
-    p_obj["presetCode"]    = presetCode;
-    p_obj["styleCode"]     = styleCode;
-    p_obj["intensity"]     = userIntensity;
-    p_obj["variability"]   = userVariability;
-    p_obj["gustFreq"]      = userGustFreq;
-    p_obj["fan_limit"]     = fanLimitPct;
-    p_obj["min_fan"]       = minFanPct;
-    p_obj["turbSigma"]     = turbSigma;
-    p_obj["turbScale"]     = turbLenScale;
-    p_obj["thermalPower"]  = thermalStrength;
-    p_obj["thermalRadius"] = thermalRadius;
-
-    portEXIT_CRITICAL(&_simMutex);
-}
-
-*/
 
 // ==================================================
 // 차트 데이터 JSON Export (/api/sim/chart)
@@ -555,33 +528,75 @@ void CL_S10_Simulation::toChartJson(JsonDocument& p_doc, bool p_diffOnly) {
  * @brief 최종 계산된 풍속 기반 Duty Percent를 PWM 모듈에 적용합니다.
  * 사용자 Intensity, Min/Limit 값을 반영합니다.
  */
-void CL_S10_Simulation::applyFan(float p_pct) {
+
+ void CL_S10_Simulation::applyFan(float p_pct) {
     if (!_pwm)
         return;
 
-    float v_req   = p_pct / 100.0f; // 요청된 Duty (0~1)
-    float v_limit = fanLimitPct / 100.0f;
-    float v_min   = minFanPct / 100.0f;
+    // 1) 요청 duty → 0~1 정규화
+    float v_req01 = A10_clampf(p_pct, 0.0f, 100.0f) / 100.0f;
     float v_int   = userIntensity / 100.0f;
 
-    // 팬 전원 비활성 또는 Intensity가 0에 가까우면 팬 정지
+    // 전원 off 또는 intensity ~0 이면 정지
     if (!fanPowerEnabled || v_int <= 0.01f) {
         _pwm->P10_setDutyPercent(0.0f);
         return;
     }
 
+    // 시뮬레이션이 active 인 동안만 intensity 스케일 적용
     if (active) {
-        v_req *= v_int; // 사용자 Intensity 적용 (전체 출력 배율)
+        v_req01 *= v_int;   // “논리적인 요청 풍량” (0~1)
     }
 
-    // Min/Limit 값 적용
-    if (v_req < v_min)
-        v_req = v_min;
-    if (v_req > v_limit)
-        v_req = v_limit;
+    // 2) ResolvedWind min/max (0~1)로 변환
+    float v_min01 = A10_clampf(minFanPct,   0.0f, 100.0f) / 100.0f;
+    float v_max01 = A10_clampf(fanLimitPct, 0.0f, 100.0f) / 100.0f;
 
-    _pwm->P10_setDutyPercent(v_req * 100.0f); // PWM 모듈에 최종 % 전달
+    // 3) hw.fanConfig 가져오기
+    const ST_A10_FanConfig_t* v_fc = nullptr;
+
+
+    if (g_A10_config_root.system != nullptr) {
+        // 포인터를 사용하여 직접 hw.fanConfig 멤버에 접근 (-> 연산자 사용)
+        v_fc = &g_A10_config_root.system->hw.fanConfig;
+    }
+
+
+    // 4) 커브 적용: 논리 duty → 실제 PWM duty (0~1)
+    float v_phy01 = _pwm->applyFanConfigCurve(v_fc, v_req01, v_min01, v_max01);
+
+    // 5) 실제 PWM 모듈에 반영
+    _pwm->P10_setDutyPercent(v_phy01 * 100.0f);
 }
+
+
+// void CL_S10_Simulation::applyFan(float p_pct) {
+//     if (!_pwm)
+//         return;
+
+//     float v_req   = p_pct / 100.0f; // 요청된 Duty (0~1)
+//     float v_limit = fanLimitPct / 100.0f;
+//     float v_min   = minFanPct / 100.0f;
+//     float v_int   = userIntensity / 100.0f;
+
+//     // 팬 전원 비활성 또는 Intensity가 0에 가까우면 팬 정지
+//     if (!fanPowerEnabled || v_int <= 0.01f) {
+//         _pwm->P10_setDutyPercent(0.0f);
+//         return;
+//     }
+
+//     if (active) {
+//         v_req *= v_int; // 사용자 Intensity 적용 (전체 출력 배율)
+//     }
+
+//     // Min/Limit 값 적용
+//     if (v_req < v_min)
+//         v_req = v_min;
+//     if (v_req > v_limit)
+//         v_req = v_limit;
+
+//     _pwm->P10_setDutyPercent(v_req * 100.0f); // PWM 모듈에 최종 % 전달
+// }
 
 /**
  * @brief Preset 코드에 따라 기본 스펙(Base Wind, 확률 등)을 설정합니다.

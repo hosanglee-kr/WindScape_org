@@ -76,8 +76,24 @@ inline bool S20_resolveWindParams(
 	p_out.wind_intensity			 = A10_clampf(v_int, 0.0f, 100.0f);
 	p_out.wind_variability			 = A10_clampf(v_var, 0.0f, 100.0f);
 	p_out.gust_frequency			 = A10_clampf(v_gust, 0.0f, 100.0f);
-	p_out.fan_limit					 = A10_clampf(v_fl, 0.0f, 100.0f);
-	p_out.min_fan					 = A10_clampf(v_min, 0.0f, 100.0f);
+
+	// min_fan ≤ fan_limit 보정 유지
+	v_fl  += p_adj->fan_limit;
+	v_min += p_adj->min_fan;
+
+	float v_fl_clamped  = A10_clampf(v_fl,  0.0f, 100.0f);
+	float v_min_clamped = A10_clampf(v_min, 0.0f, 100.0f);
+
+	if (v_min_clamped > v_fl_clamped) {
+		v_min_clamped = v_fl_clamped;
+	}
+
+	p_out.fan_limit = v_fl_clamped;
+	p_out.min_fan   = v_min_clamped;
+
+	// p_out.fan_limit					 = A10_clampf(v_fl, 0.0f, 100.0f);
+	// p_out.min_fan					 = A10_clampf(v_min, 0.0f, 100.0f);
+
 	p_out.turbulence_length_scale	 = (v_tL > 1.0f) ? v_tL : 1.0f;
 	p_out.turbulence_intensity_sigma = (v_tS > 0.0f) ? v_tS : 0.0f;
 	p_out.thermal_bubble_strength	 = (v_thB > 0.1f) ? v_thB : 0.1f;

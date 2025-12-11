@@ -63,17 +63,7 @@ bool CL_C10_ConfigManager::loadSystemConfig(ST_A10_SystemConfig& p_cfg) {
     strlcpy(p_cfg.system.webPagesJson,
             j["system"]["webPageJson"] | "/html/main.html",
             sizeof(p_cfg.system.webPagesJson));
-    /*
-    strlcpy(p_cfg.system.web.html,
-            j["system"]["web"]["html"] | "/html/main.html",
-            sizeof(p_cfg.system.web.html));
-    strlcpy(p_cfg.system.web.css,
-            j["system"]["web"]["css"] | "/html/main.css",
-            sizeof(p_cfg.system.web.css));
-    strlcpy(p_cfg.system.web.js,
-            j["system"]["web"]["js"] | "/html/main.js",
-            sizeof(p_cfg.system.web.js));
-    */
+
 
     strlcpy(p_cfg.system.logging.level,
             j["system"]["logging"]["level"] | "INFO",
@@ -89,6 +79,20 @@ bool CL_C10_ConfigManager::loadSystemConfig(ST_A10_SystemConfig& p_cfg) {
         j["hw"]["fan_pwm"]["freq"] | 25000;
     p_cfg.hw.fan_pwm.res =
         j["hw"]["fan_pwm"]["res"] | 10;
+
+    // ----------------------------------------------------------------
+    // [추가] hw.fanConfig 로드
+    // ----------------------------------------------------------------
+// >> [추가] hw.fanConfig 로드
+    p_cfg.hw.fanConfig.startPercentMin =
+        j["hw"]["fanConfig"]["startPercentMin"] | 18;
+    p_cfg.hw.fanConfig.comfortPercentMin =
+        j["hw"]["fanConfig"]["comfortPercentMin"] | 22;
+    p_cfg.hw.fanConfig.comfortPercentMax =
+        j["hw"]["fanConfig"]["comfortPercentMax"] | 65;
+    p_cfg.hw.fanConfig.hardPercentMax =
+        j["hw"]["fanConfig"]["hardPercentMax"] | 90;
+
 
     p_cfg.hw.pir.enabled =
         j["hw"]["pir"]["enabled"] | true;
@@ -238,6 +242,12 @@ bool CL_C10_ConfigManager::saveSystemConfig(const ST_A10_SystemConfig& p_cfg) {
     v["hw"]["fan_pwm"]["freq"]            = p_cfg.hw.fan_pwm.freq;
     v["hw"]["fan_pwm"]["res"]             = p_cfg.hw.fan_pwm.res;
 
+    // >> [추가] hw.fanConfig 저장
+    v["hw"]["fanConfig"]["startPercentMin"]   = p_cfg.hw.fanConfig.startPercentMin;
+    v["hw"]["fanConfig"]["comfortPercentMin"] = p_cfg.hw.fanConfig.comfortPercentMin;
+    v["hw"]["fanConfig"]["comfortPercentMax"] = p_cfg.hw.fanConfig.comfortPercentMax;
+    v["hw"]["fanConfig"]["hardPercentMax"]    = p_cfg.hw.fanConfig.hardPercentMax;
+
     v["hw"]["pir"]["enabled"]             = p_cfg.hw.pir.enabled;
     v["hw"]["pir"]["pin"]                 = p_cfg.hw.pir.pin;
     v["hw"]["pir"]["debounce_sec"]        = p_cfg.hw.pir.debounce_sec;
@@ -320,6 +330,7 @@ bool CL_C10_ConfigManager::patchSystemFromJson(
 
     JsonObjectConst j_sys      = p_patch["system"];
     JsonObjectConst j_sec_root = p_patch["security"];
+    JsonObjectConst j_hw_root  = p_patch["hw"]; // H/W root 객체 추가
 
     if (j_sys.isNull() && j_sec_root.isNull()) {
         C10_MUTEX_RELEASE();
@@ -358,6 +369,45 @@ bool CL_C10_ConfigManager::patchSystemFromJson(
                     v_key,
                     sizeof(p_config.security.api_key));
             v_changed = true;
+        }
+    }
+
+    // >> [추가] hw.fanConfig 패치
+    if (!j_hw_root.isNull()) {
+        JsonObjectConst j_fan = j_hw_root["fanConfig"];
+        if (!j_fan.isNull()) {
+            // startPercentMin
+            if (j_fan["startPercentMin"].is<uint8_t>()) {
+                uint8_t v_val = j_fan["startPercentMin"];
+                if (v_val != p_config.hw.fanConfig.startPercentMin) {
+                    p_config.hw.fanConfig.startPercentMin = v_val;
+                    v_changed = true;
+                }
+            }
+            // comfortPercentMin
+            if (j_fan["comfortPercentMin"].is<uint8_t>()) {
+                uint8_t v_val = j_fan["comfortPercentMin"];
+                if (v_val != p_config.hw.fanConfig.comfortPercentMin) {
+                    p_config.hw.fanConfig.comfortPercentMin = v_val;
+                    v_changed = true;
+                }
+            }
+            // comfortPercentMax
+            if (j_fan["comfortPercentMax"].is<uint8_t>()) {
+                uint8_t v_val = j_fan["comfortPercentMax"];
+                if (v_val != p_config.hw.fanConfig.comfortPercentMax) {
+                    p_config.hw.fanConfig.comfortPercentMax = v_val;
+                    v_changed = true;
+                }
+            }
+            // hardPercentMax
+            if (j_fan["hardPercentMax"].is<uint8_t>()) {
+                uint8_t v_val = j_fan["hardPercentMax"];
+                if (v_val != p_config.hw.fanConfig.hardPercentMax) {
+                    p_config.hw.fanConfig.hardPercentMax = v_val;
+                    v_changed = true;
+                }
+            }
         }
     }
 
@@ -601,6 +651,13 @@ void CL_C10_ConfigManager::toJson_System(
     d["hw"]["fan_pwm"]["channel"]         = p.hw.fan_pwm.channel;
     d["hw"]["fan_pwm"]["freq"]            = p.hw.fan_pwm.freq;
     d["hw"]["fan_pwm"]["res"]             = p.hw.fan_pwm.res;
+
+    // >> [추가] hw.fanConfig Export
+    d["hw"]["fanConfig"]["startPercentMin"]   = p.hw.fanConfig.startPercentMin;
+    d["hw"]["fanConfig"]["comfortPercentMin"] = p.hw.fanConfig.comfortPercentMin;
+    d["hw"]["fanConfig"]["comfortPercentMax"] = p.hw.fanConfig.comfortPercentMax;
+    d["hw"]["fanConfig"]["hardPercentMax"]    = p.hw.fanConfig.hardPercentMax;
+
 
     d["hw"]["pir"]["enabled"]             = p.hw.pir.enabled;
     d["hw"]["pir"]["pin"]                 = p.hw.pir.pin;

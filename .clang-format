@@ -6,7 +6,7 @@
       ColumnLimit: 0,                  
       AlignAfterOpenBracket: Align,    
       IndentPPDirectives: BeforeHash,  
-      AlignConsecutiveAssignments: AcrossEmptyLinesAndComments,  
+      AlignConsecutiveAssignments: None,
       AlignConsecutiveDeclarations: AcrossEmptyLinesAndComments, 
       AlignConsecutiveMacros: AcrossEmptyLinesAndComments,       
       AllowShortBlocksOnASingleLine: Never,                      

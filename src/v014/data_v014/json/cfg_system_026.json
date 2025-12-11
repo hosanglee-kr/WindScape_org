@@ -6,7 +6,7 @@
 		"last_update": "2025-10-24T13:00:00+09:00"
 	},
 	"system": {
-		"webPagesJson": "/json/cfg_pages_032.json"
+		"webPagesJson": "/json/cfg_pages_032.json",
 		"logging": {
 			"level": "INFO",
 			"max_entries": 300

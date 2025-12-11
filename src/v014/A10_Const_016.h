@@ -54,47 +54,46 @@ constexpr char FW_VERSION[] = "SC10_FW_1.0.0";
 // JSON config files (최신 합의안)
 #define G_A10_CFG_JSON_FILE_VER "025"
 
-constexpr char CFG_SYSTEM_FILE[]		= "/json/cfg_system_" G_A10_CFG_JSON_FILE_VER ".json";
-constexpr char CFG_WIFI_FILE[]			= "/json/cfg_wifi_" G_A10_CFG_JSON_FILE_VER ".json";
-constexpr char CFG_MOTION_FILE[]		= "/json/cfg_motion_" G_A10_CFG_JSON_FILE_VER ".json";
-constexpr char CFG_SCHEDULES_FILE[]		= "/json/cfg_schedules_" G_A10_CFG_JSON_FILE_VER ".json";
-constexpr char CFG_USER_PROFILES_FILE[] = "/json/cfg_uzOpProfile_" G_A10_CFG_JSON_FILE_VER ".json";
-constexpr char CFG_WIND_PROFILE_FILE[]	= "/json/cfg_dft_windProfile_" G_A10_CFG_JSON_FILE_VER ".json";
+constexpr char CFG_SYSTEM_FILE[]				= "/json/cfg_system_" G_A10_CFG_JSON_FILE_VER ".json";
+constexpr char CFG_WIFI_FILE[]					= "/json/cfg_wifi_" G_A10_CFG_JSON_FILE_VER ".json";
+constexpr char CFG_MOTION_FILE[]				= "/json/cfg_motion_" G_A10_CFG_JSON_FILE_VER ".json";
+constexpr char CFG_SCHEDULES_FILE[]				= "/json/cfg_schedules_" G_A10_CFG_JSON_FILE_VER ".json";
+constexpr char CFG_USER_PROFILES_FILE[] 		= "/json/cfg_uzOpProfile_" G_A10_CFG_JSON_FILE_VER ".json";
+constexpr char CFG_WIND_PROFILE_FILE[]			= "/json/cfg_dft_windProfile_" G_A10_CFG_JSON_FILE_VER ".json";
 
 // 백업 파일
-constexpr char CFG_SYSTEM_FILE_BAK[]		= "/json/cfg_system_" G_A10_CFG_JSON_FILE_VER ".json.bak";
-constexpr char CFG_WIFI_FILE_BAK[]			= "/json/cfg_wifi_" G_A10_CFG_JSON_FILE_VER ".json.bak";
-constexpr char CFG_MOTION_FILE_BAK[]		= "/json/cfg_motion_" G_A10_CFG_JSON_FILE_VER ".json.bak";
-constexpr char CFG_SCHEDULES_FILE_BAK[]		= "/json/cfg_schedules_" G_A10_CFG_JSON_FILE_VER ".json.bak";
-constexpr char CFG_USER_PROFILES_FILE_BAK[] = "/json/cfg_uzOpProfile_" G_A10_CFG_JSON_FILE_VER ".json.bak";
-constexpr char CFG_WIND_PROFILE_FILE_BAK[]	= "/json/cfg_dft_windProfile_" G_A10_CFG_JSON_FILE_VER ".json.bak";
+constexpr char CFG_SYSTEM_FILE_BAK[]			= "/json/cfg_system_" G_A10_CFG_JSON_FILE_VER ".json.bak";
+constexpr char CFG_WIFI_FILE_BAK[]				= "/json/cfg_wifi_" G_A10_CFG_JSON_FILE_VER ".json.bak";
+constexpr char CFG_MOTION_FILE_BAK[]			= "/json/cfg_motion_" G_A10_CFG_JSON_FILE_VER ".json.bak";
+constexpr char CFG_SCHEDULES_FILE_BAK[]			= "/json/cfg_schedules_" G_A10_CFG_JSON_FILE_VER ".json.bak";
+constexpr char CFG_USER_PROFILES_FILE_BAK[] 	= "/json/cfg_uzOpProfile_" G_A10_CFG_JSON_FILE_VER ".json.bak";
+constexpr char CFG_WIND_PROFILE_FILE_BAK[]		= "/json/cfg_dft_windProfile_" G_A10_CFG_JSON_FILE_VER ".json.bak";
 
 // 문자열 및 배열 길이 정의
-constexpr uint8_t LEN_NAME	 = 64;
-constexpr uint8_t LEN_PATH	 = 128;
-constexpr uint8_t LEN_SSID	 = 32;
-constexpr uint8_t LEN_PASS	 = 32;
-constexpr uint8_t LEN_PRESET = 32;
-constexpr uint8_t LEN_ALIAS	 = 32;
-constexpr uint8_t LEN_TIME	 = 8;
-constexpr uint8_t LEN_LEVEL	 = 16;
+constexpr uint8_t LEN_NAME	 					= 64;
+constexpr uint8_t LEN_PATH	 					= 128;
+constexpr uint8_t LEN_SSID	 					= 32;
+constexpr uint8_t LEN_PASS	 					= 32;
+constexpr uint8_t LEN_PRESET 					= 32;
+constexpr uint8_t LEN_ALIAS	 					= 32;
+constexpr uint8_t LEN_TIME	 					= 8;
+constexpr uint8_t LEN_LEVEL	 					= 16;
 
 // 배열 개수
-constexpr uint8_t MAX_BLE_DEVICES  = 8;
-constexpr uint8_t MAX_STA_NETWORKS = 5;
+constexpr uint8_t MAX_BLE_DEVICES  				= 8;
+constexpr uint8_t MAX_STA_NETWORKS 				= 5;
 
 // 배열 개수 제한
-constexpr uint8_t MAX_SCHEDULES				= 8;
-constexpr uint8_t MAX_SEGMENTS_PER_SCHEDULE = 8;
-constexpr uint8_t MAX_USER_PROFILES			= 6;  // 최신 스펙: 6개
-constexpr uint8_t MAX_SEGMENTS_PER_PROFILE	= 8;
+constexpr uint8_t MAX_SCHEDULES					= 8;
+constexpr uint8_t MAX_SEGMENTS_PER_SCHEDULE 	= 8;
+constexpr uint8_t MAX_USER_PROFILES				= 6;  // 최신 스펙: 6개
+constexpr uint8_t MAX_SEGMENTS_PER_PROFILE		= 8;
 
 // 문자열 길이 제한
-constexpr size_t MAX_NAME_LEN = 32;
-constexpr size_t MAX_CODE_LEN = 24;
+constexpr size_t MAX_NAME_LEN 					= 32;
+constexpr size_t MAX_CODE_LEN 					= 24;
 
 }  // namespace A10_Const
-
 
 
 // ======================================================
@@ -151,7 +150,8 @@ static const char* g_A10_PRESET_CODES[] = {
 	"FOREST_CANOPY",
 	"URBAN_SUNSET",
 	"TROPICAL_RAIN",
-	"DESERT_NIGHT"};
+	"DESERT_NIGHT"
+};
 
 static const char* g_A10_PRESET_MODE_NAMES_Arr[] = {
 	"OFF",
@@ -164,11 +164,19 @@ static const char* g_A10_PRESET_MODE_NAMES_Arr[] = {
 	"FOREST_CANOPY",
 	"URBAN_SUNSET",
 	"TROPICAL_RAIN",
-	"DESERT_NIGHT"};
+	"DESERT_NIGHT"
+};
 
 // ======================================================
 // 구조체 정의
 // ======================================================
+
+typedef struct {
+    uint8_t startPercentMin;    // 시동이 확실히 거는 최소 구간 (예: 18)
+    uint8_t comfortPercentMin;  // “편안한 바람” 구간 시작 (예: 22), “체감 바람” 시작점 (예: 22%)
+    uint8_t comfortPercentMax;  // “편안한 바람” 구간 끝   (예: 65)  소음/체감 균형 좋은 상한 (예: 65%)
+    uint8_t hardPercentMax;     // 팬/소음/내구성 상으로 무리 없는 상한 (예: 90)
+} ST_A10_FanConfig_t;
 
 // ------------------------------------------------------
 // SYSTEM 설정 (cfg_system_022.json)
@@ -195,13 +203,16 @@ typedef struct {
 			uint32_t freq;
 			uint8_t	 res;
 		} fan_pwm;
+
+		ST_A10_FanConfig_t fanConfig;
+
         //  팬 특성 모델
-        struct {
-            uint8_t startPercentMin;     // 이 값 미만은 모터가 돌지 않음 (실제 시동 한계)
-            uint8_t comfortPercentMin;   // “체감 바람” 시작점 (예: 22%)
-            uint8_t comfortPercentMax;   // 소음/체감 균형 좋은 상한 (예: 65%)
-            uint8_t hardPercentMax;      // 안전상 절대 넘지 않는 상한 (예: 90%)
-       } fanConfig;
+    //     struct {
+    //         uint8_t startPercentMin;     	// 이 값 미만은 모터가 돌지 않음 (실제 시동 한계)
+    //         uint8_t comfortPercentMin;   	// “체감 바람” 시작점 (예: 22%)
+    //         uint8_t comfortPercentMax;   	// 소음/체감 균형 좋은 상한 (예: 65%)
+    //         uint8_t hardPercentMax;      	// 안전상 절대 넘지 않는 상한 (예: 90%)
+    //    } fanConfig;
 
 		struct {
 			bool	 enabled;
@@ -220,7 +231,6 @@ typedef struct {
 			uint16_t scan_interval;
 		} ble;
 	} hw;
-
 	struct {
 		char api_key[64];
 	} security;

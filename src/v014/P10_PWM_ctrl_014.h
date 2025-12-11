@@ -147,41 +147,116 @@ class CL_P10_PWM {
 		return _state.initialized;
 	}
 
-    // 논리 duty% → 팬 H/W특성 반영된 실제 PWM % 변환
-    float applyFanConfigCurve(const ST_A10_SystemConfig& p_sys,
-                                     float p_reqPercent) {
-        float v_req = A10_clampf(p_reqPercent, 0.0f, 100.0f);
-        const auto& v_fc = p_sys.hw.fanConfig;
 
-        // 완전 OFF
-        if (v_req <= 0.1f) {
-            return 0.0f;
-        }
+	float applyFanConfigCurve(
+		const ST_A10_FanConfig_t* p_cfg,
+		float                      p_req01,
+		float                      p_minFan01,
+		float                      p_maxFan01)
+	{
+		// 0~1 범위 방어
+		float v_req = A10_clampf(p_req01, 0.0f, 1.0f);
 
-        // 시동 최소 구간 미만이면 0으로 보냄 (모터 떨림 방지)
-        if (v_req < (float)v_fc.startPercentMin) {
-            return 0.0f;
-        }
+		// 완전 정지 요청인 경우는 그냥 0으로 내보냄
+		if (v_req <= 0.0f) {
+			return 0.0f;
+		}
 
-        // 절대 상한
-        if (v_req > (float)v_fc.hardPercentMax) {
-            v_req = (float)v_fc.hardPercentMax;
-        }
+		// ResolvedWind min/max 먼저 정리
+		float v_min = A10_clampf(p_minFan01, 0.0f, 1.0f);
+		float v_max = A10_clampf(p_maxFan01, 0.0f, 1.0f);
+		if (v_max < v_min) {
+			v_max = v_min;
+		}
 
-        // comfort 구간으로 리맵핑 (선택사항)
-        float v_span = (float)v_fc.comfortPercentMax - (float)v_fc.comfortPercentMin;
-        if (v_span < 1.0f) {
-            // 설정 이상 시: 그냥 클램프된 v_req 그대로 사용
-            return v_req;
-        }
+		// fanConfig 없으면 그냥 min/max만 적용해서 반환
+		if (!p_cfg) {
+			float v_out = v_req;
+			if (v_out < v_min) v_out = v_min;
+			if (v_out > v_max) v_out = v_max;
+			return v_out;
+		}
 
-        float v_norm = v_req / 100.0f; // 0~1
-        float v_out  = (float)v_fc.comfortPercentMin + v_norm * v_span;
+		// fanConfig 값을 0~1로 정규화
+		float s  = A10_clampf(p_cfg->startPercentMin   / 100.0f, 0.0f, 1.0f);
+		float c1 = A10_clampf(p_cfg->comfortPercentMin / 100.0f, 0.0f, 1.0f);
+		float c2 = A10_clampf(p_cfg->comfortPercentMax / 100.0f, 0.0f, 1.0f);
+		float h  = A10_clampf(p_cfg->hardPercentMax    / 100.0f, 0.0f, 1.0f);
 
-        // hardMax 한 번 더 방어
-        v_out = A10_clampf(v_out, 0.0f, (float)v_fc.hardPercentMax);
-        return v_out;
-    }
+		// 순서 보정: s ≤ c1 ≤ c2 ≤ h 보장
+		if (c1 < s)  c1 = s;
+		if (c2 < c1) c2 = c1;
+		if (h  < c2) h  = c2;
+
+		// ResolvedWind 의 min_fan / fan_limit 과 merge
+		if (s  < v_min) s  = v_min;
+		if (h  > v_max) h  = v_max;
+		if (c1 < s)    c1 = s;
+		if (c2 > h)    c2 = h;
+
+		// ---------------------------
+		// 3구간 커브:
+		//  - 0 ~ 0.33  : 0 → s 로 부드럽게
+		//  - 0.33~0.66 : s → c2 (컴포트 범위)
+		//  - 0.66~1.0  : c2 → h (하드 상한)
+		// ---------------------------
+		float v_out = 0.0f;
+
+		if (v_req <= 0.0001f) {
+			v_out = 0.0f;
+		} else if (v_req < 0.33f) {
+			float v_t = v_req / 0.33f;          // 0~1
+			v_out     = s * v_t;                // 0 -> s
+		} else if (v_req < 0.66f) {
+			float v_t = (v_req - 0.33f) / 0.33f; // 0~1
+			v_out     = s + (c2 - s) * v_t;      // s -> c2
+		} else {
+			float v_t = (v_req - 0.66f) / 0.34f; // 0~1
+			v_out     = c2 + (h - c2) * v_t;     // c2 -> h
+		}
+
+		// 최종 min/max 한 번 더 방어
+		if (v_out < v_min) v_out = v_min;
+		if (v_out > v_max) v_out = v_max;
+
+		return v_out;
+	}
+
+    // // 논리 duty% → 팬 H/W특성 반영된 실제 PWM % 변환
+    // float applyFanConfigCurve(const ST_A10_SystemConfig& p_sys,
+    //                                  float p_reqPercent) {
+    //     float v_req = A10_clampf(p_reqPercent, 0.0f, 100.0f);
+    //     const auto& v_fc = p_sys.hw.fanConfig;
+
+    //     // 완전 OFF
+    //     if (v_req <= 0.1f) {
+    //         return 0.0f;
+    //     }
+
+    //     // 시동 최소 구간 미만이면 0으로 보냄 (모터 떨림 방지)
+    //     if (v_req < (float)v_fc.startPercentMin) {
+    //         return 0.0f;
+    //     }
+
+    //     // 절대 상한
+    //     if (v_req > (float)v_fc.hardPercentMax) {
+    //         v_req = (float)v_fc.hardPercentMax;
+    //     }
+
+    //     // comfort 구간으로 리맵핑 (선택사항)
+    //     float v_span = (float)v_fc.comfortPercentMax - (float)v_fc.comfortPercentMin;
+    //     if (v_span < 1.0f) {
+    //         // 설정 이상 시: 그냥 클램프된 v_req 그대로 사용
+    //         return v_req;
+    //     }
+
+    //     float v_norm = v_req / 100.0f; // 0~1
+    //     float v_out  = (float)v_fc.comfortPercentMin + v_norm * v_span;
+
+    //     // hardMax 한 번 더 방어
+    //     v_out = A10_clampf(v_out, 0.0f, (float)v_fc.hardPercentMax);
+    //     return v_out;
+    // }
 
 	// ==================================================
 	// 듀티 설정 (0.0 ~ 100.0)
