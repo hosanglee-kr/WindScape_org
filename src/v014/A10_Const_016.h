@@ -172,12 +172,15 @@ static const char* g_A10_PRESET_MODE_NAMES_Arr[] = {
 // ======================================================
 
 typedef struct {
-    char aaa;
-    char ccc;
-    char ddd;
-    char fff:
+    std::string system;          // "/json/cfg_system_026.json"
+    std::string wifi;            // "/json/cfg_wifi_025.json"
+    std::string motion;          // "/json/cfg_motion_025.json"
+    std::string nvsSpec;         // "/json/cfg_nvsSpec_025.json"
+    std::string schedules;       // "/json/cfg_schedules_026.json"
+    std::string uzOpProfile;     // "/json/cfg_uzOpProfile_026.json"
+    std::string dft_windProfile; // "/json/cfg_dft_windProfile_025.json"
+    std::string webPages;        // "/json/cfg_pages_032.json"
 } ST_A10_cfg_jsonFile_t;
-
 
 typedef struct {
     uint8_t startPercentMin;    // 시동이 확실히 거는 최소 구간 (예: 18)
