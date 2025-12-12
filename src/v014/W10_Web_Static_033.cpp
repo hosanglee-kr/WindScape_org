@@ -107,7 +107,7 @@ bool CL_W10_WebAPI::W10_loadPagesJson(JsonDocument& p_doc,
 	if (!v_file) {
 		CL_D10_Logger::log(EN_L10_LOG_ERROR,
 						   "[W10] Failed to open pages JSON: %s",
-						   v_cfg_system.system.webPagesJson);
+						   v_cfgJsonPath.webPages);
 		                   // G_W10_PAGES_JSON);
 		return false;
 	}
