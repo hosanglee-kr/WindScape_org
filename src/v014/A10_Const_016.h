@@ -202,7 +202,7 @@ typedef struct {
 	} meta;
 
 	struct {
-        char webPagesJson[A10_Const::LEN_PATH];
+        // char webPagesJson[A10_Const::LEN_PATH];
 		struct {
 			char	 level[A10_Const::LEN_LEVEL];
 			uint16_t max_entries;
@@ -628,7 +628,7 @@ inline void A10_resetSystemDefault(ST_A10_SystemConfig& p_cfg) {
 	A10_safe_strlcpy(p_cfg.meta.device_name, "SmartNatureWind", sizeof(p_cfg.meta.device_name));
 	A10_safe_strlcpy(p_cfg.meta.last_update, "", sizeof(p_cfg.meta.last_update));
 
-    A10_safe_strlcpy(p_cfg.system.webPagesJson, "", sizeof(p_cfg.system.webPagesJson));
+    // A10_safe_strlcpy(p_cfg.system.webPagesJson, "", sizeof(p_cfg.system.webPagesJson));
 
 	A10_safe_strlcpy(p_cfg.system.logging.level, "INFO", sizeof(p_cfg.system.logging.level));
 	p_cfg.system.logging.max_entries = 300;

@@ -84,9 +84,9 @@ bool CL_C10_ConfigManager::loadSystemConfig(ST_A10_SystemConfig& p_cfg) {
             j["meta"]["last_update"] | "",
             sizeof(p_cfg.meta.last_update));
 
-    strlcpy(p_cfg.system.webPagesJson,
-            j["system"]["webPageJson"] | "/html/main.html",
-            sizeof(p_cfg.system.webPagesJson));
+    // strlcpy(p_cfg.system.webPagesJson,
+    //         j["system"]["webPageJson"] | "/html/main.html",
+    //         sizeof(p_cfg.system.webPagesJson));
 
 
     strlcpy(p_cfg.system.logging.level,
@@ -292,7 +292,7 @@ bool CL_C10_ConfigManager::saveSystemConfig(const ST_A10_SystemConfig& p_cfg) {
     v["meta"]["last_update"]              = p_cfg.meta.last_update;
 
     
-    v["system"]["webPagesJson"]            = p_cfg.system.webPagesJson;
+    // v["system"]["webPagesJson"]            = p_cfg.system.webPagesJson;
     /*
     v["system"]["web"]["html"]            = p_cfg.system.web.html;
     v["system"]["web"]["css"]             = p_cfg.system.web.css;
@@ -702,7 +702,7 @@ void CL_C10_ConfigManager::toJson_System(
     d["meta"]["device_name"]              = p.meta.device_name;
     d["meta"]["last_update"]              = p.meta.last_update;
 
-    d["system"]["webPagesJson"]           = p.system.webPagesJson;
+    // d["system"]["webPagesJson"]           = p.system.webPagesJson;
     /*
     d["system"]["web"]["html"]            = p.system.web.html;
     d["system"]["web"]["css"]             = p.system.web.css;
