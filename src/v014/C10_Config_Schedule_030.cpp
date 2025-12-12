@@ -287,7 +287,7 @@ bool CL_C10_ConfigManager::loadSchedules(ST_A10_SchedulesRoot_t& p_cfg) {
             "[C10] loadSchedules: s_cfgJsonFileMap.schedules failed");
         return false;
     }
-    if (!ioLoadJson(v_cfgJsonPath, nullptr, v_doc)) {   // bak는 자동 .bak 처리
+    if (!ioLoadJson(v_cfgJsonPath, nullptr, d)) {   // bak는 자동 .bak 처리
         CL_D10_Logger::log(
             EN_L10_LOG_ERROR,
             "[C10] loadSchedules: ioLoadJson failed (%s)", v_cfgJsonPath);
@@ -331,7 +331,7 @@ bool CL_C10_ConfigManager::loadUserProfiles(ST_A10_UserProfilesRoot_t& p_cfg) {
             "[C10] loadUserProfiles: s_cfgJsonFileMap.uzOpProfile failed");
         return false;
     }
-    if (!ioLoadJson(v_cfgJsonPath, nullptr, v_doc)) {   // bak는 자동 .bak 처리
+    if (!ioLoadJson(v_cfgJsonPath, nullptr, d)) {   // bak는 자동 .bak 처리
         CL_D10_Logger::log(
             EN_L10_LOG_ERROR,
             "[C10] loadUserProfiles: ioLoadJson failed (%s)", v_cfgJsonPath);
@@ -375,7 +375,7 @@ bool CL_C10_ConfigManager::loadWindProfileDict(ST_A10_WindProfileDict_t& p_dict)
             "[C10] loadWindProfileDict: s_cfgJsonFileMap.dft_windProfile failed");
         return false;
     }
-    if (!ioLoadJson(v_cfgJsonPath, nullptr, v_doc)) {   // bak는 자동 .bak 처리
+    if (!ioLoadJson(v_cfgJsonPath, nullptr, d)) {   // bak는 자동 .bak 처리
         CL_D10_Logger::log(
             EN_L10_LOG_ERROR,
             "[C10] loadWindProfileDict: ioLoadJson failed (%s)", v_cfgJsonPath);
