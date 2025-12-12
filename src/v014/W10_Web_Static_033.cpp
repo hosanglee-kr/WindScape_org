@@ -97,9 +97,12 @@ bool CL_W10_WebAPI::W10_loadPagesJson(JsonDocument& p_doc,
 	p_page_count  = 0;
 	p_asset_count = 0;
 
-	ST_A10_SystemConfig& v_cfg_system = *g_A10_config_root.system;
+	const auto& v_cfgJsonPath = CL_C10_ConfigManager::getConfigJsonFileList();
 
-	File v_file = LittleFS.open(v_cfg_system.system.webPagesJson, "r");
+	File v_file = LittleFS.open(v_cfgJsonPath.webPages, "r");
+	// ST_A10_SystemConfig& v_cfg_system = *g_A10_config_root.system;
+
+	// File v_file = LittleFS.open(v_cfg_system.system.webPagesJson, "r");
 	// File v_file = LittleFS.open(G_W10_PAGES_JSON, "r");
 	if (!v_file) {
 		CL_D10_Logger::log(EN_L10_LOG_ERROR,
