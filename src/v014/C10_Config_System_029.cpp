@@ -42,12 +42,36 @@
 // =====================================================
 bool CL_C10_ConfigManager::loadSystemConfig(ST_A10_SystemConfig& p_cfg) {
     JsonDocument v_doc;
+
+    const char* v_cfgJsonPath = nullptr;
+    if (!s_cfgJsonFileMap.system.empty()) {
+        v_cfgJsonPath = s_cfgJsonFileMap.system.c_str();
+    } else {
+        CL_D10_Logger::log(
+            EN_L10_LOG_ERROR,
+            "[C10] loadSystemConfig: s_cfgJsonFileMap.system failed");
+        return false;
+        
+        // fallback: 기존 상수 (원하시면 이것도 제거 가능)
+        // v_cfgJsonPath = A10_Const::CFG_SYSTEM_FILE;
+    }
+
+    if (!ioLoadJson(v_cfgJsonPath, nullptr, v_doc)) {   // bak는 자동 .bak 처리
+        CL_D10_Logger::log(
+            EN_L10_LOG_ERROR,
+            "[C10] loadSystemConfig: ioLoadJson failed (%s)", v_cfgJsonPath);
+        // A10_resetSystemDefault(p_cfg);
+        return false;
+    }
+
+    /*
     if (!ioLoadJson(A10_Const::CFG_SYSTEM_FILE,
                     A10_Const::CFG_SYSTEM_FILE_BAK,
                     v_doc)) {
         A10_resetSystemDefault(p_cfg);
         return false;
     }
+    */
     JsonObjectConst j = v_doc.as<JsonObjectConst>();
 
     strlcpy(p_cfg.meta.version,
@@ -124,12 +148,33 @@ bool CL_C10_ConfigManager::loadSystemConfig(ST_A10_SystemConfig& p_cfg) {
 
 bool CL_C10_ConfigManager::loadWifiConfig(ST_A10_WifiConfig& p_cfg) {
     JsonDocument d;
+
+    const char* v_cfgJsonPath = nullptr;
+    if (!s_cfgJsonFileMap.wifi.empty()) {
+        v_cfgJsonPath = s_cfgJsonFileMap.wifi.c_str();
+    } else {
+        CL_D10_Logger::log(
+            EN_L10_LOG_ERROR,
+            "[C10] loadWifiConfig: s_cfgJsonFileMap.wifi failed");
+        return false;
+    }
+    if (!ioLoadJson(v_cfgJsonPath, nullptr, v_doc)) {   // bak는 자동 .bak 처리
+        CL_D10_Logger::log(
+            EN_L10_LOG_ERROR,
+            "[C10] loadWifiConfig: ioLoadJson failed (%s)", v_cfgJsonPath);
+        return false;
+    }
+    
+    /*
     if (!ioLoadJson(A10_Const::CFG_WIFI_FILE,
                     A10_Const::CFG_WIFI_FILE_BAK,
                     d)) {
         A10_resetWifiDefault(p_cfg);
         return false;
     }
+    */
+
+
     JsonObjectConst j = d["wifi"];
 
     p_cfg.wifiMode =
@@ -165,12 +210,32 @@ bool CL_C10_ConfigManager::loadWifiConfig(ST_A10_WifiConfig& p_cfg) {
 
 bool CL_C10_ConfigManager::loadMotionConfig(ST_A10_MotionConfig& p_cfg) {
     JsonDocument d;
+
+    const char* v_cfgJsonPath = nullptr;
+    if (!s_cfgJsonFileMap.motion.empty()) {
+        v_cfgJsonPath = s_cfgJsonFileMap.motion.c_str();
+    } else {
+        CL_D10_Logger::log(
+            EN_L10_LOG_ERROR,
+            "[C10] loadMotionConfig: s_cfgJsonFileMap.motion failed");
+        return false;
+    }
+    if (!ioLoadJson(v_cfgJsonPath, nullptr, v_doc)) {   // bak는 자동 .bak 처리
+        CL_D10_Logger::log(
+            EN_L10_LOG_ERROR,
+            "[C10] loadMotionConfig: ioLoadJson failed (%s)", v_cfgJsonPath);
+        return false;
+    }
+
+    /*
     if (!ioLoadJson(A10_Const::CFG_MOTION_FILE,
                     A10_Const::CFG_MOTION_FILE_BAK,
                     d)) {
         A10_resetMotionDefault(p_cfg);
         return false;
     }
+    */
+    
     JsonObjectConst j = d["motion"];
 
     p_cfg.enabled            = j["enabled"] | true;
