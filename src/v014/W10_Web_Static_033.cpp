@@ -97,7 +97,7 @@ bool CL_W10_WebAPI::W10_loadPagesJson(JsonDocument& p_doc,
 	p_page_count  = 0;
 	p_asset_count = 0;
 
-	const auto& v_cfgJsonPath = CL_C10_ConfigManager::getConfigJsonFileList();
+	const auto& v_cfgJsonPath = CL_C10_ConfigManager::getCfgJsonFileMap();
 
 	File v_file = LittleFS.open(v_cfgJsonPath.webPages, "r");
 	// ST_A10_SystemConfig& v_cfg_system = *g_A10_config_root.system;
