@@ -55,8 +55,7 @@ static void C10_fromJson_ScheduleItem(
     p_s.repeatCount    = p_js["repeatCount"]    | 0;
 
     // period
-    p_s.period.enabled =
-        p_js["period"]["enabled"] | false;
+    //// p_s.period.enabled = p_js["period"]["enabled"] | false;
     for (uint8_t v_d = 0; v_d < 7; v_d++) {
         p_s.period.days[v_d] =
             p_js["period"]["days"][v_d] | 1;
@@ -447,8 +446,7 @@ bool CL_C10_ConfigManager::saveSchedules(const ST_A10_SchedulesRoot_t& p_cfg) {
     for (uint8_t v_i = 0; v_i < p_cfg.count; v_i++) {
         const ST_A10_ScheduleItem_t& s =
             p_cfg.items[v_i];
-        JsonObject js =
-            d["schedules"][v_i];
+        JsonObject js = d["schedules"][v_i];
 
         js["schId"]   = s.schId;
         js["schNo"]   = s.schNo;
@@ -457,10 +455,9 @@ bool CL_C10_ConfigManager::saveSchedules(const ST_A10_SchedulesRoot_t& p_cfg) {
         js["repeatSegments"] = s.repeatSegments;
         js["repeatCount"]    = s.repeatCount;
 
-        js["period"]["enabled"] = s.period.enabled;
+        //// js["period"]["enabled"] = s.period.enabled;
         for (uint8_t v_d = 0; v_d < 7; v_d++) {
-            js["period"]["days"][v_d] =
-                s.period.days[v_d];
+            js["period"]["days"][v_d] = s.period.days[v_d];
         }
         js["period"]["start_time"] =
             s.period.start_time;
@@ -662,11 +659,10 @@ void CL_C10_ConfigManager::toJson_Schedules(
         js["repeatSegments"] = s.repeatSegments;
         js["repeatCount"]    = s.repeatCount;
 
-        js["period"]["enabled"] =
-            s.period.enabled;
+        //// js["period"]["enabled"] = s.period.enabled;
+        
         for (uint8_t v_d = 0; v_d < 7; v_d++) {
-            js["period"]["days"][v_d] =
-                s.period.days[v_d];
+            js["period"]["days"][v_d] = s.period.days[v_d];
         }
         js["period"]["start_time"] =
             s.period.start_time;
