@@ -453,7 +453,7 @@ typedef struct {
  * Schedule JSON 구조
  * ====================================================== */
 typedef struct {
-	bool	enabled		  = false;
+	//// bool	enabled		  = false;
 	uint8_t days[7]		  = {1, 1, 1, 1, 1, 1, 1};
 	char	start_time[6] = {0};  // "HH:MM"
 	char	end_time[6]	  = {0};  // "HH:MM" (익일 교차 가능)
