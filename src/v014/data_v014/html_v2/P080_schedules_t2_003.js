@@ -446,7 +446,7 @@
       $("#repeatCount").value = schedule.repeatCount ?? 1;
 
       const period = schedule.period || {};
-      $("#periodEnabled").checked = period.enabled ?? true;
+      //// $("#periodEnabled").checked = period.enabled ?? true;
       $("#periodStart").value = period.start_time || "08:00";
       $("#periodEnd").value = period.end_time || "23:00";
       applyPeriodDaysUI(Array.isArray(period.days) ? period.days : [1, 1, 1, 1, 1, 1, 1]);
@@ -482,7 +482,7 @@
       $("#isEnabled").checked = true;
       $("#repeatSegments").checked = true;
       $("#repeatCount").value = 1;
-      $("#periodEnabled").checked = true;
+      //// $("#periodEnabled").checked = true;
       $("#periodStart").value = "08:00";
       $("#periodEnd").value = "23:00";
       applyPeriodDaysUI([1, 1, 1, 1, 1, 1, 1]);
@@ -603,7 +603,7 @@
     const repeatSegments = $("#repeatSegments").checked;
     const repeatCount = Number($("#repeatCount").value) || 0;
 
-    const periodEnabled = $("#periodEnabled").checked;
+    //// const periodEnabled = $("#periodEnabled").checked;
     const periodStart = $("#periodStart").value || "00:00";
     const periodEnd = $("#periodEnd").value || "23:59";
     const periodDays = buildDaysFromUI();
@@ -631,7 +631,7 @@
       repeatSegments,
       repeatCount,
       period: {
-        enabled: periodEnabled,
+        //// enabled: periodEnabled,
         days: periodDays,
         start_time: periodStart,
         end_time: periodEnd,
