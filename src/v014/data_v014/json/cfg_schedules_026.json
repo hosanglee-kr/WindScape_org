@@ -11,7 +11,6 @@
       "repeatSegments": true,
       "repeatCount": 1,
       "period": {
-        "enabled": true,
         "days": [1,1,1,1,1,1,1],
         "start_time": "08:00",
         "end_time": "12:00"
@@ -61,7 +60,6 @@
       "repeatSegments": true,
       "repeatCount": 1,
       "period": {
-        "enabled": true,
         "days": [1,1,1,1,1,1,1],
         "start_time": "19:00",
         "end_time": "23:00"
@@ -102,9 +100,7 @@
       "enabled": true,
       "repeatSegments": true,
       "repeatCount": 1,
-
       "period": {
-        "enabled": true,
         "days": [1,1,1,1,1,1,1],
         "start_time": "23:00",
         "end_time": "07:00"
