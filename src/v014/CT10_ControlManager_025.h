@@ -1135,7 +1135,8 @@ class CL_CT10_ControlManager {
     
 		    for (int v_i = 0; v_i < p_cfg.count; v_i++) {
 			    const ST_A10_ScheduleItem_t& v_s = p_cfg.items[v_i];
-			    if (!v_s.enabled || !v_s.period.enabled)
+				if (!v_s.enabled)
+			    //// if (!v_s.enabled || !v_s.period.enabled)
 				    continue;
 			    if (!v_s.period.days[v_wday]) // 요일 체크
 				    continue;
