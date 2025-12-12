@@ -158,7 +158,7 @@ bool CL_C10_ConfigManager::loadWifiConfig(ST_A10_WifiConfig& p_cfg) {
             "[C10] loadWifiConfig: s_cfgJsonFileMap.wifi failed");
         return false;
     }
-    if (!ioLoadJson(v_cfgJsonPath, nullptr, v_doc)) {   // bak는 자동 .bak 처리
+    if (!ioLoadJson(v_cfgJsonPath, nullptr, d)) {   // bak는 자동 .bak 처리
         CL_D10_Logger::log(
             EN_L10_LOG_ERROR,
             "[C10] loadWifiConfig: ioLoadJson failed (%s)", v_cfgJsonPath);
@@ -220,7 +220,7 @@ bool CL_C10_ConfigManager::loadMotionConfig(ST_A10_MotionConfig& p_cfg) {
             "[C10] loadMotionConfig: s_cfgJsonFileMap.motion failed");
         return false;
     }
-    if (!ioLoadJson(v_cfgJsonPath, nullptr, v_doc)) {   // bak는 자동 .bak 처리
+    if (!ioLoadJson(v_cfgJsonPath, nullptr, d)) {   // bak는 자동 .bak 처리
         CL_D10_Logger::log(
             EN_L10_LOG_ERROR,
             "[C10] loadMotionConfig: ioLoadJson failed (%s)", v_cfgJsonPath);
