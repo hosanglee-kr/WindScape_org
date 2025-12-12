@@ -277,6 +277,24 @@ static void C10_fromJson_WindPreset(
 // =====================================================
 bool CL_C10_ConfigManager::loadSchedules(ST_A10_SchedulesRoot_t& p_cfg) {
     JsonDocument d;
+
+    const char* v_cfgJsonPath = nullptr;
+    if (!s_cfgJsonFileMap.schedules.empty()) {
+        v_cfgJsonPath = s_cfgJsonFileMap.schedules.c_str();
+    } else {
+        CL_D10_Logger::log(
+            EN_L10_LOG_ERROR,
+            "[C10] loadSchedules: s_cfgJsonFileMap.schedules failed");
+        return false;
+    }
+    if (!ioLoadJson(v_cfgJsonPath, nullptr, v_doc)) {   // bak는 자동 .bak 처리
+        CL_D10_Logger::log(
+            EN_L10_LOG_ERROR,
+            "[C10] loadSchedules: ioLoadJson failed (%s)", v_cfgJsonPath);
+        return false;
+    }
+    
+    /*
     if (!ioLoadJson(
             A10_Const::CFG_SCHEDULES_FILE,
             A10_Const::CFG_SCHEDULES_FILE_BAK,
@@ -284,6 +302,7 @@ bool CL_C10_ConfigManager::loadSchedules(ST_A10_SchedulesRoot_t& p_cfg) {
         A10_resetSchedulesDefault(p_cfg);
         return false;
     }
+    */
 
     JsonArrayConst arr = d["schedules"].as<JsonArrayConst>();
     p_cfg.count        = 0;
@@ -302,12 +321,31 @@ bool CL_C10_ConfigManager::loadSchedules(ST_A10_SchedulesRoot_t& p_cfg) {
 
 bool CL_C10_ConfigManager::loadUserProfiles(ST_A10_UserProfilesRoot_t& p_cfg) {
     JsonDocument d;
+
+    const char* v_cfgJsonPath = nullptr;
+    if (!s_cfgJsonFileMap.uzOpProfile.empty()) {
+        v_cfgJsonPath = s_cfgJsonFileMap.uzOpProfile.c_str();
+    } else {
+        CL_D10_Logger::log(
+            EN_L10_LOG_ERROR,
+            "[C10] loadUserProfiles: s_cfgJsonFileMap.uzOpProfile failed");
+        return false;
+    }
+    if (!ioLoadJson(v_cfgJsonPath, nullptr, v_doc)) {   // bak는 자동 .bak 처리
+        CL_D10_Logger::log(
+            EN_L10_LOG_ERROR,
+            "[C10] loadUserProfiles: ioLoadJson failed (%s)", v_cfgJsonPath);
+        return false;
+    }
+    
+    /*
     if (!ioLoadJson(A10_Const::CFG_USER_PROFILES_FILE,
                     A10_Const::CFG_USER_PROFILES_FILE_BAK,
                     d)) {
         A10_resetUserProfilesDefault(p_cfg);
         return false;
     }
+    */
 
     JsonArrayConst arr =
         d["userProfiles"]["profiles"].as<JsonArrayConst>();
@@ -327,12 +365,32 @@ bool CL_C10_ConfigManager::loadUserProfiles(ST_A10_UserProfilesRoot_t& p_cfg) {
 
 bool CL_C10_ConfigManager::loadWindProfileDict(ST_A10_WindProfileDict_t& p_dict) {
     JsonDocument d;
+
+    const char* v_cfgJsonPath = nullptr;
+    if (!s_cfgJsonFileMap.dft_windProfile.empty()) {
+        v_cfgJsonPath = s_cfgJsonFileMap.dft_windProfile.c_str();
+    } else {
+        CL_D10_Logger::log(
+            EN_L10_LOG_ERROR,
+            "[C10] loadWindProfileDict: s_cfgJsonFileMap.dft_windProfile failed");
+        return false;
+    }
+    if (!ioLoadJson(v_cfgJsonPath, nullptr, v_doc)) {   // bak는 자동 .bak 처리
+        CL_D10_Logger::log(
+            EN_L10_LOG_ERROR,
+            "[C10] loadWindProfileDict: ioLoadJson failed (%s)", v_cfgJsonPath);
+        return false;
+    }
+
+    /*
     if (!ioLoadJson(A10_Const::CFG_WIND_PROFILE_FILE,
                     A10_Const::CFG_WIND_PROFILE_FILE_BAK,
                     d)) {
         A10_resetWindProfileDictDefault(p_dict);
         return false;
     }
+    */
+    
     JsonObjectConst j = d["windProfile"];
 
     p_dict.preset_count = 0;
