@@ -112,6 +112,122 @@ void CL_S10_Simulation::resetDefaults() {
  * 주기적으로 호출되어 풍속을 계산하고 PWM에 반영합니다.
  */
 void CL_S10_Simulation::tick() {
+
+    // ---- (A) 브로드캐스트 요청을 락 밖에서 처리하기 위한 로컬 스냅샷 ----
+    bool  v_needBroadcast = false;
+    float v_bc_avgWind    = 0.0f;
+    float v_bc_target     = 0.0f;
+    uint8_t v_bc_samples  = 0;
+    float v_bc_delta      = 0.0f;
+    T_A10_WindPhase_t v_bc_phase = EN_A10_WEATHER_PHASE_NORMAL;
+
+    // [스레드 안전성]: Critical Section 시작
+    portENTER_CRITICAL(&_simMutex);
+
+    if (!active) {
+        portEXIT_CRITICAL(&_simMutex);
+        return;
+    }
+
+    unsigned long   v_now        = millis();
+    static uint32_t s_jitterSeed = 0;
+
+    uint32_t v_interval = 40u + (s_jitterSeed % 60u);
+    if (v_now - lastUpdateMs < v_interval) {
+        portEXIT_CRITICAL(&_simMutex);
+        return;
+    }
+
+    s_jitterSeed = esp_random();
+
+    float v_dt = (v_now - lastUpdateMs) / 1000.0f;
+    v_dt = A10_clampf(v_dt, 0.001f, 0.5f);
+    lastUpdateMs = v_now;
+
+    float             v_prevWind  = currentWindSpeed;
+    T_A10_WindPhase_t v_prevPhase = phase;
+
+    updatePhase();
+
+    float v_delta = fabsf(currentWindSpeed - v_prevWind);
+    if (phase != v_prevPhase || v_delta > 2.0f) {
+        // ---- (B) 락 안에서는 "값만 복사" ----
+        v_needBroadcast = true;
+        v_bc_avgWind    = _getAvgWindFast();
+        v_bc_target     = targetWindSpeed;
+        v_bc_samples    = historyCount;
+        v_bc_delta      = v_delta;
+        v_bc_phase      = phase;
+        // (주의) 여기서 JsonDocument 만들거나 broadcast 호출 금지
+    }
+
+    // ---- 내부 물리 계산 ----
+    calcTurb(v_dt);
+    calcThermalEnvelope();
+    updateGust();
+    updateThermal();
+
+    float v_diff   = targetWindSpeed - currentWindSpeed;
+    float v_change = v_diff * windChangeRate * v_dt;
+
+    windMomentum = windMomentum * 0.85f + v_change * 0.15f;
+    windMomentum = constrain(windMomentum, -0.5f, 0.5f);
+
+    float v_new = currentWindSpeed + windMomentum + spectralEnergyBuf;
+    currentWindSpeed = constrain(v_new, 0.2f, 11.0f);
+
+    float v_th = 0.5f + (currentWindSpeed / 20.0f);
+    if (fabsf(v_diff) < v_th) {
+        if (A10_randRange(0.0f, 100.0f) < 30.0f) generateTarget();
+    } else {
+        if (A10_randRange(0.0f, 100.0f) < 6.0f) generateTarget();
+    }
+
+    float v_pwmPct = currentWindSpeed * 10.0f + 10.0f;
+    v_pwmPct *= gustIntensity;
+    v_pwmPct += thermalContribution * 5.0f;
+    applyFan(v_pwmPct);
+
+    _updateWindHistory(currentWindSpeed);
+
+    v_interval = (gustActive || thermalActive) ? 500UL : 1000UL;
+    if (millis() - s_lastChartLogMs > v_interval) {
+        if (s_chartBuffer.size() >= 120) s_chartBuffer.pop_front();
+
+        ST_ChartEntry v_e{};
+        v_e.timestamp        = millis();
+        v_e.wind_speed       = currentWindSpeed;
+        v_e.pwm_duty         = _pwm ? _pwm->P10_getDutyPercent() : 0.0f;
+        v_e.intensity        = userIntensity;
+        v_e.variability      = userVariability;
+        v_e.turbulence_sigma = turbSigma;
+        v_e.preset_index     = (uint8_t)A10_getPresetIndexByCode(presetCode);
+        v_e.gust_active      = gustActive;
+        v_e.thermal_active   = thermalActive;
+        s_chartBuffer.push_back(v_e);
+
+        s_lastChartLogMs = millis();
+    }
+
+    portEXIT_CRITICAL(&_simMutex); // Critical Section 종료
+
+    // ---- (C) 락 밖에서 브로드캐스트 수행 ----
+    if (v_needBroadcast) {
+        JsonDocument v_doc;
+        JsonObject   o = v_doc["sim"].to<JsonObject>();
+        o["phase"]   = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)v_bc_phase];
+        o["avgWind"] = v_bc_avgWind;
+        o["target"]  = v_bc_target;
+        o["samples"] = v_bc_samples;
+        o["delta"]   = v_bc_delta;
+
+        SC10_broadcastChart(v_doc, true);
+        SC10_markDirty("chart");
+    }
+}
+
+/*
+void CL_S10_Simulation::tick() {
     // [스레드 안전성]: Critical Section 시작 (멀티 코어 환경에서 상태 변수 동시 접근 방지)
     portENTER_CRITICAL(&_simMutex); 
 
@@ -228,6 +344,8 @@ void CL_S10_Simulation::tick() {
 
     portEXIT_CRITICAL(&_simMutex); // Critical Section 종료
 }
+*/
+
 
 // ==================================================
 // 해석 결과 적용: resolveWindParams → 여기 호출
