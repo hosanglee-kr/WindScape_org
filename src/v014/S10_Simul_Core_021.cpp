@@ -274,3 +274,52 @@ void CL_S10_Simulation::applyResolvedWind(const ST_A10_ResolvedWind_t& p_resolve
 
     generateTarget(); // 새로운 목표 풍속 생성
 }
+
+
+/**
+ * @brief 최종 계산된 풍속 기반 Duty Percent를 PWM 모듈에 적용합니다.
+ * 사용자 Intensity, Min/Limit 값을 반영합니다.
+ */
+
+ void CL_S10_Simulation::applyFan(float p_pct) {
+    if (!_pwm)
+        return;
+
+    // 1) 요청 duty → 0~1 정규화
+    float v_req01 = A10_clampf(p_pct, 0.0f, 100.0f) / 100.0f;
+    float v_int   = userIntensity / 100.0f;
+
+    // 전원 off 또는 intensity ~0 이면 정지
+    if (!fanPowerEnabled || v_int <= 0.01f) {
+        _pwm->P10_setDutyPercent(0.0f);
+        return;
+    }
+
+    // 시뮬레이션이 active 인 동안만 intensity 스케일 적용
+    if (active) {
+        v_req01 *= v_int;   // “논리적인 요청 풍량” (0~1)
+    }
+
+    // 2) ResolvedWind min/max (0~1)로 변환
+    float v_min01 = A10_clampf(minFanPct,   0.0f, 100.0f) / 100.0f;
+    float v_max01 = A10_clampf(fanLimitPct, 0.0f, 100.0f) / 100.0f;
+
+    // 3) hw.fanConfig 가져오기
+    const ST_A10_FanConfig_t* v_fc = nullptr;
+
+
+    if (g_A10_config_root.system != nullptr) {
+        // 포인터를 사용하여 직접 hw.fanConfig 멤버에 접근 (-> 연산자 사용)
+        v_fc = &g_A10_config_root.system->hw.fanConfig;
+    }
+
+
+    // 4) 커브 적용: 논리 duty → 실제 PWM duty (0~1)
+    float v_phy01 = _pwm->applyFanConfigCurve(v_fc, v_req01, v_min01, v_max01);
+
+    // 5) 실제 PWM 모듈에 반영
+    _pwm->P10_setDutyPercent(v_phy01 * 100.0f);
+}
+
+
+
