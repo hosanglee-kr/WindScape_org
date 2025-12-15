@@ -385,6 +385,68 @@ void CL_S10_Simulation::tick() {
  * @brief WindParam 해석 결과(ST_A10_ResolvedWind_t)를 시뮬레이션 파라미터에 적용합니다.
  */
 void CL_S10_Simulation::applyResolvedWind(const ST_A10_ResolvedWind_t& p_resolved) {
+
+    // [스레드 안전성]
+    // - tick()이 동시에 currentWindSpeed/phase/userIntensity 등을 읽고 쓰므로
+    //   applyResolvedWind()는 반드시 _simMutex로 보호해야 합니다.
+    portENTER_CRITICAL(&_simMutex);
+
+    // 1) preset/style 코드 복사 (안전 초기화 후 복사)
+    memset(presetCode, 0, sizeof(presetCode));
+    memset(styleCode,  0, sizeof(styleCode));
+    strlcpy(presetCode, p_resolved.presetCode, sizeof(presetCode));
+    strlcpy(styleCode,  p_resolved.styleCode,  sizeof(styleCode));
+
+    // 2) 사용자 파라미터(0~100) 클램프
+    //    - UI/웹/API 등 다양한 입력 경로에서 들어오기 때문에 항상 방어
+    userIntensity   = constrain(p_resolved.wind_intensity,   0.0f, 100.0f);
+    userVariability = constrain(p_resolved.wind_variability, 0.0f, 100.0f);
+    userGustFreq    = constrain(p_resolved.gust_frequency,   0.0f, 100.0f);
+
+    // fan limit/min도 클램프 후 "관계 보정(min <= limit)" 유지
+    float v_limit = constrain(p_resolved.fan_limit, 0.0f, 100.0f);
+    float v_min   = constrain(p_resolved.min_fan,   0.0f, 100.0f);
+    if (v_min > v_limit) {
+        v_min = v_limit; // 정책: min이 limit를 넘으면 min을 limit에 맞춘다
+    }
+    fanLimitPct = v_limit;
+    minFanPct   = v_min;
+
+    // 3) 물리 파라미터 최소값 보정
+    //    - 길이 스케일은 1.0 이상, sigma는 0 이상
+    //    - thermalStrength는 1.0 이상(1.0=영향 없음 기준), radius는 0 이상
+    turbLenScale    = max(1.0f, p_resolved.turbulence_length_scale);
+    turbSigma       = max(0.0f, p_resolved.turbulence_intensity_sigma);
+    thermalStrength = max(1.0f, p_resolved.thermal_bubble_strength);
+    thermalRadius   = max(0.0f, p_resolved.thermal_bubble_radius);
+
+    // 4) Preset 코어 파라미터 재설정
+    //    - presetCode에 따라 baseMin/baseMax/확률 등이 바뀌므로 반드시 재적용
+    applyPresetCore(presetCode);
+
+    // 5) variability -> windChangeRate 재계산
+    //    - variability가 높을수록 목표 풍속으로 빨리 수렴(변화가 잦아짐)
+    const float v_varNorm = userVariability / 100.0f; // 0~1
+    windChangeRate = constrain(0.10f + v_varNorm * 0.20f, 0.06f, 0.34f);
+
+    // 6) Phase/상태 초기화
+    //    - Preset 변경 시 Phase 범위도 달라지므로 initPhaseFromBase()로 재시작
+    initPhaseFromBase();
+
+    // 7) 이벤트 상태 리셋 (새 파라미터 적용 시 깔끔하게 시작)
+    active              = true;
+    gustActive          = false;
+    thermalActive       = false;
+    gustIntensity       = 1.0f;
+    thermalContribution = 0.0f;
+
+    // 8) 새 목표 생성
+    generateTarget();
+
+    portEXIT_CRITICAL(&_simMutex);
+}
+/*
+void CL_S10_Simulation::applyResolvedWind(const ST_A10_ResolvedWind_t& p_resolved) {
     // 코드명 복사
     memset(presetCode, 0, sizeof(presetCode));
     memset(styleCode, 0, sizeof(styleCode));
@@ -423,6 +485,7 @@ void CL_S10_Simulation::applyResolvedWind(const ST_A10_ResolvedWind_t& p_resolve
 
     generateTarget(); // 새로운 목표 풍속 생성
 }
+*/
 
 
 /**
@@ -430,6 +493,55 @@ void CL_S10_Simulation::applyResolvedWind(const ST_A10_ResolvedWind_t& p_resolve
  * 사용자 Intensity, Min/Limit 값을 반영합니다.
  */
 
+void CL_S10_Simulation::applyFan(float p_pct) {
+    if (!_pwm) {
+        return;
+    }
+
+    // 1) 요청 duty(%)를 0~1로 정규화
+    float v_req01 = A10_clampf(p_pct, 0.0f, 100.0f) / 100.0f;
+
+    // 2) 사용자 intensity(0~1)
+    const float v_int01 = A10_clampf(userIntensity, 0.0f, 100.0f) / 100.0f;
+
+    // 3) 팬 전원 OFF 또는 intensity가 거의 0이면 즉시 정지
+    if (!fanPowerEnabled || v_int01 <= 0.01f) {
+        _pwm->P10_setDutyPercent(0.0f);
+        return;
+    }
+
+    // 4) 시뮬레이션이 active인 동안에만 intensity 스케일 적용
+    //    - “논리적인 바람 세기”를 줄여도 min/limit/커브는 이후 단계에서 적용됨
+    if (active) {
+        v_req01 *= v_int01;
+    }
+
+    // 5) min/limit(%) -> 0~1 변환 + 관계 보정(min <= limit)
+    float v_min01 = A10_clampf(minFanPct,   0.0f, 100.0f) / 100.0f;
+    float v_max01 = A10_clampf(fanLimitPct, 0.0f, 100.0f) / 100.0f;
+
+    if (v_min01 > v_max01) {
+        // 정책: min이 limit를 넘으면 min을 limit에 맞춘다
+        v_min01 = v_max01;
+    }
+
+    // 6) hw.fanConfig 포인터 스냅샷
+    //    - system 포인터가 null일 수 있으므로 방어
+    //    - applyFanConfigCurve()는 v_fc가 null이어도 “기본 커브”로 처리하도록 설계하는 것이 이상적
+    const ST_A10_FanConfig_t* v_fc = nullptr;
+    if (g_A10_config_root.system != nullptr) {
+        v_fc = &g_A10_config_root.system->hw.fanConfig;
+    }
+
+    // 7) 커브 적용: 논리 duty(0~1) -> 실제 PWM duty(0~1)
+    //    - min/max 제한과 fan curve(저속 보정/선형/감마 등)를 함께 적용
+    const float v_phy01 = _pwm->applyFanConfigCurve(v_fc, v_req01, v_min01, v_max01);
+
+    // 8) PWM 모듈에 최종 %로 전달
+    _pwm->P10_setDutyPercent(v_phy01 * 100.0f);
+}
+
+/*
  void CL_S10_Simulation::applyFan(float p_pct) {
     if (!_pwm)
         return;
@@ -469,6 +581,6 @@ void CL_S10_Simulation::applyResolvedWind(const ST_A10_ResolvedWind_t& p_resolve
     // 5) 실제 PWM 모듈에 반영
     _pwm->P10_setDutyPercent(v_phy01 * 100.0f);
 }
-
+*/
 
 
