@@ -10,13 +10,13 @@
  * ------------------------------------------------------
  */
 
-#include "S10_Simulation_020.h" // 해당 클래스 헤더 파일 포함
+#include "S10_Simul_021.h" // 해당 클래스 헤더 파일 포함
 
 // 외부 종속성 헤더 포함 (외부에서 제공되어야 함: 시스템 상수, 설정, 로그, PWM 제어)
 #include "A10_Const_016.h"
 #include "C10_Config_029.h"
 #include "D10_Logger_016.h"
-#include "P10_PWM_ctrl_014.h"
+// #include "P10_PWM_ctrl_014.h"
 
 
 
