@@ -151,7 +151,9 @@ void CL_S10_Simulation::tick() {
 
     // 2) 이번 tick의 기준 시간은 "딱 1번만" 읽어서 끝까지 재사용
     //    - 락 안에서 millis()를 여러 번 부르면 미세한 시간 튐으로 샘플링/interval 판단이 흔들릴 수 있음
-    const unsigned long v_now = millis();
+    _tickNowMs  = millis();
+    _tickNowSec = (float)_tickNowMs / 1000.0f;
+    // const unsigned long v_now = millis();
 
     // 3) 업데이트 주기 지터(불규칙성) 적용
     //    - 자연스러운 떨림을 위해 40ms + (0~59ms) 범위의 랜덤 지터
@@ -159,7 +161,7 @@ void CL_S10_Simulation::tick() {
     const uint32_t  v_minIntervalMs = 40u + (s_jitterSeed % 60u);
 
     // 아직 업데이트할 시간이 아니면 종료
-    if (v_now - lastUpdateMs < v_minIntervalMs) {
+    if (_tickNowMs - lastUpdateMs < v_minIntervalMs) {
         portEXIT_CRITICAL(&_simMutex);
         return;
     }
@@ -168,9 +170,9 @@ void CL_S10_Simulation::tick() {
     s_jitterSeed = esp_random();
 
     // 4) delta time 계산
-    float v_dt = (v_now - lastUpdateMs) / 1000.0f;
+    float v_dt = (_tickNowMs - lastUpdateMs) / 1000.0f;
     v_dt = A10_clampf(v_dt, 0.001f, 0.5f); // 안정성 상한/하한
-    lastUpdateMs = v_now;
+    lastUpdateMs = _tickNowMs;
 
     // 5) 변화 감지를 위해 "이전 상태" 기록
     const float           v_prevWind  = currentWindSpeed;
@@ -232,14 +234,14 @@ void CL_S10_Simulation::tick() {
 
     // 13) 차트 샘플링(1Hz, 이벤트 중 2Hz) - 시간 기준은 v_now 재사용(일관성)
     const unsigned long v_chartIntervalMs = (gustActive || thermalActive) ? 500UL : 1000UL;
-    if (v_now - s_lastChartLogMs > v_chartIntervalMs) {
+    if (_tickNowMs - s_lastChartLogMs > v_chartIntervalMs) {
 
         if (s_chartBuffer.size() >= 120) {
             s_chartBuffer.pop_front();
         }
 
         ST_ChartEntry v_e{};
-        v_e.timestamp        = v_now; // millis() 재호출 금지: tick 기준 시간 사용
+        v_e.timestamp        = _tickNowMs; // millis() 재호출 금지: tick 기준 시간 사용
         v_e.wind_speed       = currentWindSpeed;
         v_e.pwm_duty         = _pwm ? _pwm->P10_getDutyPercent() : 0.0f;
         v_e.intensity        = userIntensity;
@@ -252,7 +254,7 @@ void CL_S10_Simulation::tick() {
         s_chartBuffer.push_back(v_e);
 
         // (중요) s_lastChartLogMs도 v_now로 갱신 (일관된 시간축 유지)
-        s_lastChartLogMs = v_now;
+        s_lastChartLogMs = _tickNowMs;
     }
 
     // Critical Section 종료
