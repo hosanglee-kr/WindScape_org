@@ -190,6 +190,9 @@ class CL_S10_Simulation {
     private:
 
         CL_P10_PWM* _pwm = nullptr; // PWM 제어기 포인터
+
+        const ST_A10_FanConfig_t* _fanCfgSnap = nullptr;  // g_A10_config_root.system->hw.fanConfig
+
         portMUX_TYPE _simMutex = portMUX_INITIALIZER_UNLOCKED; // FreeRTOS Mutex: 다중 Task 접근 보호용
 
 
