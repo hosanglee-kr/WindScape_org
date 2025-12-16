@@ -191,6 +191,9 @@ class CL_S10_Simulation {
 
         CL_P10_PWM* _pwm = nullptr; // PWM 제어기 포인터
 
+        // 주의:
+        // - fanConfig가 포함된 system 구조체는 ConfigManager가
+        //   "주소 안정성"을 보장해야 함 (내용만 갱신, free/realloc 금지)
         const ST_A10_FanConfig_t* _fanCfgSnap = nullptr;  // g_A10_config_root.system->hw.fanConfig
 
         portMUX_TYPE _simMutex = portMUX_INITIALIZER_UNLOCKED; // FreeRTOS Mutex: 다중 Task 접근 보호용
