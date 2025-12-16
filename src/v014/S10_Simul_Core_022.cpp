@@ -29,6 +29,9 @@
  */
 void CL_S10_Simulation::begin(CL_P10_PWM& p_pwm) {
     _pwm = &p_pwm;
+    // fanConfig 스냅샷 초기화
+    _fanCfgSnap = nullptr;
+    
     resetDefaults(); // 시뮬레이션 파라미터를 기본값으로 설정
     // 풍속 이력 버퍼(history) 초기화 및 인덱스 리셋 (평균 풍속 계산용)
     memset(history, 0, sizeof(history));
@@ -44,6 +47,9 @@ void CL_S10_Simulation::begin(CL_P10_PWM& p_pwm) {
  */
 void CL_S10_Simulation::stop() {
     active           = false;
+    // fanConfig 스냅샷 초기화
+    _fanCfgSnap = nullptr;
+    
     phase            = EN_A10_WEATHER_PHASE_CALM;
     targetWindSpeed  = 0.0f;
     currentWindSpeed = 0.0f;
@@ -57,6 +63,9 @@ void CL_S10_Simulation::stop() {
  */
 void CL_S10_Simulation::resetDefaults() {
     active          = false;
+    // fanConfig 스냅샷 초기화
+    _fanCfgSnap = nullptr;
+    
     fanPowerEnabled = true;
 
     // 기본 Preset/Style 설정
@@ -68,6 +77,7 @@ void CL_S10_Simulation::resetDefaults() {
     userVariability = 50.0f;    // 목표 풍속 변화율/빈도 (0~100)
     userGustFreq    = 45.0f;    // 돌풍 발생 빈도 (0~100)
     minFanPct       = 10.0f;    // 최소 팬 구동 Duty (%)
+  
     fanLimitPct     = 90.0f;    // 최대 팬 구동 Duty (%)
 
     // 물리 파라미터: 난류
@@ -129,6 +139,14 @@ void CL_S10_Simulation::tick() {
     if (!active) {
         portEXIT_CRITICAL(&_simMutex);
         return;
+    }
+
+    // [fanConfig 스냅샷] 이번 tick에서 사용할 fanConfig 포인터를 1회 캡처
+    // - 락 안에서 수행(일관성)
+    // - system이 null이면 fanConfig도 null 처리 → applyFanConfigCurve가 기본 동작으로 처리해야 함
+    _fanCfgSnap = nullptr;
+    if (g_A10_config_root.system != nullptr) {
+        _fanCfgSnap = &g_A10_config_root.system->hw.fanConfig;
     }
 
     // 2) 이번 tick의 기준 시간은 "딱 1번만" 읽어서 끝까지 재사용
@@ -272,6 +290,12 @@ void CL_S10_Simulation::applyResolvedWind(const ST_A10_ResolvedWind_t& p_resolve
     //   applyResolvedWind()는 반드시 _simMutex로 보호해야 합니다.
     portENTER_CRITICAL(&_simMutex);
 
+    // [fanConfig 스냅샷] applyResolvedWind 호출 시점에도 1회 캡처
+    _fanCfgSnap = nullptr;
+    if (g_A10_config_root.system != nullptr) {
+        _fanCfgSnap = &g_A10_config_root.system->hw.fanConfig;
+    }
+
     // 1) preset/style 코드 복사 (안전 초기화 후 복사)
     memset(presetCode, 0, sizeof(presetCode));
     memset(styleCode,  0, sizeof(styleCode));
@@ -366,6 +390,8 @@ void CL_S10_Simulation::applyFan(float p_pct) {
         v_min01 = v_max01;
     }
 
+    const ST_A10_FanConfig_t* v_fc = _fanCfgSnap;
+    /*
     // 6) hw.fanConfig 포인터 스냅샷
     //    - system 포인터가 null일 수 있으므로 방어
     //    - applyFanConfigCurve()는 v_fc가 null이어도 “기본 커브”로 처리하도록 설계하는 것이 이상적
@@ -373,6 +399,7 @@ void CL_S10_Simulation::applyFan(float p_pct) {
     if (g_A10_config_root.system != nullptr) {
         v_fc = &g_A10_config_root.system->hw.fanConfig;
     }
+    */
 
     // 7) 커브 적용: 논리 duty(0~1) -> 실제 PWM duty(0~1)
     //    - min/max 제한과 fan curve(저속 보정/선형/감마 등)를 함께 적용
