@@ -198,6 +198,9 @@ class CL_S10_Simulation {
 
         portMUX_TYPE _simMutex = portMUX_INITIALIZER_UNLOCKED; // FreeRTOS Mutex: 다중 Task 접근 보호용
 
+        unsigned long _tickNowMs = 0;  // (tick에서 1회만 캡처)
+        float         _tickNowSec = 0.0f; // (tickNowMs / 1000.0f)
+
 
         // ==================================================
         // 내부 구현부
