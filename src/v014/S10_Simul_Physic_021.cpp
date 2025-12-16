@@ -108,7 +108,10 @@ void CL_S10_Simulation::applyPresetCore(const char* p_code) {
  */
 void CL_S10_Simulation::initPhaseFromBase() {
     phase         = EN_A10_WEATHER_PHASE_NORMAL; // NORMAL 상태로 시작
-    phaseStartSec = millis() / 1000.0f;
+
+    // tick()에서 캡처한 시간 기반(일관성) 사용
+    phaseStartSec = _tickNowSec;
+    // phaseStartSec = millis() / 1000.0f;
 
     float v_span = baseMaxWind - baseMinWind;
     if (v_span < 0.5f)
@@ -136,10 +139,19 @@ void CL_S10_Simulation::updatePhase() {
     if (!active)
         return;
 
+    // tick()에서 캡처한 시간(초) 기반 사용 (millis() 재호출 금지)
+    const float v_nowSec = _tickNowSec;
+
+    if (v_nowSec - phaseStartSec < phaseDurationSec) {
+        return;
+    }
+
+    /*
     float v_now = millis() / 1000.0f;
     // 현재 Phase 지속 시간(phaseDurationSec)이 지나지 않았으면 전환하지 않음
     if (v_now - phaseStartSec < phaseDurationSec)
         return;
+    */
 
     T_A10_WindPhase_t v_old = phase;
     float             v_r   = A10_getRandom01(); // 0.0 ~ 1.0 랜덤 값
@@ -161,7 +173,8 @@ void CL_S10_Simulation::updatePhase() {
             phase = EN_A10_WEATHER_PHASE_STRONG;
     }
 
-    phaseStartSec = v_now;
+    phaseStartSec = v_nowSec;
+    // phaseStartSec = v_now;
 
     float v_span = baseMaxWind - baseMinWind;
     if (v_span < 0.5f)
@@ -250,8 +263,10 @@ void CL_S10_Simulation::calcThermalEnvelope() {
         return;
     }
 
-    float v_t   = millis() / 1000.0f;
-    float v_age = v_t - thermalStartSec;
+    // tick() 스냅샷 시간 기반 사용
+    const float v_age = _tickNowSec - thermalStartSec;
+    // float v_t   = millis() / 1000.0f;
+    // float v_age = v_t - thermalStartSec;
 
     // 지속 시간 초과 시 비활성화
     if (v_age >= thermalDuration) {
@@ -292,8 +307,8 @@ void CL_S10_Simulation::calcThermalEnvelope() {
 void CL_S10_Simulation::updateGust() {
     if (!active)
         return;
-
-    float v_nowSec = millis() / 1000.0f;
+    const float v_nowSec = _tickNowSec;
+    // float v_nowSec = millis() / 1000.0f;
 
     if (gustActive) {
         // 돌풍 진행 중: 시간 경과에 따른 포락선(Envelope) 기반 강도 갱신
@@ -330,11 +345,18 @@ void CL_S10_Simulation::updateGust() {
     }
 
     // 새로운 돌풍 트리거 (최소 500ms 간격)
+    const unsigned long v_nowMs = _tickNowMs;
+    if (v_nowMs - lastGustCheckMs < 500UL) {
+        return;
+    }
+    lastGustCheckMs = v_nowMs;
+    /*
     unsigned long v_nowMs = millis();
     if (v_nowMs - lastGustCheckMs < 500UL) {
         return;
     }
     lastGustCheckMs = v_nowMs;
+    */
 
     // 확률 계산: 기본 확률 * 사용자 주파수 * 풍속/Phase 가중치
     float v_base = gustProbBase;
@@ -356,6 +378,7 @@ void CL_S10_Simulation::updateGust() {
     if (A10_getRandom01() < v_p) {
         // 돌풍 발생
         gustActive   = true;
+        
         gustStartSec = v_nowSec;
 
         float v_speedF = currentWindSpeed / 6.7f;
@@ -388,11 +411,18 @@ void CL_S10_Simulation::updateThermal() {
     if (!active || thermalActive)
         return;
 
+    const unsigned long v_nowMs = _tickNowMs;
+    if (v_nowMs - lastThermalCheckMs < 700UL) {
+        return;
+    }
+    lastThermalCheckMs = v_nowMs;
+    /*
     unsigned long v_nowMs = millis();
     if (v_nowMs - lastThermalCheckMs < 700UL) {
         return;
     }
     lastThermalCheckMs = v_nowMs;
+    */
 
     // 확률 계산: 기본 확률 * 강도/풍속/Phase 가중치
     float v_strength = max(1.0f, thermalStrength);
@@ -407,7 +437,10 @@ void CL_S10_Simulation::updateThermal() {
     if (A10_getRandom01() < v_freq) {
         // 열기포 발생
         thermalActive   = true;
-        thermalStartSec = v_nowMs / 1000.0f;
+
+        // tickNowMs/1000 계산 금지 → tickNowSec 사용
+        thermalStartSec = _tickNowSec;
+        // thermalStartSec = v_nowMs / 1000.0f;
 
         // 지속 시간 랜덤 설정
         float v_d = A10_randRange(8.0f, 14.0f);
