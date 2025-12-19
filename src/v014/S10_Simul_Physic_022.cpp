@@ -39,6 +39,19 @@ static const float G_S10_THERM_DUR_MAX_S        = 14.0f;
 static const float G_S10_THERM_DUR_MUL_CALM     = 1.3f;
 static const float G_S10_THERM_DUR_MUL_STRONG   = 0.8f;
 
+// ==================================================
+// [확률/레이트 보정 헬퍼]
+// ==================================================
+static inline float S10_probFromRatePerSec(float p_ratePerSec, float p_dtSec) {
+    // p_ratePerSec: 초당 발생률(λ, 1/sec). 0이면 발생 안 함.
+    // p_dtSec     : 평가 구간(초). 0이면 확률 0.
+    if (p_ratePerSec <= 0.0f || p_dtSec <= 0.0f) {
+        return 0.0f;
+    }
+    // 포아송 기반: P(N>=1) = 1 - exp(-λΔt)
+    float v_p = 1.0f - expf(-p_ratePerSec * p_dtSec);
+    return A10_clampf(v_p, 0.0f, 1.0f);
+}
 
 
 
