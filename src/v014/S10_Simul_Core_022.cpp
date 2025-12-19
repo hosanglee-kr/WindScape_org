@@ -156,9 +156,14 @@ void CL_S10_Simulation::tick() {
     // const unsigned long v_now = millis();
 
     // 3) 업데이트 주기 지터(불규칙성) 적용
+    // tick 주기 지터 (자연스러운 비주기성 유도) // - 기본 40ms + [0~59ms] 랜덤
+    const uint32_t v_jitterMs      = esp_random() % 60u;
+    const uint32_t v_minIntervalMs = 40u + v_jitterMs;
+
+    
     //    - 자연스러운 떨림을 위해 40ms + (0~59ms) 범위의 랜덤 지터
-    static uint32_t s_jitterSeed = 0;
-    const uint32_t  v_minIntervalMs = 40u + (s_jitterSeed % 60u);
+    // static uint32_t s_jitterSeed = 0;
+    // const uint32_t  v_minIntervalMs = 40u + (s_jitterSeed % 60u);
 
     // 아직 업데이트할 시간이 아니면 종료
     if (_tickNowMs - lastUpdateMs < v_minIntervalMs) {
@@ -167,7 +172,7 @@ void CL_S10_Simulation::tick() {
     }
 
     // 다음 지터를 위한 seed 갱신
-    s_jitterSeed = esp_random();
+    // s_jitterSeed = esp_random();
 
     // 4) delta time 계산
     float v_dt = (_tickNowMs - lastUpdateMs) / 1000.0f;
