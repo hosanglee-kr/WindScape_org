@@ -110,6 +110,9 @@ void CL_S10_Simulation::resetDefaults() {
     thermalActive       = false;
     thermalContribution = 0.0f; // 현재 열기포 가산값 (m/s)
 
+    _tickNowMs  = millis();
+    _tickNowSec = (float)_tickNowMs / 1000.0f;
+    
     applyPresetCore(presetCode); // Preset 코어 값 (Base Wind/확률) 적용
     initPhaseFromBase();         // Phase 상태 초기화 (NORMAL 상태로 시작)
 }
@@ -296,6 +299,9 @@ void CL_S10_Simulation::applyResolvedWind(const ST_A10_ResolvedWind_t& p_resolve
     // - tick()이 동시에 currentWindSpeed/phase/userIntensity 등을 읽고 쓰므로
     //   applyResolvedWind()는 반드시 _simMutex로 보호해야 합니다.
     portENTER_CRITICAL(&_simMutex);
+
+    _tickNowMs  = millis();
+    _tickNowSec = (float)_tickNowMs / 1000.0f;
 
     // [fanConfig 스냅샷] applyResolvedWind 호출 시점에도 1회 캡처
     _fanCfgSnap = nullptr;
