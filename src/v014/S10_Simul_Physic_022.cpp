@@ -36,43 +36,16 @@
  * ------------------------------------------------------
  */
 
-#include "S10_Simul_021.h"
+#include "S10_Simul_022.h"
 
-// 외부 종속성 헤더 포함 (외부에서 제공되어야 함: 시스템 상수, 설정, 로그, PWM 제어)
+// 외부 종속성 헤더 포함
 #include "A10_Const_016.h"
 #include "C10_Config_029.h"
 #include "D10_Logger_016.h"
-// #include "P10_PWM_ctrl_014.h"
+
 
 // ==================================================
-// [S10 주기/시간 정책 상수]
-// ==================================================
-
-// (1) Phase 지속시간 범위(초) 정책
-static const float G_S10_PHASE_CALM_DUR_MIN_S   = 90.0f;
-static const float G_S10_PHASE_CALM_DUR_MAX_S   = 210.0f;
-static const float G_S10_PHASE_NORM_DUR_MIN_S   = 120.0f;
-static const float G_S10_PHASE_NORM_DUR_MAX_S   = 300.0f;
-static const float G_S10_PHASE_STRONG_DUR_MIN_S = 60.0f;
-static const float G_S10_PHASE_STRONG_DUR_MAX_S = 150.0f;
-
-// (2) Thermal(열기포) 지속시간 범위(초) 정책
-static const float G_S10_THERM_DUR_MIN_S        = 8.0f;
-static const float G_S10_THERM_DUR_MAX_S        = 14.0f;
-
-// (3) Thermal phase 보정 배율(지속시간에 적용)
-static const float G_S10_THERM_DUR_MUL_CALM     = 1.3f;
-static const float G_S10_THERM_DUR_MUL_STRONG   = 0.8f;
-
-// (4) 이벤트 평가 최소 간격(밀리초) 정책
-// - 확률 의미를 "초당 발생률(rate, 1/sec)"로 정규화하고,
-//   실제 평가 구간 dtSec(=경과시간/1000)로 P(N>=1)=1-exp(-rate*dtSec) 변환한다.
-// - 최소 간격은 과도한 평가/부하를 줄이기 위한 정책이며, dtSec는 실제 경과로 자동 보정됨.
-static const unsigned long G_S10_GUST_EVAL_MIN_MS  = 500UL;
-static const unsigned long G_S10_THERM_EVAL_MIN_MS = 700UL;
-
-// ==================================================
-// [문자열/확률 헬퍼]
+// [문자열/확률 헬퍼] (파일 내부 전용)
 // ==================================================
 static inline bool S10_strEqNoCase(const char* p_a, const char* p_b) {
     // [입력 방어] null 안전
@@ -87,15 +60,16 @@ static inline float S10_probFromRatePerSec(float p_ratePerSec, float p_dtSec) {
     // - p_ratePerSec : 초당 발생률(rate, λ) [1/sec]
     // - p_dtSec      : 평가 구간(경과 시간) [sec]
     // [의미]
-    // - 포아송 과정 가정 시, dtSec 동안 "최소 1회 이상" 발생할 확률:
+    // - 포아송 과정 가정 시, dtSec 동안 "최소 1회 이상" 발생 확률:
     //     P(N>=1) = 1 - exp(-λ * dt)
-    // - 평가 주기가 바뀌어도(예: 0.5s -> 0.2s) 동일한 체감 빈도를 유지하도록 자동 보정됨.
+    // - 평가 주기가 바뀌어도 동일한 체감 빈도를 유지하도록 자동 보정됨.
     if (p_ratePerSec <= 0.0f || p_dtSec <= 0.0f) {
         return 0.0f;
     }
-    float v_p = 1.0f - expf(-p_ratePerSec * p_dtSec);
+    const float v_p = 1.0f - expf(-p_ratePerSec * p_dtSec);
     return A10_clampf(v_p, 0.0f, 1.0f);
 }
+
 
 // ==================================================
 // Preset / Phase
@@ -140,9 +114,9 @@ void CL_S10_Simulation::applyPresetCore(const char* p_code) {
     if (S10_strEqNoCase(v_code, "COUNTRY") || S10_strEqNoCase(v_code, "COUNTRY_BREEZE") || S10_strEqNoCase(v_code, "COUNTRY_B")) {
         baseMinWind     = 0.7f;
         baseMaxWind     = 3.4f;
-        gustProbBase    = 0.006f; // [1/sec] 낮은 돌풍 발생률
+        gustProbBase    = 0.006f;
         gustStrengthMax = 1.35f;
-        thermalFreqBase = 0.015f; // [1/sec]
+        thermalFreqBase = 0.015f;
     } else if (S10_strEqNoCase(v_code, "MEDITERRANEAN")) {
         baseMinWind     = 1.6f;
         baseMaxWind     = 3.8f;
@@ -213,10 +187,6 @@ void CL_S10_Simulation::applyPresetCore(const char* p_code) {
  *
  * [시간 기준]
  * - millis()를 직접 호출하지 않고 tick()에서 캡처한 _tickNowSec 사용.
- *
- * [단위]
- * - phaseStartSec/phaseDurationSec : [sec]
- * - phaseMinWind/phaseMaxWind      : [m/s]
  */
 void CL_S10_Simulation::initPhaseFromBase() {
     phase         = EN_A10_WEATHER_PHASE_NORMAL; // NORMAL 상태로 시작
@@ -227,14 +197,14 @@ void CL_S10_Simulation::initPhaseFromBase() {
         v_span = 0.5f;
     }
 
-    // Normal Phase의 Min/Max Wind를 Base Wind Span 기준으로 설정
+    // Normal Phase 기준 범위
     phaseMinWind = baseMinWind + v_span * 0.15f;
     phaseMaxWind = baseMinWind + v_span * 0.85f;
 
-    // 초기 phase 지속시간 정책(초)
+    // 지속시간(초) 정책 상수는 헤더(S10_Simul_022.h)에서 공유
     phaseDurationSec = A10_randRange(G_S10_PHASE_NORM_DUR_MIN_S, G_S10_PHASE_NORM_DUR_MAX_S);
 
-    // 현재 풍속 및 목표 풍속을 기본 중간값으로 설정
+    // 초기 풍속/목표
     const float v_mid = (baseMinWind + baseMaxWind) * 0.5f;
     currentWindSpeed  = v_mid;
     targetWindSpeed   = v_mid;
@@ -243,7 +213,7 @@ void CL_S10_Simulation::initPhaseFromBase() {
     spectralPhaseAcc  = 0.0f;
     windMomentum      = 0.0f;
 
-    // [안정성] 최종 범위 보정
+    // 범위 보정
     phaseMinWind = max(0.2f, phaseMinWind);
     phaseMaxWind = min(11.0f, phaseMaxWind);
     if (phaseMaxWind < phaseMinWind + 0.2f) {
@@ -259,26 +229,24 @@ void CL_S10_Simulation::initPhaseFromBase() {
  * - STRONG-> 70% NORMAL, 30% CALM
  * - NORMAL-> 40% CALM, 40% NORMAL, 20% STRONG
  *
- * [시간/단위]
- * - phaseDurationSec : [sec]
- * - _tickNowSec      : tick()에서 캡처된 현재 시간 [sec]
+ * [시간 기준]
+ * - _tickNowSec : tick()에서 캡처된 현재 시간 [sec]
  */
 void CL_S10_Simulation::updatePhase() {
     if (!active) {
         return;
     }
 
-    const float v_nowSec = _tickNowSec; // tick 스냅샷 시간 기반
+    const float v_nowSec = _tickNowSec;
 
-    // 아직 현재 phase 지속시간이 끝나지 않으면 전환하지 않음
+    // 지속시간 미만이면 유지
     if (v_nowSec - phaseStartSec < phaseDurationSec) {
         return;
     }
 
     const T_A10_WindPhase_t v_old = phase;
-    const float             v_r   = A10_getRandom01(); // 0.0 ~ 1.0
+    const float             v_r   = A10_getRandom01(); // 0..1
 
-    // 확률적 Phase 전환 로직
     if (v_old == EN_A10_WEATHER_PHASE_CALM) {
         phase = (v_r < 0.7f) ? EN_A10_WEATHER_PHASE_NORMAL : EN_A10_WEATHER_PHASE_STRONG;
     } else if (v_old == EN_A10_WEATHER_PHASE_STRONG) {
@@ -300,7 +268,7 @@ void CL_S10_Simulation::updatePhase() {
         v_span = 0.5f;
     }
 
-    // 새로운 Phase에 따른 Duration 및 풍속 범위 설정 (정책 상수 적용)
+    // Phase별 지속시간/범위 (정책 상수는 헤더 공유)
     if (phase == EN_A10_WEATHER_PHASE_CALM) {
         phaseDurationSec = A10_randRange(G_S10_PHASE_CALM_DUR_MIN_S, G_S10_PHASE_CALM_DUR_MAX_S);
         phaseMinWind     = baseMinWind;
@@ -315,55 +283,44 @@ void CL_S10_Simulation::updatePhase() {
         phaseMaxWind     = baseMaxWind;
     }
 
-    // 최종 풍속 범위 제한/보정
+    // 범위 제한/보정
     phaseMinWind = max(0.2f, phaseMinWind);
     phaseMaxWind = min(11.0f, phaseMaxWind);
     if (phaseMaxWind < phaseMinWind + 0.2f) {
         phaseMaxWind = phaseMinWind + 0.2f;
     }
 
-    // Phase 변경 후 새 목표 풍속 생성
+    // Phase 변경 후 목표 재생성
     generateTarget();
 }
+
 
 // ==================================================
 // Turbulence / Thermal Envelope
 // ==================================================
 
 /**
- * @brief Von Kármán 난류 모델을 12개 주파수 밴드의 합으로 근사하여 난류 성분을 계산합니다.
+ * @brief Von Kármán 난류 모델을 12개 주파수 밴드 합으로 근사하여 난류 성분을 계산합니다.
  * @param p_dt Delta Time [sec]
- *
- * [입력 방어/단위]
- * - p_dt: tick()에서 계산된 dt(초). 0 이하이면 의미가 없으므로 상위에서 클램프 권장.
- * - turbLenScale(L): 난류 길이 스케일(>=1.0)
- * - turbSigma(σ)   : 난류 세기(>=0.0)
- * - currentWindSpeed(U): 평균 풍속(>=0.1)
- *
- * [출력]
- * - spectralEnergyBuf: 난류 성분(평균 0 근처) [m/s] 형태로 누적/관성 반영
  */
 void CL_S10_Simulation::calcTurb(float p_dt) {
     if (!active) {
         return;
     }
-
-    // [입력 방어]
     if (p_dt <= 0.0f) {
         return;
     }
 
-    const float v_L     = max(1.0f, turbLenScale);          // [m] 또는 상대 스케일
-    const float v_sigma = max(0.0f, turbSigma);             // [-] (모델 내 표준편차)
-    const float v_U     = max(0.1f, currentWindSpeed);       // [m/s]
+    const float v_L     = max(1.0f, turbLenScale);
+    const float v_sigma = max(0.0f, turbSigma);
+    const float v_U     = max(0.1f, currentWindSpeed);
 
     float v_sum = 0.0f;
 
-    // 12개 주파수 밴드의 합으로 난류 스펙트럼 근사
     for (int v_i = 1; v_i <= 12; v_i++) {
         const float v_n   = (float)v_i * 0.1f;
-        const float v_f   = v_n * v_U / v_L;   // [Hz] 유사
-        const float v_fLU = v_f * v_L / v_U;   // 무차원
+        const float v_f   = v_n * v_U / v_L;
+        const float v_fLU = v_f * v_L / v_U;
 
         const float v_term  = 70.8f * v_fLU * v_fLU;
         const float v_numer = 4.0f * v_sigma * v_sigma * (v_L / v_U) * (1.0f + v_term);
@@ -373,23 +330,19 @@ void CL_S10_Simulation::calcTurb(float p_dt) {
         const float v_phaseRate = 2.0f * (float)M_PI * v_f;
         const float v_phaseInc  = v_phaseRate * p_dt;
 
-        // 위상: 누적 위상 + 현재 증가량 + 랜덤 노이즈
         const float v_phase = spectralPhaseAcc * (float)v_i + v_phaseInc + A10_randRange(-0.1f, 0.1f);
 
-        const float v_bandWidth = 0.083f; // 1/12 근사
+        const float v_bandWidth = 0.083f;
         const float v_amp       = sqrtf(max(0.0f, 2.0f * v_S * v_bandWidth));
 
         v_sum += v_amp * sinf(v_phase);
     }
 
-    // 위상 누적
     spectralPhaseAcc += p_dt * 0.5f;
     if (spectralPhaseAcc > 2.0f * (float)M_PI) {
         spectralPhaseAcc -= 2.0f * (float)M_PI;
     }
 
-    // 난류 에너지 버퍼에 관성(지수평활) 적용
-    // - turbTimeScale: [sec] (클래스 멤버로 존재한다고 가정)
     const float v_tscale = max(0.001f, turbTimeScale);
     const float v_corr   = expf(-p_dt / v_tscale);
 
@@ -397,29 +350,21 @@ void CL_S10_Simulation::calcTurb(float p_dt) {
 }
 
 /**
- * @brief 열기포가 활성화되었을 때, 시간 경과에 따른 가산 기여도(Envelope)를 계산합니다.
- *
- * [단위]
- * - thermalStartSec/_tickNowSec : [sec]
- * - thermalDuration             : [sec]
- * - thermalContribution         : 풍속 가산값 [m/s] (엄밀히는 모델 내부 가산)
+ * @brief 열기포 활성 시 시간 경과에 따른 가산 기여도(Envelope)를 계산합니다.
  */
 void CL_S10_Simulation::calcThermalEnvelope() {
     if (!active || !thermalActive) {
         return;
     }
 
-    // tick 스냅샷 시간 기반
     const float v_age = _tickNowSec - thermalStartSec;
 
-    // [입력 방어] duration은 0보다 커야 함
     if (thermalDuration <= 0.0f) {
         thermalActive       = false;
         thermalContribution = 0.0f;
         return;
     }
 
-    // 지속 시간 초과 시 비활성화
     if (v_age >= thermalDuration) {
         thermalActive       = false;
         thermalContribution = 0.0f;
@@ -429,7 +374,6 @@ void CL_S10_Simulation::calcThermalEnvelope() {
     const float v_prog = A10_clampf(v_age / thermalDuration, 0.0f, 1.0f);
     float       v_env  = 0.0f;
 
-    // 포락선: 증가(0~0.2) - 유지+지터(0.2~0.6) - 감소(0.6~1.0)
     if (v_prog < 0.2f) {
         const float v_r = v_prog / 0.2f;
         v_env = 1.0f - powf(1.0f - v_r, 2.0f);
@@ -449,6 +393,7 @@ void CL_S10_Simulation::calcThermalEnvelope() {
     thermalContribution = (v_strength - 1.0f) * v_env;
 }
 
+
 // ==================================================
 // Gust / Thermal Spawn
 // ==================================================
@@ -457,11 +402,11 @@ void CL_S10_Simulation::calcThermalEnvelope() {
  * @brief 돌풍 발생 조건을 체크하고, 활성화 시 돌풍 강도(gustIntensity)를 갱신합니다.
  *
  * [확률 의미(정규화)]
- * - gustProbBase는 "초당 발생률(rate, 1/sec)"이며,
- *   평가 주기 dtSec(실제 경과 시간)로 P=1-exp(-rate*dt)로 변환 후 비교한다.
+ * - gustProbBase는 "초당 발생률(rate, 1/sec)"
+ * - dtSec로 P=1-exp(-rate*dt) 변환 후 비교
  *
  * [시간 기준]
- * - tick() 스냅샷(_tickNowMs/_tickNowSec)만 사용. millis() 재호출 금지.
+ * - tick() 스냅샷(_tickNowMs/_tickNowSec)만 사용
  */
 void CL_S10_Simulation::updateGust() {
     if (!active) {
@@ -470,9 +415,7 @@ void CL_S10_Simulation::updateGust() {
 
     const float v_nowSec = _tickNowSec;
 
-    // ------------------------------------------------------
-    // (1) 돌풍 진행 중이면: 포락선 기반으로 강도 갱신
-    // ------------------------------------------------------
+    // (1) 진행 중이면: 포락선 기반 강도 갱신
     if (gustActive) {
         const float v_age = v_nowSec - gustStartSec;
 
@@ -505,13 +448,10 @@ void CL_S10_Simulation::updateGust() {
         return;
     }
 
-    // ------------------------------------------------------
     // (2) 새 돌풍 트리거: 평가 간격 + dt 기반 확률 보정
-    // ------------------------------------------------------
     const unsigned long v_nowMs     = _tickNowMs;
     const unsigned long v_elapsedMs = (v_nowMs >= lastGustCheckMs) ? (v_nowMs - lastGustCheckMs) : 0UL;
 
-    // 최소 평가 간격 정책
     if (v_elapsedMs < G_S10_GUST_EVAL_MIN_MS) {
         return;
     }
@@ -523,10 +463,8 @@ void CL_S10_Simulation::updateGust() {
         return;
     }
 
-    // ------------------------------------------------------
-    // (3) rate(1/sec) 구성: base * user * wind/phase 가중치
-    // ------------------------------------------------------
-    const float v_user = A10_clampf(userGustFreq, 0.0f, 100.0f) / 100.0f; // [0..1]
+    // (3) rate 구성: base * user * wind/phase 가중치
+    const float v_user = A10_clampf(userGustFreq, 0.0f, 100.0f) / 100.0f;
     const float v_wfac = 1.0f + (currentWindSpeed / 8.9f) * 0.5f;
 
     float v_phaseMul = 1.0f;
@@ -534,14 +472,12 @@ void CL_S10_Simulation::updateGust() {
         v_phaseMul = 0.3f * v_wfac;
     } else if (phase == EN_A10_WEATHER_PHASE_STRONG) {
         v_phaseMul = 2.2f * v_wfac;
-    } else { // NORMAL
+    } else {
         v_phaseMul = 0.9f * v_wfac;
     }
 
-    // gustProbBase: [1/sec]
     const float v_ratePerSec = max(0.0f, gustProbBase) * v_user * v_phaseMul;
 
-    // dt에 따른 확률로 변환(자동 보정)
     const float v_p = S10_probFromRatePerSec(v_ratePerSec, v_dtSec);
 
     if (A10_getRandom01() < v_p) {
@@ -550,19 +486,17 @@ void CL_S10_Simulation::updateGust() {
 
         const float v_speedF = currentWindSpeed / 6.7f;
 
-        // Phase에 따라 지속 시간/강도 랜덤 설정
         if (phase == EN_A10_WEATHER_PHASE_CALM) {
             gustDuration  = A10_randRange(3.0f, 8.0f);
             gustIntensity = A10_randRange(1.08f, 1.33f);
         } else if (phase == EN_A10_WEATHER_PHASE_STRONG) {
             gustDuration  = A10_randRange(0.8f, 3.3f);
             gustIntensity = A10_randRange(1.3f, 1.3f + 0.9f * (1.0f + v_speedF * 0.3f));
-        } else { // NORMAL
+        } else {
             gustDuration  = A10_randRange(1.8f, 5.8f);
             gustIntensity = A10_randRange(1.15f, 1.15f + 0.5f * (1.0f + v_speedF * 0.2f));
         }
 
-        // 최대 제한값 적용
         const float v_maxMul = max(1.0f, gustStrengthMax);
         if (gustIntensity > v_maxMul) {
             gustIntensity = v_maxMul;
@@ -574,11 +508,8 @@ void CL_S10_Simulation::updateGust() {
  * @brief 열기포 발생 조건을 체크하고, 발생 시 상태를 활성화합니다.
  *
  * [확률 의미(정규화)]
- * - thermalFreqBase는 "초당 발생률(rate, 1/sec)"이며,
- *   평가 주기 dtSec(실제 경과 시간)로 P=1-exp(-rate*dt)로 변환 후 비교한다.
- *
- * [주의]
- * - thermalActive가 true인 동안에는 중복 발생을 막는다.
+ * - thermalFreqBase는 "초당 발생률(rate, 1/sec)"
+ * - dtSec로 P=1-exp(-rate*dt) 변환 후 비교
  */
 void CL_S10_Simulation::updateThermal() {
     if (!active || thermalActive) {
@@ -599,27 +530,26 @@ void CL_S10_Simulation::updateThermal() {
         return;
     }
 
-    // rate(1/sec) 구성: base * strengthMul * windMul * phaseMul
-    const float v_strength = max(1.0f, thermalStrength);
+    // rate 구성: base * strengthMul * windMul * phaseMul
+    const float v_strength    = max(1.0f, thermalStrength);
     const float v_strengthMul = (0.6f + 0.4f * min(3.0f, max(0.5f, v_strength)));
 
     const float v_wfac = 1.0f + (currentWindSpeed / 8.0f) * 0.3f;
 
-    // 열기포는 약풍에서 더 잘 발생한다는 가정: CALM 가중↑, STRONG 가중↓
-    const float v_phaseMul = (phase == EN_A10_WEATHER_PHASE_CALM) ? 1.2f
-                           : (phase == EN_A10_WEATHER_PHASE_STRONG ? 0.7f : 1.0f);
+    // 약풍에서 더 잘 발생한다는 가정
+    const float v_phaseMul =
+        (phase == EN_A10_WEATHER_PHASE_CALM) ? 1.2f :
+        (phase == EN_A10_WEATHER_PHASE_STRONG ? 0.7f : 1.0f);
 
-    // thermalFreqBase: [1/sec]
     const float v_ratePerSec = max(0.0f, thermalFreqBase) * v_strengthMul * v_wfac * v_phaseMul;
 
-    // dt에 따른 확률로 변환(자동 보정)
     const float v_p = S10_probFromRatePerSec(v_ratePerSec, v_dtSec);
 
     if (A10_getRandom01() < v_p) {
         thermalActive   = true;
-        thermalStartSec = _tickNowSec; // tickNowMs/1000 금지 → tickNowSec 사용
+        thermalStartSec = _tickNowSec;
 
-        // 지속 시간 정책 상수 적용 + phase 보정
+        // 지속 시간 정책 상수(헤더 공유) + phase 보정 배율
         float v_d = A10_randRange(G_S10_THERM_DUR_MIN_S, G_S10_THERM_DUR_MAX_S);
         if (phase == EN_A10_WEATHER_PHASE_CALM) {
             v_d *= G_S10_THERM_DUR_MUL_CALM;
@@ -627,9 +557,11 @@ void CL_S10_Simulation::updateThermal() {
             v_d *= G_S10_THERM_DUR_MUL_STRONG;
         }
 
-        thermalDuration = max(0.1f, v_d); // [입력 방어]
+        thermalDuration = max(0.1f, v_d);
+        thermalContribution = 0.0f; // envelope에서 계산
     }
 }
+
 
 // ==================================================
 // Target generation
@@ -637,14 +569,6 @@ void CL_S10_Simulation::updateThermal() {
 
 /**
  * @brief 새로운 목표 풍속(targetWindSpeed)을 생성합니다.
- *
- * [의미/단위]
- * - phaseMinWind~phaseMaxWind 범위 내에서 목표 생성 [m/s]
- * - 중앙값 바이어스로 극단값을 줄임
- * - userVariability/phase/turbLenScale/currentWindSpeed를 반영해 windChangeRate(수렴률) 결정
- *
- * [입력 방어]
- * - active=false면 동작하지 않음
  */
 void CL_S10_Simulation::generateTarget() {
     if (!active) {
@@ -656,12 +580,11 @@ void CL_S10_Simulation::generateTarget() {
         v_range = 0.2f;
     }
 
-    // Phase 범위 내 1차 목표 생성
     float v_w    = phaseMinWind + A10_getRandom01() * v_range;
     float v_mid  = (phaseMinWind + phaseMaxWind) * 0.5f;
     float v_bias = A10_randRange(0.0f, 1.0f);
 
-    // 중앙값 바이어스(극단 방지)
+    // 중앙값 바이어스
     v_w = (v_w + v_mid * v_bias) / (1.0f + v_bias);
     targetWindSpeed = v_w;
 
@@ -670,20 +593,17 @@ void CL_S10_Simulation::generateTarget() {
 
     float v_base = 0.15f;
 
-    // Phase별 변화율 기본값
     if (phase == EN_A10_WEATHER_PHASE_CALM) {
         v_base = 0.08f + v_var * 0.12f;
     } else if (phase == EN_A10_WEATHER_PHASE_STRONG) {
         v_base = 0.25f + v_var * 0.35f;
-    } else { // NORMAL
+    } else {
         v_base = 0.15f + v_var * 0.25f;
     }
 
-    // 풍속/난류 길이 스케일 가중치
     const float v_U      = max(0.1f, currentWindSpeed);
     const float v_tscale = turbLenScale / v_U;
     v_base *= (1.0f + v_tscale * 0.1f);
 
-    // 최종 변화율: 지터 + 제한
     windChangeRate = constrain(v_base * A10_randRange(0.7f, 1.7f), 0.04f, 0.5f);
 }
