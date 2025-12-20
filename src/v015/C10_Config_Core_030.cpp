@@ -61,7 +61,6 @@ bool CL_C10_ConfigManager::_dirty_windProfile  = false;
 ST_A20_cfg_jsonFile_t CL_C10_ConfigManager::s_cfgJsonFileMap{};
 
 SemaphoreHandle_t CL_C10_ConfigManager::s_configMutex = nullptr;
-// SemaphoreHandle_t CL_C10_ConfigManager::s_configMutex = xSemaphoreCreateMutex();
 
 // ------------------------------------------------------
 // JSON IO Helper 구현
@@ -233,26 +232,15 @@ bool CL_C10_ConfigManager::_mutex_Acquire(const char* p_funcName) {
 
 void CL_C10_ConfigManager::_mutex_Release() {
     if (s_configMutex) {
-        xSemaphoreGiveRecursive(s_configMutex);
+        if (xSemaphoreGiveRecursive(s_configMutex) != pdTRUE) {
+            CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                               "[C10] Mutex give failed (not owner?)");
+        }
     }
 }
 
 
 
-/*
-bool CL_C10_ConfigManager::_mutex_Acquire(const char* p_funcName) {
-    if (xSemaphoreTake(s_configMutex, G_C10_MUTEX_TIMEOUT) != pdTRUE) {
-        CL_D10_Logger::log(EN_L10_LOG_ERROR,
-                           "[C10] %s() Mutex timeout!", p_funcName);
-        return false;
-    }
-    return true;
-}
-
-void CL_C10_ConfigManager::_mutex_Release() {
-    xSemaphoreGive(s_configMutex);
-}
-*/
 
 // =====================================================
 // 1. 전체 관리 (Load/Free/Save)
