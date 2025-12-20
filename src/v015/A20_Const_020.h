@@ -51,7 +51,7 @@
 namespace A20_Const {
 
 // 펌웨어/파일버전
-constexpr char FW_VERSION[] = "A00_FW_1.0.0";
+constexpr char FW_VERSION[] = "FW_Ver_1.0.0";
 
 constexpr char CFG_JSON_FILE[] = "10_cfg_jsonFile.json";
 
