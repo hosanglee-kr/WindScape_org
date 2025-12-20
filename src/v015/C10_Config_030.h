@@ -53,6 +53,8 @@
 // ------------------------------------------------------
 // 외부 헬퍼 함수 선언 (Reset, 모드 변환 등)
 // ------------------------------------------------------
+
+/*
 // extern EN_A20_segment_mode_t A20_modeFromString(const char* p_mode);
 // extern const char*           A20_modeToString(EN_A20_segment_mode_t p_mode);
 
@@ -62,6 +64,7 @@ extern void A20_resetSchedulesDefault(ST_A20_SchedulesRoot_t& p_cfg);
 extern void A20_resetUserProfilesDefault(ST_A20_UserProfilesRoot_t& p_cfg);
 extern void A20_resetWifiDefault(ST_A20_WifiConfig& p_cfg);
 extern void A20_resetMotionDefault(ST_A20_MotionConfig& p_cfg);
+*/
 
 // ------------------------------------------------------
 // JSON I/O Helper 함수 선언 (Core cpp에서 구현)
