@@ -1,0 +1,78 @@
+/*
+ * ------------------------------------------------------
+ * 소스명 : P050_chart_t2_008.css
+ * 모듈명 : Smart Nature Wind Chart Monitor UI Style (v008)
+ * ------------------------------------------------------
+ * 주요 내용:
+ * - P000_common_001.css 그리드/버튼/카드 스타일에 의존
+ * - 6개 차트 컨테이너 레이아웃 및 헤더/토글 스타일 정의
+ * ------------------------------------------------------
+ */
+
+/* ======================= 차트 섹션 스타일 ======================= */
+
+.chart-section {
+  margin-top: 20px;
+}
+
+.chart-grid {
+  /* 차트 컨테이너 간 간격 */
+  gap: 20px;
+}
+
+.chart-container {
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #e0e6ed;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: #f7f9fb;
+  border-bottom: 1px solid #e0e6ed;
+  cursor: pointer;
+}
+
+.chart-header h3 {
+  margin: 0;
+  font-size: 1.1em;
+  color: #34495e;
+  font-weight: 600;
+}
+
+.btn-toggle {
+  background: none;
+  border: none;
+  font-size: 1.2em;
+  color: #34495e;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.chart-content {
+  padding: 15px;
+  background-color: #fff;
+  flex-grow: 1;
+}
+
+/* Chart.js 캔버스 높이 조정 */
+.chart-content canvas {
+  max-height: 260px;
+}
+
+/* 반응형: 공통 CSS의 col-6, grid 레이아웃을 그대로 활용 */
+@media (max-width: 768px) {
+  .chart-container {
+    flex: 1 1 100%;
+  }
+}
+

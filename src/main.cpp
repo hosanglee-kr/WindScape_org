@@ -11,12 +11,16 @@
 #include <Arduino.h>
 #include <LittleFS.h>
 
-#include "v014/SC10_Main_005.h"
+#include "v015/SC10_Main_010.h"
+
+//#include "v014/SC10_Main_005.h"
 
 
 void setup() {
 	Serial.begin(115200);
 	delay(1500);
+
+	
 	Serial.println();
 	Serial.println("=====================================");
 	Serial.println(" Smart Nature Wind - Boot Sequence ");

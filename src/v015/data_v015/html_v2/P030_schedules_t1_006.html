@@ -1,0 +1,215 @@
+
+
+<!-- P030_schedules_t1_006.html -->
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Wind 스케줄 관리</title>
+
+	<link rel="stylesheet" href="./P000_common_001.css">    
+    <link rel="stylesheet" href="P030_schedules_t1_006.css">
+</head>
+<body class="p-4 sm:p-8">
+    <header class="nav-bar">
+		<div class="nav-container">
+			<a href="./P040_dashboard_002.html" class="nav-logo">Smart Wind</a>
+			<nav>
+				<ul class="nav-menu" id="navMenu">
+					</ul>
+			</nav>
+		</div>
+	</header>
+
+    <div id="toastContainer"></div>
+    <div id="loadingOverlay" class="hidden">
+        <div class="spinner"></div>
+    </div>
+    
+    <div class="max-w-5xl mx-auto space-y-6">
+        <header class="flex justify-between items-center pb-4 border-b">
+            <h1 class="header-title">
+                <span class="header-icon">📅</span> Smart Wind 스케줄 관리
+            </h1>
+            <div class="flex space-x-2">
+                <span id="authStatus" class="text-sm text-gray-500 flex items-center">
+                    <span class="auth-dot pulse"></span>
+                    인증 중...
+                </span>
+                <button id="btnRefresh" class="btn btn-gray">
+                    새로고침
+                </button>
+                <button id="btnAddNewSchedule" class="btn btn-green" disabled>
+                    추가+
+                </button>
+            </div>
+        </header>
+
+        <section id="scheduleListSection" class="card p-6 border border-gray-200">
+            <h2 class="text-xl font-bold text-gray-700 mb-4">스케줄 목록 (<span id="scheduleCount">0</span>개)</h2>
+            
+            <div id="listPlaceholder" class="list-placeholder">스케줄을 로드 중입니다.</div>
+            
+            <div id="scheduleListContainer" class="list-container">
+            </div>
+            <div class="mt-4 p-2 user-id-display">
+                사용자 ID: <code id="displayUserId" class="user-id-code">N/A</code>
+            </div>
+        </section>
+
+        <section id="scheduleDetailSection" class="card p-6 border border-gray-200 hidden">
+            <header class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold text-blue-600">스케줄 편집 (<span id="detailTitle">새 항목</span>)</h2>
+                <div class="space-x-2">
+                    <button id="btnCancelEdit" class="btn btn-gray">
+                        취소
+                    </button>
+                    <button id="btnDeleteSchedule" class="btn btn-red hidden">
+                        삭제
+                    </button>
+                    <button id="btnSaveDetail" class="btn btn-blue">
+                        저장
+                    </button>
+                </div>
+            </header>
+
+            <div class="mt-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-3 header-h3">기본 정보 및 기간</h3>
+                <div class="grid-container md-grid-cols-4 gap-4">
+                    <div class="md-col-span-1">
+                        <label class="form-label">스케줄 번호 (1-999)</label>
+                        <input type="number" id="schNoDetail" min="1" max="999" class="input-style">
+                    </div>
+                    <div class="md-col-span-2">
+                        <label class="form-label">스케줄 이름</label>
+                        <div class="flex space-x-2">
+                            <input type="text" id="scheduleNameDetail" class="input-style flex-grow-1">
+                            <button id="btnSuggestName" class="btn btn-purple" disabled>
+                                ✨ 이름 추천
+                            </button>
+                        </div>
+                    </div>
+                    <div class="md-col-span-1 flex items-end">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" id="scheduleEnabledDetail" class="form-checkbox">
+                            <span class="ml-2 text-sm font-medium text-gray-700">스케줄 사용 여부</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mt-6 border-t pt-4">
+                    <div class="flex items-start">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" id="periodEnabledDetail" class="form-checkbox">
+                            <span class="ml-2 text-sm font-medium text-gray-700">동작 시간대 Rule 적용 여부</span>
+                        </label>
+                    </div>
+                    <div id="periodSettingsContainer" class="mt-4 grid-container md-grid-cols-4 gap-4 period-settings-container">
+                        <div id="startTimeContainer" class="md-col-span-1">
+                            <label class="form-label">시작 시간 (HH:MM)</label>
+                            <input type="time" id="startTimeDetail" class="input-style" value="08:00">
+                        </div>
+                        <div id="endTimeContainer" class="md-col-span-1">
+                            <label class="form-label">종료 시간 (HH:MM)</label>
+                            <input type="time" id="endTimeDetail" class="input-style" value="18:00">
+                        </div>
+                        <div class="md-col-span-4 mt-2">
+                            <label class="form-label">동작 요일</label>
+                            <div id="daySelectorsDetail" class="day-toggle">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 border-t pt-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-lg font-semibold text-gray-700 header-h3">동작 단계 (Step)</h3>
+                    <button id="btnAddSegmentDetail" class="btn btn-green btn-add-segment">
+                        + 동작 단계(Step) 추가
+                    </button>
+                </div>
+                <div id="segmentListDetail" class="segment-list-detail">
+                </div>
+            </div>
+
+            <div class="mt-6 border-t pt-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-3 header-h3">자동 종료 및 움직임 감지</h3>
+                <div class="grid-container md-grid-cols-3 gap-6 mt-4">
+                
+                    <div>
+                        <h4 class="font-semibold text-gray-600 mb-2">자동 종료 (AutoOff)</h4>
+                        <div class="autooff-container">
+                            <label class="inline-flex items-center ml-2">
+                                <input type="checkbox" id="autoOffTimerEnabledDetail" class="form-checkbox autooff-toggle">
+                                <span class="ml-1 text-sm font-medium text-gray-700">작동 타이머 적용</span>
+                            </label>
+                            <div class="autooff-group timer-group autooff-indent">
+                                <label class="form-label">작동 시간 (분)</label>
+                                <input type="number" id="autoOffTimerMinutesDetail" min="0" class="input-style autooff-input-timer" value="0">
+                            </div>
+                            
+                            <label class="inline-flex items-center ml-2">
+                                <input type="checkbox" id="autoOffOffTimeEnabledDetail" class="form-checkbox autooff-toggle">
+                                <span class="ml-1 text-sm font-medium text-gray-700">종료 시각 적용</span>
+                            </label>
+                            <div class="autooff-group offtime-group autooff-indent">
+                                <label class="form-label">시간 (HH:MM)</label>
+                                <input type="time" id="autoOffOffTimeDetail" class="input-style autooff-input-offtime" value="23:59">
+                            </div>
+
+                            <label class="inline-flex items-center ml-2">
+                                <input type="checkbox" id="autoOffOffTempEnabledDetail" class="form-checkbox autooff-toggle">
+                                <span class="ml-1 text-sm font-medium text-gray-700">종료 온도 적용</span>
+                            </label>
+                            <div class="autooff-group offtemp-group autooff-indent">
+                                <label class="form-label">온도 미만 (°C)</label>
+                                <input type="number" id="autoOffOffTempDetail" min="0" step="0.1" class="input-style autooff-input-offtemp" value="0.0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="md-col-span-2">
+                        <h4 class="font-semibold text-gray-600 mb-2">움직임 감지 (Motion) 작동 Rule</h4>
+                        <div class="grid-container md-grid-cols-2 gap-4 mt-4">
+                            
+                            <div class="motion-rule-card">
+                                <h5 class="motion-rule-title">적외선</h5>
+                                <label class="inline-flex items-center text-sm">
+                                    <input type="checkbox" id="motionPirEnabledDetail" class="form-checkbox motion-toggle-pir">
+                                    <span class="ml-2">적외선 감지 적용</span>
+                                </label>
+                                <div class="motion-group pir-group motion-indent">
+                                    <label class="form-label motion-label">감지 시 작동 시간 (초)</label>
+                                    <input type="number" id="motionPirHoldSecDetail" min="0" class="input-style motion-input" value="0">
+                                </div>
+                            </div>
+
+                            <div class="motion-rule-card">
+                                <h5 class="motion-rule-title">블루투스 디바이스</h5>
+                                <label class="inline-flex items-center text-sm">
+                                    <input type="checkbox" id="motionBleEnabledDetail" class="form-checkbox motion-toggle-ble">
+                                    <span class="ml-2">블루투스 감지 적용</span>
+                                </label>
+                                <div class="motion-group ble-group motion-indent">
+                                    <label class="form-label motion-label">신호(RSSI) 임계값 (dBm)</label>
+                                    <input type="number" id="motionBleRssiThresholdDetail" min="-100" max="-30" class="input-style motion-input" value="-70">
+                                    <label class="form-label motion-label mt-05">감지 시 작동 시간 (초)</label>
+                                    <input type="number" id="motionBleHoldSecDetail" min="0" class="input-style motion-input" value="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+	<script src="./P000_common_006.js" defer></script>    
+    <script type="module" src="P030_schedules_t1_006.js"></script>
+</body>
+</html>
+

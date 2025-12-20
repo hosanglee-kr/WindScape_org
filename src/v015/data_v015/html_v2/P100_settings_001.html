@@ -1,0 +1,148 @@
+<!-- P100_settings_001.html -->
+
+<!doctype html>
+<html lang="ko">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>⚙️ Smart Nature Wind 시스템 설정</title>
+	
+	<link rel="stylesheet" href="./P000_common_001.css">
+	<link rel="stylesheet" href="./P100_settings_001.css">
+</head>
+
+<body>
+	
+	<header class="nav-bar">
+		<div class="nav-container">
+			<a href="./P040_dashboard_002.html" class="nav-logo">Smart Wind</a>
+			<nav>
+				<ul class="nav-menu" id="navMenu">
+					</ul>
+			</nav>
+		</div>
+	</header>
+
+	<!-- <header class="nav-bar">
+		<div class="nav-container">
+			<a href="./SC10_dashboard_001.html" class="nav-logo">Smart Wind</a>
+			<nav>
+				<ul class="nav-menu">
+					<li><a href="./SC10_dashboard_001.html">대시보드</a></li>
+					<li><a href="./SC10_chart_t2_007.html">차트 모니터링</a></li>
+					<li><a href="./SC10_sim_details_001.html">시뮬 설정</a></li>
+					<li><a href="./SC10_profile_001.html">프로파일 관리</a></li>
+					<li><a href="./SC10_schedules_t2_001.html">스케줄 관리</a></li>
+					<li><a href="./SC10_user_001.html">사용자 프로필</a></li>
+					<li><a href="./P100_settings_001.html" class="active">시스템 설정</a></li>
+				</ul>
+			</nav>
+		</div>
+	</header> -->
+	
+	<div class="wrap">
+		<h1>시스템 설정 및 관리</h1>
+		
+		<div class="grid settings-grid">
+			
+			<div class="col-6 card">
+				<strong class="section-title">🔑 API Key 및 인증 관리</strong>
+				<p class="muted">API 호출에 사용되는 인증 키를 설정합니다.</p>
+				<div class="form-group row tight middle">
+					<span class="label">현재 키 상태:</span>
+					<span id="apiKeyStatus" class="info-label warn">설정 필요</span>
+				</div>
+				<div class="actions">
+					<button class="btn ok" id="btnSetApiKey">API Key 변경 / 설정</button>
+					<button class="btn" id="btnCheckAuth">인증 테스트</button>
+				</div>
+			</div>
+
+			<div class="col-6 card">
+				<strong class="section-title">ℹ️ 시스템 정보</strong>
+				<div class="system-info">
+					<div class="info-item">
+						<span class="label">펌웨어 버전:</span>
+						<span id="fwVersion">N/A</span>
+					</div>
+					<div class="info-item">
+						<span class="label">운영 체제:</span>
+						<span id="osName">ESP32-Arduino-v7</span>
+					</div>
+					<div class="info-item">
+						<span class="label">구동 시간(Uptime):</span>
+						<span id="uptime">N/A</span>
+					</div>
+				</div>
+				<div class="actions">
+					<button class="btn" id="btnCheckUpdate">⬆️ 펌웨어 업데이트 확인</button>
+				</div>
+			</div>
+
+			<div class="col-12 card">
+				<strong class="section-title">🌐 네트워크 상태 및 설정</strong>
+				<div class="network-status grid timing-grid">
+					<div class="col-4 info-item">
+						<span class="label">연결 방식:</span>
+						<span id="netMode" class="info-label ok">WiFi (STA)</span>
+					</div>
+					<div class="col-4 info-item">
+						<span class="label">IP 주소:</span>
+						<span id="ipAddress">0.0.0.0</span>
+					</div>
+					<div class="col-4 info-item">
+						<span class="label">WiFi SSID:</span>
+						<span id="wifiSsid">N/A</span>
+					</div>
+				</div>
+				<div class="actions top-margin">
+					<button class="btn" id="btnNetworkSetup">📶 WiFi/Ethernet 설정</button>
+					<button class="btn" id="btnTimeSetup">⏰ 시간 및 NTP 설정</button>
+				</div>
+			</div>
+			
+			<div class="col-12 card">
+				<strong class="section-title">⚠️ 장치 제어 및 관리</strong>
+				<p class="muted">장치를 재부팅하거나 공장 초기화하는 기능입니다. 주의해서 사용하십시오.</p>
+				<div class="actions">
+					<button class="btn ok" id="btnConfigSave">💾 현재 설정 파일 저장</button>
+					<button class="btn warn" id="btnReboot">🔄 장치 재부팅</button>
+					<button class="btn err" id="btnFactoryReset">💥 공장 초기화</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="muted">© 2540.kr SmartNatureWind (v001 System Settings UI)</div>
+	</div>
+
+	<div id="apiKeyModal" class="modal-overlay" style="display:none;">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2 id="apiKeyModalTitle">API Key 설정</h2>
+				<button class="btn-close" id="btnCloseApiKeyModal">❌</button>
+			</div>
+			<form id="apiKeyForm">
+				<div class="form-group">
+					<label for="newApiKey">새로운 API Key 입력</label>
+					<input type="text" id="newApiKey" name="newApiKey" placeholder="여기에 키를 입력하세요" required>
+				</div>
+				<div class="modal-actions">
+					<button type="submit" class="btn ok" id="btnSaveApiKey">🔑 키 저장 및 적용</button>
+					<button type="button" class="btn" id="btnCancelApiKeyModal">취소</button>
+				</div>
+			</form>
+		</div>
+	</div>
+	
+	<div id="loadingOverlay" style="display:none;">
+		<div class="spinner"></div>
+	</div>
+	<div id="toastContainer"></div>
+
+	<script src="./P000_common_006.js" defer></script>	
+	<script src="./P100_settings_002.js" defer></script>
+</body>
+
+</html>
+

@@ -1,0 +1,68 @@
+/*
+ * ------------------------------------------------------
+ * 소스명 : P090_user_001.css
+ * 모듈명 : Smart Nature Wind Help & Info UI Style (v001)
+ * ------------------------------------------------------
+ * 주요 내용:
+ * - SC10_common_001.css에 의존
+ * - 정보 항목 및 가이드 목록 스타일
+ * ------------------------------------------------------
+ */
+
+.info-grid {
+    margin-top: 15px;
+    gap: 20px;
+}
+
+/* 기술 스택 목록 */
+.tech-stack-list {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 10px;
+}
+
+.tech-stack-list li {
+    padding: 5px 0;
+    border-bottom: 1px dotted #eee;
+    font-size: 0.95em;
+    color: #555;
+}
+.tech-stack-list li:last-child {
+    border-bottom: none;
+}
+
+/* 사용 가이드 항목 */
+.guide-item {
+    padding: 10px 0;
+    border-bottom: 1px dotted #e9ecef;
+}
+.guide-item:last-child {
+    border-bottom: none;
+}
+
+.step-label {
+    display: inline-block;
+    font-weight: 700;
+    color: #3498db;
+    background-color: #ecf0f1;
+    padding: 4px 8px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+
+.guide-item p {
+    margin: 5px 0 0 0;
+    padding-left: 5px;
+    color: #34495e;
+    line-height: 1.4;
+}
+
+.contact-info {
+    font-size: 0.9em;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+}
+.contact-info p {
+    margin: 5px 0;
+}

@@ -1,0 +1,128 @@
+<!-- P070_profile_001.html -->
+ 
+<!doctype html>
+<html lang="ko">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>🌬️ Smart Nature Wind 프로파일 관리</title>
+	
+	<link rel="stylesheet" href="./P000_common_001.css">
+	<link rel="stylesheet" href="./P070_profile_001.css">
+</head>
+
+<body>
+	<header class="nav-bar">
+		<div class="nav-container">
+			<a href="./P040_dashboard_002.html" class="nav-logo">Smart Wind</a>
+			<nav>
+				<ul class="nav-menu" id="navMenu">
+					</ul>
+			</nav>
+		</div>
+	</header>
+		
+	<!-- <header class="nav-bar">
+		<div class="nav-container">
+			<a href="./SC10_dashboard_001.html" class="nav-logo">Smart Wind</a>
+			<nav>
+				<ul class="nav-menu">
+					<li><a href="./SC10_dashboard_001.html">대시보드</a></li>
+					<li><a href="./SC10_chart_t2_007.html">차트 모니터링</a></li>
+					<li><a href="./SC10_sim_details_001.html">시뮬 설정</a></li>
+					<li><a href="./P070_profile_001.html" class="active">프로파일 관리</a></li>
+					<li><a href="./SC10_schedules_t2_001.html">스케줄 관리</a></li>
+					<li><a href="./SC10_user_001.html">사용자 프로필</a></li>
+					<li><a href="./SC10_settings_001.html">시스템 설정</a></li>
+				</ul>
+			</nav>
+		</div>
+	</header> -->
+	
+	<div class="wrap">
+		<h1>Wind Profile 관리</h1>
+
+		<section class="card control-panel">
+			<div class="row">
+				<strong class="section-title">등록된 Wind Profile 목록</strong>
+				<div class="right tight">
+					<button class="btn ok" id="btnCreateNew">➕ 새 프로파일 생성</button>
+					<button class="btn" id="btnRefreshList">🔄 목록 새로고침</button>
+				</div>
+			</div>
+			
+			<div class="profile-list-container">
+				<table class="profile-table">
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>프로파일 이름</th>
+							<th>강도(%)</th>
+							<th>가변성(%)</th>
+							<th>난류 Sigma</th>
+							<th>설정 상태</th>
+							<th>액션</th>
+						</tr>
+					</thead>
+					<tbody id="profileListBody">
+						</tbody>
+				</table>
+				<p id="noProfileMessage" class="muted" style="display:none;">등록된 프로파일이 없습니다.</p>
+			</div>
+		</section>
+		
+		<div class="muted">© 2540.kr SmartNatureWind (v001 Profile Manager UI)</div>
+	</div>
+
+	<div id="profileModal" class="modal-overlay" style="display:none;">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2 id="modalTitle">프로파일 생성</h2>
+				<button class="btn-close" id="btnCloseModal">❌</button>
+			</div>
+			<form id="profileForm">
+				<input type="hidden" id="profileId" name="id" value="">
+
+				<div class="form-group">
+					<label for="profileName">프로파일 이름</label>
+					<input type="text" id="profileName" name="name" required>
+				</div>
+				
+				<div class="grid profile-params-grid">
+					<div class="col-6 form-group">
+						<label for="intensity">풍속 강도 (%)</label>
+						<input type="number" id="intensity" name="intensity" min="0" max="100" step="0.1" required>
+					</div>
+					<div class="col-6 form-group">
+						<label for="variability">풍속 가변성 (%)</label>
+						<input type="number" id="variability" name="variability" min="0" max="100" step="0.1" required>
+					</div>
+					<div class="col-6 form-group">
+						<label for="turb_sigma">난류 세기 시그마</label>
+						<input type="number" id="turb_sigma" name="turb_sigma" min="0" max="100" step="0.1" required>
+					</div>
+					<div class="col-6 form-group">
+						<label for="turb_length">난류 길이 스케일 (cm)</label>
+						<input type="number" id="turb_length" name="turb_length" min="1" max="500" step="1" required>
+					</div>
+					</div>
+				
+				<div class="modal-actions">
+					<button type="submit" class="btn ok" id="btnSaveProfile">💾 저장</button>
+					<button type="button" class="btn" id="btnCancelModal">취소</button>
+				</div>
+			</form>
+		</div>
+	</div>
+	
+	<div id="loadingOverlay" style="display:none;">
+		<div class="spinner"></div>
+	</div>
+	<div id="toastContainer"></div>
+
+	<script src="./P000_common_006.js" defer></script>
+	<script src="./P070_profile_001.js" defer></script>
+</body>
+
+</html>

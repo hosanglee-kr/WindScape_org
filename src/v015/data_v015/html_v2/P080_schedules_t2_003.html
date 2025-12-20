@@ -1,0 +1,267 @@
+<!-- P080_schedules_t2_003.html -->
+
+<!doctype html>
+<html lang="ko">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🌬️ Smart Nature Wind 스케줄 관리 (t2_003)</title>
+
+  <!-- 공통 스타일 -->
+  <link rel="stylesheet" href="./P000_common_001.css">
+  <!-- 스케줄 전용 스타일 -->
+  <link rel="stylesheet" href="./P080_schedules_t2_003.css">
+</head>
+
+<body>
+  <!-- 상단 네비게이션 -->
+  <header class="nav-bar">
+    <div class="nav-container">
+      <a href="./P040_dashboard_002.html" class="nav-logo">Smart Wind</a>
+      <nav>
+        <ul class="nav-menu" id="navMenu">
+          <!-- P000_common_006.js 에서 /api/v1/menu 기반으로 채워질 예정 -->
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <h1>자동 적용 스케줄 관리 (C10 풀 구조)</h1>
+
+    <!-- 상단 컨트롤 패널 -->
+    <section class="card control-panel">
+      <div class="row">
+        <strong class="section-title">등록된 스케줄 목록</strong>
+        <div class="right tight">
+          <button class="btn ok" id="btnCreateNew">➕ 새 스케줄 생성</button>
+          <button class="btn" id="btnRefreshList">🔄 목록 새로고침</button>
+          <button class="btn" id="btnSaveAllConfig">전체 설정 저장</button>
+        </div>
+      </div>
+
+      <div class="schedule-list-container">
+        <table class="schedule-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>No</th>
+              <th>스케줄 이름</th>
+              <th>기간/시간</th>
+              <th>반복</th>
+              <th>세그먼트 요약</th>
+              <th>상태</th>
+              <th>액션</th>
+            </tr>
+          </thead>
+          <tbody id="scheduleListBody"></tbody>
+        </table>
+        <p id="noScheduleMessage" class="muted" style="display:none;">
+          등록된 스케줄이 없습니다.
+        </p>
+      </div>
+    </section>
+
+    <div class="muted">© 2540.kr SmartNatureWind (v003 Schedule Manager UI)</div>
+  </div>
+
+  <!-- ======================= 스케줄 생성/수정 모달 ======================= -->
+
+  <div id="scheduleModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2 id="modalTitle">스케줄 생성</h2>
+        <button class="btn-close" id="btnCloseModal">❌</button>
+      </div>
+
+      <form id="scheduleForm">
+        <input type="hidden" id="scheduleId" name="schId" value="">
+
+        <!-- 1. 기본 정보 -->
+        <section class="card section-block">
+          <h3 class="section-subtitle">기본 정보</h3>
+          <div class="grid grid-3">
+            <div class="form-group">
+              <label for="schNo">스케줄 번호 (schNo)</label>
+              <input type="number" id="schNo" name="schNo" min="0" step="1" />
+            </div>
+            <div class="form-group">
+              <label for="scheduleName">스케줄 이름</label>
+              <input type="text" id="scheduleName" name="name" required />
+            </div>
+            <div class="form-group toggle-inline">
+              <label for="isEnabled">스케줄 사용</label>
+              <input type="checkbox" id="isEnabled" name="enabled" checked />
+              <span class="info-label">활성화 시 기간/시간 조건에 맞게 자동 적용</span>
+            </div>
+          </div>
+
+          <div class="grid grid-3">
+            <div class="form-group toggle-inline">
+              <label for="repeatSegments">세그먼트 반복 여부</label>
+              <input type="checkbox" id="repeatSegments" name="repeatSegments" checked />
+            </div>
+            <div class="form-group">
+              <label for="repeatCount">반복 횟수 (0=무한)</label>
+              <input type="number" id="repeatCount" name="repeatCount" min="0" step="1" value="1" />
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. 기간/요일 설정 -->
+        <section class="card section-block">
+          <h3 class="section-subtitle">기간 / 요일 설정</h3>
+
+          <div class="grid grid-3">
+            <div class="form-group toggle-inline">
+              <!--<label for="periodEnabled">기간 사용</label>-->
+              <input type="checkbox" id="periodEnabled" name="periodEnabled" checked />
+              <span class="info-label">비활성화 시 항상 시간 조건만 사용</span>
+            </div>
+            <div class="form-group">
+              <label for="periodStart">시작 시간</label>
+              <input type="time" id="periodStart" name="periodStart" value="08:00" />
+            </div>
+            <div class="form-group">
+              <label for="periodEnd">종료 시간</label>
+              <input type="time" id="periodEnd" name="periodEnd" value="23:00" />
+            </div>
+          </div>
+
+          <div class="form-group repeat-days-group">
+            <label>반복 요일 (period.days[7])</label>
+            <div id="periodDays" class="day-checkboxes">
+              <label><input type="checkbox" data-index="1">월</label>
+              <label><input type="checkbox" data-index="2">화</label>
+              <label><input type="checkbox" data-index="3">수</label>
+              <label><input type="checkbox" data-index="4">목</label>
+              <label><input type="checkbox" data-index="5">금</label>
+              <label><input type="checkbox" data-index="6">토</label>
+              <label><input type="checkbox" data-index="0">일</label>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. 세그먼트 목록 -->
+        <section class="card section-block">
+          <div class="row">
+            <h3 class="section-subtitle">세그먼트 목록</h3>
+            <div class="right tight">
+              <button type="button" class="btn ok" id="btnAddSegment">➕ 세그먼트 추가</button>
+            </div>
+          </div>
+
+          <div class="segment-list-container">
+            <table class="segment-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>No</th>
+                  <th>ON (분)</th>
+                  <th>OFF (분)</th>
+                  <th>모드</th>
+                  <th>프리셋</th>
+                  <th>스타일</th>
+                  <th>고정풍속</th>
+                  <th>조정(강도/변동/돌풍/제한/최소)</th>
+                  <th>조정(난류 L/σ)</th>
+                  <th>액션</th>
+                </tr>
+              </thead>
+              <tbody id="segmentListBody">
+                <!-- JS에서 동적 생성 -->
+              </tbody>
+            </table>
+            <p class="muted">
+              ※ PRESET 모드: presetCode/styleCode + adjust 사용, FIXED 모드: fixed_speed 사용.
+            </p>
+          </div>
+        </section>
+
+        <!-- 4. AutoOff + Motion -->
+        <section class="card section-block">
+          <h3 class="section-subtitle">자동 종료 / 모션 감지</h3>
+          <div class="grid schedule-sections">
+            <!-- AutoOff -->
+            <div class="form-subcard">
+              <h4>자동 종료 (autoOff)</h4>
+              <div class="form-group toggle-inline">
+                <label for="autoOffTimerEnabled">타이머 사용</label>
+                <input type="checkbox" id="autoOffTimerEnabled" />
+              </div>
+              <div class="form-group">
+                <label for="autoOffTimerMinutes">타이머 분 (minutes)</label>
+                <input type="number" id="autoOffTimerMinutes" min="0" step="1" value="0" />
+              </div>
+
+              <div class="form-group toggle-inline">
+                <label for="autoOffTimeEnabled">특정 시간 종료</label>
+                <input type="checkbox" id="autoOffTimeEnabled" />
+              </div>
+              <div class="form-group">
+                <label for="autoOffTime">종료 시각 (HH:MM)</label>
+                <input type="time" id="autoOffTime" value="00:00" />
+              </div>
+
+              <div class="form-group toggle-inline">
+                <label for="autoOffTempEnabled">온도 기준 종료</label>
+                <input type="checkbox" id="autoOffTempEnabled" />
+              </div>
+              <div class="form-group">
+                <label for="autoOffTemp">종료 온도 (°C)</label>
+                <input type="number" id="autoOffTemp" step="0.1" value="0" />
+              </div>
+            </div>
+
+            <!-- Motion -->
+            <div class="form-subcard">
+              <h4>모션 감지 (motion)</h4>
+
+              <div class="form-group toggle-inline">
+                <label for="pirEnabled">PIR 센서 사용</label>
+                <input type="checkbox" id="pirEnabled" />
+              </div>
+              <div class="form-group">
+                <label for="pirHoldSec">PIR 유지 시간 (초)</label>
+                <input type="number" id="pirHoldSec" min="0" step="1" value="0" />
+              </div>
+
+              <div class="form-group toggle-inline">
+                <label for="bleEnabled">BLE 근접 사용</label>
+                <input type="checkbox" id="bleEnabled" />
+              </div>
+              <div class="form-group">
+                <label for="bleRssiThreshold">BLE RSSI 임계값 (dBm)</label>
+                <input type="number" id="bleRssiThreshold" step="1" value="-70" />
+              </div>
+              <div class="form-group">
+                <label for="bleHoldSec">BLE 유지 시간 (초)</label>
+                <input type="number" id="bleHoldSec" min="0" step="1" value="0" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 모달 버튼 -->
+        <div class="modal-actions">
+          <button type="submit" class="btn ok" id="btnSaveSchedule">💾 저장</button>
+          <button type="button" class="btn" id="btnCancelModal">취소</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 공통 로딩/토스트 컨테이너 -->
+  <div id="loadingOverlay" style="display:none;">
+    <div class="spinner"></div>
+  </div>
+  <div id="toastContainer"></div>
+
+  <!-- 공통 JS (메뉴/토스트 등) -->
+  <script src="./P000_common_006.js" defer></script>
+  <!-- 스케줄 전용 컨트롤러 -->
+  <script src="./P080_schedules_t2_003.js" defer></script>
+</body>
+
+</html>
