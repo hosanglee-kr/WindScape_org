@@ -2,15 +2,44 @@
  * ------------------------------------------------------
  * 소스명 : S10_Simul_IO_022.cpp
  * 모듈약어 : S10
- * 모듈명 : Smart Nature Wind 풍속 시뮬레이션 Manager (v019, Full)
+ * 모듈명 : Smart Nature Wind 풍속 시뮬레이션 Manager (v022, Full)
  * ------------------------------------------------------
  * 기능 요약:
- * - CL_S10_Simulation 클래스의 구현부
- * - Von Kármán 난류 모델, 관성, 돌풍/열기포 확률 모델 구현
+ * - CL_S10_Simulation 클래스의 IO/직렬화/패치 구현부
+ * - 현재 시뮬레이션 상태(toJson) 및 차트 버퍼(toChartJson) JSON 직렬화
+ * - patchFromJson()로 시뮬레이션 파라미터 부분 업데이트(패치) 지원
+ * - v022 정책 반영:
+ *    - Header(S10_Simul_022.h) 사용
+ *    - 차트 전송 간격: G_S10_CHART_FULL_MIN_MS 정책 상수 사용
+ *    - 시간 기준: _tickNowMs 우선(0이면 millis() 1회 fallback)
+ *    - JSON Key: camelCase 로 통일
+ * ------------------------------------------------------
+ * [구현 규칙]
+ * - 항상 소스 시작 주석 체계 유지 및 내용 업데이트
+ * - ArduinoJson v7.x.x 사용 (v6 이하 사용 금지)
+ * - JsonDocument 단일 타입만 사용
+ * - createNestedArray/Object/containsKey 사용 금지
+ * - memset + strlcpy 기반 안전 초기화
+ * - 주석/필드명은 JSON 구조와 동일하게 유지
+ * ------------------------------------------------------
+ * [코드 네이밍 규칙]
+ * - 전역 상수,매크로      : G_모듈약어_ prefix
+ * - 전역 변수             : g_모듈약어_ prefix
+ * - 전역 함수             : 모듈약어_ prefix
+ * - Types                 : T_모듈약어_ prefix
+ * - Typedefs              : _t suffix
+ * - Enum constants        : EN_모듈약어_ prefix
+ * - Structs               : ST_모듈약어_ prefix
+ * - Classes               : CL_모듈약어_ prefix
+ * - Private class members : _ prefix
+ * - Class members         : (functions/variables) no module prefix
+ * - Static class members  : s_ prefix
+ * - Function local vars   : v_ prefix
+ * - Function arguments    : p_ prefix
  * ------------------------------------------------------
  */
 
-#include "S10_Simul_021.h" // 해당 클래스 헤더 파일 포함
+#include "S10_Simul_022.h"
 
 // 외부 종속성 헤더 포함 (외부에서 제공되어야 함: 시스템 상수, 설정, 로그, PWM 제어)
 #include "A10_Const_016.h"
@@ -22,11 +51,8 @@
 // ------------------------------------------------------
 // 정적 멤버 정의 (클래스 인스턴스와 무관하게 유지되는 공유 데이터)
 // ------------------------------------------------------
-// 차트 데이터를 저장하는 순환 버퍼 (최대 120개 샘플 = 2분 분량)
 std::deque<CL_S10_Simulation::ST_ChartEntry> CL_S10_Simulation::s_chartBuffer;
-// 차트 로그를 기록한 마지막 시간 (Hz 제어용)
 unsigned long                                CL_S10_Simulation::s_lastChartLogMs    = 0;
-// 차트 JSON을 웹으로 전송한 마지막 시간 (API 부하 제어용)
 unsigned long                                CL_S10_Simulation::s_lastChartSampleMs = 0;
 
 
@@ -35,31 +61,66 @@ unsigned long                                CL_S10_Simulation::s_lastChartSampl
 // ==================================================
 /**
  * @brief 현재 시뮬레이션 상태 변수들을 JSON Object에 직렬화합니다.
+ * JSON Key는 camelCase로 통일합니다.
+ *
+ * 출력 예:
+ * {
+ *   "sim": {
+ *     "active": true,
+ *     "fanPowerEnabled": true,
+ *     "phase": "NORMAL",
+ *     "windSpeed": 3.2,
+ *     "targetWind": 3.6,
+ *     "gustActive": false,
+ *     "thermalActive": false,
+ *     "pwmDuty": 42.0,
+ *     "presetCode": "OCEAN",
+ *     "styleCode": "BALANCE",
+ *     "intensity": 70,
+ *     "variability": 50,
+ *     "gustFreq": 45,
+ *     "fanLimit": 90,
+ *     "minFan": 10,
+ *     "turbSigma": 0.5,
+ *     "turbLenScale": 40,
+ *     "thermalStrength": 2.0,
+ *     "thermalRadius": 18
+ *   }
+ * }
  */
-
 void CL_S10_Simulation::toJson(JsonDocument& p_doc) {
-    portENTER_CRITICAL(&_simMutex); // 상태 읽기 중 변수 변경 방지
+    // 상태 읽기 중 변수 변경 방지
+    portENTER_CRITICAL(&_simMutex);
 
     JsonObject v_objSim = p_doc["sim"].to<JsonObject>();
-    
-    v_objSim["active"]        = active;
-    v_objSim["phase"]         = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
-    v_objSim["windSpeed"]     = currentWindSpeed;
-    v_objSim["targetWind"]    = targetWindSpeed;
-    v_objSim["gustActive"]    = gustActive;
-    v_objSim["thermalActive"] = thermalActive;
-    v_objSim["pwmDuty"]       = _pwm ? _pwm->P10_getDutyPercent() : 0.0f;
-    v_objSim["presetCode"]    = presetCode;
-    v_objSim["styleCode"]     = styleCode;
-    v_objSim["intensity"]     = userIntensity;
-    v_objSim["variability"]   = userVariability;
-    v_objSim["gustFreq"]      = userGustFreq;
-    v_objSim["fan_limit"]     = fanLimitPct;
-    v_objSim["min_fan"]       = minFanPct;
-    v_objSim["turbSigma"]     = turbSigma;
-    v_objSim["turbScale"]     = turbLenScale;
-    v_objSim["thermalPower"]  = thermalStrength;
-    v_objSim["thermalRadius"] = thermalRadius;
+
+    v_objSim["active"]           = active;
+    v_objSim["fanPowerEnabled"]  = fanPowerEnabled;
+
+    v_objSim["phase"]            = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
+    v_objSim["windSpeed"]        = currentWindSpeed;
+    v_objSim["targetWind"]       = targetWindSpeed;
+
+    v_objSim["gustActive"]       = gustActive;
+    v_objSim["thermalActive"]    = thermalActive;
+
+    v_objSim["pwmDuty"]          = _pwm ? _pwm->P10_getDutyPercent() : 0.0f;
+
+    v_objSim["presetCode"]       = presetCode;
+    v_objSim["styleCode"]        = styleCode;
+
+    v_objSim["intensity"]        = userIntensity;
+    v_objSim["variability"]      = userVariability;
+    v_objSim["gustFreq"]         = userGustFreq;
+
+    v_objSim["fanLimit"]         = fanLimitPct;
+    v_objSim["minFan"]           = minFanPct;
+
+    v_objSim["turbSigma"]        = turbSigma;
+    v_objSim["turbLenScale"]     = turbLenScale;
+
+    v_objSim["thermalStrength"]  = thermalStrength;
+    v_objSim["thermalRadius"]    = thermalRadius;
 
     portEXIT_CRITICAL(&_simMutex);
 }
@@ -71,199 +132,317 @@ void CL_S10_Simulation::toJson(JsonDocument& p_doc) {
 /**
  * @brief 차트 버퍼(s_chartBuffer)의 내용을 JSON Array로 직렬화합니다.
  * @param p_doc JSON 문서
- * @param p_diffOnly true인 경우, 마지막 1개 샘플만 전송 (WebSocket용)
+ * @param p_diffOnly true인 경우, 마지막 1개 샘플만 전송 (WebSocket/REST diff 전송)
+ *
+ * JSON Key는 camelCase로 통일합니다.
+ * {
+ *   "sim": {
+ *     "meta": {
+ *        "phase": "NORMAL",
+ *        "avgWind": 3.1,
+ *        "gustActive": false,
+ *        "thermalActive": false,
+ *        "samples": 60
+ *     },
+ *     "chart": [
+ *        {"ts":123, "wind":3.2, "pwm":42.0, "gustActive":false, "thermalActive":false},
+ *        ...
+ *     ],
+ *     "chartCount": 120
+ *   }
+ * }
  */
 void CL_S10_Simulation::toChartJson(JsonDocument& p_doc, bool p_diffOnly) {
-    // JSON 구조: p_doc["sim"]["chart"] 배열
-    JsonArray arr = p_doc["sim"]["chart"].to<JsonArray>();
 
-    // 메타 정보 추가 (차트의 현재 상태)
-    JsonObject meta = p_doc["sim"]["meta"].to<JsonObject>();
-    meta["phase"]   = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
-    meta["avgWind"] = _getAvgWindFast();
-    meta["gust"]    = gustActive;
-    meta["thermal"] = thermalActive;
-    meta["samples"] = historyCount;
+    // 시간 기준: _tickNowMs 우선, 0이면 millis() 1회 fallback
+    unsigned long v_nowMs = _tickNowMs;
+    if (v_nowMs == 0UL) {
+        v_nowMs = millis();
+    }
 
-    // WebAPI 부하 감소를 위해 Full Dump는 10초 간격으로 제한
-    if (millis() - s_lastChartSampleMs < 10000UL)
+    // ---- (A) 메타/샘플 스냅샷(락 안에서 값만 캡처) ----
+    T_A10_WindPhase_t v_phase = EN_A10_WEATHER_PHASE_NORMAL;
+    float             v_avg   = 0.0f;
+    bool              v_gust  = false;
+    bool              v_therm = false;
+    uint8_t           v_samp  = 0;
+
+    // chart entries 스냅샷
+    std::vector<ST_ChartEntry> v_entries;
+    v_entries.clear();
+
+    portENTER_CRITICAL(&_simMutex);
+
+    v_phase = phase;
+    v_avg   = _getAvgWindFast();
+    v_gust  = gustActive;
+    v_therm = thermalActive;
+    v_samp  = historyCount;
+
+    // Full Dump 전송 간격 제한: diffOnly는 제한하지 않음
+    if (!p_diffOnly) {
+        const unsigned long v_elapsedMs = (v_nowMs >= s_lastChartSampleMs) ? (v_nowMs - s_lastChartSampleMs) : 0UL;
+        if (v_elapsedMs < G_S10_CHART_FULL_MIN_MS) {
+            portEXIT_CRITICAL(&_simMutex);
+            return;
+        }
+        s_lastChartSampleMs = v_nowMs;
+    }
+
+    if (s_chartBuffer.empty()) {
+        portEXIT_CRITICAL(&_simMutex);
         return;
-    s_lastChartSampleMs = millis();
-
-    if (s_chartBuffer.empty())
-        return;
+    }
 
     if (p_diffOnly) {
-        // diffOnly 모드: 마지막 1개 샘플만 전송 (WebSocket 실시간 업데이트용)
-        const ST_ChartEntry& e  = s_chartBuffer.back();
-        JsonObject           jo = arr.add<JsonObject>();
-        jo["ts"]                = e.timestamp / 1000UL;
-        jo["wind"]              = e.wind_speed;
-        jo["pwm"]               = e.pwm_duty;
-        jo["gust"]              = e.gust_active;
-        jo["thermal"]           = e.thermal_active;
-        jo["phase"]             = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
-        jo["avgWind"]           = _getAvgWindFast();
-        jo["samples"]           = historyCount;
+        v_entries.reserve(1);
+        v_entries.push_back(s_chartBuffer.back());
+    } else {
+        v_entries.reserve((size_t)s_chartBuffer.size());
+        for (const auto& v_e : s_chartBuffer) {
+            v_entries.push_back(v_e);
+        }
+    }
+
+    portEXIT_CRITICAL(&_simMutex);
+
+    // ---- (B) 락 밖에서 JSON 생성 ----
+    JsonObject v_objSim = p_doc["sim"].to<JsonObject>();
+
+    JsonObject v_meta = v_objSim["meta"].to<JsonObject>();
+    v_meta["phase"]         = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)v_phase];
+    v_meta["avgWind"]       = v_avg;
+    v_meta["gustActive"]    = v_gust;
+    v_meta["thermalActive"] = v_therm;
+    v_meta["samples"]       = v_samp;
+
+    JsonArray v_arr = v_objSim["chart"].to<JsonArray>();
+
+    // diffOnly: 마지막 1개만 전송
+    if (p_diffOnly) {
+        const ST_ChartEntry& v_e = v_entries[0];
+        JsonObject v_jo = v_arr.add<JsonObject>();
+        v_jo["ts"]           = (uint32_t)(v_e.timestamp / 1000UL);
+        v_jo["wind"]         = v_e.wind_speed;
+        v_jo["pwm"]          = v_e.pwm_duty;
+        v_jo["gustActive"]   = v_e.gust_active;
+        v_jo["thermalActive"]= v_e.thermal_active;
+
+        v_objSim["chartCount"] = 1;
         return;
     }
 
-    // 기본 모드: 전체 chartBuffer 전송 (Full Dump)
-    for (const auto& e : s_chartBuffer) {
-        JsonObject jo = arr.add<JsonObject>();
-        jo["ts"]      = e.timestamp / 1000UL;
-        jo["wind"]    = e.wind_speed;
-        jo["pwm"]     = e.pwm_duty;
-        jo["gust"]    = e.gust_active;
-        jo["thermal"] = e.thermal_active;
+    // Full Dump: 전체 전송
+    for (size_t v_i = 0; v_i < v_entries.size(); v_i++) {
+        const ST_ChartEntry& v_e = v_entries[v_i];
+        JsonObject v_jo = v_arr.add<JsonObject>();
+        v_jo["ts"]            = (uint32_t)(v_e.timestamp / 1000UL);
+        v_jo["wind"]          = v_e.wind_speed;
+        v_jo["pwm"]           = v_e.pwm_duty;
+        v_jo["gustActive"]    = v_e.gust_active;
+        v_jo["thermalActive"] = v_e.thermal_active;
     }
 
-    p_doc["sim"]["chartCount"] = (int)s_chartBuffer.size();
+    v_objSim["chartCount"] = (int)v_entries.size();
 }
 
 
+// ==================================================
+// Patch From JSON (부분 업데이트)
+// ==================================================
 /**
- * @brief 주어진 JSON 문서로부터 시뮬레이션 설정(사용자 파라미터/물리 파라미터)을 패치(부분 업데이트)합니다.
- * * @param p_doc 시뮬레이션 설정 업데이트 데이터가 포함된 JsonDocument (ArduinoJson V7.x)
- * @return 설정이 변경되었으면 true, 아니면 false를 반환합니다.
+ * @brief 주어진 JSON 문서로부터 시뮬레이션 설정(사용자 파라미터/물리 파라미터)을 패치합니다.
+ * @param p_doc 시뮬레이션 설정 업데이트 데이터가 포함된 JsonDocument (ArduinoJson v7.x)
+ * @return 설정이 변경되었으면 true, 아니면 false
+ *
+ * JSON Key는 camelCase로 통일합니다.
+ * 입력 예:
+ * {
+ *   "sim": {
+ *     "presetCode":"OCEAN",
+ *     "styleCode":"BALANCE",
+ *     "fanPowerEnabled":true,
+ *     "intensity":70,
+ *     "variability":50,
+ *     "gustFreq":45,
+ *     "fanLimit":90,
+ *     "minFan":10,
+ *     "turbLenScale":40,
+ *     "turbSigma":0.5,
+ *     "thermalStrength":2.0,
+ *     "thermalRadius":18
+ *   }
+ * }
  */
 bool CL_S10_Simulation::patchFromJson(const JsonDocument& p_doc) {
-    // 1. 뮤텍스 획득 (Critical Section 시작)
-    // S10_Simulation_020.cpp의 tick() 함수와 동일하게 _simMutex 사용
-    portENTER_CRITICAL(&_simMutex);
 
     bool v_changed = false;
-    // 클라이언트가 전달하는 최상위 객체는 { "sim": { ... } } 형태이므로, "sim" 내부로 들어갑니다.
-    JsonObjectConst j_sim = p_doc["sim"].as<JsonObjectConst>();
-    if (j_sim.isNull()) {
-        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[S10] patchFromJson failed: 'sim' object not found in JSON.");
+    bool v_needPresetReapply = false;
+    bool v_needPhaseReset = false;
+
+    portENTER_CRITICAL(&_simMutex);
+
+    JsonObjectConst v_sim = p_doc["sim"].as<JsonObjectConst>();
+    if (v_sim.isNull()) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[S10] patchFromJson failed: 'sim' object not found.");
         portEXIT_CRITICAL(&_simMutex);
         return false;
     }
 
-    // -------------------------------------------------------------------------
-    // 2. 사용자 설정 (userIntensity, fanLimitPct 등) 패치
-    // -------------------------------------------------------------------------
-    
-    // preset (문자열)
-    if (j_sim["preset"].is<const char*>()) {
-        const char* v_new = j_sim["preset"];
-        if (strcasecmp(v_new, this->presetCode) != 0) {
-            strlcpy(this->presetCode, v_new, sizeof(this->presetCode));
-            // Preset이 변경되면 Core Wind Params를 즉시 재적용
-            applyPresetCore(this->presetCode); 
-            initPhaseFromBase(); // Phase도 재설정
-            CL_D10_Logger::log(EN_L10_LOG_INFO, "[S10] Preset changed to %s", this->presetCode);
+    // presetCode
+    if (!v_sim["presetCode"].isNull() && v_sim["presetCode"].is<const char*>()) {
+        const char* v_new = v_sim["presetCode"].as<const char*>();
+        if (v_new && v_new[0] && strcasecmp(v_new, presetCode) != 0) {
+            memset(presetCode, 0, sizeof(presetCode));
+            strlcpy(presetCode, v_new, sizeof(presetCode));
+            v_changed = true;
+            v_needPresetReapply = true;
+            v_needPhaseReset = true;
+        }
+    }
+
+    // styleCode
+    if (!v_sim["styleCode"].isNull() && v_sim["styleCode"].is<const char*>()) {
+        const char* v_new = v_sim["styleCode"].as<const char*>();
+        if (v_new && v_new[0] && strcasecmp(v_new, styleCode) != 0) {
+            memset(styleCode, 0, sizeof(styleCode));
+            strlcpy(styleCode, v_new, sizeof(styleCode));
             v_changed = true;
         }
     }
 
-    // intensity (userIntensity, 0.0f ~ 100.0f)
-    if (j_sim["intensity"].is<float>()) {
-        float v_new = constrain(j_sim["intensity"].as<float>(), 0.0f, 100.0f);
-        if (v_new != this->userIntensity) {
-            this->userIntensity = v_new;
-            v_changed = true;
-        }
-    }
-    
-    // gust_freq (userGustFreq, 0.0f ~ 100.0f)
-    if (j_sim["gust_freq"].is<float>()) {
-        float v_new = constrain(j_sim["gust_freq"].as<float>(), 0.0f, 100.0f);
-        if (v_new != this->userGustFreq) {
-            this->userGustFreq = v_new;
-            v_changed = true;
-        }
-    }
-    
-    // variability (userVariability, 0.0f ~ 100.0f)
-    if (j_sim["variability"].is<float>()) {
-        float v_new = constrain(j_sim["variability"].as<float>(), 0.0f, 100.0f);
-        if (v_new != this->userVariability) {
-            this->userVariability = v_new;
-            // variability 변경 시 windChangeRate 즉시 갱신
-            float v_varNorm = this->userVariability / 100.0f;
-            this->windChangeRate = constrain(0.10f + v_varNorm * 0.20f, 0.06f, 0.34f);
-            v_changed = true;
-        }
-    }
-    
-    // fan_limit (fanLimitPct, 0.0f ~ 100.0f)
-    if (j_sim["fan_limit"].is<float>()) {
-        float v_new = constrain(j_sim["fan_limit"].as<float>(), 0.0f, 100.0f);
-        if (v_new != this->fanLimitPct) {
-            this->fanLimitPct = v_new;
-            v_changed = true;
-        }
-    }
-    
-    // min_fan (minFanPct, 0.0f ~ 100.0f)
-    if (j_sim["min_fan"].is<float>()) {
-        float v_new = constrain(j_sim["min_fan"].as<float>(), 0.0f, 100.0f);
-        if (v_new != this->minFanPct) {
-            this->minFanPct = v_new;
+    // fanPowerEnabled
+    if (!v_sim["fanPowerEnabled"].isNull()) {
+        const bool v_new = v_sim["fanPowerEnabled"].as<bool>();
+        if (v_new != fanPowerEnabled) {
+            fanPowerEnabled = v_new;
             v_changed = true;
         }
     }
 
-    // -------------------------------------------------------------------------
-    // 3. 물리 파라미터 (turbLenScale, thermalStrength 등) 패치
-    // -------------------------------------------------------------------------
-
-    // turb_len (turbLenScale, 난류 길이 스케일)
-    if (j_sim["turb_len"].is<float>()) {
-        float v_new = max(1.0f, j_sim["turb_len"].as<float>());
-        if (v_new != this->turbLenScale) {
-            this->turbLenScale = v_new;
+    // intensity
+    if (!v_sim["intensity"].isNull()) {
+        const float v_new = constrain(v_sim["intensity"].as<float>(), 0.0f, 100.0f);
+        if (v_new != userIntensity) {
+            userIntensity = v_new;
             v_changed = true;
         }
     }
 
-    // turb_sig (turbSigma, 난류 세기)
-    if (j_sim["turb_sig"].is<float>()) {
-        float v_new = max(0.0f, j_sim["turb_sig"].as<float>());
-        if (v_new != this->turbSigma) {
-            this->turbSigma = v_new;
+    // variability
+    if (!v_sim["variability"].isNull()) {
+        const float v_new = constrain(v_sim["variability"].as<float>(), 0.0f, 100.0f);
+        if (v_new != userVariability) {
+            userVariability = v_new;
+            // variability 변경 시 windChangeRate 즉시 갱신(정책은 Physic/generateTarget에서도 갱신)
+            const float v_varNorm = userVariability / 100.0f;
+            windChangeRate = constrain(0.10f + v_varNorm * 0.20f, 0.06f, 0.34f);
             v_changed = true;
         }
     }
 
-    // therm_str (thermalStrength, 열기포 강도)
-    if (j_sim["therm_str"].is<float>()) {
-        float v_new = max(1.0f, j_sim["therm_str"].as<float>());
-        if (v_new != this->thermalStrength) {
-            this->thermalStrength = v_new;
+    // gustFreq
+    if (!v_sim["gustFreq"].isNull()) {
+        const float v_new = constrain(v_sim["gustFreq"].as<float>(), 0.0f, 100.0f);
+        if (v_new != userGustFreq) {
+            userGustFreq = v_new;
             v_changed = true;
         }
     }
 
-    // therm_rad (thermalRadius, 열기포 반경)
-    if (j_sim["therm_rad"].is<float>()) {
-        float v_new = max(0.0f, j_sim["therm_rad"].as<float>());
-        if (v_new != this->thermalRadius) {
-            this->thermalRadius = v_new;
+    // fanLimit / minFan (관계 보정 포함)
+    bool v_minOrLimitChanged = false;
+    float v_limit = fanLimitPct;
+    float v_min   = minFanPct;
+
+    if (!v_sim["fanLimit"].isNull()) {
+        const float v_new = constrain(v_sim["fanLimit"].as<float>(), 0.0f, 100.0f);
+        if (v_new != v_limit) {
+            v_limit = v_new;
+            v_minOrLimitChanged = true;
+        }
+    }
+
+    if (!v_sim["minFan"].isNull()) {
+        const float v_new = constrain(v_sim["minFan"].as<float>(), 0.0f, 100.0f);
+        if (v_new != v_min) {
+            v_min = v_new;
+            v_minOrLimitChanged = true;
+        }
+    }
+
+    if (v_minOrLimitChanged) {
+        if (v_min > v_limit) {
+            v_min = v_limit; // 정책: min이 limit를 넘으면 min을 limit에 맞춘다
+        }
+        if (v_limit != fanLimitPct || v_min != minFanPct) {
+            fanLimitPct = v_limit;
+            minFanPct   = v_min;
             v_changed = true;
         }
     }
 
-    // -------------------------------------------------------------------------
-    // 4. 변경 사항 처리 및 뮤텍스 반납
-    // -------------------------------------------------------------------------
-    
+    // turbLenScale
+    if (!v_sim["turbLenScale"].isNull()) {
+        const float v_new = max(1.0f, v_sim["turbLenScale"].as<float>());
+        if (v_new != turbLenScale) {
+            turbLenScale = v_new;
+            v_changed = true;
+        }
+    }
+
+    // turbSigma
+    if (!v_sim["turbSigma"].isNull()) {
+        const float v_new = max(0.0f, v_sim["turbSigma"].as<float>());
+        if (v_new != turbSigma) {
+            turbSigma = v_new;
+            v_changed = true;
+        }
+    }
+
+    // thermalStrength
+    if (!v_sim["thermalStrength"].isNull()) {
+        const float v_new = max(1.0f, v_sim["thermalStrength"].as<float>());
+        if (v_new != thermalStrength) {
+            thermalStrength = v_new;
+            v_changed = true;
+        }
+    }
+
+    // thermalRadius
+    if (!v_sim["thermalRadius"].isNull()) {
+        const float v_new = max(0.0f, v_sim["thermalRadius"].as<float>());
+        if (v_new != thermalRadius) {
+            thermalRadius = v_new;
+            v_changed = true;
+        }
+    }
+
+    // preset 변경 시 core 재적용 + phase 재설정
+    if (v_needPresetReapply) {
+        applyPresetCore(presetCode);
+    }
+    if (v_needPhaseReset) {
+        // tick 스냅샷 시간 확보 (patch가 tick 외부에서 호출될 수 있음)
+        if (_tickNowMs == 0UL) {
+            _tickNowMs  = millis();
+            _tickNowSec = (float)_tickNowMs / 1000.0f;
+        }
+        initPhaseFromBase();
+    }
+
+    // 변경 시 로그
     if (v_changed) {
-        CL_D10_Logger::log(EN_L10_LOG_INFO, "[S10] Simulation parameters patched. Intensity: %.1f, TurbSigma: %.2f", 
-                           this->userIntensity, this->turbSigma);
-        
-        // 시뮬레이션 상태가 변경되었으므로, ConfigManager를 통해 Dirty 플래그 설정 필요
-        // (W10_Web_Routes_027.cpp의 API 핸들러에서 이 함수 호출 후 Dirty 플래그를 설정하는 것이 더 일반적입니다.)
+        CL_D10_Logger::log(
+            EN_L10_LOG_INFO,
+            "[S10] patchFromJson applied. preset=%s style=%s intensity=%.1f var=%.1f gust=%.1f fanLimit=%.1f minFan=%.1f turbSigma=%.2f",
+            presetCode, styleCode, userIntensity, userVariability, userGustFreq, fanLimitPct, minFanPct, turbSigma
+        );
     }
 
-    // 뮤텍스 반납 (Critical Section 종료)
-    portEXIT_CRITICAL(&_simMutex); 
-    
+    portEXIT_CRITICAL(&_simMutex);
     return v_changed;
 }
-
 
 
 // --------------------------------------------------
@@ -274,15 +453,18 @@ bool CL_S10_Simulation::patchFromJson(const JsonDocument& p_doc) {
  */
 void CL_S10_Simulation::_updateWindHistory(float p_speed) {
     history[historyIndex] = p_speed;
-    historyIndex          = (historyIndex + 1) % HISTORY_SIZE; // 인덱스 순환
-    if (historyCount < HISTORY_SIZE)
-        historyCount++; // 카운트 증가
+    historyIndex          = (uint8_t)((historyIndex + 1u) % HISTORY_SIZE);
+    if (historyCount < HISTORY_SIZE) {
+        historyCount++;
+    }
 
-    // 평균 풍속 캐시 갱신
     float v_sum = 0.0f;
-    for (uint8_t i = 0; i < historyCount; i++) v_sum += history[i];
-    avgWindCached = v_sum / (float)historyCount;
+    for (uint8_t v_i = 0; v_i < historyCount; v_i++) {
+        v_sum += history[v_i];
+    }
+    avgWindCached = (historyCount > 0) ? (v_sum / (float)historyCount) : p_speed;
 }
+
 
 // --------------------------------------------------
 // 캐시된 평균 풍속 반환 (O(1))
@@ -293,4 +475,3 @@ void CL_S10_Simulation::_updateWindHistory(float p_speed) {
 float CL_S10_Simulation::_getAvgWindFast() const {
     return (historyCount > 0) ? avgWindCached : currentWindSpeed;
 }
-
