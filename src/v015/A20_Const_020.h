@@ -70,6 +70,10 @@ constexpr uint8_t LEN_LEVEL	 					= 16;
 constexpr uint8_t MAX_BLE_DEVICES  				= 8;
 constexpr uint8_t MAX_STA_NETWORKS 				= 5;
 
+constexpr uint8_t WIND_PRESETS_MAX = 16;
+constexpr uint8_t WIND_STYLES_MAX  = 16;
+
+
 // 배열 개수 제한
 constexpr uint8_t MAX_SCHEDULES					= 8;
 constexpr uint8_t MAX_SEGMENTS_PER_SCHEDULE 	= 8;
@@ -129,7 +133,7 @@ typedef enum : uint8_t {
 } T_A20_PresetMode_t;
 
 // 프리셋 코드 배열 정의 (문자열 상수)
-static const char* g_A20_PRESET_CODES[] = {
+inline constexpr const char* g_A20_PRESET_CODES[] = {
 	"OFF",
 	"COUNTRY",
 	"MEDITERRANEAN",
@@ -143,7 +147,7 @@ static const char* g_A20_PRESET_CODES[] = {
 	"DESERT_NIGHT"
 };
 
-static const char* g_A20_PRESET_MODE_NAMES_Arr[] = {
+inline constexpr const char* g_A20_PRESET_MODE_NAMES_Arr[] = {
 	"OFF",
 	"COUNTRY",
 	"MEDITERRANEAN",
@@ -367,8 +371,8 @@ typedef struct {
 	// version/json_file 키는 내부 관리용이므로 본 구조체엔 포함하지 않음
 	uint8_t				 preset_count = 0;
 	uint8_t				 style_count  = 0;
-	ST_A20_PresetEntry_t presets[16];  // 충분히 여유있게
-	ST_A20_StyleEntry_t	 styles[16];
+	ST_A20_PresetEntry_t presets[A20_Const::WIND_PRESETS_MAX];
+	ST_A20_StyleEntry_t	 styles[A20_Const::WIND_STYLES_MAX];
 } ST_A20_WindProfileDict_t;
 
 /* ======================================================
