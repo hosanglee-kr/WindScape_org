@@ -1,8 +1,8 @@
 /*
  * ------------------------------------------------------
- * 소스명 : CT10_Control_json_026.cpp
+ * 소스명 : CT10_Control_IO_026.cpp
  * 모듈약어 : CT10
- * 모듈명 : Smart Nature Wind 제어 통합 Manager (v026, JSON)
+ * 모듈명 : Smart Nature Wind 제어 통합 Manager (v026, IO)
  * ------------------------------------------------------
  * 기능 요약:
  * - CT10 제어 상태 / 요약 / 메트릭 / 차트 JSON Export 구현

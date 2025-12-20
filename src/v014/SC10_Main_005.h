@@ -25,7 +25,7 @@
 
 #include "A10_Const_016.h"
 #include "C10_Config_029.h"
-#include "CT10_ControlManager_025.h"
+#include "CT10_Control_026.h"
 #include "D10_Logger_016.h"
 #include "M10_MotionLogic_016.h"
 #include "N10_NvsManager_019.h"

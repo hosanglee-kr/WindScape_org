@@ -90,21 +90,17 @@ typedef struct {
 
 // AutoOff 런타임 상태 (현재 적용된 AutoOff 조건)
 typedef struct {
-    bool          timerArmed;    // 타이머 AutoOff 활성 여부
-    unsigned long timerStartMs;  // 타이머 시작 시간
-    uint32_t      timerMinutes;  // 설정된 타이머 시간 (분)
+    bool          	timerArmed;    // 타이머 AutoOff 활성 여부
+    unsigned long 	timerStartMs;  // 타이머 시작 시간
+    uint32_t      	timerMinutes;  // 설정된 타이머 시간 (분)
 
-    bool     offTimeEnabled;     // 지정 시간 AutoOff 활성 여부
-    uint16_t offTimeMinutes;     // AutoOff가 발동되는 하루 중 시간 (분 단위, 0~1439)
+    bool     		offTimeEnabled;     // 지정 시간 AutoOff 활성 여부
+    uint16_t 		offTimeMinutes;     // AutoOff가 발동되는 하루 중 시간 (분 단위, 0~1439)
 
-    bool  offTempEnabled;        // 온도 기반 AutoOff 활성 여부
-    float offTemp;               // AutoOff가 발동되는 온도 (섭씨)
+    bool  			offTempEnabled;        // 온도 기반 AutoOff 활성 여부
+    float 			offTemp;               // AutoOff가 발동되는 온도 (섭씨)
 } ST_CT10_AutoOffRuntime_t;
 
-
-
-static void toSummaryJson(JsonDocument& p_doc) { instance().exportSummaryJson(p_doc); }
-static void toMetricsJson(JsonDocument& p_doc) { instance().exportMetricsJson(p_doc); }
 
 
 // ======================================================
@@ -130,6 +126,12 @@ class CL_CT10_ControlManager {
 
     static bool reloadAll();
 
+	static void toSummaryJson(JsonDocument& p_doc) { 
+		instance().exportSummaryJson(p_doc); 
+	}
+	static void toMetricsJson(JsonDocument& p_doc) { 
+		instance().exportMetricsJson(p_doc); 
+	}
   public:
     // --------------------------------------------------
     // 외부에서 필요한 인스턴스 API
