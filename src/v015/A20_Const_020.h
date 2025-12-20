@@ -110,7 +110,7 @@ typedef enum : uint8_t {
 	EN_A20_WEATHER_PHASE_COUNT
 } T_A20_WindPhase_t;
 
-static const char* g_A20_WEATHER_PHASE_NAMES_Arr[] = {
+inline constexpr const char* g_A20_WEATHER_PHASE_NAMES_Arr[] = {
 	  "CALM"
 	, "NORMAL"
 	, "STRONG"
@@ -307,7 +307,7 @@ typedef enum : uint8_t {
 /* ======================================================
  * Segment Mode <-> String 매핑 유틸
  * ====================================================== */
-static const char* g_A20_SEG_MODE_NAMES[] = {
+inline constexpr const char* g_A20_SEG_MODE_NAMES[] = {
 	"PRESET",
 	"FIXED"
 };
@@ -722,6 +722,13 @@ inline void A20_resetUserProfilesDefault(ST_A20_UserProfilesRoot_t& p_cfg) {
 //  - C10_ConfigManager::loadAll() 진입 전 호출 가정
 // ------------------------------------------------------
 inline void A20_resetToDefault(ST_A20_ConfigRoot_t& p_root) {
+	if (p_root.system)
+		A20_resetSystemDefault(*p_root.system);
+	if (p_root.wifi)
+		A20_resetWifiDefault(*p_root.wifi);
+	if (p_root.motion)
+		A20_resetMotionDefault(*p_root.motion);
+	
 	if (p_root.windDict)
 		A20_resetWindProfileDictDefault(*p_root.windDict);
 	if (p_root.schedules)
