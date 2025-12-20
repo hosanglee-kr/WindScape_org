@@ -46,9 +46,5 @@ void setup() {
 }
 
 void loop() {
-
 	A00_run();
-
-
-	delay(5); // CPU 점유율 완화
 }
