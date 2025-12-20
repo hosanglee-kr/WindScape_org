@@ -53,6 +53,7 @@ constexpr char FW_VERSION[] = "SC10_FW_1.0.0";
 
 constexpr char CFG_JSON_FILE[] = "10_cfg_jsonFile.json";
 
+/*
 // JSON config files (최신 합의안)
 #define G_A10_CFG_JSON_FILE_VER "025"
 
@@ -70,6 +71,8 @@ constexpr char CFG_MOTION_FILE_BAK[]			= "/json/cfg_motion_" G_A10_CFG_JSON_FILE
 constexpr char CFG_SCHEDULES_FILE_BAK[]			= "/json/cfg_schedules_" G_A10_CFG_JSON_FILE_VER ".json.bak";
 constexpr char CFG_USER_PROFILES_FILE_BAK[] 	= "/json/cfg_uzOpProfile_" G_A10_CFG_JSON_FILE_VER ".json.bak";
 constexpr char CFG_WIND_PROFILE_FILE_BAK[]		= "/json/cfg_dft_windProfile_" G_A10_CFG_JSON_FILE_VER ".json.bak";
+
+*/
 
 // 문자열 및 배열 길이 정의
 constexpr uint8_t LEN_NAME	 					= 64;
