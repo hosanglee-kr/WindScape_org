@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ------------------------------------------------------
- * 소스명 : CT10_ControlManager_026.h
+ * 소스명 : CT10_Control_026.h
  * 모듈약어 : CT10
  * 모듈명 : Smart Nature Wind 제어 통합 Manager (v026)
  * ------------------------------------------------------
@@ -100,6 +100,12 @@ typedef struct {
     bool  offTempEnabled;        // 온도 기반 AutoOff 활성 여부
     float offTemp;               // AutoOff가 발동되는 온도 (섭씨)
 } ST_CT10_AutoOffRuntime_t;
+
+
+
+static void toSummaryJson(JsonDocument& p_doc) { instance().exportSummaryJson(p_doc); }
+static void toMetricsJson(JsonDocument& p_doc) { instance().exportMetricsJson(p_doc); }
+
 
 // ======================================================
 // CL_CT10_ControlManager 클래스
