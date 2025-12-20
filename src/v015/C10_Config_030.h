@@ -41,6 +41,7 @@
  */
 
 #include <ArduinoJson.h>
+#include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 #include <stdint.h>
 #include <string.h>
@@ -52,8 +53,8 @@
 // ------------------------------------------------------
 // 외부 헬퍼 함수 선언 (Reset, 모드 변환 등)
 // ------------------------------------------------------
-extern EN_A20_segment_mode_t A20_modeFromString(const char* p_mode);
-extern const char*           A20_modeToString(EN_A20_segment_mode_t p_mode);
+// extern EN_A20_segment_mode_t A20_modeFromString(const char* p_mode);
+// extern const char*           A20_modeToString(EN_A20_segment_mode_t p_mode);
 
 extern void A20_resetSystemDefault(ST_A20_SystemConfig& p_cfg);
 extern void A20_resetWindProfileDictDefault(ST_A20_WindProfileDict_t& p_cfg);
