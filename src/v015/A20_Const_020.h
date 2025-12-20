@@ -1,8 +1,8 @@
 #pragma once
 /*
  * ------------------------------------------------------
- * 소스명 : A10_Const_020.h
- * 모듈약어 : A10
+ * 소스명 : A20_Const_020.h
+ * 모듈약어 : A20
  * 모듈명 : Smart Nature Wind 공용 상수/타입/구조체 선언 (v015)
  * ------------------------------------------------------
  * 기능 요약
@@ -10,7 +10,7 @@
  *  - 프리셋/스타일 코드 상수 및 인덱싱 유틸
  *  - Schedule / UserProfile / WindProfile JSON 구조체
  *  - 공용 헬퍼 (clamp, safe strlcpy 등)
- *  - 전역 구성 루트 객체 선언(g_A10_config_root)
+ *  - 전역 구성 루트 객체 선언(g_A20_config_root)
  * ------------------------------------------------------
  * [구현 규칙]
  *  - 항상 소스 시작 주석 부분 체계 유지 및 내용 업데이트
@@ -41,38 +41,18 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include <string.h>
+// #include <string.h>
 
 /* ======================================================
  * 경로/파일 이름 (최신 스펙)
  * ====================================================== */
-namespace A10_Const {
+namespace A20_Const {
 
 // 펌웨어/파일버전
-constexpr char FW_VERSION[] = "SC10_FW_1.0.0";
+constexpr char FW_VERSION[] = "A00_FW_1.0.0";
 
 constexpr char CFG_JSON_FILE[] = "10_cfg_jsonFile.json";
 
-/*
-// JSON config files (최신 합의안)
-#define G_A10_CFG_JSON_FILE_VER "025"
-
-constexpr char CFG_SYSTEM_FILE[]				= "/json/cfg_system_" G_A10_CFG_JSON_FILE_VER ".json";
-constexpr char CFG_WIFI_FILE[]					= "/json/cfg_wifi_" G_A10_CFG_JSON_FILE_VER ".json";
-constexpr char CFG_MOTION_FILE[]				= "/json/cfg_motion_" G_A10_CFG_JSON_FILE_VER ".json";
-constexpr char CFG_SCHEDULES_FILE[]				= "/json/cfg_schedules_" G_A10_CFG_JSON_FILE_VER ".json";
-constexpr char CFG_USER_PROFILES_FILE[] 		= "/json/cfg_uzOpProfile_" G_A10_CFG_JSON_FILE_VER ".json";
-constexpr char CFG_WIND_PROFILE_FILE[]			= "/json/cfg_dft_windProfile_" G_A10_CFG_JSON_FILE_VER ".json";
-
-// 백업 파일
-constexpr char CFG_SYSTEM_FILE_BAK[]			= "/json/cfg_system_" G_A10_CFG_JSON_FILE_VER ".json.bak";
-constexpr char CFG_WIFI_FILE_BAK[]				= "/json/cfg_wifi_" G_A10_CFG_JSON_FILE_VER ".json.bak";
-constexpr char CFG_MOTION_FILE_BAK[]			= "/json/cfg_motion_" G_A10_CFG_JSON_FILE_VER ".json.bak";
-constexpr char CFG_SCHEDULES_FILE_BAK[]			= "/json/cfg_schedules_" G_A10_CFG_JSON_FILE_VER ".json.bak";
-constexpr char CFG_USER_PROFILES_FILE_BAK[] 	= "/json/cfg_uzOpProfile_" G_A10_CFG_JSON_FILE_VER ".json.bak";
-constexpr char CFG_WIND_PROFILE_FILE_BAK[]		= "/json/cfg_dft_windProfile_" G_A10_CFG_JSON_FILE_VER ".json.bak";
-
-*/
 
 // 문자열 및 배열 길이 정의
 constexpr uint8_t LEN_NAME	 					= 64;
@@ -98,53 +78,56 @@ constexpr uint8_t MAX_SEGMENTS_PER_PROFILE		= 8;
 constexpr size_t MAX_NAME_LEN 					= 32;
 constexpr size_t MAX_CODE_LEN 					= 24;
 
-}  // namespace A10_Const
+}  // namespace A20_Const
 
 
 // ======================================================
 // ENUM 정의
 // ======================================================
 typedef enum : uint8_t {
-	EN_A10_WIFI_MODE_AP		= 0,
-	EN_A10_WIFI_MODE_STA	= 1,
-	EN_A10_WIFI_MODE_AP_STA = 2
-} EN_A10_WIFI_MODE_t;
+	EN_A20_WIFI_MODE_AP		= 0,
+	EN_A20_WIFI_MODE_STA	= 1,
+	EN_A20_WIFI_MODE_AP_STA = 2
+} EN_A20_WIFI_MODE_t;
 
 // 0=Continuous / 1=Schedule
 typedef enum : uint8_t {
-	EN_A10_CONTROL_RUN_CONTINUE = 0,
-	EN_A10_CONTROL_RUN_SCHEDULE = 1,
-} T_A10_control_runMode_t;
+	EN_A20_CONTROL_RUN_CONTINUE = 0,
+	EN_A20_CONTROL_RUN_SCHEDULE = 1,
+} T_A20_control_runMode_t;
 
 // 바람 단계(참고용)
 typedef enum : uint8_t {
-	EN_A10_WEATHER_PHASE_CALM = 0,
-	EN_A10_WEATHER_PHASE_NORMAL,
-	EN_A10_WEATHER_PHASE_STRONG,
-	EN_A10_WEATHER_PHASE_COUNT
-} T_A10_WindPhase_t;
+	EN_A20_WEATHER_PHASE_CALM = 0,
+	EN_A20_WEATHER_PHASE_NORMAL,
+	EN_A20_WEATHER_PHASE_STRONG,
+	EN_A20_WEATHER_PHASE_COUNT
+} T_A20_WindPhase_t;
 
-static const char* g_A10_WEATHER_PHASE_NAMES_Arr[] = {
-	"CALM", "NORMAL", "STRONG"};
+static const char* g_A20_WEATHER_PHASE_NAMES_Arr[] = {
+	  "CALM"
+	, "NORMAL"
+	, "STRONG"
+};
 
 // 프리셋 (레거시/참고용: 신규 sim은 문자열 preset 사용)
 typedef enum : uint8_t {
-	EN_A10_PRESET_OFF			= 0,
-	EN_A10_PRESET_COUNTRY		= 1,
-	EN_A10_PRESET_MEDITERRANEAN = 2,
-	EN_A10_PRESET_OCEAN			= 3,
-	EN_A10_PRESET_MOUNTAIN		= 4,
-	EN_A10_PRESET_PLAINS		= 5,
-	EN_A10_PRESET_HARBOR_BREEZE = 6,
-	EN_A10_PRESET_FOREST_CANOPY = 7,
-	EN_A10_PRESET_URBAN_SUNSET	= 8,
-	EN_A10_PRESET_TROPICAL_RAIN = 9,
-	EN_A10_PRESET_DESERT_NIGHT	= 10,
-	EN_A10_PRESET_COUNT
-} T_A10_PresetMode_t;
+	EN_A20_PRESET_OFF			= 0,
+	EN_A20_PRESET_COUNTRY		= 1,
+	EN_A20_PRESET_MEDITERRANEAN = 2,
+	EN_A20_PRESET_OCEAN			= 3,
+	EN_A20_PRESET_MOUNTAIN		= 4,
+	EN_A20_PRESET_PLAINS		= 5,
+	EN_A20_PRESET_HARBOR_BREEZE = 6,
+	EN_A20_PRESET_FOREST_CANOPY = 7,
+	EN_A20_PRESET_URBAN_SUNSET	= 8,
+	EN_A20_PRESET_TROPICAL_RAIN = 9,
+	EN_A20_PRESET_DESERT_NIGHT	= 10,
+	EN_A20_PRESET_COUNT
+} T_A20_PresetMode_t;
 
 // 프리셋 코드 배열 정의 (문자열 상수)
-static const char* g_A10_PRESET_CODES[] = {
+static const char* g_A20_PRESET_CODES[] = {
 	"OFF",
 	"COUNTRY",
 	"MEDITERRANEAN",
@@ -158,7 +141,7 @@ static const char* g_A10_PRESET_CODES[] = {
 	"DESERT_NIGHT"
 };
 
-static const char* g_A10_PRESET_MODE_NAMES_Arr[] = {
+static const char* g_A20_PRESET_MODE_NAMES_Arr[] = {
 	"OFF",
 	"COUNTRY",
 	"MEDITERRANEAN",
@@ -177,37 +160,37 @@ static const char* g_A10_PRESET_MODE_NAMES_Arr[] = {
 // ======================================================
 
 typedef struct {
-    std::string system;          // "/json/cfg_system_026.json"
-    std::string wifi;            // "/json/cfg_wifi_025.json"
-    std::string motion;          // "/json/cfg_motion_025.json"
-    std::string nvsSpec;         // "/json/cfg_nvsSpec_025.json"
-    std::string schedules;       // "/json/cfg_schedules_026.json"
-    std::string uzOpProfile;     // "/json/cfg_uzOpProfile_026.json"
-    std::string dft_windProfile; // "/json/cfg_dft_windProfile_025.json"
-    std::string webPages;        // "/json/cfg_pages_032.json"
-} ST_A10_cfg_jsonFile_t;
+	char system[A20_Const::LEN_NAME];         
+	char wifi[A20_Const::LEN_NAME];            
+	char motion[A20_Const::LEN_NAME];
+	char nvsSpec[A20_Const::LEN_NAME];
+	char schedules[A20_Const::LEN_NAME];
+	char uzOpProfile[A20_Const::LEN_NAME];
+	char dft_windProfile[A20_Const::LEN_NAME];
+	char webPages[A20_Const::LEN_NAME];
+} ST_A20_cfg_jsonFile_t;
 
 typedef struct {
     uint8_t startPercentMin;    // 시동이 확실히 거는 최소 구간 (예: 18)
     uint8_t comfortPercentMin;  // “편안한 바람” 구간 시작 (예: 22), “체감 바람” 시작점 (예: 22%)
     uint8_t comfortPercentMax;  // “편안한 바람” 구간 끝   (예: 65)  소음/체감 균형 좋은 상한 (예: 65%)
     uint8_t hardPercentMax;     // 팬/소음/내구성 상으로 무리 없는 상한 (예: 90)
-} ST_A10_FanConfig_t;
+} ST_A20_FanConfig_t;
 
 // ------------------------------------------------------
 // SYSTEM 설정 (cfg_system_022.json)
 // ------------------------------------------------------
 typedef struct {
 	struct {
-		char version[A10_Const::LEN_NAME];
-		char device_name[A10_Const::LEN_NAME];
-		char last_update[A10_Const::LEN_NAME];
+		char version[A20_Const::LEN_NAME];
+		char device_name[A20_Const::LEN_NAME];
+		char last_update[A20_Const::LEN_NAME];
 	} meta;
 
 	struct {
-        // char webPagesJson[A10_Const::LEN_PATH];
+        // char webPagesJson[A20_Const::LEN_PATH];
 		struct {
-			char	 level[A10_Const::LEN_LEVEL];
+			char	 level[A20_Const::LEN_LEVEL];
 			uint16_t max_entries;
 		} logging;
 	} system;
@@ -220,15 +203,8 @@ typedef struct {
 			uint8_t	 res;
 		} fan_pwm;
 
-		ST_A10_FanConfig_t fanConfig;
-
         //  팬 특성 모델
-    //     struct {
-    //         uint8_t startPercentMin;     	// 이 값 미만은 모터가 돌지 않음 (실제 시동 한계)
-    //         uint8_t comfortPercentMin;   	// “체감 바람” 시작점 (예: 22%)
-    //         uint8_t comfortPercentMax;   	// 소음/체감 균형 좋은 상한 (예: 65%)
-    //         uint8_t hardPercentMax;      	// 안전상 절대 넘지 않는 상한 (예: 90%)
-    //    } fanConfig;
+		ST_A20_FanConfig_t fanConfig;
 
 		struct {
 			bool	 enabled;
@@ -255,32 +231,26 @@ typedef struct {
 		char	 timezone[32];
 		uint16_t sync_interval_min;
 	} time;
-} ST_A10_SystemConfig;
+} ST_A20_SystemConfig;
 
 // ------------------------------------------------------
 // WIFI 설정 (cfg_wifi_022.json)
 // ------------------------------------------------------
 typedef struct {
-	char ssid[A10_Const::LEN_SSID];
-	char pass[A10_Const::LEN_PASS];
-} ST_A10_STANetwork_t; // 1. STA 네트워크 개별 항목 정의
+	char ssid[A20_Const::LEN_SSID];
+	char pass[A20_Const::LEN_PASS];
+} ST_A20_STANetwork_t; // 1. STA 네트워크 개별 항목 정의
 
 typedef struct {
-	EN_A10_WIFI_MODE_t wifiMode;
+	EN_A20_WIFI_MODE_t wifiMode;
 	char			   wifiModeDesc[48];
 	struct {
-		char ssid[A10_Const::LEN_SSID];
-		char password[A10_Const::LEN_PASS];
+		char ssid[A20_Const::LEN_SSID];
+		char password[A20_Const::LEN_PASS];
 	} ap;
-    ST_A10_STANetwork_t sta[A10_Const::MAX_STA_NETWORKS]; 
-    /*
-	struct {
-		char ssid[A10_Const::LEN_SSID];
-		char pass[A10_Const::LEN_PASS];
-	} ST_A10_STANetwork_t sta[A10_Const::MAX_STA_NETWORKS];
-	*/
+    ST_A20_STANetwork_t sta[A20_Const::MAX_STA_NETWORKS]; 
 	uint8_t sta_count;
-} ST_A10_WifiConfig;
+} ST_A20_WifiConfig;
 
 // ------------------------------------------------------
 // MOTION 설정 (cfg_motion_022.json)
@@ -289,13 +259,13 @@ typedef struct {
 //    motion.ble.enabled, motion.ble.trusted_devices[], motion.ble.rssi{on,off,avg_count,persist_count,exit_delay_sec}
 // ------------------------------------------------------
 typedef struct {
-	char	alias[A10_Const::LEN_ALIAS];  // "MyPhone"
-	char	name[A10_Const::LEN_NAME];	  // "iPhone15" 등
+	char	alias[A20_Const::LEN_ALIAS];  // "MyPhone"
+	char	name[A20_Const::LEN_NAME];	  // "iPhone15" 등
 	char	mac[20];					  // "AA:BB:CC:11:22:33" 또는 ""(랜덤화시)
 	char	manuf_prefix[9];			  // "4C0002" (최대 8 chars + NUL)
 	uint8_t prefix_len;					  // 바이트 단위(예: 3 → "4C0002" 3바이트)
 	bool	enabled;					  // 디바이스 화이트리스트 on/off
-} ST_A10_BLETrustedDevice;
+} ST_A20_BLETrustedDevice;
 
 typedef struct {
 	bool enabled;  // 전체 motion 기능 마스터 스위치(옵션)
@@ -306,7 +276,7 @@ typedef struct {
 	struct {  // motion.ble
 		bool enabled;
 		// motion.ble.trusted_devices[]
-		ST_A10_BLETrustedDevice trusted_devices[A10_Const::MAX_BLE_DEVICES];
+		ST_A20_BLETrustedDevice trusted_devices[A20_Const::MAX_BLE_DEVICES];
 		uint8_t					trusted_count;
 		// motion.ble.rssi { on/off/avg_count/persist_count/exit_delay_sec }
 		struct {
@@ -317,38 +287,39 @@ typedef struct {
 			uint16_t exit_delay_sec;  // Presence→Idle 지연
 		} rssi;
 	} ble;
-} ST_A10_MotionConfig;
+} ST_A20_MotionConfig;
 
 /* ======================================================
  * Enum/Code: Segment Mode
  * ====================================================== */
 typedef enum : uint8_t {
-	EN_A10_SEG_MODE_PRESET = 0,	 // 프리셋/스타일 기반
-	EN_A10_SEG_MODE_FIXED  = 1,	 // 고정속도
-	EN_A10_SEG_MODE_COUNT
-} EN_A10_segment_mode_t;
+	EN_A20_SEG_MODE_PRESET = 0,	 // 프리셋/스타일 기반
+	EN_A20_SEG_MODE_FIXED  = 1,	 // 고정속도
+	EN_A20_SEG_MODE_COUNT
+} EN_A20_segment_mode_t;
 
 /* ======================================================
  * Segment Mode <-> String 매핑 유틸
  * ====================================================== */
-static const char* g_A10_SEG_MODE_NAMES[] = {
+static const char* g_A20_SEG_MODE_NAMES[] = {
 	"PRESET",
-	"FIXED"};
+	"FIXED"
+};
 
-inline EN_A10_segment_mode_t A10_modeFromString(const char* p_str) {
+inline EN_A20_segment_mode_t A20_modeFromString(const char* p_str) {
 	if (!p_str)
-		return EN_A10_SEG_MODE_PRESET;
-	for (uint8_t v_i = 0; v_i < EN_A10_SEG_MODE_COUNT; v_i++) {
-		if (strcasecmp(p_str, g_A10_SEG_MODE_NAMES[v_i]) == 0)
-			return static_cast<EN_A10_segment_mode_t>(v_i);
+		return EN_A20_SEG_MODE_PRESET;
+	for (uint8_t v_i = 0; v_i < EN_A20_SEG_MODE_COUNT; v_i++) {
+		if (strcasecmp(p_str, g_A20_SEG_MODE_NAMES[v_i]) == 0)
+			return static_cast<EN_A20_segment_mode_t>(v_i);
 	}
-	return EN_A10_SEG_MODE_PRESET;	// fallback
+	return EN_A20_SEG_MODE_PRESET;	// fallback
 }
 
-inline const char* A10_modeToString(EN_A10_segment_mode_t p_mode) {
-	if (p_mode >= EN_A10_SEG_MODE_COUNT)
+inline const char* A20_modeToString(EN_A20_segment_mode_t p_mode) {
+	if (p_mode >= EN_A20_SEG_MODE_COUNT)
 		return "PRESET";
-	return g_A10_SEG_MODE_NAMES[p_mode];
+	return g_A20_SEG_MODE_NAMES[p_mode];
 }
 
 /* ======================================================
@@ -367,13 +338,13 @@ typedef struct {
 	float turbulence_intensity_sigma;  // sigma
 	float thermal_bubble_strength;	   // 1.0 ~ 3.0
 	float thermal_bubble_radius;	   // unit
-} ST_A10_WindBase_t;
+} ST_A20_WindBase_t;
 
 typedef struct {
-	char			  code[A10_Const::MAX_CODE_LEN];  // 예: "OCEAN"
-	char			  name[A10_Const::MAX_NAME_LEN];  // 예: "Ocean"
-	ST_A10_WindBase_t base;
-} ST_A10_PresetEntry_t;
+	char			  code[A20_Const::MAX_CODE_LEN];  // 예: "OCEAN"
+	char			  name[A20_Const::MAX_NAME_LEN];  // 예: "Ocean"
+	ST_A20_WindBase_t base;
+} ST_A20_PresetEntry_t;
 
 typedef struct {
 	// 가중치 계수
@@ -381,22 +352,22 @@ typedef struct {
 	float variability_factor;
 	float gust_factor;
 	float thermal_factor;
-} ST_A10_StyleFactors_t;
+} ST_A20_StyleFactors_t;
 
 typedef struct {
-	char				  code[A10_Const::MAX_CODE_LEN];  // 예: "RELAX"
-	char				  name[A10_Const::MAX_NAME_LEN];
-	ST_A10_StyleFactors_t factors;
-} ST_A10_StyleEntry_t;
+	char				  code[A20_Const::MAX_CODE_LEN];  // 예: "RELAX"
+	char				  name[A20_Const::MAX_NAME_LEN];
+	ST_A20_StyleFactors_t factors;
+} ST_A20_StyleEntry_t;
 
 typedef struct {
 	// windProfile JSON 루트
 	// version/json_file 키는 내부 관리용이므로 본 구조체엔 포함하지 않음
 	uint8_t				 preset_count = 0;
 	uint8_t				 style_count  = 0;
-	ST_A10_PresetEntry_t presets[16];  // 충분히 여유있게
-	ST_A10_StyleEntry_t	 styles[16];
-} ST_A10_WindProfileDict_t;
+	ST_A20_PresetEntry_t presets[16];  // 충분히 여유있게
+	ST_A20_StyleEntry_t	 styles[16];
+} ST_A20_WindProfileDict_t;
 
 /* ======================================================
  * 공통: Motion, AutoOff
@@ -404,18 +375,18 @@ typedef struct {
 typedef struct {
 	bool	enabled	 = false;
 	int32_t hold_sec = 0;
-} ST_A10_PIR_t;
+} ST_A20_PIR_t;
 
 typedef struct {
 	bool	enabled		   = false;
 	int32_t rssi_threshold = -70;
 	int32_t hold_sec	   = 0;
-} ST_A10_BLE_t;
+} ST_A20_BLE_t;
 
 typedef struct {
-	ST_A10_PIR_t pir;
-	ST_A10_BLE_t ble;
-} ST_A10_Motion_t;
+	ST_A20_PIR_t pir;
+	ST_A20_BLE_t ble;
+} ST_A20_Motion_t;
 
 // userProfiles의 autoOff(통합형)
 typedef struct {
@@ -431,10 +402,10 @@ typedef struct {
 		bool  enabled = false;
 		float temp	  = 0.0f;
 	} offTemp;
-} ST_A10_AutoOff_t;
+} ST_A20_AutoOff_t;
 
 // schedules의 autoOffTimer (동일 스펙으로 통일 사용)
-typedef ST_A10_AutoOff_t ST_A10_SchAutoOff_t;
+typedef ST_A20_AutoOff_t ST_A20_SchAutoOff_t;
 
 /* ======================================================
  * Segment 조정(Adjust)
@@ -450,7 +421,7 @@ typedef struct {
 	float min_fan					 = 0.0f;  // ±
 	float turbulence_length_scale	 = 0.0f;  // ±
 	float turbulence_intensity_sigma = 0.0f;  // ±
-} ST_A10_AdjustDelta_t;
+} ST_A20_AdjustDelta_t;
 
 /* ======================================================
  * Schedule JSON 구조
@@ -460,7 +431,7 @@ typedef struct {
 	uint8_t days[7]		  = {1, 1, 1, 1, 1, 1, 1};
 	char	start_time[6] = {0};  // "HH:MM"
 	char	end_time[6]	  = {0};  // "HH:MM" (익일 교차 가능)
-} ST_A10_SchedulePeriod_t;
+} ST_A20_SchedulePeriod_t;
 
 typedef struct {
     uint8_t  segId       = 0;
@@ -468,38 +439,38 @@ typedef struct {
 	uint16_t on_minutes	 = 0;
 	uint16_t off_minutes = 0;
 
-	EN_A10_segment_mode_t mode = EN_A10_SEG_MODE_PRESET;
+	EN_A20_segment_mode_t mode = EN_A20_SEG_MODE_PRESET;
 
 	// PRESET 모드
-	char				 presetCode[A10_Const::MAX_CODE_LEN] = {0};
-	char				 styleCode[A10_Const::MAX_CODE_LEN]	 = {0};
-	ST_A10_AdjustDelta_t adjust;
+	char				 presetCode[A20_Const::MAX_CODE_LEN] = {0};
+	char				 styleCode[A20_Const::MAX_CODE_LEN]	 = {0};
+	ST_A20_AdjustDelta_t adjust;
 
 	// FIXED 모드
 	float fixed_speed = 0.0f;  // 0~100
-} ST_A10_ScheduleSegment_t;
+} ST_A20_ScheduleSegment_t;
 
 typedef struct {
     uint8_t  schId                         = 0;
 	uint16_t schNo						   = 0;
-	char	 name[A10_Const::MAX_NAME_LEN] = {0};
+	char	 name[A20_Const::MAX_NAME_LEN] = {0};
 	bool	 enabled					   = true;
 
-	ST_A10_SchedulePeriod_t	 period;  // period.enabled=false면 시간대 무시(항상 활성)
+	ST_A20_SchedulePeriod_t	 period;  // period.enabled=false면 시간대 무시(항상 활성)
 	uint8_t					 seg_count = 0;
-	ST_A10_ScheduleSegment_t segments[A10_Const::MAX_SEGMENTS_PER_SCHEDULE];
+	ST_A20_ScheduleSegment_t segments[A20_Const::MAX_SEGMENTS_PER_SCHEDULE];
     bool	repeatSegments				  = true;
     uint8_t repeatCount                   = 0;
 
-	ST_A10_SchAutoOff_t autoOff;  // schedules도 userProfiles와 동일 구조 사용
-	ST_A10_Motion_t		motion;
-} ST_A10_ScheduleItem_t;
+	ST_A20_SchAutoOff_t autoOff;  // schedules도 userProfiles와 동일 구조 사용
+	ST_A20_Motion_t		motion;
+} ST_A20_ScheduleItem_t;
 
 typedef struct {
 	// { "version", "jsonFile" } 등은 파일 메타이므로 구조에 포함 안함
 	uint8_t				  count = 0;
-	ST_A10_ScheduleItem_t items[A10_Const::MAX_SCHEDULES];
-} ST_A10_SchedulesRoot_t;
+	ST_A20_ScheduleItem_t items[A20_Const::MAX_SCHEDULES];
+} ST_A20_SchedulesRoot_t;
 
 /* ======================================================
  * UserProfiles JSON 구조
@@ -510,41 +481,41 @@ typedef struct {
 	uint16_t on_minutes	 = 0;
 	uint16_t off_minutes = 0;
 
-	EN_A10_segment_mode_t mode = EN_A10_SEG_MODE_PRESET;
+	EN_A20_segment_mode_t mode = EN_A20_SEG_MODE_PRESET;
 
-	char				 presetCode[A10_Const::MAX_CODE_LEN] = {0};
-	char				 styleCode[A10_Const::MAX_CODE_LEN]	 = {0};
-	ST_A10_AdjustDelta_t adjust;
+	char				 presetCode[A20_Const::MAX_CODE_LEN] = {0};
+	char				 styleCode[A20_Const::MAX_CODE_LEN]	 = {0};
+	ST_A20_AdjustDelta_t adjust;
 
 	float fixed_speed = 0.0f;  // FIXED일 때
-} ST_A10_UserProfileSegment_t;
+} ST_A20_UserProfileSegment_t;
 
 typedef struct {
     uint8_t profileId                     = 0;
 	uint8_t profileNo					  = 0;
-	char	name[A10_Const::MAX_NAME_LEN] = {0};
+	char	name[A20_Const::MAX_NAME_LEN] = {0};
 	bool	enabled						  = true;
 	bool	repeatSegments				  = true;
     uint8_t repeatCount                   = 0;
 	uint8_t						seg_count = 0;
-	ST_A10_UserProfileSegment_t segments[A10_Const::MAX_SEGMENTS_PER_PROFILE];
+	ST_A20_UserProfileSegment_t segments[A20_Const::MAX_SEGMENTS_PER_PROFILE];
 
-	ST_A10_AutoOff_t autoOff;
-	ST_A10_Motion_t	 motion;
-} ST_A10_UserProfileItem_t;
+	ST_A20_AutoOff_t autoOff;
+	ST_A20_Motion_t	 motion;
+} ST_A20_UserProfileItem_t;
 
 typedef struct {
 	uint8_t					 count = 0;	 // 최대 6
-	ST_A10_UserProfileItem_t items[A10_Const::MAX_USER_PROFILES];
-} ST_A10_UserProfilesRoot_t;
+	ST_A20_UserProfileItem_t items[A20_Const::MAX_USER_PROFILES];
+} ST_A20_UserProfilesRoot_t;
 
 /* ======================================================
  * 시뮬레이션에 전달할 "해석된 파라미터"
  *  - preset(base) × style(factor) + adjust(delta)
  * ====================================================== */
 typedef struct {
-	char presetCode[A10_Const::MAX_CODE_LEN];
-	char styleCode[A10_Const::MAX_CODE_LEN];
+	char presetCode[A20_Const::MAX_CODE_LEN];
+	char styleCode[A20_Const::MAX_CODE_LEN];
 
 	bool  valid;	   // 유효성 플래그
 	bool  fixedMode;   // 고정 속도 모드 여부
@@ -561,26 +532,26 @@ typedef struct {
 	float thermal_bubble_strength;
 	float thermal_bubble_radius;
 
-} ST_A10_ResolvedWind_t;
+} ST_A20_ResolvedWind_t;
 
 /* ======================================================
  * Config Root (전역 보관)
  * ====================================================== */
 
 typedef struct {
-	ST_A10_SystemConfig*	   system		= nullptr;
-	ST_A10_WifiConfig*		   wifi			= nullptr;
-	ST_A10_MotionConfig*	   motion		= nullptr;
-	ST_A10_WindProfileDict_t*  windDict		= nullptr;
-	ST_A10_SchedulesRoot_t*	   schedules	= nullptr;
-	ST_A10_UserProfilesRoot_t* userProfiles = nullptr;
-} ST_A10_ConfigRoot_t;
+	ST_A20_SystemConfig*	   system		= nullptr;
+	ST_A20_WifiConfig*		   wifi			= nullptr;
+	ST_A20_MotionConfig*	   motion		= nullptr;
+	ST_A20_WindProfileDict_t*  windDict		= nullptr;
+	ST_A20_SchedulesRoot_t*	   schedules	= nullptr;
+	ST_A20_UserProfilesRoot_t* userProfiles = nullptr;
+} ST_A20_ConfigRoot_t;
 
-extern ST_A10_ConfigRoot_t g_A10_config_root;
+extern ST_A20_ConfigRoot_t g_A20_config_root;
 
 
 class CL_M10_MotionLogic; // 전방 선언
-// ... (ST_A10_ConfigRoot_t 및 g_A10_config_root 선언) ...
+// ... (ST_A20_ConfigRoot_t 및 g_A20_config_root 선언) ...
 extern CL_M10_MotionLogic* g_M10_motionLogic; // extern 선언
 
 // extern CL_M10_MotionLogic* g_M10_motionLogic;
@@ -588,7 +559,7 @@ extern CL_M10_MotionLogic* g_M10_motionLogic; // extern 선언
 /* ======================================================
  * 헬퍼 함수 선언
  * ====================================================== */
-inline float A10_clampf(float v, float lo, float hi) {
+inline float A20_clampf(float v, float lo, float hi) {
 	if (v < lo)
 		return lo;
 	if (v > hi)
@@ -596,7 +567,7 @@ inline float A10_clampf(float v, float lo, float hi) {
 	return v;
 }
 
-inline void A10_safe_strlcpy(char* dst, const char* src, size_t n) {
+inline void A20_safe_strlcpy(char* dst, const char* src, size_t n) {
 	if (!dst || n == 0)
 		return;
 	if (!src) {
@@ -610,12 +581,12 @@ inline void A10_safe_strlcpy(char* dst, const char* src, size_t n) {
 // [보완] 랜덤 및 프리셋 유틸 (S10, C10 등 공용)
 // ------------------------------------------------------
 
-inline float A10_getRandom01() {
+inline float A20_getRandom01() {
 	return (float)esp_random() / (float)UINT32_MAX;
 }
 
-inline float A10_randRange(float p_min, float p_max) {
-	return p_min + (A10_getRandom01() * (p_max - p_min));
+inline float A20_randRange(float p_min, float p_max) {
+	return p_min + (A20_getRandom01() * (p_max - p_min));
 }
 
 // ======================================================
@@ -624,16 +595,16 @@ inline float A10_randRange(float p_min, float p_max) {
 // ======================================================
 
 // System 기본값
-inline void A10_resetSystemDefault(ST_A10_SystemConfig& p_cfg) {
+inline void A20_resetSystemDefault(ST_A20_SystemConfig& p_cfg) {
 	memset(&p_cfg, 0, sizeof(p_cfg));
 
-	A10_safe_strlcpy(p_cfg.meta.version, A10_Const::FW_VERSION, sizeof(p_cfg.meta.version));
-	A10_safe_strlcpy(p_cfg.meta.device_name, "SmartNatureWind", sizeof(p_cfg.meta.device_name));
-	A10_safe_strlcpy(p_cfg.meta.last_update, "", sizeof(p_cfg.meta.last_update));
+	A20_safe_strlcpy(p_cfg.meta.version, A20_Const::FW_VERSION, sizeof(p_cfg.meta.version));
+	A20_safe_strlcpy(p_cfg.meta.device_name, "SmartNatureWind", sizeof(p_cfg.meta.device_name));
+	A20_safe_strlcpy(p_cfg.meta.last_update, "", sizeof(p_cfg.meta.last_update));
 
-    // A10_safe_strlcpy(p_cfg.system.webPagesJson, "", sizeof(p_cfg.system.webPagesJson));
+    // A20_safe_strlcpy(p_cfg.system.webPagesJson, "", sizeof(p_cfg.system.webPagesJson));
 
-	A10_safe_strlcpy(p_cfg.system.logging.level, "INFO", sizeof(p_cfg.system.logging.level));
+	A20_safe_strlcpy(p_cfg.system.logging.level, "INFO", sizeof(p_cfg.system.logging.level));
 	p_cfg.system.logging.max_entries = 300;
 
 	// HW: PWM
@@ -658,29 +629,29 @@ inline void A10_resetSystemDefault(ST_A10_SystemConfig& p_cfg) {
 	p_cfg.hw.ble.scan_interval = 5;
 
 	// Security
-	A10_safe_strlcpy(p_cfg.security.api_key, "", sizeof(p_cfg.security.api_key));
+	A20_safe_strlcpy(p_cfg.security.api_key, "", sizeof(p_cfg.security.api_key));
 
 	// Time
-	A10_safe_strlcpy(p_cfg.time.ntp_server, "pool.ntp.org", sizeof(p_cfg.time.ntp_server));
-	A10_safe_strlcpy(p_cfg.time.timezone, "Asia/Seoul", sizeof(p_cfg.time.timezone));
+	A20_safe_strlcpy(p_cfg.time.ntp_server, "pool.ntp.org", sizeof(p_cfg.time.ntp_server));
+	A20_safe_strlcpy(p_cfg.time.timezone, "Asia/Seoul", sizeof(p_cfg.time.timezone));
 	p_cfg.time.sync_interval_min = 60;
 }
 
 // WiFi 기본값
-inline void A10_resetWifiDefault(ST_A10_WifiConfig& p_cfg) {
+inline void A20_resetWifiDefault(ST_A20_WifiConfig& p_cfg) {
 	memset(&p_cfg, 0, sizeof(p_cfg));
 
-	p_cfg.wifiMode = EN_A10_WIFI_MODE_AP_STA;
-	A10_safe_strlcpy(p_cfg.wifiModeDesc, "0=AP,1=STA,2=AP+STA", sizeof(p_cfg.wifiModeDesc));
+	p_cfg.wifiMode = EN_A20_WIFI_MODE_AP_STA;
+	A20_safe_strlcpy(p_cfg.wifiModeDesc, "0=AP,1=STA,2=AP+STA", sizeof(p_cfg.wifiModeDesc));
 
-	A10_safe_strlcpy(p_cfg.ap.ssid, "NatureWind", sizeof(p_cfg.ap.ssid));
-	A10_safe_strlcpy(p_cfg.ap.password, "2540", sizeof(p_cfg.ap.password));
+	A20_safe_strlcpy(p_cfg.ap.ssid, "NatureWind", sizeof(p_cfg.ap.ssid));
+	A20_safe_strlcpy(p_cfg.ap.password, "2540", sizeof(p_cfg.ap.password));
 
 	p_cfg.sta_count = 0;  // STA 목록은 비워둠
 }
 
 // Motion 기본값
-inline void A10_resetMotionDefault(ST_A10_MotionConfig& p_cfg) {
+inline void A20_resetMotionDefault(ST_A20_MotionConfig& p_cfg) {
 	memset(&p_cfg, 0, sizeof(p_cfg));
 
 	p_cfg.enabled = true;
@@ -698,13 +669,13 @@ inline void A10_resetMotionDefault(ST_A10_MotionConfig& p_cfg) {
 }
 
 // WindProfile Dict 기본값
-inline void A10_resetWindProfileDictDefault(ST_A10_WindProfileDict_t& p_dict) {
+inline void A20_resetWindProfileDictDefault(ST_A20_WindProfileDict_t& p_dict) {
 	memset(&p_dict, 0, sizeof(p_dict));
 
 	// 최소 기본 Preset: OCEAN 기준 하나만이라도 보장 (필요 시 확장)
 	p_dict.preset_count = 1;
-	A10_safe_strlcpy(p_dict.presets[0].code, "OCEAN", sizeof(p_dict.presets[0].code));
-	A10_safe_strlcpy(p_dict.presets[0].name, "Ocean Breeze", sizeof(p_dict.presets[0].name));
+	A20_safe_strlcpy(p_dict.presets[0].code, "OCEAN", sizeof(p_dict.presets[0].code));
+	A20_safe_strlcpy(p_dict.presets[0].name, "Ocean Breeze", sizeof(p_dict.presets[0].name));
 	p_dict.presets[0].base.wind_intensity			  = 70.0f;
 	p_dict.presets[0].base.wind_variability			  = 50.0f;
 	p_dict.presets[0].base.gust_frequency			  = 45.0f;
@@ -717,8 +688,8 @@ inline void A10_resetWindProfileDictDefault(ST_A10_WindProfileDict_t& p_dict) {
 
 	// Style 기본 1개 (BALANCE)
 	p_dict.style_count = 1;
-	A10_safe_strlcpy(p_dict.styles[0].code, "BALANCE", sizeof(p_dict.styles[0].code));
-	A10_safe_strlcpy(p_dict.styles[0].name, "Balance", sizeof(p_dict.styles[0].name));
+	A20_safe_strlcpy(p_dict.styles[0].code, "BALANCE", sizeof(p_dict.styles[0].code));
+	A20_safe_strlcpy(p_dict.styles[0].name, "Balance", sizeof(p_dict.styles[0].name));
 	p_dict.styles[0].factors.intensity_factor	= 1.0f;
 	p_dict.styles[0].factors.variability_factor = 1.0f;
 	p_dict.styles[0].factors.gust_factor		= 1.0f;
@@ -726,39 +697,39 @@ inline void A10_resetWindProfileDictDefault(ST_A10_WindProfileDict_t& p_dict) {
 }
 
 // Schedules 기본값 (비움 + 구조 일관성 보장)
-inline void A10_resetSchedulesDefault(ST_A10_SchedulesRoot_t& p_cfg) {
+inline void A20_resetSchedulesDefault(ST_A20_SchedulesRoot_t& p_cfg) {
 	memset(&p_cfg, 0, sizeof(p_cfg));
 	p_cfg.count = 0;
 	// 필요 시 여기서 기본 스케줄 1~2개 정의 가능
 }
 
 // UserProfiles 기본값 (비움 + 구조 일관성 보장)
-inline void A10_resetUserProfilesDefault(ST_A10_UserProfilesRoot_t& p_cfg) {
+inline void A20_resetUserProfilesDefault(ST_A20_UserProfilesRoot_t& p_cfg) {
 	memset(&p_cfg, 0, sizeof(p_cfg));
 	p_cfg.count = 0;
 	// 필요 시 기본 프로파일 추가 가능
 }
 
 // ------------------------------------------------------
-// A10_resetToDefault
+// A20_resetToDefault
 //  - 전체 ConfigRoot 기본 초기화
 //  - C10_ConfigManager::loadAll() 진입 전 호출 가정
 // ------------------------------------------------------
-inline void A10_resetToDefault(ST_A10_ConfigRoot_t& p_root) {
+inline void A20_resetToDefault(ST_A20_ConfigRoot_t& p_root) {
 	if (p_root.windDict)
-		A10_resetWindProfileDictDefault(*p_root.windDict);
+		A20_resetWindProfileDictDefault(*p_root.windDict);
 	if (p_root.schedules)
-		A10_resetSchedulesDefault(*p_root.schedules);
+		A20_resetSchedulesDefault(*p_root.schedules);
 	if (p_root.userProfiles)
-		A10_resetUserProfilesDefault(*p_root.userProfiles);
+		A20_resetUserProfilesDefault(*p_root.userProfiles);
 }
 
 // 프리셋 코드 → 인덱스 매핑 (S10용)
-inline int8_t A10_getPresetIndexByCode(const char* code) {
+inline int8_t A20_getPresetIndexByCode(const char* code) {
 	if (!code)
 		return -1;
-	for (int8_t i = 0; i < EN_A10_PRESET_COUNT; i++) {
-		if (strcasecmp(code, g_A10_PRESET_CODES[i]) == 0)
+	for (int8_t i = 0; i < EN_A20_PRESET_COUNT; i++) {
+		if (strcasecmp(code, g_A20_PRESET_CODES[i]) == 0)
 			return i;
 	}
 	return -1;
@@ -767,8 +738,8 @@ inline int8_t A10_getPresetIndexByCode(const char* code) {
 // ------------------------------------------------------
 // WindProfileDict 검색 유틸리티
 // ------------------------------------------------------
-inline int16_t A10_findPresetIndexByCode(
-	const ST_A10_WindProfileDict_t& p_dict,
+inline int16_t A20_findPresetIndexByCode(
+	const ST_A20_WindProfileDict_t& p_dict,
 	const char*						p_code) {
 	if (!p_code || !p_code[0])
 		return -1;
@@ -779,8 +750,8 @@ inline int16_t A10_findPresetIndexByCode(
 	return -1;
 }
 
-inline int16_t A10_findStyleIndexByCode(
-	const ST_A10_WindProfileDict_t& p_dict,
+inline int16_t A20_findStyleIndexByCode(
+	const ST_A20_WindProfileDict_t& p_dict,
 	const char*						p_code) {
 	if (!p_code || !p_code[0])
 		return -1;

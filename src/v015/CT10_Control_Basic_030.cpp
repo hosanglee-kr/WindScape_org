@@ -70,7 +70,7 @@ uint32_t CL_CT10_ControlManager::calcOverrideRemainSec() const {
 // --------------------------------------------------
 // autoOff init
 // --------------------------------------------------
-void CL_CT10_ControlManager::initAutoOffFromUserProfile(const ST_A10_UserProfileItem_t& p_up) {
+void CL_CT10_ControlManager::initAutoOffFromUserProfile(const ST_A20_UserProfileItem_t& p_up) {
     memset(&autoOffRt, 0, sizeof(autoOffRt));
 
     if (p_up.autoOff.timer.enabled) {
@@ -88,7 +88,7 @@ void CL_CT10_ControlManager::initAutoOffFromUserProfile(const ST_A10_UserProfile
     }
 }
 
-void CL_CT10_ControlManager::initAutoOffFromSchedule(const ST_A10_ScheduleItem_t& p_s) {
+void CL_CT10_ControlManager::initAutoOffFromSchedule(const ST_A20_ScheduleItem_t& p_s) {
     memset(&autoOffRt, 0, sizeof(autoOffRt));
 
     if (p_s.autoOff.timer.enabled) {
@@ -173,7 +173,7 @@ float CL_CT10_ControlManager::getCurrentTemperatureMock() {
 // --------------------------------------------------
 // find active schedule
 // --------------------------------------------------
-int CL_CT10_ControlManager::findActiveScheduleIndex(const ST_A10_SchedulesRoot_t& p_cfg) {
+int CL_CT10_ControlManager::findActiveScheduleIndex(const ST_A20_SchedulesRoot_t& p_cfg) {
     if (p_cfg.count == 0)
         return -1;
 
@@ -187,7 +187,7 @@ int CL_CT10_ControlManager::findActiveScheduleIndex(const ST_A10_SchedulesRoot_t
     uint16_t v_curMin = (uint16_t)v_localTm->tm_hour * 60 + (uint16_t)v_localTm->tm_min;
 
     for (int v_i = 0; v_i < (int)p_cfg.count; v_i++) {
-        const ST_A10_ScheduleItem_t& v_s = p_cfg.items[v_i];
+        const ST_A20_ScheduleItem_t& v_s = p_cfg.items[v_i];
 
         if (!v_s.enabled)
             continue;
@@ -215,7 +215,7 @@ int CL_CT10_ControlManager::findActiveScheduleIndex(const ST_A10_SchedulesRoot_t
 // --------------------------------------------------
 // motion check
 // --------------------------------------------------
-bool CL_CT10_ControlManager::isMotionBlocked(const ST_A10_Motion_t& p_motionCfg) {
+bool CL_CT10_ControlManager::isMotionBlocked(const ST_A20_Motion_t& p_motionCfg) {
     if (!motion)
         return false;
 
@@ -246,10 +246,10 @@ void CL_CT10_ControlManager::maybePushMetricsDirty() {
 // preset/style name lookup (log 개선용)
 // --------------------------------------------------
 const char* CL_CT10_ControlManager::findPresetNameByCode(const char* p_code) const {
-    if (!g_A10_config_root.windDict || !p_code || !p_code[0])
+    if (!g_A20_config_root.windDict || !p_code || !p_code[0])
         return "";
 
-    const ST_A10_WindProfileDict_t& v_dict = *g_A10_config_root.windDict;
+    const ST_A20_WindProfileDict_t& v_dict = *g_A20_config_root.windDict;
     for (uint8_t v_i = 0; v_i < v_dict.preset_count; v_i++) {
         if (strcasecmp(v_dict.presets[v_i].code, p_code) == 0) {
             return v_dict.presets[v_i].name;
@@ -259,10 +259,10 @@ const char* CL_CT10_ControlManager::findPresetNameByCode(const char* p_code) con
 }
 
 const char* CL_CT10_ControlManager::findStyleNameByCode(const char* p_code) const {
-    if (!g_A10_config_root.windDict || !p_code || !p_code[0])
+    if (!g_A20_config_root.windDict || !p_code || !p_code[0])
         return "";
 
-    const ST_A10_WindProfileDict_t& v_dict = *g_A10_config_root.windDict;
+    const ST_A20_WindProfileDict_t& v_dict = *g_A20_config_root.windDict;
     for (uint8_t v_i = 0; v_i < v_dict.style_count; v_i++) {
         if (strcasecmp(v_dict.styles[v_i].code, p_code) == 0) {
             return v_dict.styles[v_i].name;

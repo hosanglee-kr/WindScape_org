@@ -33,7 +33,7 @@ bool CL_CT10_ControlManager::setActiveUserProfile(uint8_t p_profileNo) {
     return instance().startUserProfileByNo(p_profileNo);
 }
 
-void CL_CT10_ControlManager::applyManual(const ST_A10_ResolvedWind_t& p_wind) {
+void CL_CT10_ControlManager::applyManual(const ST_A20_ResolvedWind_t& p_wind) {
     instance().applyManualResolved(p_wind, 0);
 }
 
@@ -42,7 +42,7 @@ void CL_CT10_ControlManager::clearManual() {
 }
 
 bool CL_CT10_ControlManager::reloadAll() {
-    bool v_ok = CL_C10_ConfigManager::loadAll(g_A10_config_root);
+    bool v_ok = CL_C10_ConfigManager::loadAll(g_A20_config_root);
     if (!v_ok)
         return false;
 
@@ -124,13 +124,13 @@ void CL_CT10_ControlManager::setProfileMode(bool p_profileMode) {
 }
 
 bool CL_CT10_ControlManager::startUserProfileByNo(uint8_t p_profileNo) {
-    if (!g_A10_config_root.userProfiles)
+    if (!g_A20_config_root.userProfiles)
         return false;
 
-    ST_A10_UserProfilesRoot_t& v_cfg = *g_A10_config_root.userProfiles;
+    ST_A20_UserProfilesRoot_t& v_cfg = *g_A20_config_root.userProfiles;
 
     for (uint8_t v_i = 0; v_i < v_cfg.count; v_i++) {
-        const ST_A10_UserProfileItem_t& v_p = v_cfg.items[v_i];
+        const ST_A20_UserProfileItem_t& v_p = v_cfg.items[v_i];
         if (!v_p.enabled)
             continue;
 
@@ -191,15 +191,15 @@ void CL_CT10_ControlManager::startOverrideFixed(float p_percent, uint32_t p_seco
 
 void CL_CT10_ControlManager::startOverridePreset(const char* p_presetCode,
                                                  const char* p_styleCode,
-                                                 const ST_A10_AdjustDelta_t* p_adj,
+                                                 const ST_A20_AdjustDelta_t* p_adj,
                                                  uint32_t p_seconds) {
-    if (!g_A10_config_root.windDict)
+    if (!g_A20_config_root.windDict)
         return;
 
-    ST_A10_ResolvedWind_t v_resolved;
+    ST_A20_ResolvedWind_t v_resolved;
     memset(&v_resolved, 0, sizeof(v_resolved));
 
-    bool v_ok = S20_resolveWindParams(*g_A10_config_root.windDict,
+    bool v_ok = S20_resolveWindParams(*g_A20_config_root.windDict,
                                      p_presetCode,
                                      p_styleCode,
                                      p_adj,
@@ -215,7 +215,7 @@ void CL_CT10_ControlManager::startOverridePreset(const char* p_presetCode,
     applyManualResolved(v_resolved, p_seconds);
 }
 
-void CL_CT10_ControlManager::applyManualResolved(const ST_A10_ResolvedWind_t& p_wind, uint32_t p_seconds) {
+void CL_CT10_ControlManager::applyManualResolved(const ST_A20_ResolvedWind_t& p_wind, uint32_t p_seconds) {
     if (!p_wind.valid) {
         CL_D10_Logger::log(EN_L10_LOG_WARN, "[CT10] applyManual: invalid ResolvedWind");
         return;
@@ -357,16 +357,16 @@ bool CL_CT10_ControlManager::tickOverride() {
 // userProfile tick
 // --------------------------------------------------
 bool CL_CT10_ControlManager::tickUserProfile() {
-    if (!g_A10_config_root.userProfiles)
+    if (!g_A20_config_root.userProfiles)
         return false;
     if (curProfileIndex < 0)
         return false;
 
-    ST_A10_UserProfilesRoot_t& v_cfg = *g_A10_config_root.userProfiles;
+    ST_A20_UserProfilesRoot_t& v_cfg = *g_A20_config_root.userProfiles;
     if ((uint8_t)curProfileIndex >= v_cfg.count)
         return false;
 
-    ST_A10_UserProfileItem_t& v_profile = v_cfg.items[(uint8_t)curProfileIndex];
+    ST_A20_UserProfileItem_t& v_profile = v_cfg.items[(uint8_t)curProfileIndex];
     if (!v_profile.enabled || v_profile.seg_count == 0)
         return false;
 
@@ -397,10 +397,10 @@ bool CL_CT10_ControlManager::tickUserProfile() {
 // schedule tick
 // --------------------------------------------------
 bool CL_CT10_ControlManager::tickSchedule() {
-    if (!g_A10_config_root.schedules)
+    if (!g_A20_config_root.schedules)
         return false;
 
-    ST_A10_SchedulesRoot_t& v_cfg = *g_A10_config_root.schedules;
+    ST_A20_SchedulesRoot_t& v_cfg = *g_A20_config_root.schedules;
 
     int v_activeIdx = findActiveScheduleIndex(v_cfg);
     if (v_activeIdx < 0) {
@@ -424,7 +424,7 @@ bool CL_CT10_ControlManager::tickSchedule() {
         markDirty("metrics");
     }
 
-    ST_A10_ScheduleItem_t& v_schedule = v_cfg.items[(uint8_t)curScheduleIndex];
+    ST_A20_ScheduleItem_t& v_schedule = v_cfg.items[(uint8_t)curScheduleIndex];
     if (!v_schedule.enabled || v_schedule.seg_count == 0)
         return false;
 
@@ -456,7 +456,7 @@ bool CL_CT10_ControlManager::tickSchedule() {
 // --------------------------------------------------
 bool CL_CT10_ControlManager::tickSegmentSequence(bool p_repeat,
                                                  uint8_t p_repeatCount,
-                                                 ST_A10_ScheduleSegment_t* p_segs,
+                                                 ST_A20_ScheduleSegment_t* p_segs,
                                                  uint8_t p_count,
                                                  ST_CT10_SegmentRuntime_t& p_rt) {
     unsigned long v_nowMs = millis();
@@ -480,7 +480,7 @@ bool CL_CT10_ControlManager::tickSegmentSequence(bool p_repeat,
         return false;
     }
 
-    ST_A10_ScheduleSegment_t& v_seg = p_segs[(uint8_t)p_rt.index];
+    ST_A20_ScheduleSegment_t& v_seg = p_segs[(uint8_t)p_rt.index];
 
     uint32_t v_onMs  = (uint32_t)v_seg.on_minutes  * 60000UL;
     uint32_t v_offMs = (uint32_t)v_seg.off_minutes * 60000UL;
@@ -522,7 +522,7 @@ bool CL_CT10_ControlManager::tickSegmentSequence(bool p_repeat,
 // --------------------------------------------------
 bool CL_CT10_ControlManager::tickSegmentSequence(bool p_repeat,
                                                  uint8_t p_repeatCount,
-                                                 ST_A10_UserProfileSegment_t* p_segs,
+                                                 ST_A20_UserProfileSegment_t* p_segs,
                                                  uint8_t p_count,
                                                  ST_CT10_SegmentRuntime_t& p_rt) {
     unsigned long v_nowMs = millis();
@@ -546,7 +546,7 @@ bool CL_CT10_ControlManager::tickSegmentSequence(bool p_repeat,
         return false;
     }
 
-    ST_A10_UserProfileSegment_t& v_seg = p_segs[(uint8_t)p_rt.index];
+    ST_A20_UserProfileSegment_t& v_seg = p_segs[(uint8_t)p_rt.index];
 
     uint32_t v_onMs  = (uint32_t)v_seg.on_minutes  * 60000UL;
     uint32_t v_offMs = (uint32_t)v_seg.off_minutes * 60000UL;
@@ -586,11 +586,11 @@ bool CL_CT10_ControlManager::tickSegmentSequence(bool p_repeat,
 // --------------------------------------------------
 // apply segment on/off + 로그 개선(이름 출력)
 // --------------------------------------------------
-void CL_CT10_ControlManager::applySegmentOn(const ST_A10_ScheduleSegment_t& p_seg) {
-    if (!g_A10_config_root.windDict)
+void CL_CT10_ControlManager::applySegmentOn(const ST_A20_ScheduleSegment_t& p_seg) {
+    if (!g_A20_config_root.windDict)
         return;
 
-    if (p_seg.mode == EN_A10_SEG_MODE_FIXED) {
+    if (p_seg.mode == EN_A20_SEG_MODE_FIXED) {
         sim.stop();
         if (pwm) {
             pwm->P10_setDutyPercent(p_seg.fixed_speed);
@@ -604,10 +604,10 @@ void CL_CT10_ControlManager::applySegmentOn(const ST_A10_ScheduleSegment_t& p_se
         return;
     }
 
-    ST_A10_ResolvedWind_t v_resolved;
+    ST_A20_ResolvedWind_t v_resolved;
     memset(&v_resolved, 0, sizeof(v_resolved));
 
-    bool v_ok = S20_resolveWindParams(*g_A10_config_root.windDict,
+    bool v_ok = S20_resolveWindParams(*g_A20_config_root.windDict,
                                      p_seg.presetCode,
                                      p_seg.styleCode,
                                      &p_seg.adjust,
@@ -637,11 +637,11 @@ void CL_CT10_ControlManager::applySegmentOn(const ST_A10_ScheduleSegment_t& p_se
     }
 }
 
-void CL_CT10_ControlManager::applySegmentOn(const ST_A10_UserProfileSegment_t& p_seg) {
-    if (!g_A10_config_root.windDict)
+void CL_CT10_ControlManager::applySegmentOn(const ST_A20_UserProfileSegment_t& p_seg) {
+    if (!g_A20_config_root.windDict)
         return;
 
-    if (p_seg.mode == EN_A10_SEG_MODE_FIXED) {
+    if (p_seg.mode == EN_A20_SEG_MODE_FIXED) {
         sim.stop();
         if (pwm) {
             pwm->P10_setDutyPercent(p_seg.fixed_speed);
@@ -655,10 +655,10 @@ void CL_CT10_ControlManager::applySegmentOn(const ST_A10_UserProfileSegment_t& p
         return;
     }
 
-    ST_A10_ResolvedWind_t v_resolved;
+    ST_A20_ResolvedWind_t v_resolved;
     memset(&v_resolved, 0, sizeof(v_resolved));
 
-    bool v_ok = S20_resolveWindParams(*g_A10_config_root.windDict,
+    bool v_ok = S20_resolveWindParams(*g_A20_config_root.windDict,
                                      p_seg.presetCode,
                                      p_seg.styleCode,
                                      &p_seg.adjust,

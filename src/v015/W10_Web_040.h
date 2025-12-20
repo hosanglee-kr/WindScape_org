@@ -41,7 +41,7 @@
 #include <Update.h>    // OTA
 #include <vector>
 
-#include "A10_Const_020.h"
+#include "A20_Const_020.h"
 #include "C10_Config_030.h"
 #include "D10_Logger_020.h"
 #include "CT10_Control_030.h"
@@ -229,8 +229,8 @@ static inline void sendText(AsyncWebServerRequest* p_request,
 	// API Key 검사
 	static inline bool checkApiKey(AsyncWebServerRequest* p_request) {
 		const char* v_key = nullptr;
-		if (g_A10_config_root.system && g_A10_config_root.system->security.api_key[0] != '\0') {
-			v_key = g_A10_config_root.system->security.api_key;
+		if (g_A20_config_root.system && g_A20_config_root.system->security.api_key[0] != '\0') {
+			v_key = g_A20_config_root.system->security.api_key;
 		}
 		if (!v_key || v_key[0] == '\0') {
 			return true; // API 키 비활성화 상태

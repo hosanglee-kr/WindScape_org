@@ -16,7 +16,7 @@
 #include "WF10_WiFiManager_030.h"
 
 // Config 루트 (다른 모듈에서 정의)
-extern ST_A10_ConfigRoot_t g_A10_config_root;
+extern ST_A20_ConfigRoot_t g_A20_config_root;
 
 // --------------------------------------------------
 // Static Members Definition (단 하나의 .cpp 파일에만 정의)
@@ -83,8 +83,8 @@ void CL_WF10_WiFiManager::attachWiFiEvents() {
 // --------------------------------------------------
 // 초기화
 // --------------------------------------------------
-bool CL_WF10_WiFiManager::init(const ST_A10_WifiConfig&	p_cfg_wifi,
-							   const ST_A10_SystemConfig& p_cfg_system,
+bool CL_WF10_WiFiManager::init(const ST_A20_WifiConfig&	p_cfg_wifi,
+							   const ST_A20_SystemConfig& p_cfg_system,
 							   WiFiMulti&					p_multi,
 							   uint8_t						p_apChannel,
 							   uint8_t						p_staMaxTries,
@@ -151,10 +151,10 @@ bool CL_WF10_WiFiManager::init(const ST_A10_WifiConfig&	p_cfg_wifi,
 // --------------------------------------------------
 // AP 시작 (고정 IP + DHCP On/Off)
 // --------------------------------------------------
-bool CL_WF10_WiFiManager::startAP(const ST_A10_WifiConfig& p_cfg_wifi,
+bool CL_WF10_WiFiManager::startAP(const ST_A20_WifiConfig& p_cfg_wifi,
 								  uint8_t					 p_channel,
 								  bool						 p_enableDhcp) {
-	char v_pass[A10_Const::LEN_PASS + 1];
+	char v_pass[A20_Const::LEN_PASS + 1];
 	memset(v_pass, 0, sizeof(v_pass));
 	strlcpy(v_pass, p_cfg_wifi.ap.password, sizeof(v_pass));
 
@@ -185,7 +185,7 @@ bool CL_WF10_WiFiManager::startAP(const ST_A10_WifiConfig& p_cfg_wifi,
 // --------------------------------------------------
 // STA 시작
 // --------------------------------------------------
-bool CL_WF10_WiFiManager::startSTA(const ST_A10_WifiConfig& p_cfg_wifi,
+bool CL_WF10_WiFiManager::startSTA(const ST_A20_WifiConfig& p_cfg_wifi,
 								   WiFiMulti&				  p_multi,
 								   uint8_t					  p_maxTries) {
 	WF10_MUTEX_ACQUIRE();
@@ -239,8 +239,8 @@ bool CL_WF10_WiFiManager::startSTA(const ST_A10_WifiConfig& p_cfg_wifi,
 // NTP 동기화 (구성값 기반 주기)
 // --------------------------------------------------
 void CL_WF10_WiFiManager::syncTimeIfNeeded(
-	const ST_A10_WifiConfig&,
-	const ST_A10_SystemConfig& p_cfg_system,
+	const ST_A20_WifiConfig&,
+	const ST_A20_SystemConfig& p_cfg_system,
 	uint32_t				  p_interval_ms) {
 	WF10_MUTEX_ACQUIRE();
 	if (!s_staConnected) {
@@ -374,7 +374,7 @@ const char* CL_WF10_WiFiManager::_encTypeToString(wifi_auth_mode_t p_mode) {
 // --------------------------------------------------
 // Wi-Fi 설정 적용 (Web API → Config 변경 후 호출)
 // --------------------------------------------------
-bool CL_WF10_WiFiManager::applyConfig(const ST_A10_WifiConfig& p_cfg) {
+bool CL_WF10_WiFiManager::applyConfig(const ST_A20_WifiConfig& p_cfg) {
 	CL_D10_Logger::log(EN_L10_LOG_INFO, "[WiFi] Applying new configuration...");
 
 	// 1. 현재 Wi-Fi 연결/AP를 모두 끊습니다.
@@ -385,14 +385,14 @@ bool CL_WF10_WiFiManager::applyConfig(const ST_A10_WifiConfig& p_cfg) {
 	WiFiMulti v_multi;
 
 	// 3. system config 존재 여부 확인
-	if (!g_A10_config_root.system) {
+	if (!g_A20_config_root.system) {
 		CL_D10_Logger::log(
 			EN_L10_LOG_ERROR,
 			"[WiFi] applyConfig: system config is null. "
 			"Using default time interval (6h) without full system integration."
 		);
 
-		ST_A10_SystemConfig v_sys;
+		ST_A20_SystemConfig v_sys;
 		memset(&v_sys, 0, sizeof(v_sys));
 		v_sys.time.sync_interval_min = 360; // 6시간
 
@@ -401,7 +401,7 @@ bool CL_WF10_WiFiManager::applyConfig(const ST_A10_WifiConfig& p_cfg) {
 	}
 
 	// 4. 기존 init() 로직 재사용 (AP/STA + NTP 동기화까지 포함)
-	bool v_ok = init(p_cfg, *g_A10_config_root.system, v_multi, 1, 15, true);
+	bool v_ok = init(p_cfg, *g_A20_config_root.system, v_multi, 1, 15, true);
 
 	CL_D10_Logger::log(EN_L10_LOG_INFO,
 					   "[WiFi] Configuration applied (ok=%d, mode=%d)",
@@ -415,7 +415,7 @@ bool CL_WF10_WiFiManager::applyConfig(const ST_A10_WifiConfig& p_cfg) {
 //  - /api/system/time/set 등에서 호출
 //  - system.time 설정(TZ, NTP 서버, sync_interval_min)을 런타임에 반영
 // --------------------------------------------------
-void WF10_applyTimeConfigFromSystem(const ST_A10_SystemConfig& p_cfg) {
+void WF10_applyTimeConfigFromSystem(const ST_A20_SystemConfig& p_cfg) {
 	// 1. 로그: 적용할 설정 요약
 	CL_D10_Logger::log(
 		EN_L10_LOG_INFO,
@@ -452,7 +452,7 @@ void WF10_applyTimeConfigFromSystem(const ST_A10_SystemConfig& p_cfg) {
 	}
 
 	// 4. Wi-Fi가 존재하면, 새 sync_interval 기준으로 정규 동기화 루프도 갱신
-	if (g_A10_config_root.wifi) {
+	if (g_A20_config_root.wifi) {
 		uint32_t v_interval_ms =
 			(uint32_t)p_cfg.time.sync_interval_min * 60000UL;
 		if (v_interval_ms == 0) {
@@ -460,7 +460,7 @@ void WF10_applyTimeConfigFromSystem(const ST_A10_SystemConfig& p_cfg) {
 		}
 
 		CL_WF10_WiFiManager::syncTimeIfNeeded(
-			*g_A10_config_root.wifi,
+			*g_A20_config_root.wifi,
 			p_cfg,
 			v_interval_ms
 		);

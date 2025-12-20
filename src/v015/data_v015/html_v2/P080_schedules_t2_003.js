@@ -6,7 +6,7 @@
  * 기능 요약:
  * - /api/schedules (GET, POST, PUT, DELETE) : C10 풀 구조 기반 CRUD
  * - /api/windProfile (GET) : 프리셋/스타일 목록 로드 → 세그먼트에서 선택
- * - ST_A10_ScheduleItem_t 구조를 그대로 JS 객체로 다루고 JSON 직렬화
+ * - ST_A20_ScheduleItem_t 구조를 그대로 JS 객체로 다루고 JSON 직렬화
  * - /api/config/dirty · /api/config/save 연동 (schedules dirty 표시)
  * - API Key: localStorage["snw_api_key"] 사용 (Main/Dashboard와 통일)
  * ------------------------------------------------------

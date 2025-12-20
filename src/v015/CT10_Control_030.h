@@ -12,7 +12,7 @@
  * - Motion (PIR / BLE) 및 AutoOff 조건 훅 제공
  * - Web UI / 버튼에서 Profile 선택, Override 즉시 반영
  * - JSON 상태 Export (control / override / autoOff / sim / metrics)
- * - Dirty 플래그 기반 SC10 diffOnly API 연동 지원 (SC10이 브로드캐스트 처리)
+ * - Dirty 플래그 기반 A00 diffOnly API 연동 지원 (A00이 브로드캐스트 처리)
  * - Override 타임아웃 및 AutoOff 발생 시 Dirty 플래그 자동 설정
  * - 정적 싱글톤 인터페이스 제공 (W10_WebAPI에서 직접 사용)
  * - 구현은 cpp 3개로 분리:
@@ -51,7 +51,7 @@
 #include <time.h>
 
 // 종속성 모듈 헤더
-#include "A10_Const_020.h"
+#include "A20_Const_020.h"
 #include "C10_Config_030.h"
 #include "D10_Logger_020.h"
 #include "M10_MotionLogic_020.h"
@@ -77,7 +77,7 @@ typedef struct {
     bool                  resolvedApplied; // ResolvedWind를 S10에 1회 적용했는지 여부 (S10 상태 리셋 방지)
     unsigned long         endMs;           // 0이면 타이머 없음(무한)
     float                 fixedPercent;    // 0~100, useFixed==true 일 때만 사용
-    ST_A10_ResolvedWind_t resolved;        // 수동 바람 설정 (useFixed==false 일 때의 바람 파라미터)
+    ST_A20_ResolvedWind_t resolved;        // 수동 바람 설정 (useFixed==false 일 때의 바람 파라미터)
 } ST_CT10_Override_t;
 
 // Segment 실행 상태 (Schedule 또는 Profile)
@@ -121,7 +121,7 @@ class CL_CT10_ControlManager {
     static void setMode(bool p_profileMode);
     static bool setActiveUserProfile(uint8_t p_profileNo);
 
-    static void applyManual(const ST_A10_ResolvedWind_t& p_wind);
+    static void applyManual(const ST_A20_ResolvedWind_t& p_wind);
     static void clearManual();
 
     static bool reloadAll();
@@ -153,9 +153,9 @@ class CL_CT10_ControlManager {
     void startOverrideFixed(float p_percent, uint32_t p_seconds);
     void startOverridePreset(const char* p_presetCode,
                              const char* p_styleCode,
-                             const ST_A10_AdjustDelta_t* p_adj,
+                             const ST_A20_AdjustDelta_t* p_adj,
                              uint32_t p_seconds);
-    void applyManualResolved(const ST_A10_ResolvedWind_t& p_wind, uint32_t p_seconds);
+    void applyManualResolved(const ST_A20_ResolvedWind_t& p_wind, uint32_t p_seconds);
     void stopOverride();
 
     // tick(구현은 control cpp)
@@ -221,29 +221,29 @@ class CL_CT10_ControlManager {
     // segment 처리: schedule/profile 오버로드(템플릿 제거)
     bool tickSegmentSequence(bool p_repeat,
                              uint8_t p_repeatCount,
-                             ST_A10_ScheduleSegment_t* p_segs,
+                             ST_A20_ScheduleSegment_t* p_segs,
                              uint8_t p_count,
                              ST_CT10_SegmentRuntime_t& p_rt);
 
     bool tickSegmentSequence(bool p_repeat,
                              uint8_t p_repeatCount,
-                             ST_A10_UserProfileSegment_t* p_segs,
+                             ST_A20_UserProfileSegment_t* p_segs,
                              uint8_t p_count,
                              ST_CT10_SegmentRuntime_t& p_rt);
 
-    void applySegmentOn(const ST_A10_ScheduleSegment_t& p_seg);
-    void applySegmentOn(const ST_A10_UserProfileSegment_t& p_seg);
+    void applySegmentOn(const ST_A20_ScheduleSegment_t& p_seg);
+    void applySegmentOn(const ST_A20_UserProfileSegment_t& p_seg);
     void applySegmentOff();
 
-    void initAutoOffFromUserProfile(const ST_A10_UserProfileItem_t& p_up);
-    void initAutoOffFromSchedule(const ST_A10_ScheduleItem_t& p_s);
+    void initAutoOffFromUserProfile(const ST_A20_UserProfileItem_t& p_up);
+    void initAutoOffFromSchedule(const ST_A20_ScheduleItem_t& p_s);
     bool checkAutoOff();
 
     static uint16_t parseHHMMtoMin(const char* p_time);
     static float getCurrentTemperatureMock();
 
-    int findActiveScheduleIndex(const ST_A10_SchedulesRoot_t& p_cfg);
-    bool isMotionBlocked(const ST_A10_Motion_t& p_motionCfg);
+    int findActiveScheduleIndex(const ST_A20_SchedulesRoot_t& p_cfg);
+    bool isMotionBlocked(const ST_A20_Motion_t& p_motionCfg);
 
     void maybePushMetricsDirty();
 

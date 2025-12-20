@@ -42,9 +42,9 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 
-#include "A10_Const_020.h"
+#include "A20_Const_020.h"
 #include "D10_Logger_020.h"
-#include "C10_Config_030.h" // ST_A10_WifiConfig, ST_A10_SystemConfig, ST_A10_ConfigRoot_t
+#include "C10_Config_030.h" // ST_A20_WifiConfig, ST_A20_SystemConfig, ST_A20_ConfigRoot_t
 
 // Mutex 보호 매크로 정의
 #define WF10_MUTEX_ACQUIRE() xSemaphoreTake(CL_WF10_WiFiManager::s_wifiMutex, portMAX_DELAY)
@@ -55,9 +55,9 @@
 // --------------------------------------------------
 /**
  * @brief system.time 설정을 기준으로 TZ/NTP/주기 설정을 런타임에 반영
- * @param p_cfg 시스템 설정 구조체 (ST_A10_SystemConfig)
+ * @param p_cfg 시스템 설정 구조체 (ST_A20_SystemConfig)
  */
-void WF10_applyTimeConfigFromSystem(const ST_A10_SystemConfig& p_cfg);
+void WF10_applyTimeConfigFromSystem(const ST_A20_SystemConfig& p_cfg);
 
 class CL_WF10_WiFiManager {
    public:
@@ -77,7 +77,7 @@ class CL_WF10_WiFiManager {
 	 * @param p_cfg 적용할 Wi-Fi 설정 구조체 참조
 	 * @return 성공 여부
 	 */
-	static bool applyConfig(const ST_A10_WifiConfig& p_cfg);
+	static bool applyConfig(const ST_A20_WifiConfig& p_cfg);
 
 	// --------------------------------------------------
 	// 이벤트 등록
@@ -87,8 +87,8 @@ class CL_WF10_WiFiManager {
 	// --------------------------------------------------
 	// 초기화
 	// --------------------------------------------------
-	static bool init(const ST_A10_WifiConfig&	p_cfg_wifi,
-					 const ST_A10_SystemConfig& p_cfg_system,
+	static bool init(const ST_A20_WifiConfig&	p_cfg_wifi,
+					 const ST_A20_SystemConfig& p_cfg_system,
 					 WiFiMulti&					p_multi,
 					 uint8_t					p_apChannel	   = 1,
 					 uint8_t					p_staMaxTries  = 15,
@@ -97,22 +97,22 @@ class CL_WF10_WiFiManager {
 	// --------------------------------------------------
 	// AP 시작 (고정 IP + DHCP On/Off)
 	// --------------------------------------------------
-	static bool startAP(const ST_A10_WifiConfig& p_cfg_wifi,
+	static bool startAP(const ST_A20_WifiConfig& p_cfg_wifi,
 						uint8_t					 p_channel,
 						bool					 p_enableDhcp);
 
 	// --------------------------------------------------
 	// STA 시작
 	// --------------------------------------------------
-	static bool startSTA(const ST_A10_WifiConfig& p_cfg_wifi,
+	static bool startSTA(const ST_A20_WifiConfig& p_cfg_wifi,
 						 WiFiMulti&				  p_multi,
 						 uint8_t				  p_maxTries);
 
 	// --------------------------------------------------
 	// NTP 동기화 (구성값 기반 주기)
 	// --------------------------------------------------
-	static void syncTimeIfNeeded(const ST_A10_WifiConfig&  p_cfg_wifi,
-								 const ST_A10_SystemConfig& p_cfg_system,
+	static void syncTimeIfNeeded(const ST_A20_WifiConfig&  p_cfg_wifi,
+								 const ST_A20_SystemConfig& p_cfg_system,
 								 uint32_t					p_interval_ms = 21600000);
 
 	// --------------------------------------------------

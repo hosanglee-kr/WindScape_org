@@ -42,7 +42,7 @@
 #include "S10_Simul_030.h"
 
 // 외부 종속성 헤더 포함 (외부에서 제공되어야 함: 시스템 상수, 설정, 로그, PWM 제어)
-#include "A10_Const_020.h"
+#include "A20_Const_020.h"
 #include "C10_Config_030.h"
 #include "D10_Logger_020.h"
 #include "P10_PWM_ctrl_020.h"
@@ -97,7 +97,7 @@ void CL_S10_Simulation::toJson(JsonDocument& p_doc) {
     v_objSim["active"]           = active;
     v_objSim["fanPowerEnabled"]  = fanPowerEnabled;
 
-    v_objSim["phase"]            = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
+    v_objSim["phase"]            = g_A20_WEATHER_PHASE_NAMES_Arr[(uint8_t)phase];
     v_objSim["windSpeed"]        = currentWindSpeed;
     v_objSim["targetWind"]       = targetWindSpeed;
 
@@ -161,7 +161,7 @@ void CL_S10_Simulation::toChartJson(JsonDocument& p_doc, bool p_diffOnly) {
     }
 
     // ---- (A) 메타/샘플 스냅샷(락 안에서 값만 캡처) ----
-    T_A10_WindPhase_t v_phase = EN_A10_WEATHER_PHASE_NORMAL;
+    T_A20_WindPhase_t v_phase = EN_A20_WEATHER_PHASE_NORMAL;
     float             v_avg   = 0.0f;
     bool              v_gust  = false;
     bool              v_therm = false;
@@ -210,7 +210,7 @@ void CL_S10_Simulation::toChartJson(JsonDocument& p_doc, bool p_diffOnly) {
     JsonObject v_objSim = p_doc["sim"].to<JsonObject>();
 
     JsonObject v_meta = v_objSim["meta"].to<JsonObject>();
-    v_meta["phase"]         = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)v_phase];
+    v_meta["phase"]         = g_A20_WEATHER_PHASE_NAMES_Arr[(uint8_t)v_phase];
     v_meta["avgWind"]       = v_avg;
     v_meta["gustActive"]    = v_gust;
     v_meta["thermalActive"] = v_therm;

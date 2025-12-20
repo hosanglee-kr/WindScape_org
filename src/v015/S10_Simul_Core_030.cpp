@@ -10,14 +10,14 @@
  * - tick 시간 캡처 일관성 유지(_tickNowMs/_tickNowSec)
  * - 주기 정책 상수는 S10_Simul_022.h로 승격되어 공용 사용
  * - fanConfig 포인터 스냅샷(락 내 1회 캡처) 기반 PWM 커브 적용
- * - 브로드캐스트는 락 밖에서 수행(JsonDocument 생성/SC10_* 호출 금지 준수)
+ * - 브로드캐스트는 락 밖에서 수행(JsonDocument 생성/A00_* 호출 금지 준수)
  * ------------------------------------------------------
  */
 
 #include "S10_Simul_030.h" // (변경 반영) 헤더 포함
 
 // 외부 종속성 헤더 포함
-#include "A10_Const_020.h"
+#include "A20_Const_020.h"
 #include "C10_Config_030.h"
 #include "D10_Logger_020.h"
 #include "P10_PWM_ctrl_020.h"
@@ -57,7 +57,7 @@ void CL_S10_Simulation::stop() {
     active      = false;
     _fanCfgSnap = nullptr;
 
-    phase            = EN_A10_WEATHER_PHASE_CALM;
+    phase            = EN_A20_WEATHER_PHASE_CALM;
     targetWindSpeed  = 0.0f;
     currentWindSpeed = 0.0f;
 
@@ -156,7 +156,7 @@ void CL_S10_Simulation::tick() {
     float             v_bc_target     = 0.0f;
     uint8_t           v_bc_samples    = 0;
     float             v_bc_delta      = 0.0f;
-    T_A10_WindPhase_t v_bc_phase      = EN_A10_WEATHER_PHASE_NORMAL;
+    T_A20_WindPhase_t v_bc_phase      = EN_A20_WEATHER_PHASE_NORMAL;
 
     portENTER_CRITICAL(&_simMutex);
 
@@ -168,8 +168,8 @@ void CL_S10_Simulation::tick() {
 
     // 2) fanConfig 스냅샷(락 내 1회 캡처)
     _fanCfgSnap = nullptr;
-    if (g_A10_config_root.system != nullptr) {
-        _fanCfgSnap = &g_A10_config_root.system->hw.fanConfig;
+    if (g_A20_config_root.system != nullptr) {
+        _fanCfgSnap = &g_A20_config_root.system->hw.fanConfig;
     }
 
     // 3) tick 기준 시간(딱 1회 캡처)
@@ -189,12 +189,12 @@ void CL_S10_Simulation::tick() {
 
     // 5) dt 계산
     float v_dt = (_tickNowMs - lastUpdateMs) / 1000.0f;
-    v_dt       = A10_clampf(v_dt, 0.001f, 0.5f);
+    v_dt       = A20_clampf(v_dt, 0.001f, 0.5f);
     lastUpdateMs = _tickNowMs;
 
     // 6) 이전 상태 기록(변화 감지)
     const float             v_prevWind  = currentWindSpeed;
-    const T_A10_WindPhase_t v_prevPhase = phase;
+    const T_A20_WindPhase_t v_prevPhase = phase;
 
     // 7) Phase 업데이트
     updatePhase();
@@ -219,11 +219,11 @@ void CL_S10_Simulation::tick() {
     // 11) 목표 재생성(확률)
     const float v_th = 0.5f + (currentWindSpeed / 20.0f);
     if (fabsf(v_diff) < v_th) {
-        if (A10_randRange(0.0f, 100.0f) < 30.0f) {
+        if (A20_randRange(0.0f, 100.0f) < 30.0f) {
             generateTarget();
         }
     } else {
-        if (A10_randRange(0.0f, 100.0f) < 6.0f) {
+        if (A20_randRange(0.0f, 100.0f) < 6.0f) {
             generateTarget();
         }
     }
@@ -263,7 +263,7 @@ void CL_S10_Simulation::tick() {
         v_e.intensity        = userIntensity;
         v_e.variability      = userVariability;
         v_e.turbulence_sigma = turbSigma;
-        v_e.preset_index     = (uint8_t)A10_getPresetIndexByCode(presetCode);
+        v_e.preset_index     = (uint8_t)A20_getPresetIndexByCode(presetCode);
         v_e.gust_active      = gustActive;
         v_e.thermal_active   = thermalActive;
 
@@ -278,14 +278,14 @@ void CL_S10_Simulation::tick() {
         JsonDocument v_doc; // JsonDocument 단일 타입 사용
         JsonObject   v_sim = v_doc["sim"].to<JsonObject>();
 
-        v_sim["phase"]   = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)v_bc_phase];
+        v_sim["phase"]   = g_A20_WEATHER_PHASE_NAMES_Arr[(uint8_t)v_bc_phase];
         v_sim["avgWind"] = v_bc_avgWind;
         v_sim["target"]  = v_bc_target;
         v_sim["samples"] = v_bc_samples;
         v_sim["delta"]   = v_bc_delta;
 
-        SC10_broadcastChart(v_doc, true);
-        SC10_markDirty("chart");
+        A00_broadcastChart(v_doc, true);
+        A00_markDirty("chart");
     }
 }
 
@@ -294,9 +294,9 @@ void CL_S10_Simulation::tick() {
 // 해석 결과 적용: resolveWindParams → 여기 호출
 // ==================================================
 /**
- * @brief WindParam 해석 결과(ST_A10_ResolvedWind_t)를 시뮬레이션 파라미터에 적용합니다.
+ * @brief WindParam 해석 결과(ST_A20_ResolvedWind_t)를 시뮬레이션 파라미터에 적용합니다.
  */
-void CL_S10_Simulation::applyResolvedWind(const ST_A10_ResolvedWind_t& p_resolved) {
+void CL_S10_Simulation::applyResolvedWind(const ST_A20_ResolvedWind_t& p_resolved) {
 
     portENTER_CRITICAL(&_simMutex);
 
@@ -306,8 +306,8 @@ void CL_S10_Simulation::applyResolvedWind(const ST_A10_ResolvedWind_t& p_resolve
 
     // fanConfig 스냅샷(락 내 1회 캡처)
     _fanCfgSnap = nullptr;
-    if (g_A10_config_root.system != nullptr) {
-        _fanCfgSnap = &g_A10_config_root.system->hw.fanConfig;
+    if (g_A20_config_root.system != nullptr) {
+        _fanCfgSnap = &g_A20_config_root.system->hw.fanConfig;
     }
 
     // preset/style 코드
@@ -370,10 +370,10 @@ void CL_S10_Simulation::applyFan(float p_pct) {
     }
 
     // 1) 요청 duty(%)를 0~1로 정규화
-    float v_req01 = A10_clampf(p_pct, 0.0f, 100.0f) / 100.0f;
+    float v_req01 = A20_clampf(p_pct, 0.0f, 100.0f) / 100.0f;
 
     // 2) 사용자 intensity(0~1)
-    const float v_int01 = A10_clampf(userIntensity, 0.0f, 100.0f) / 100.0f;
+    const float v_int01 = A20_clampf(userIntensity, 0.0f, 100.0f) / 100.0f;
 
     // 3) 팬 전원 OFF 또는 intensity가 거의 0이면 정지
     if (!fanPowerEnabled || v_int01 <= 0.01f) {
@@ -387,15 +387,15 @@ void CL_S10_Simulation::applyFan(float p_pct) {
     }
 
     // 5) min/limit(%) -> 0~1 변환 + 관계 보정(min <= limit)
-    float v_min01 = A10_clampf(minFanPct,   0.0f, 100.0f) / 100.0f;
-    float v_max01 = A10_clampf(fanLimitPct, 0.0f, 100.0f) / 100.0f;
+    float v_min01 = A20_clampf(minFanPct,   0.0f, 100.0f) / 100.0f;
+    float v_max01 = A20_clampf(fanLimitPct, 0.0f, 100.0f) / 100.0f;
 
     if (v_min01 > v_max01) {
         v_min01 = v_max01;
     }
 
     // 6) 커브 적용: 논리 duty(0~1) -> 실제 PWM duty(0~1)
-    const ST_A10_FanConfig_t* v_fc = _fanCfgSnap;
+    const ST_A20_FanConfig_t* v_fc = _fanCfgSnap;
     const float v_phy01 = _pwm->applyFanConfigCurve(v_fc, v_req01, v_min01, v_max01);
 
     // 7) 최종 %로 전달

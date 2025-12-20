@@ -44,7 +44,7 @@
 #include <ArduinoJson.h>
 #include <string.h>
 
-#include "A10_Const_020.h"
+#include "A20_Const_020.h"
 #include "D10_Logger_020.h"
 
 // ------------------------------------------------------
@@ -87,7 +87,7 @@ typedef void (*T_M10_OnChangeCallback_t)(const ST_M10_MotionState_t& p_state);
 class CL_M10_MotionLogic {
    public:
 
-    // [추가됨] 정적 초기화 함수 (SC10/Main 진입용)
+    // [추가됨] 정적 초기화 함수 (A00/Main 진입용)
 	// --------------------------------------------------
 	static void M10_begin() {
         static CL_M10_MotionLogic s_instance;
@@ -291,10 +291,10 @@ class CL_M10_MotionLogic {
 	// --------------------------------------------------
 	bool isActive() const {
 		unsigned long v_now = millis();
-		// hold_sec 로직은 외부 config 사용 (예: g_A10_config_root.motion)
+		// hold_sec 로직은 외부 config 사용 (예: g_A20_config_root.motion)
 		uint32_t v_hold = 0;
-		if (g_A10_config_root.motion) {
-			v_hold = (uint32_t)g_A10_config_root.motion->pir.hold_sec;
+		if (g_A20_config_root.motion) {
+			v_hold = (uint32_t)g_A20_config_root.motion->pir.hold_sec;
 		}
 		if (_state.pirActive || _state.bleActive)
 			// if (pirActive || bleActive)

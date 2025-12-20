@@ -42,7 +42,7 @@
 #include <Arduino.h>
 #include <string.h>
 
-#include "A10_Const_020.h"
+#include "A20_Const_020.h"
 #include "D10_Logger_020.h"
 
 // ------------------------------------------------------
@@ -80,7 +80,7 @@ class CL_P10_PWM {
 	// 초기화
 	//  - cfg.system.hw.fan_pwm 기반
 	// ==================================================
-	void begin(const ST_A10_SystemConfig& p_cfg) {
+	void begin(const ST_A20_SystemConfig& p_cfg) {
 		memset(&_state, 0, sizeof(_state));
 		_state.pin			  = p_cfg.hw.fan_pwm.pin;
 		_state.channel		  = (uint8_t)p_cfg.hw.fan_pwm.channel;
@@ -149,13 +149,13 @@ class CL_P10_PWM {
 
 
 	float applyFanConfigCurve(
-		const ST_A10_FanConfig_t* p_cfg,
+		const ST_A20_FanConfig_t* p_cfg,
 		float                      p_req01,
 		float                      p_minFan01,
 		float                      p_maxFan01)
 	{
 		// 0~1 범위 방어
-		float v_req = A10_clampf(p_req01, 0.0f, 1.0f);
+		float v_req = A20_clampf(p_req01, 0.0f, 1.0f);
 
 		// 완전 정지 요청인 경우는 그냥 0으로 내보냄
 		if (v_req <= 0.0f) {
@@ -163,8 +163,8 @@ class CL_P10_PWM {
 		}
 
 		// ResolvedWind min/max 먼저 정리
-		float v_min = A10_clampf(p_minFan01, 0.0f, 1.0f);
-		float v_max = A10_clampf(p_maxFan01, 0.0f, 1.0f);
+		float v_min = A20_clampf(p_minFan01, 0.0f, 1.0f);
+		float v_max = A20_clampf(p_maxFan01, 0.0f, 1.0f);
 		if (v_max < v_min) {
 			v_max = v_min;
 		}
@@ -178,10 +178,10 @@ class CL_P10_PWM {
 		}
 
 		// fanConfig 값을 0~1로 정규화
-		float s  = A10_clampf(p_cfg->startPercentMin   / 100.0f, 0.0f, 1.0f);
-		float c1 = A10_clampf(p_cfg->comfortPercentMin / 100.0f, 0.0f, 1.0f);
-		float c2 = A10_clampf(p_cfg->comfortPercentMax / 100.0f, 0.0f, 1.0f);
-		float h  = A10_clampf(p_cfg->hardPercentMax    / 100.0f, 0.0f, 1.0f);
+		float s  = A20_clampf(p_cfg->startPercentMin   / 100.0f, 0.0f, 1.0f);
+		float c1 = A20_clampf(p_cfg->comfortPercentMin / 100.0f, 0.0f, 1.0f);
+		float c2 = A20_clampf(p_cfg->comfortPercentMax / 100.0f, 0.0f, 1.0f);
+		float h  = A20_clampf(p_cfg->hardPercentMax    / 100.0f, 0.0f, 1.0f);
 
 		// 순서 보정: s ≤ c1 ≤ c2 ≤ h 보장
 		if (c1 < s)  c1 = s;
@@ -223,9 +223,9 @@ class CL_P10_PWM {
 	}
 
     // // 논리 duty% → 팬 H/W특성 반영된 실제 PWM % 변환
-    // float applyFanConfigCurve(const ST_A10_SystemConfig& p_sys,
+    // float applyFanConfigCurve(const ST_A20_SystemConfig& p_sys,
     //                                  float p_reqPercent) {
-    //     float v_req = A10_clampf(p_reqPercent, 0.0f, 100.0f);
+    //     float v_req = A20_clampf(p_reqPercent, 0.0f, 100.0f);
     //     const auto& v_fc = p_sys.hw.fanConfig;
 
     //     // 완전 OFF
@@ -254,7 +254,7 @@ class CL_P10_PWM {
     //     float v_out  = (float)v_fc.comfortPercentMin + v_norm * v_span;
 
     //     // hardMax 한 번 더 방어
-    //     v_out = A10_clampf(v_out, 0.0f, (float)v_fc.hardPercentMax);
+    //     v_out = A20_clampf(v_out, 0.0f, (float)v_fc.hardPercentMax);
     //     return v_out;
     // }
 
@@ -306,7 +306,7 @@ class CL_P10_PWM {
 	// 호환용 래퍼 (기존 P10_ 접두사 멤버 이름 유지)
 	//  - CT10 / S10 등 기존 코드와의 연동용
 	// --------------------------------------------------
-	void P10_begin(const ST_A10_SystemConfig& p_cfg) {
+	void P10_begin(const ST_A20_SystemConfig& p_cfg) {
 		begin(p_cfg);
 	}
 	void P10_setEnabled(bool p_enabled) {

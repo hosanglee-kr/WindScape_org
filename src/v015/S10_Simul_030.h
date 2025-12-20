@@ -8,7 +8,7 @@
  * 기능 요약:
  * - 자연풍 시뮬레이션 핵심 엔진 (Phase / 난류 / 돌풍 / 열기포 / 관성)
  * - PWM 제어기(CL_P10_PWM)와 연동하여 실시간 풍속을 PWM Duty로 변환
- * - C10 해석 결과(ST_A10_ResolvedWind_t) 기반 파라미터 적용
+ * - C10 해석 결과(ST_A20_ResolvedWind_t) 기반 파라미터 적용
  * - PresetCode + StyleCode 기반 풍속 특성(범위·확률·스펙트럼) 자동 세팅
  * - Von Kármán 스펙트럼 난류 모델 + Phase별 풍속 재생성 로직
  * - 돌풍(Gust), 열기포(Thermal Bubble), 자연감 지터(Jitter) 확률적 발생
@@ -54,16 +54,16 @@
 #include <cmath>
 #include <deque>
 
-#include "A10_Const_020.h"
+#include "A20_Const_020.h"
 #include "C10_Config_030.h"
 #include "D10_Logger_020.h"
 #include "P10_PWM_ctrl_020.h"
 
-// SC10(메인 루프)의 전역 함수 전방 선언: WebAPI로 상태를 브로드캐스팅
-extern void SC10_broadcastState(ArduinoJson::JsonDocument& doc, bool diffOnly);
-extern void SC10_broadcastChart(ArduinoJson::JsonDocument& doc, bool diffOnly);
-extern void SC10_broadcastMetrics(ArduinoJson::JsonDocument& doc, bool diffOnly);
-extern void SC10_markDirty(const char* key);
+// A00(메인 루프)의 전역 함수 전방 선언: WebAPI로 상태를 브로드캐스팅
+extern void A00_broadcastState(ArduinoJson::JsonDocument& doc, bool diffOnly);
+extern void A00_broadcastChart(ArduinoJson::JsonDocument& doc, bool diffOnly);
+extern void A00_broadcastMetrics(ArduinoJson::JsonDocument& doc, bool diffOnly);
+extern void A00_markDirty(const char* key);
 extern int  strcasecmp(const char* s1, const char* s2);
 
 // ==================================================
@@ -138,7 +138,7 @@ public:
     float thermalRadius   = 18.0f;
 
     // Phase 상태
-    T_A10_WindPhase_t phase            = EN_A10_WEATHER_PHASE_NORMAL;
+    T_A20_WindPhase_t phase            = EN_A20_WEATHER_PHASE_NORMAL;
     float             phaseStartSec    = 0.0f;   // [s]
     float             phaseDurationSec = 120.0f; // [s]
     float             phaseMinWind     = 2.0f;
@@ -210,7 +210,7 @@ public:
     void resetDefaults();
 
     void tick();
-    void applyResolvedWind(const ST_A10_ResolvedWind_t& p_resolved);
+    void applyResolvedWind(const ST_A20_ResolvedWind_t& p_resolved);
 
     bool patchFromJson(const JsonDocument& p_doc);
 
@@ -220,7 +220,7 @@ public:
 private:
     CL_P10_PWM* _pwm = nullptr;
 
-    const ST_A10_FanConfig_t* _fanCfgSnap = nullptr;
+    const ST_A20_FanConfig_t* _fanCfgSnap = nullptr;
 
     portMUX_TYPE _simMutex = portMUX_INITIALIZER_UNLOCKED;
 

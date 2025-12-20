@@ -138,7 +138,7 @@ void CL_W10_WebAPI::routeVersion() {
                      }
                      JsonDocument v_doc;
                      v_doc["module"]  = "SmartNatureWind";
-                     v_doc["fw"]      = A10_Const::FW_VERSION;
+                     v_doc["fw"]      = A20_Const::FW_VERSION;
 
                      v_doc["control"] = "CT10_ControlManager_024";
                      v_doc["config"]  = "C10_ConfigManager_029";
@@ -180,8 +180,8 @@ void CL_W10_WebAPI::routeSystem() {
                          return;
                      }
                      JsonDocument v_doc;
-                     if (g_A10_config_root.system) {
-                         CL_C10_ConfigManager::toJson_System(*g_A10_config_root.system, v_doc);
+                     if (g_A20_config_root.system) {
+                         CL_C10_ConfigManager::toJson_System(*g_A20_config_root.system, v_doc);
                      }
                      sendJson(p_request, v_doc);
                  });
@@ -202,9 +202,9 @@ void CL_W10_WebAPI::routeSystem() {
 					 }
 
 					 bool v_changed = false;
-					 if (g_A10_config_root.system) {
+					 if (g_A20_config_root.system) {
 						 v_changed = CL_C10_ConfigManager::patchSystemFromJson(
-							 *g_A10_config_root.system,
+							 *g_A20_config_root.system,
 							 v_doc);
 					 }
 
@@ -225,8 +225,8 @@ void CL_W10_WebAPI::routeMotion() {
                          return;
                      }
                      JsonDocument v_doc;
-                     if (g_A10_config_root.motion) {
-                         CL_C10_ConfigManager::toJson_Motion(*g_A10_config_root.motion, v_doc);
+                     if (g_A20_config_root.motion) {
+                         CL_C10_ConfigManager::toJson_Motion(*g_A20_config_root.motion, v_doc);
                      }
                      sendJson(p_request, v_doc);
                  });
@@ -247,9 +247,9 @@ void CL_W10_WebAPI::routeMotion() {
 					 }
 
 					 bool v_changed = false;
-					 if (g_A10_config_root.motion) {
+					 if (g_A20_config_root.motion) {
 						 v_changed = CL_C10_ConfigManager::patchMotionFromJson(
-							 *g_A10_config_root.motion,
+							 *g_A20_config_root.motion,
 							 v_doc);
 					 }
 
@@ -272,7 +272,7 @@ void CL_W10_WebAPI::routeWindProfile() {
             }
 
             JsonDocument             v_doc;
-            ST_A10_WindProfileDict_t v_dict;
+            ST_A20_WindProfileDict_t v_dict;
             memset(&v_dict, 0, sizeof(v_dict));
 
             if (CL_C10_ConfigManager::loadWindProfileDict(v_dict)) {
@@ -390,8 +390,8 @@ void CL_W10_WebAPI::routeSchedules() {
                 return;
             }
             JsonDocument v_doc;
-            if (g_A10_config_root.schedules) {
-                CL_C10_ConfigManager::toJson_Schedules(*g_A10_config_root.schedules, v_doc);
+            if (g_A20_config_root.schedules) {
+                CL_C10_ConfigManager::toJson_Schedules(*g_A20_config_root.schedules, v_doc);
             }
             sendJson(p_request, v_doc);
         });
@@ -500,8 +500,8 @@ void CL_W10_WebAPI::routeUserProfiles() {
                 return;
             }
             JsonDocument v_doc;
-            if (g_A10_config_root.userProfiles) {
-                CL_C10_ConfigManager::toJson_UserProfiles(*g_A10_config_root.userProfiles, v_doc);
+            if (g_A20_config_root.userProfiles) {
+                CL_C10_ConfigManager::toJson_UserProfiles(*g_A20_config_root.userProfiles, v_doc);
             }
             sendJson(p_request, v_doc);
         });
@@ -624,9 +624,9 @@ void CL_W10_WebAPI::routeUserProfilesPatch() {
             }
 
             bool v_changed = false;
-            if (g_A10_config_root.userProfiles) {
+            if (g_A20_config_root.userProfiles) {
                 v_changed = CL_C10_ConfigManager::patchUserProfilesFromJson(
-                    *g_A10_config_root.userProfiles,
+                    *g_A20_config_root.userProfiles,
                     v_doc);
             }
 
@@ -773,7 +773,7 @@ void CL_W10_WebAPI::routeControl() {
             const char*          v_style  = v_doc["styleCode"] | "BALANCE";
             uint32_t             v_sec    = v_doc["durationSec"] | 0;
 
-            ST_A10_AdjustDelta_t v_adj;
+            ST_A20_AdjustDelta_t v_adj;
             memset(&v_adj, 0, sizeof(v_adj));
             if (v_doc["adjust"].is<JsonObject>()) {
                 JsonObject v_aj        = v_doc["adjust"];
@@ -943,13 +943,13 @@ void CL_W10_WebAPI::routeReload() {
                 p_request->send(401, "application/json", "{\"error\":\"unauthorized\"}");
                 return;
             }
-            ST_A10_ConfigRoot_t v_root;
+            ST_A20_ConfigRoot_t v_root;
             bool                v_ok = CL_C10_ConfigManager::loadAll(v_root);
             if (!v_ok) {
                 p_request->send(500, "application/json", "{\"error\":\"reload failed\"}");
                 return;
             }
-            g_A10_config_root = v_root;
+            g_A20_config_root = v_root;
             p_request->send(200, "application/json", "{\"result\":\"ok\"}");
         });
 }
@@ -1143,8 +1143,8 @@ void CL_W10_WebAPI::routeWifiConfig() {
                 return;
             }
             JsonDocument v_doc;
-            if (g_A10_config_root.wifi) {
-                CL_C10_ConfigManager::toJson_Wifi(*g_A10_config_root.wifi, v_doc);
+            if (g_A20_config_root.wifi) {
+                CL_C10_ConfigManager::toJson_Wifi(*g_A20_config_root.wifi, v_doc);
             }
             sendJson(p_request, v_doc);
         });
@@ -1169,9 +1169,9 @@ void CL_W10_WebAPI::routeWifiConfig() {
             }
 
             bool v_changed = false;
-            if (g_A10_config_root.wifi) {
+            if (g_A20_config_root.wifi) {
                 v_changed = CL_C10_ConfigManager::patchWifiFromJson(
-                    *g_A10_config_root.wifi, v_doc);
+                    *g_A20_config_root.wifi, v_doc);
             }
 
             JsonDocument v_res;
@@ -1181,7 +1181,7 @@ void CL_W10_WebAPI::routeWifiConfig() {
                 // 1. 변경된 설정을 비휘발성 메모리에 마킹(Save)
                 CL_C10_ConfigManager::saveDirtyConfigs();
                 // 2. WiFiManager 모듈에 실제 설정 즉시 투입
-                CL_WF10_WiFiManager::applyConfig(*g_A10_config_root.wifi);
+                CL_WF10_WiFiManager::applyConfig(*g_A20_config_root.wifi);
 
                 v_res["status"]      = "applied";
                 v_res["need_reboot"] = true;
@@ -1219,9 +1219,9 @@ void CL_W10_WebAPI::routeWifiConfig() {
                      }
 
                      bool v_changed = false;
-                     if (g_A10_config_root.wifi) {
+                     if (g_A20_config_root.wifi) {
                          v_changed = CL_C10_ConfigManager::patchWifiFromJson(
-                             *g_A10_config_root.wifi,
+                             *g_A20_config_root.wifi,
                              v_doc);
                      }
 
@@ -1231,7 +1231,7 @@ void CL_W10_WebAPI::routeWifiConfig() {
                      if (v_changed) {
                          CL_C10_ConfigManager::saveDirtyConfigs();
                          // WiFiManager에 실제 설정 적용
-                         CL_WF10_WiFiManager::applyConfig(*g_A10_config_root.wifi);
+                         CL_WF10_WiFiManager::applyConfig(*g_A20_config_root.wifi);
                          v_res["status"]	  = "applied";
                          v_res["need_reboot"] = true;
                          CL_D10_Logger::log(EN_L10_LOG_INFO,
@@ -1269,19 +1269,19 @@ void CL_W10_WebAPI::routeTimeSet() {
             }
 
             bool v_changed = false;
-            if (g_A10_config_root.system) {
+            if (g_A20_config_root.system) {
                 v_changed = CL_C10_ConfigManager::patchSystemFromJson(
-                    *g_A10_config_root.system,
+                    *g_A20_config_root.system,
                     v_doc);
             }
 
             JsonDocument v_res;
             v_res["updated"] = v_changed;
 
-            if (v_changed && g_A10_config_root.system) {
+            if (v_changed && g_A20_config_root.system) {
                 CL_C10_ConfigManager::saveDirtyConfigs();
 
-                WF10_applyTimeConfigFromSystem(*g_A10_config_root.system);
+                WF10_applyTimeConfigFromSystem(*g_A20_config_root.system);
                 v_res["status"] = "applied";
                 CL_D10_Logger::log(EN_L10_LOG_INFO,
                                    "[W10] Time config updated and applied via TimeManager.");
@@ -1306,7 +1306,7 @@ void CL_W10_WebAPI::routeFirmwareCheck() {
             }
             JsonDocument v_doc;
 
-            const char*  v_current_version = A10_Const::FW_VERSION;
+            const char*  v_current_version = A20_Const::FW_VERSION;
             const char*  v_latest_version  = "V1.0.1";  // TODO: 실제 OTA 서버 연동
 
             v_doc["current_version"]       = v_current_version;

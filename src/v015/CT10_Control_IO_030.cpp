@@ -82,7 +82,7 @@ void CL_CT10_ControlManager::exportChartJson(JsonDocument& p_doc, bool p_diffOnl
 
 void CL_CT10_ControlManager::exportSummaryJson(JsonDocument& p_doc) {
     JsonObject v_sum = p_doc["summary"].to<JsonObject>();
-    v_sum["phase"]       = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)sim.phase];
+    v_sum["phase"]       = g_A20_WEATHER_PHASE_NAMES_Arr[(uint8_t)sim.phase];
     v_sum["wind"]        = sim.currentWindSpeed;
     v_sum["target"]      = sim.targetWindSpeed;
     v_sum["pwmDuty"]     = pwm ? pwm->P10_getDutyPercent() : 0.0f;
@@ -109,7 +109,7 @@ void CL_CT10_ControlManager::exportMetricsJson(JsonDocument& p_doc) {
 
     // sim metrics
     v_m["simActive"]  = sim.active;
-    v_m["simPhase"]   = g_A10_WEATHER_PHASE_NAMES_Arr[(uint8_t)sim.phase];
+    v_m["simPhase"]   = g_A20_WEATHER_PHASE_NAMES_Arr[(uint8_t)sim.phase];
     v_m["simWind"]    = sim.currentWindSpeed;
     v_m["simTarget"]  = sim.targetWindSpeed;
     v_m["simGust"]    = sim.gustActive;

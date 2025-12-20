@@ -42,7 +42,7 @@
 // =====================================================
 static void C10_fromJson_ScheduleItem(
     const JsonObjectConst&      p_js,
-    ST_A10_ScheduleItem_t&      p_s) {
+    ST_A20_ScheduleItem_t&      p_s) {
 
     p_s.schId   = p_js["schId"] | 0;
     p_s.schNo   = p_js["schNo"] | 0;
@@ -73,10 +73,10 @@ static void C10_fromJson_ScheduleItem(
         JsonArrayConst segArr =
             p_js["segments"].as<JsonArrayConst>();
         for (JsonObjectConst jseg : segArr) {
-            if (p_s.seg_count >= A10_Const::MAX_SEGMENTS_PER_SCHEDULE)
+            if (p_s.seg_count >= A20_Const::MAX_SEGMENTS_PER_SCHEDULE)
                 break;
 
-            ST_A10_ScheduleSegment_t& sg =
+            ST_A20_ScheduleSegment_t& sg =
                 p_s.segments[p_s.seg_count++];
 
             sg.segId = jseg["segId"] | 0;
@@ -88,7 +88,7 @@ static void C10_fromJson_ScheduleItem(
 
             const char* v_mode =
                 jseg["mode"] | "PRESET";
-            sg.mode = A10_modeFromString(v_mode);
+            sg.mode = A20_modeFromString(v_mode);
 
             strlcpy(sg.presetCode,
                     jseg["presetCode"] | "",
@@ -156,7 +156,7 @@ static void C10_fromJson_ScheduleItem(
 
 static void C10_fromJson_UserProfile(
     const JsonObjectConst&     p_jp,
-    ST_A10_UserProfileItem_t&  p_up) {
+    ST_A20_UserProfileItem_t&  p_up) {
 
     p_up.profileId = p_jp["profileId"] | 0;
     p_up.profileNo = p_jp["profileNo"] | 0;
@@ -174,10 +174,10 @@ static void C10_fromJson_UserProfile(
         JsonArrayConst sArr =
             p_jp["segments"].as<JsonArrayConst>();
         for (JsonObjectConst jseg : sArr) {
-            if (p_up.seg_count >= A10_Const::MAX_SEGMENTS_PER_PROFILE)
+            if (p_up.seg_count >= A20_Const::MAX_SEGMENTS_PER_PROFILE)
                 break;
 
-            ST_A10_UserProfileSegment_t& sg =
+            ST_A20_UserProfileSegment_t& sg =
                 p_up.segments[p_up.seg_count++];
 
             sg.segId       = jseg["segId"] | 0;
@@ -187,7 +187,7 @@ static void C10_fromJson_UserProfile(
 
             const char* v_mode =
                 jseg["mode"] | "PRESET";
-            sg.mode = A10_modeFromString(v_mode);
+            sg.mode = A20_modeFromString(v_mode);
 
             strlcpy(sg.presetCode,
                     jseg["presetCode"] | "",
@@ -249,7 +249,7 @@ static void C10_fromJson_UserProfile(
 
 static void C10_fromJson_WindPreset(
     const JsonObjectConst&   p_js,
-    ST_A10_PresetEntry_t&    p_p) {
+    ST_A20_PresetEntry_t&    p_p) {
 
     strlcpy(p_p.name,
             p_js["name"] | "",
@@ -274,12 +274,15 @@ static void C10_fromJson_WindPreset(
 // =====================================================
 // 2-1. 목적물별 Load 구현 (Schedules/UserProfiles/WindProfileDict)
 // =====================================================
-bool CL_C10_ConfigManager::loadSchedules(ST_A10_SchedulesRoot_t& p_cfg) {
+bool CL_C10_ConfigManager::loadSchedules(ST_A20_SchedulesRoot_t& p_cfg) {
     JsonDocument d;
 
     const char* v_cfgJsonPath = nullptr;
-    if (!s_cfgJsonFileMap.schedules.empty()) {
-        v_cfgJsonPath = s_cfgJsonFileMap.schedules.c_str();
+
+    if (s_cfgJsonFileMap.schedules[0] != '\0') {
+        v_cfgJsonPath = s_cfgJsonFileMap.schedules;
+    // if (!s_cfgJsonFileMap.schedules.empty()) {
+    //     v_cfgJsonPath = s_cfgJsonFileMap.schedules.c_str();
     } else {
         CL_D10_Logger::log(
             EN_L10_LOG_ERROR,
@@ -293,24 +296,15 @@ bool CL_C10_ConfigManager::loadSchedules(ST_A10_SchedulesRoot_t& p_cfg) {
         return false;
     }
     
-    /*
-    if (!ioLoadJson(
-            A10_Const::CFG_SCHEDULES_FILE,
-            A10_Const::CFG_SCHEDULES_FILE_BAK,
-            d)) {
-        A10_resetSchedulesDefault(p_cfg);
-        return false;
-    }
-    */
 
     JsonArrayConst arr = d["schedules"].as<JsonArrayConst>();
     p_cfg.count        = 0;
 
     for (JsonObjectConst js : arr) {
-        if (p_cfg.count >= A10_Const::MAX_SCHEDULES)
+        if (p_cfg.count >= A20_Const::MAX_SCHEDULES)
             break;
 
-        ST_A10_ScheduleItem_t& s =
+        ST_A20_ScheduleItem_t& s =
             p_cfg.items[p_cfg.count++];
 
         C10_fromJson_ScheduleItem(js, s);
@@ -318,12 +312,13 @@ bool CL_C10_ConfigManager::loadSchedules(ST_A10_SchedulesRoot_t& p_cfg) {
     return true;
 }
 
-bool CL_C10_ConfigManager::loadUserProfiles(ST_A10_UserProfilesRoot_t& p_cfg) {
+bool CL_C10_ConfigManager::loadUserProfiles(ST_A20_UserProfilesRoot_t& p_cfg) {
     JsonDocument d;
 
     const char* v_cfgJsonPath = nullptr;
-    if (!s_cfgJsonFileMap.uzOpProfile.empty()) {
-        v_cfgJsonPath = s_cfgJsonFileMap.uzOpProfile.c_str();
+
+    if (s_cfgJsonFileMap.uzOpProfile[0] != '\0') {
+        v_cfgJsonPath = s_cfgJsonFileMap.uzOpProfile;
     } else {
         CL_D10_Logger::log(
             EN_L10_LOG_ERROR,
@@ -337,24 +332,16 @@ bool CL_C10_ConfigManager::loadUserProfiles(ST_A10_UserProfilesRoot_t& p_cfg) {
         return false;
     }
     
-    /*
-    if (!ioLoadJson(A10_Const::CFG_USER_PROFILES_FILE,
-                    A10_Const::CFG_USER_PROFILES_FILE_BAK,
-                    d)) {
-        A10_resetUserProfilesDefault(p_cfg);
-        return false;
-    }
-    */
 
     JsonArrayConst arr =
         d["userProfiles"]["profiles"].as<JsonArrayConst>();
     p_cfg.count = 0;
 
     for (JsonObjectConst jp : arr) {
-        if (p_cfg.count >= A10_Const::MAX_USER_PROFILES)
+        if (p_cfg.count >= A20_Const::MAX_USER_PROFILES)
             break;
 
-        ST_A10_UserProfileItem_t& up =
+        ST_A20_UserProfileItem_t& up =
             p_cfg.items[p_cfg.count++];
 
         C10_fromJson_UserProfile(jp, up);
@@ -362,12 +349,13 @@ bool CL_C10_ConfigManager::loadUserProfiles(ST_A10_UserProfilesRoot_t& p_cfg) {
     return true;
 }
 
-bool CL_C10_ConfigManager::loadWindProfileDict(ST_A10_WindProfileDict_t& p_dict) {
+bool CL_C10_ConfigManager::loadWindProfileDict(ST_A20_WindProfileDict_t& p_dict) {
     JsonDocument d;
 
     const char* v_cfgJsonPath = nullptr;
-    if (!s_cfgJsonFileMap.dft_windProfile.empty()) {
-        v_cfgJsonPath = s_cfgJsonFileMap.dft_windProfile.c_str();
+
+    if (s_cfgJsonFileMap.dft_windProfile[0] != '\0') {
+        v_cfgJsonPath = s_cfgJsonFileMap.dft_windProfile;        
     } else {
         CL_D10_Logger::log(
             EN_L10_LOG_ERROR,
@@ -381,14 +369,6 @@ bool CL_C10_ConfigManager::loadWindProfileDict(ST_A10_WindProfileDict_t& p_dict)
         return false;
     }
 
-    /*
-    if (!ioLoadJson(A10_Const::CFG_WIND_PROFILE_FILE,
-                    A10_Const::CFG_WIND_PROFILE_FILE_BAK,
-                    d)) {
-        A10_resetWindProfileDictDefault(p_dict);
-        return false;
-    }
-    */
     
     JsonObjectConst j = d["windProfile"];
 
@@ -399,7 +379,7 @@ bool CL_C10_ConfigManager::loadWindProfileDict(ST_A10_WindProfileDict_t& p_dict)
             if (p_dict.preset_count >= 16)
                 break;
 
-            ST_A10_PresetEntry_t& v_p =
+            ST_A20_PresetEntry_t& v_p =
                 p_dict.presets[p_dict.preset_count++];
 
             C10_fromJson_WindPreset(v_js, v_p);
@@ -413,7 +393,7 @@ bool CL_C10_ConfigManager::loadWindProfileDict(ST_A10_WindProfileDict_t& p_dict)
             if (p_dict.style_count >= 16)
                 break;
 
-            ST_A10_StyleEntry_t& v_s =
+            ST_A20_StyleEntry_t& v_s =
                 p_dict.styles[p_dict.style_count++];
 
             strlcpy(v_s.name,
@@ -440,61 +420,49 @@ bool CL_C10_ConfigManager::loadWindProfileDict(ST_A10_WindProfileDict_t& p_dict)
 // =====================================================
 // 2-2. 목적물별 Save 구현 (Schedules/UserProfiles/WindProfileDict)
 // =====================================================
-bool CL_C10_ConfigManager::saveSchedules(const ST_A10_SchedulesRoot_t& p_cfg) {
+bool CL_C10_ConfigManager::saveSchedules(const ST_A20_SchedulesRoot_t& p_cfg) {
     JsonDocument d;
 
     for (uint8_t v_i = 0; v_i < p_cfg.count; v_i++) {
-        const ST_A10_ScheduleItem_t& s =
-            p_cfg.items[v_i];
-        JsonObject js = d["schedules"][v_i];
+        const ST_A20_ScheduleItem_t& s  = p_cfg.items[v_i];
+        JsonObject js                   = d["schedules"][v_i];
 
-        js["schId"]   = s.schId;
-        js["schNo"]   = s.schNo;
-        js["name"]    = s.name;
-        js["enabled"] = s.enabled;
-        js["repeatSegments"] = s.repeatSegments;
-        js["repeatCount"]    = s.repeatCount;
+        js["schId"]             = s.schId;
+        js["schNo"]             = s.schNo;
+        js["name"]              = s.name;
+        js["enabled"]           = s.enabled;
+        js["repeatSegments"]    = s.repeatSegments;
+        js["repeatCount"]       = s.repeatCount;
 
-        //// js["period"]["enabled"] = s.period.enabled;
         for (uint8_t v_d = 0; v_d < 7; v_d++) {
             js["period"]["days"][v_d] = s.period.days[v_d];
         }
-        js["period"]["start_time"] =
-            s.period.start_time;
-        js["period"]["end_time"] =
-            s.period.end_time;
+        js["period"]["start_time"]  = s.period.start_time;
+        js["period"]["end_time"]    = s.period.end_time;
 
         for (uint8_t v_k = 0; v_k < s.seg_count; v_k++) {
-            const ST_A10_ScheduleSegment_t& sg =
-                s.segments[v_k];
-            JsonObject jseg =
-                js["segments"][v_k];
+            const ST_A20_ScheduleSegment_t& sg = s.segments[v_k];
+            JsonObject jseg                    = js["segments"][v_k];
 
             jseg["segId"]       = sg.segId;
             jseg["segNo"]       = sg.segNo;
             jseg["on_minutes"]  = sg.on_minutes;
             jseg["off_minutes"] = sg.off_minutes;
-            jseg["mode"]        = A10_modeToString(sg.mode);
+            jseg["mode"]        = A20_modeToString(sg.mode);
             jseg["presetCode"]  = sg.presetCode;
             jseg["styleCode"]   = sg.styleCode;
             
 
-            JsonObject adj      = jseg["adjust"];
-            adj["wind_intensity"] =
-                sg.adjust.wind_intensity;
-            adj["wind_variability"] =
-                sg.adjust.wind_variability;
-            adj["gust_frequency"] =
-                sg.adjust.gust_frequency;
-            adj["fan_limit"] =
-                sg.adjust.fan_limit;
-            adj["min_fan"] =
-                sg.adjust.min_fan;
+            JsonObject adj                    = jseg["adjust"];
+            adj["wind_intensity"]             = sg.adjust.wind_intensity;
+            adj["wind_variability"]           = sg.adjust.wind_variability;
+            adj["gust_frequency"]             = sg.adjust.gust_frequency;
+            adj["fan_limit"]                  = sg.adjust.fan_limit;
+            adj["min_fan"]                    = sg.adjust.min_fan;
             adj["turbulence_length_scale"]    = sg.adjust.turbulence_length_scale;      // ★ 추가
             adj["turbulence_intensity_sigma"] = sg.adjust.turbulence_intensity_sigma;   // ★ 추가
 
-            jseg["fixed_speed"] =
-                sg.fixed_speed;
+            jseg["fixed_speed"]              = sg.fixed_speed;
         }
 
         JsonObject ao = js["autoOff"];
@@ -523,16 +491,17 @@ bool CL_C10_ConfigManager::saveSchedules(const ST_A10_SchedulesRoot_t& p_cfg) {
             s.motion.ble.hold_sec;
     }
 
-    return ioSaveJson(A10_Const::CFG_SCHEDULES_FILE,
-                      A10_Const::CFG_SCHEDULES_FILE_BAK,
-                      d);
+    char v_bakPath[A20_Const::LEN_NAME + 5];                // ".bak" 4자 + null 1자 여유
+    snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.schedules);
+
+    return ioSaveJson(s_cfgJsonFileMap.schedules, v_bakPath, d);
 }
 
-bool CL_C10_ConfigManager::saveUserProfiles(const ST_A10_UserProfilesRoot_t& p_cfg) {
+bool CL_C10_ConfigManager::saveUserProfiles(const ST_A20_UserProfilesRoot_t& p_cfg) {
     JsonDocument d;
 
     for (uint8_t v_i = 0; v_i < p_cfg.count; v_i++) {
-        const ST_A10_UserProfileItem_t& up =
+        const ST_A20_UserProfileItem_t& up =
             p_cfg.items[v_i];
         JsonObject jp =
             d["userProfiles"]["profiles"][v_i];
@@ -545,7 +514,7 @@ bool CL_C10_ConfigManager::saveUserProfiles(const ST_A10_UserProfilesRoot_t& p_c
         jp["repeatCount"]    = up.repeatCount;
 
         for (uint8_t v_k = 0; v_k < up.seg_count; v_k++) {
-            const ST_A10_UserProfileSegment_t& sg =
+            const ST_A20_UserProfileSegment_t& sg =
                 up.segments[v_k];
             JsonObject jseg =
                 jp["segments"][v_k];
@@ -554,7 +523,7 @@ bool CL_C10_ConfigManager::saveUserProfiles(const ST_A10_UserProfilesRoot_t& p_c
             jseg["segNo"]       = sg.segNo;
             jseg["on_minutes"]  = sg.on_minutes;
             jseg["off_minutes"] = sg.off_minutes;
-            jseg["mode"]        = A10_modeToString(sg.mode);
+            jseg["mode"]        = A20_modeToString(sg.mode);
             jseg["presetCode"]  = sg.presetCode;
             jseg["styleCode"]   = sg.styleCode;
 
@@ -586,17 +555,19 @@ bool CL_C10_ConfigManager::saveUserProfiles(const ST_A10_UserProfilesRoot_t& p_c
         jp["motion"]["ble"]["hold_sec"] =    up.motion.ble.hold_sec;
     }
 
-    return ioSaveJson(A10_Const::CFG_USER_PROFILES_FILE,
-                      A10_Const::CFG_USER_PROFILES_FILE_BAK,
-                      d);
+    char v_bakPath[A20_Const::LEN_NAME + 5];                // ".bak" 4자 + null 1자 여유
+    snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.uzOpProfile);
+
+    return ioSaveJson(s_cfgJsonFileMap.uzOpProfile, v_bakPath, d);
+
 }
 
-bool CL_C10_ConfigManager::saveWindProfileDict(const ST_A10_WindProfileDict_t& p_cfg) {
+bool CL_C10_ConfigManager::saveWindProfileDict(const ST_A20_WindProfileDict_t& p_cfg) {
     JsonDocument d;
 
     // presets
     for (uint8_t v_i = 0; v_i < p_cfg.preset_count; v_i++) {
-        const ST_A10_PresetEntry_t& v_p =
+        const ST_A20_PresetEntry_t& v_p =
             p_cfg.presets[v_i];
         JsonObject v_js =
             d["windProfile"]["presets"][v_i];
@@ -618,7 +589,7 @@ bool CL_C10_ConfigManager::saveWindProfileDict(const ST_A10_WindProfileDict_t& p
 
     // styles
     for (uint8_t v_i = 0; v_i < p_cfg.style_count; v_i++) {
-        const ST_A10_StyleEntry_t& v_s =
+        const ST_A20_StyleEntry_t& v_s =
             p_cfg.styles[v_i];
         JsonObject v_js =
             d["windProfile"]["styles"][v_i];
@@ -633,20 +604,21 @@ bool CL_C10_ConfigManager::saveWindProfileDict(const ST_A10_WindProfileDict_t& p
         v_f["thermal_factor"]     = v_s.factors.thermal_factor;
     }
 
-    return ioSaveJson(A10_Const::CFG_WIND_PROFILE_FILE,
-                      A10_Const::CFG_WIND_PROFILE_FILE_BAK,
-                      d);
+    char v_bakPath[A20_Const::LEN_NAME + 5];                // ".bak" 4자 + null 1자 여유
+    snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.dft_windProfile);
+
+    return ioSaveJson(s_cfgJsonFileMap.dft_windProfile, v_bakPath, d);
 }
 
 // =====================================================
 // 3. JSON Export (Schedules/UserProfiles/WindProfileDict)
 // =====================================================
 void CL_C10_ConfigManager::toJson_Schedules(
-    const ST_A10_SchedulesRoot_t& p_cfg,
+    const ST_A20_SchedulesRoot_t& p_cfg,
     JsonDocument&                 d) {
 
     for (uint8_t v_i = 0; v_i < p_cfg.count; v_i++) {
-        const ST_A10_ScheduleItem_t& s =
+        const ST_A20_ScheduleItem_t& s =
             p_cfg.items[v_i];
         JsonObject js =
             d["schedules"][v_i];
@@ -670,7 +642,7 @@ void CL_C10_ConfigManager::toJson_Schedules(
             s.period.end_time;
 
         for (uint8_t v_k = 0; v_k < s.seg_count; v_k++) {
-            const ST_A10_ScheduleSegment_t& sg =
+            const ST_A20_ScheduleSegment_t& sg =
                 s.segments[v_k];
             JsonObject jseg =
                 js["segments"][v_k];
@@ -679,7 +651,7 @@ void CL_C10_ConfigManager::toJson_Schedules(
             jseg["segNo"]       = sg.segNo;
             jseg["on_minutes"]  = sg.on_minutes;
             jseg["off_minutes"] = sg.off_minutes;
-            jseg["mode"]        = A10_modeToString(sg.mode);
+            jseg["mode"]        = A20_modeToString(sg.mode);
             jseg["presetCode"]  = sg.presetCode;
             jseg["styleCode"]   = sg.styleCode;
 
@@ -724,11 +696,11 @@ void CL_C10_ConfigManager::toJson_Schedules(
 }
 
 void CL_C10_ConfigManager::toJson_UserProfiles(
-    const ST_A10_UserProfilesRoot_t& p_cfg,
+    const ST_A20_UserProfilesRoot_t& p_cfg,
     JsonDocument&                    d) {
 
     for (uint8_t v_i = 0; v_i < p_cfg.count; v_i++) {
-        const ST_A10_UserProfileItem_t& up =
+        const ST_A20_UserProfileItem_t& up =
             p_cfg.items[v_i];
         JsonObject jp =
             d["userProfiles"]["profiles"][v_i];
@@ -741,7 +713,7 @@ void CL_C10_ConfigManager::toJson_UserProfiles(
         jp["repeatCount"]    = up.repeatCount;
 
         for (uint8_t v_k = 0; v_k < up.seg_count; v_k++) {
-            const ST_A10_UserProfileSegment_t& sg =
+            const ST_A20_UserProfileSegment_t& sg =
                 up.segments[v_k];
             JsonObject jseg =
                 jp["segments"][v_k];
@@ -750,7 +722,7 @@ void CL_C10_ConfigManager::toJson_UserProfiles(
             jseg["segNo"]       = sg.segNo;
             jseg["on_minutes"]  = sg.on_minutes;
             jseg["off_minutes"] = sg.off_minutes;
-            jseg["mode"]        = A10_modeToString(sg.mode);
+            jseg["mode"]        = A20_modeToString(sg.mode);
             jseg["presetCode"]  = sg.presetCode;
             jseg["styleCode"]   = sg.styleCode;
 
@@ -796,11 +768,11 @@ void CL_C10_ConfigManager::toJson_UserProfiles(
 }
 
 void CL_C10_ConfigManager::toJson_WindProfileDict(
-    const ST_A10_WindProfileDict_t& p_cfg,
+    const ST_A20_WindProfileDict_t& p_cfg,
     JsonDocument&                   d) {
 
     for (uint8_t v_i = 0; v_i < p_cfg.preset_count; v_i++) {
-        const ST_A10_PresetEntry_t& v_p =
+        const ST_A20_PresetEntry_t& v_p =
             p_cfg.presets[v_i];
         JsonObject v_js =
             d["windProfile"]["presets"][v_i];
@@ -821,7 +793,7 @@ void CL_C10_ConfigManager::toJson_WindProfileDict(
     }
 
     for (uint8_t v_i = 0; v_i < p_cfg.style_count; v_i++) {
-        const ST_A10_StyleEntry_t& v_s =
+        const ST_A20_StyleEntry_t& v_s =
             p_cfg.styles[v_i];
         JsonObject v_js =
             d["windProfile"]["styles"][v_i];
@@ -841,7 +813,7 @@ void CL_C10_ConfigManager::toJson_WindProfileDict(
 // 4. JSON Patch (Schedules/UserProfiles/WindProfileDict)
 // =====================================================
 bool CL_C10_ConfigManager::patchSchedulesFromJson(
-    ST_A10_SchedulesRoot_t& p_cfg,
+    ST_A20_SchedulesRoot_t& p_cfg,
     const JsonDocument&     p_patch) {
 
     C10_MUTEX_ACQUIRE_BOOL();
@@ -854,10 +826,10 @@ bool CL_C10_ConfigManager::patchSchedulesFromJson(
 
     p_cfg.count = 0;
     for (JsonObjectConst js : arr) {
-        if (p_cfg.count >= A10_Const::MAX_SCHEDULES)
+        if (p_cfg.count >= A20_Const::MAX_SCHEDULES)
             break;
 
-        ST_A10_ScheduleItem_t& s =
+        ST_A20_ScheduleItem_t& s =
             p_cfg.items[p_cfg.count++];
         C10_fromJson_ScheduleItem(js, s);
     }
@@ -871,7 +843,7 @@ bool CL_C10_ConfigManager::patchSchedulesFromJson(
 }
 
 bool CL_C10_ConfigManager::patchUserProfilesFromJson(
-    ST_A10_UserProfilesRoot_t& p_cfg,
+    ST_A20_UserProfilesRoot_t& p_cfg,
     const JsonDocument&        p_patch) {
 
     C10_MUTEX_ACQUIRE_BOOL();
@@ -885,10 +857,10 @@ bool CL_C10_ConfigManager::patchUserProfilesFromJson(
 
     p_cfg.count = 0;
     for (JsonObjectConst jp : arr) {
-        if (p_cfg.count >= A10_Const::MAX_USER_PROFILES)
+        if (p_cfg.count >= A20_Const::MAX_USER_PROFILES)
             break;
 
-        ST_A10_UserProfileItem_t& up =
+        ST_A20_UserProfileItem_t& up =
             p_cfg.items[p_cfg.count++];
 
         C10_fromJson_UserProfile(jp, up);
@@ -903,7 +875,7 @@ bool CL_C10_ConfigManager::patchUserProfilesFromJson(
 }
 
 bool CL_C10_ConfigManager::patchWindProfileDictFromJson(
-    ST_A10_WindProfileDict_t& p_cfg,
+    ST_A20_WindProfileDict_t& p_cfg,
     const JsonDocument&       p_patch) {
 
     C10_MUTEX_ACQUIRE_BOOL();
@@ -922,7 +894,7 @@ bool CL_C10_ConfigManager::patchWindProfileDictFromJson(
             if (p_cfg.preset_count >= 16)
                 break;
 
-            ST_A10_PresetEntry_t& v_p =
+            ST_A20_PresetEntry_t& v_p =
                 p_cfg.presets[p_cfg.preset_count++];
             C10_fromJson_WindPreset(v_js, v_p);
         }
@@ -936,7 +908,7 @@ bool CL_C10_ConfigManager::patchWindProfileDictFromJson(
             if (p_cfg.style_count >= 16)
                 break;
 
-            ST_A10_StyleEntry_t& v_s =
+            ST_A20_StyleEntry_t& v_s =
                 p_cfg.styles[p_cfg.style_count++];
 
             strlcpy(v_s.name,
@@ -968,21 +940,21 @@ bool CL_C10_ConfigManager::patchWindProfileDictFromJson(
 
 // =====================================================
 // 5. CRUD - Schedules / UserProfiles / WindProfile
-//  (g_A10_config_root를 대상으로 동작)
+//  (g_A20_config_root를 대상으로 동작)
 // =====================================================
 
 // ---------- Schedule CRUD ----------
 int CL_C10_ConfigManager::addScheduleFromJson(const JsonDocument& p_doc) {
     C10_MUTEX_ACQUIRE_BOOL();
 
-    if (!g_A10_config_root.schedules) {
-        g_A10_config_root.schedules = new ST_A10_SchedulesRoot_t();
-        A10_resetSchedulesDefault(*g_A10_config_root.schedules);
+    if (!g_A20_config_root.schedules) {
+        g_A20_config_root.schedules = new ST_A20_SchedulesRoot_t();
+        A20_resetSchedulesDefault(*g_A20_config_root.schedules);
     }
 
-    ST_A10_SchedulesRoot_t& v_root = *g_A10_config_root.schedules;
+    ST_A20_SchedulesRoot_t& v_root = *g_A20_config_root.schedules;
 
-    if (v_root.count >= A10_Const::MAX_SCHEDULES) {
+    if (v_root.count >= A20_Const::MAX_SCHEDULES) {
         C10_MUTEX_RELEASE();
         return -1;
     }
@@ -992,7 +964,7 @@ int CL_C10_ConfigManager::addScheduleFromJson(const JsonDocument& p_doc) {
             ? p_doc["schedule"].as<JsonObjectConst>()
             : p_doc.as<JsonObjectConst>();
 
-    ST_A10_ScheduleItem_t& s =
+    ST_A20_ScheduleItem_t& s =
         v_root.items[v_root.count];
     C10_fromJson_ScheduleItem(js, s);
 
@@ -1011,12 +983,12 @@ bool CL_C10_ConfigManager::updateScheduleFromJson(uint16_t p_id,
                                                   const JsonDocument& p_patch) {
     C10_MUTEX_ACQUIRE_BOOL();
 
-    if (!g_A10_config_root.schedules) {
+    if (!g_A20_config_root.schedules) {
         C10_MUTEX_RELEASE();
         return false;
     }
 
-    ST_A10_SchedulesRoot_t& v_root = *g_A10_config_root.schedules;
+    ST_A20_SchedulesRoot_t& v_root = *g_A20_config_root.schedules;
 
     int v_idx = -1;
     for (uint8_t v_i = 0; v_i < v_root.count; v_i++) {
@@ -1049,12 +1021,12 @@ bool CL_C10_ConfigManager::updateScheduleFromJson(uint16_t p_id,
 bool CL_C10_ConfigManager::deleteSchedule(uint16_t p_id) {
     C10_MUTEX_ACQUIRE_BOOL();
 
-    if (!g_A10_config_root.schedules) {
+    if (!g_A20_config_root.schedules) {
         C10_MUTEX_RELEASE();
         return false;
     }
 
-    ST_A10_SchedulesRoot_t& v_root = *g_A10_config_root.schedules;
+    ST_A20_SchedulesRoot_t& v_root = *g_A20_config_root.schedules;
 
     int v_idx = -1;
     for (uint8_t v_i = 0; v_i < v_root.count; v_i++) {
@@ -1087,16 +1059,16 @@ bool CL_C10_ConfigManager::deleteSchedule(uint16_t p_id) {
 int CL_C10_ConfigManager::addUserProfilesFromJson(const JsonDocument& p_doc) {
     C10_MUTEX_ACQUIRE_BOOL();
 
-    if (!g_A10_config_root.userProfiles) {
-        g_A10_config_root.userProfiles =
-            new ST_A10_UserProfilesRoot_t();
-        A10_resetUserProfilesDefault(*g_A10_config_root.userProfiles);
+    if (!g_A20_config_root.userProfiles) {
+        g_A20_config_root.userProfiles =
+            new ST_A20_UserProfilesRoot_t();
+        A20_resetUserProfilesDefault(*g_A20_config_root.userProfiles);
     }
 
-    ST_A10_UserProfilesRoot_t& v_root =
-        *g_A10_config_root.userProfiles;
+    ST_A20_UserProfilesRoot_t& v_root =
+        *g_A20_config_root.userProfiles;
 
-    if (v_root.count >= A10_Const::MAX_USER_PROFILES) {
+    if (v_root.count >= A20_Const::MAX_USER_PROFILES) {
         C10_MUTEX_RELEASE();
         return -1;
     }
@@ -1106,7 +1078,7 @@ int CL_C10_ConfigManager::addUserProfilesFromJson(const JsonDocument& p_doc) {
             ? p_doc["profile"].as<JsonObjectConst>()
             : p_doc.as<JsonObjectConst>();
 
-    ST_A10_UserProfileItem_t& up =
+    ST_A20_UserProfileItem_t& up =
         v_root.items[v_root.count];
     C10_fromJson_UserProfile(jp, up);
 
@@ -1128,13 +1100,13 @@ bool CL_C10_ConfigManager::updateUserProfilesFromJson(
 
     C10_MUTEX_ACQUIRE_BOOL();
 
-    if (!g_A10_config_root.userProfiles) {
+    if (!g_A20_config_root.userProfiles) {
         C10_MUTEX_RELEASE();
         return false;
     }
 
-    ST_A10_UserProfilesRoot_t& v_root =
-        *g_A10_config_root.userProfiles;
+    ST_A20_UserProfilesRoot_t& v_root =
+        *g_A20_config_root.userProfiles;
 
     int v_idx = -1;
     for (uint8_t v_i = 0; v_i < v_root.count; v_i++) {
@@ -1167,13 +1139,13 @@ bool CL_C10_ConfigManager::updateUserProfilesFromJson(
 bool CL_C10_ConfigManager::deleteUserProfiles(uint16_t p_id) {
     C10_MUTEX_ACQUIRE_BOOL();
 
-    if (!g_A10_config_root.userProfiles) {
+    if (!g_A20_config_root.userProfiles) {
         C10_MUTEX_RELEASE();
         return false;
     }
 
-    ST_A10_UserProfilesRoot_t& v_root =
-        *g_A10_config_root.userProfiles;
+    ST_A20_UserProfilesRoot_t& v_root =
+        *g_A20_config_root.userProfiles;
 
     int v_idx = -1;
     for (uint8_t v_i = 0; v_i < v_root.count; v_i++) {
@@ -1206,13 +1178,13 @@ bool CL_C10_ConfigManager::deleteUserProfiles(uint16_t p_id) {
 int CL_C10_ConfigManager::addWindProfileFromJson(const JsonDocument& p_doc) {
     C10_MUTEX_ACQUIRE_BOOL();
 
-    if (!g_A10_config_root.windDict) {
-        g_A10_config_root.windDict = new ST_A10_WindProfileDict_t();
-        A10_resetWindProfileDictDefault(*g_A10_config_root.windDict);
+    if (!g_A20_config_root.windDict) {
+        g_A20_config_root.windDict = new ST_A20_WindProfileDict_t();
+        A20_resetWindProfileDictDefault(*g_A20_config_root.windDict);
     }
 
-    ST_A10_WindProfileDict_t& v_root =
-        *g_A10_config_root.windDict;
+    ST_A20_WindProfileDict_t& v_root =
+        *g_A20_config_root.windDict;
 
     if (v_root.preset_count >= 16) {
         C10_MUTEX_RELEASE();
@@ -1224,7 +1196,7 @@ int CL_C10_ConfigManager::addWindProfileFromJson(const JsonDocument& p_doc) {
             ? p_doc["preset"].as<JsonObjectConst>()
             : p_doc.as<JsonObjectConst>();
 
-    ST_A10_PresetEntry_t& v_p =
+    ST_A20_PresetEntry_t& v_p =
         v_root.presets[v_root.preset_count];
     C10_fromJson_WindPreset(v_js, v_p);
 
@@ -1246,13 +1218,13 @@ bool CL_C10_ConfigManager::updateWindProfileFromJson(
 
     C10_MUTEX_ACQUIRE_BOOL();
 
-    if (!g_A10_config_root.windDict) {
+    if (!g_A20_config_root.windDict) {
         C10_MUTEX_RELEASE();
         return false;
     }
 
-    ST_A10_WindProfileDict_t& v_root =
-        *g_A10_config_root.windDict;
+    ST_A20_WindProfileDict_t& v_root =
+        *g_A20_config_root.windDict;
 
     if (p_id >= v_root.preset_count) {
         C10_MUTEX_RELEASE();
@@ -1278,13 +1250,13 @@ bool CL_C10_ConfigManager::updateWindProfileFromJson(
 bool CL_C10_ConfigManager::deleteWindProfile(uint16_t p_id) {
     C10_MUTEX_ACQUIRE_BOOL();
 
-    if (!g_A10_config_root.windDict) {
+    if (!g_A20_config_root.windDict) {
         C10_MUTEX_RELEASE();
         return false;
     }
 
-    ST_A10_WindProfileDict_t& v_root =
-        *g_A10_config_root.windDict;
+    ST_A20_WindProfileDict_t& v_root =
+        *g_A20_config_root.windDict;
 
     if (p_id >= v_root.preset_count) {
         C10_MUTEX_RELEASE();

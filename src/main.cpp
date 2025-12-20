@@ -11,10 +11,7 @@
 #include <Arduino.h>
 #include <LittleFS.h>
 
-#include "v015/SC10_Main_010.h"
-
-//#include "v014/SC10_Main_005.h"
-
+#include "v015/A00_Main_010.h"
 
 void setup() {
 	Serial.begin(115200);
@@ -35,7 +32,7 @@ void setup() {
 	// ------------------------------------------------------
 	// 2️⃣ 시스템 초기화 (FS / Wi-Fi / PWM / WebAPI / Sim)
 	// ------------------------------------------------------
-	SC10_init();
+	A00_init();
 
 	Serial.println();
 	Serial.println("[BOOT] Initialization complete");
@@ -50,7 +47,7 @@ void setup() {
 
 void loop() {
 
-	SC10_run();
+	A00_run();
 
 
 	delay(5); // CPU 점유율 완화

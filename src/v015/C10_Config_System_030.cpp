@@ -40,54 +40,35 @@
 // =====================================================
 // 2-1. 목적물별 Load 구현 (System/Wifi/Motion)
 // =====================================================
-bool CL_C10_ConfigManager::loadSystemConfig(ST_A10_SystemConfig& p_cfg) {
+bool CL_C10_ConfigManager::loadSystemConfig(ST_A20_SystemConfig& p_cfg) {
     JsonDocument v_doc;
 
     const char* v_cfgJsonPath = nullptr;
-    if (!s_cfgJsonFileMap.system.empty()) {
-        v_cfgJsonPath = s_cfgJsonFileMap.system.c_str();
+
+    // [수정] std::string::empty() -> strlen() 또는 첫 문자 비교로 변경
+    if (s_cfgJsonFileMap.system[0] != '\0') {
+        v_cfgJsonPath = s_cfgJsonFileMap.system;
     } else {
         CL_D10_Logger::log(
             EN_L10_LOG_ERROR,
-            "[C10] loadSystemConfig: s_cfgJsonFileMap.system failed");
+            "[C10] loadSystemConfig: s_cfgJsonFileMap.system is empty");
         return false;
-        
-        // fallback: 기존 상수 (원하시면 이것도 제거 가능)
-        // v_cfgJsonPath = A10_Const::CFG_SYSTEM_FILE;
     }
+
 
     if (!ioLoadJson(v_cfgJsonPath, nullptr, v_doc)) {   // bak는 자동 .bak 처리
         CL_D10_Logger::log(
             EN_L10_LOG_ERROR,
             "[C10] loadSystemConfig: ioLoadJson failed (%s)", v_cfgJsonPath);
-        // A10_resetSystemDefault(p_cfg);
+        // A20_resetSystemDefault(p_cfg);
         return false;
     }
 
-    /*
-    if (!ioLoadJson(A10_Const::CFG_SYSTEM_FILE,
-                    A10_Const::CFG_SYSTEM_FILE_BAK,
-                    v_doc)) {
-        A10_resetSystemDefault(p_cfg);
-        return false;
-    }
-    */
     JsonObjectConst j = v_doc.as<JsonObjectConst>();
 
-    strlcpy(p_cfg.meta.version,
-            j["meta"]["version"] | A10_Const::FW_VERSION,
-            sizeof(p_cfg.meta.version));
-    strlcpy(p_cfg.meta.device_name,
-            j["meta"]["device_name"] | "SmartNatureWind",
-            sizeof(p_cfg.meta.device_name));
-    strlcpy(p_cfg.meta.last_update,
-            j["meta"]["last_update"] | "",
-            sizeof(p_cfg.meta.last_update));
-
-    // strlcpy(p_cfg.system.webPagesJson,
-    //         j["system"]["webPageJson"] | "/html/main.html",
-    //         sizeof(p_cfg.system.webPagesJson));
-
+    strlcpy(p_cfg.meta.version      , j["meta"]["version"] | A20_Const::FW_VERSION  , sizeof(p_cfg.meta.version));
+    strlcpy(p_cfg.meta.device_name  , j["meta"]["device_name"] | "SmartNatureWind"  , sizeof(p_cfg.meta.device_name));
+    strlcpy(p_cfg.meta.last_update  , j["meta"]["last_update"] | ""                 , sizeof(p_cfg.meta.last_update));
 
     strlcpy(p_cfg.system.logging.level,
             j["system"]["logging"]["level"] | "INFO",
@@ -146,12 +127,13 @@ bool CL_C10_ConfigManager::loadSystemConfig(ST_A10_SystemConfig& p_cfg) {
     return true;
 }
 
-bool CL_C10_ConfigManager::loadWifiConfig(ST_A10_WifiConfig& p_cfg) {
+bool CL_C10_ConfigManager::loadWifiConfig(ST_A20_WifiConfig& p_cfg) {
     JsonDocument d;
 
     const char* v_cfgJsonPath = nullptr;
-    if (!s_cfgJsonFileMap.wifi.empty()) {
-        v_cfgJsonPath = s_cfgJsonFileMap.wifi.c_str();
+
+    if (s_cfgJsonFileMap.wifi[0] != '\0') {
+        v_cfgJsonPath = s_cfgJsonFileMap.wifi;
     } else {
         CL_D10_Logger::log(
             EN_L10_LOG_ERROR,
@@ -165,20 +147,10 @@ bool CL_C10_ConfigManager::loadWifiConfig(ST_A10_WifiConfig& p_cfg) {
         return false;
     }
     
-    /*
-    if (!ioLoadJson(A10_Const::CFG_WIFI_FILE,
-                    A10_Const::CFG_WIFI_FILE_BAK,
-                    d)) {
-        A10_resetWifiDefault(p_cfg);
-        return false;
-    }
-    */
-
-
     JsonObjectConst j = d["wifi"];
 
     p_cfg.wifiMode =
-        (EN_A10_WIFI_MODE_t)(j["wifiMode"] | EN_A10_WIFI_MODE_AP_STA);
+        (EN_A20_WIFI_MODE_t)(j["wifiMode"] | EN_A20_WIFI_MODE_AP_STA);
     strlcpy(p_cfg.wifiModeDesc,
             j["wifiModeDesc"] | "0=AP,1=STA,2=AP+STA",
             sizeof(p_cfg.wifiModeDesc));
@@ -194,7 +166,7 @@ bool CL_C10_ConfigManager::loadWifiConfig(ST_A10_WifiConfig& p_cfg) {
     if (j["sta"].is<JsonArrayConst>()) {
         JsonArrayConst v_arr = j["sta"].as<JsonArrayConst>();
         for (JsonObjectConst v_js : v_arr) {
-            if (p_cfg.sta_count >= A10_Const::MAX_STA_NETWORKS)
+            if (p_cfg.sta_count >= A20_Const::MAX_STA_NETWORKS)
                 break;
             strlcpy(p_cfg.sta[p_cfg.sta_count].ssid,
                     v_js["ssid"] | "",
@@ -208,12 +180,13 @@ bool CL_C10_ConfigManager::loadWifiConfig(ST_A10_WifiConfig& p_cfg) {
     return true;
 }
 
-bool CL_C10_ConfigManager::loadMotionConfig(ST_A10_MotionConfig& p_cfg) {
+bool CL_C10_ConfigManager::loadMotionConfig(ST_A20_MotionConfig& p_cfg) {
     JsonDocument d;
 
     const char* v_cfgJsonPath = nullptr;
-    if (!s_cfgJsonFileMap.motion.empty()) {
-        v_cfgJsonPath = s_cfgJsonFileMap.motion.c_str();
+
+    if (s_cfgJsonFileMap.motion[0] != '\0') {
+        v_cfgJsonPath = s_cfgJsonFileMap.motion;
     } else {
         CL_D10_Logger::log(
             EN_L10_LOG_ERROR,
@@ -227,14 +200,6 @@ bool CL_C10_ConfigManager::loadMotionConfig(ST_A10_MotionConfig& p_cfg) {
         return false;
     }
 
-    /*
-    if (!ioLoadJson(A10_Const::CFG_MOTION_FILE,
-                    A10_Const::CFG_MOTION_FILE_BAK,
-                    d)) {
-        A10_resetMotionDefault(p_cfg);
-        return false;
-    }
-    */
     
     JsonObjectConst j = d["motion"];
 
@@ -256,10 +221,10 @@ bool CL_C10_ConfigManager::loadMotionConfig(ST_A10_MotionConfig& p_cfg) {
         JsonArrayConst v_arr =
             j["ble"]["trusted_devices"].as<JsonArrayConst>();
         for (JsonObjectConst v_js : v_arr) {
-            if (p_cfg.ble.trusted_count >= A10_Const::MAX_BLE_DEVICES)
+            if (p_cfg.ble.trusted_count >= A20_Const::MAX_BLE_DEVICES)
                 break;
 
-            ST_A10_BLETrustedDevice& v_d =
+            ST_A20_BLETrustedDevice& v_d =
                 p_cfg.ble.trusted_devices[p_cfg.ble.trusted_count++];
 
             strlcpy(v_d.alias,
@@ -284,20 +249,13 @@ bool CL_C10_ConfigManager::loadMotionConfig(ST_A10_MotionConfig& p_cfg) {
 // =====================================================
 // 2-2. 목적물별 Save 구현 (System/Wifi/Motion)
 // =====================================================
-bool CL_C10_ConfigManager::saveSystemConfig(const ST_A10_SystemConfig& p_cfg) {
+bool CL_C10_ConfigManager::saveSystemConfig(const ST_A20_SystemConfig& p_cfg) {
     JsonDocument v;
 
     v["meta"]["version"]                  = p_cfg.meta.version;
     v["meta"]["device_name"]              = p_cfg.meta.device_name;
     v["meta"]["last_update"]              = p_cfg.meta.last_update;
 
-    
-    // v["system"]["webPagesJson"]            = p_cfg.system.webPagesJson;
-    /*
-    v["system"]["web"]["html"]            = p_cfg.system.web.html;
-    v["system"]["web"]["css"]             = p_cfg.system.web.css;
-    v["system"]["web"]["js"]              = p_cfg.system.web.js;
-    */
 
     v["system"]["logging"]["level"]       = p_cfg.system.logging.level;
     v["system"]["logging"]["max_entries"] = p_cfg.system.logging.max_entries;
@@ -326,12 +284,14 @@ bool CL_C10_ConfigManager::saveSystemConfig(const ST_A10_SystemConfig& p_cfg) {
     v["time"]["timezone"]                 = p_cfg.time.timezone;
     v["time"]["sync_interval_min"]        = p_cfg.time.sync_interval_min;
 
-    return ioSaveJson(A10_Const::CFG_SYSTEM_FILE,
-                      A10_Const::CFG_SYSTEM_FILE_BAK,
-                      v);
+
+    char v_bakPath[A20_Const::LEN_NAME + 5];                // ".bak" 4자 + null 1자 여유
+    snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.system);
+
+    return ioSaveJson(s_cfgJsonFileMap.system, v_bakPath, v);
 }
 
-bool CL_C10_ConfigManager::saveWifiConfig(const ST_A10_WifiConfig& p_cfg) {
+bool CL_C10_ConfigManager::saveWifiConfig(const ST_A20_WifiConfig& p_cfg) {
     JsonDocument d;
 
     d["wifi"]["wifiMode"]       = p_cfg.wifiMode;
@@ -344,12 +304,13 @@ bool CL_C10_ConfigManager::saveWifiConfig(const ST_A10_WifiConfig& p_cfg) {
         d["wifi"]["sta"][v_i]["pass"] = p_cfg.sta[v_i].pass;
     }
 
-    return ioSaveJson(A10_Const::CFG_WIFI_FILE,
-                      A10_Const::CFG_WIFI_FILE_BAK,
-                      d);
+    char v_bakPath[A20_Const::LEN_NAME + 5];                // ".bak" 4자 + null 1자 여유
+    snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.wifi);
+
+    return ioSaveJson(s_cfgJsonFileMap.wifi, v_bakPath, d);
 }
 
-bool CL_C10_ConfigManager::saveMotionConfig(const ST_A10_MotionConfig& p_cfg) {
+bool CL_C10_ConfigManager::saveMotionConfig(const ST_A20_MotionConfig& p_cfg) {
     JsonDocument d;
 
     d["motion"]["enabled"]                       = p_cfg.enabled;
@@ -364,7 +325,7 @@ bool CL_C10_ConfigManager::saveMotionConfig(const ST_A10_MotionConfig& p_cfg) {
     d["motion"]["ble"]["rssi"]["exit_delay_sec"] = p_cfg.ble.rssi.exit_delay_sec;
 
     for (uint8_t v_i = 0; v_i < p_cfg.ble.trusted_count; v_i++) {
-        const ST_A10_BLETrustedDevice& v_d =
+        const ST_A20_BLETrustedDevice& v_d =
             p_cfg.ble.trusted_devices[v_i];
         JsonObject v_td =
             d["motion"]["ble"]["trusted_devices"][v_i];
@@ -377,16 +338,18 @@ bool CL_C10_ConfigManager::saveMotionConfig(const ST_A10_MotionConfig& p_cfg) {
         v_td["enabled"]      = v_d.enabled;
     }
 
-    return ioSaveJson(A10_Const::CFG_MOTION_FILE,
-                      A10_Const::CFG_MOTION_FILE_BAK,
-                      d);
+
+    char v_bakPath[A20_Const::LEN_NAME + 5];                // ".bak" 4자 + null 1자 여유
+    snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.motion);
+
+    return ioSaveJson(s_cfgJsonFileMap.motion, v_bakPath, d);
 }
 
 // =====================================================
 // 4. JSON Patch (System/Wifi/Motion)
 // =====================================================
 bool CL_C10_ConfigManager::patchSystemFromJson(
-    ST_A10_SystemConfig& p_config,
+    ST_A20_SystemConfig& p_config,
     const JsonDocument&  p_patch) {
 
     bool v_changed = false;
@@ -487,7 +450,7 @@ bool CL_C10_ConfigManager::patchSystemFromJson(
 }
 
 bool CL_C10_ConfigManager::patchWifiFromJson(
-    ST_A10_WifiConfig& p_config,
+    ST_A20_WifiConfig& p_config,
     const JsonDocument& p_patch) {
 
     bool v_changed = false;
@@ -504,9 +467,9 @@ bool CL_C10_ConfigManager::patchWifiFromJson(
     if (j_wifi["wifiMode"].is<uint8_t>()) {
         uint8_t v_mode = j_wifi["wifiMode"];
         if (v_mode != p_config.wifiMode) {
-            if (v_mode >= EN_A10_WIFI_MODE_AP &&
-                v_mode <= EN_A10_WIFI_MODE_AP_STA) {
-                p_config.wifiMode = (EN_A10_WIFI_MODE_t)v_mode;
+            if (v_mode >= EN_A20_WIFI_MODE_AP &&
+                v_mode <= EN_A20_WIFI_MODE_AP_STA) {
+                p_config.wifiMode = (EN_A20_WIFI_MODE_t)v_mode;
                 v_changed         = true;
             } else {
                 CL_D10_Logger::log(EN_L10_LOG_WARN,
@@ -543,10 +506,10 @@ bool CL_C10_ConfigManager::patchWifiFromJson(
     if (!j_sta.isNull()) {
         p_config.sta_count = 0;
         for (JsonObjectConst v_js : j_sta) {
-            if (p_config.sta_count >= A10_Const::MAX_STA_NETWORKS)
+            if (p_config.sta_count >= A20_Const::MAX_STA_NETWORKS)
                 break;
 
-            ST_A10_STANetwork_t& v_net =
+            ST_A20_STANetwork_t& v_net =
                 p_config.sta[p_config.sta_count];
 
             strlcpy(v_net.ssid,
@@ -573,7 +536,7 @@ bool CL_C10_ConfigManager::patchWifiFromJson(
 }
 
 bool CL_C10_ConfigManager::patchMotionFromJson(
-    ST_A10_MotionConfig& p_config,
+    ST_A20_MotionConfig& p_config,
     const JsonDocument&  p_patch) {
 
     C10_MUTEX_ACQUIRE_BOOL();
@@ -652,10 +615,10 @@ bool CL_C10_ConfigManager::patchMotionFromJson(
         if (!j_devices.isNull()) {
             p_config.ble.trusted_count = 0;
             for (JsonObjectConst j_dev : j_devices) {
-                if (p_config.ble.trusted_count >= A10_Const::MAX_BLE_DEVICES)
+                if (p_config.ble.trusted_count >= A20_Const::MAX_BLE_DEVICES)
                     break;
 
-                ST_A10_BLETrustedDevice& v_d =
+                ST_A20_BLETrustedDevice& v_d =
                     p_config.ble.trusted_devices[p_config.ble.trusted_count];
 
                 strlcpy(v_d.alias,
@@ -695,19 +658,12 @@ bool CL_C10_ConfigManager::patchMotionFromJson(
 // 3-1. JSON Export (System/Wifi/Motion)
 // =====================================================
 void CL_C10_ConfigManager::toJson_System(
-    const ST_A10_SystemConfig& p,
+    const ST_A20_SystemConfig& p,
     JsonDocument&              d) {
 
     d["meta"]["version"]                  = p.meta.version;
     d["meta"]["device_name"]              = p.meta.device_name;
     d["meta"]["last_update"]              = p.meta.last_update;
-
-    // d["system"]["webPagesJson"]           = p.system.webPagesJson;
-    /*
-    d["system"]["web"]["html"]            = p.system.web.html;
-    d["system"]["web"]["css"]             = p.system.web.css;
-    d["system"]["web"]["js"]              = p.system.web.js;
-   v*/
 
     d["system"]["logging"]["level"]       = p.system.logging.level;
     d["system"]["logging"]["max_entries"] = p.system.logging.max_entries;
@@ -739,7 +695,7 @@ void CL_C10_ConfigManager::toJson_System(
 }
 
 void CL_C10_ConfigManager::toJson_Wifi(
-    const ST_A10_WifiConfig& p,
+    const ST_A20_WifiConfig& p,
     JsonDocument&            d) {
 
     d["wifi"]["wifiMode"]       = p.wifiMode;
@@ -754,7 +710,7 @@ void CL_C10_ConfigManager::toJson_Wifi(
 }
 
 void CL_C10_ConfigManager::toJson_Motion(
-    const ST_A10_MotionConfig& p,
+    const ST_A20_MotionConfig& p,
     JsonDocument&              d) {
 
     d["motion"]["enabled"]           = p.enabled;
@@ -769,7 +725,7 @@ void CL_C10_ConfigManager::toJson_Motion(
     d["motion"]["ble"]["rssi"]["exit_delay_sec"]  = p.ble.rssi.exit_delay_sec;
 
     for (uint8_t i = 0; i < p.ble.trusted_count; i++) {
-        const ST_A10_BLETrustedDevice& v_d =
+        const ST_A20_BLETrustedDevice& v_d =
             p.ble.trusted_devices[i];
         JsonObject v_td =
             d["motion"]["ble"]["trusted_devices"][i];
