@@ -37,11 +37,11 @@
  * ------------------------------------------------------
  */
 
-#include <LittleFS.h>
 #include <ArduinoJson.h>
+#include <LittleFS.h>
+#include <string.h>
 
 #include <algorithm>
-#include <string.h>
 
 #include "W10_Web_040.h"
 
@@ -55,7 +55,6 @@
 
 // 메뉴 상태
 CL_W10_WebAPI::ST_W10_MenuState_t CL_W10_WebAPI::s_menu_state;
-
 
 // ------------------------------------------------------
 // 헬퍼 함수 구현
@@ -77,114 +76,102 @@ char* CL_W10_WebAPI::W10_allocCString(const char* p_src) {
 }
 
 const char* CL_W10_WebAPI::W10_guessMime(const char* p_path) {
-    if (!p_path)
-        return "application/octet-stream";
+	if (!p_path)
+		return "application/octet-stream";
 
-    if (strstr(p_path, ".html"))
-        return "text/html; charset=utf-8";
-    if (strstr(p_path, ".css"))
-        return "text/css; charset=utf-8";
-    if (strstr(p_path, ".js"))
-        return "application/javascript; charset=utf-8";
+	if (strstr(p_path, ".html"))
+		return "text/html; charset=utf-8";
+	if (strstr(p_path, ".css"))
+		return "text/css; charset=utf-8";
+	if (strstr(p_path, ".js"))
+		return "application/javascript; charset=utf-8";
 
-    return "application/octet-stream";
+	return "application/octet-stream";
 }
 
 // JSON 로딩 (로컬 JsonDocument 사용)
-bool CL_W10_WebAPI::W10_loadPagesJson(JsonDocument& p_doc,
-									  uint16_t& p_page_count,
-									  uint16_t& p_asset_count) {
-	p_page_count  = 0;
-	p_asset_count = 0;
+bool CL_W10_WebAPI::W10_loadPagesJson(JsonDocument& p_doc, uint16_t& p_page_count, uint16_t& p_asset_count) {
+	p_page_count			  = 0;
+	p_asset_count			  = 0;
 
 	const auto& v_cfgJsonPath = CL_C10_ConfigManager::getCfgJsonFileMap();
 
-	File v_file = LittleFS.open(v_cfgJsonPath.webPages, "r");
+	File		v_file		  = LittleFS.open(v_cfgJsonPath.webPages, "r");
 
 	if (!v_file) {
-		CL_D10_Logger::log(EN_L10_LOG_ERROR,
-						   "[W10] Failed to open pages JSON: %s",
-						   v_cfgJsonPath.webPages);
-		                   // G_W10_PAGES_JSON);
+		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] Failed to open pages JSON: %s", v_cfgJsonPath.webPages);
+		// G_W10_PAGES_JSON);
 		return false;
 	}
 
 	DeserializationError v_err = deserializeJson(p_doc, v_file);
 	v_file.close();
 	if (v_err) {
-		CL_D10_Logger::log(EN_L10_LOG_ERROR,
-						   "[W10] Pages JSON deserialize failed: %s",
-						   v_err.c_str());
+		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] Pages JSON deserialize failed: %s", v_err.c_str());
 		return false;
 	}
 
 	if (!p_doc.is<JsonObject>()) {
-		CL_D10_Logger::log(EN_L10_LOG_ERROR,
-						   "[W10] Pages JSON is not a valid object.");
+		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] Pages JSON is not a valid object.");
 		return false;
 	}
 
-	JsonArray v_pages_array  = p_doc["pages"].as<JsonArray>();
+	JsonArray v_pages_array	 = p_doc["pages"].as<JsonArray>();
 	JsonArray v_assets_array = p_doc["assets"].as<JsonArray>();
 
 	if (v_pages_array.isNull()) {
-		CL_D10_Logger::log(EN_L10_LOG_ERROR,
-						   "[W10] Pages array missing or invalid in JSON.");
+		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] Pages array missing or invalid in JSON.");
 		return false;
 	}
 
 	p_page_count  = v_pages_array.size();
 	p_asset_count = v_assets_array.isNull() ? 0 : v_assets_array.size();
 
-	CL_D10_Logger::log(EN_L10_LOG_INFO,
-					   "[W10] JSON loaded (Pages: %u, Assets: %u)",
-					   p_page_count, p_asset_count);
+	CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] JSON loaded (Pages: %u, Assets: %u)", p_page_count, p_asset_count);
 	return true;
 }
 
 // 정적 파일 라우트 등록 (등록 시점에 URI/FILE/MIME 문자열을 복사해서 평생 유지)
 // - "/html_v2/..." 실제 경로는 serveStatic("/html_v2", ...)에 위임
 // - 여기서는 short URI("/P0xx_...") 등 별칭만 등록하는 것을 기본으로 함
-void CL_W10_WebAPI::W10_registerStaticRoute(const char* p_uri,
-											const char* p_file,
-											const char* p_mime) {
+void CL_W10_WebAPI::W10_registerStaticRoute(const char* p_uri, const char* p_file, const char* p_mime) {
 	if (!p_uri || !p_file || !p_mime)
 		return;
 
 	if (strlen(p_uri) == 0 || strlen(p_file) == 0)
 		return;
 
-	char* v_uri  = W10_allocCString(p_uri);
+	char* v_uri	 = W10_allocCString(p_uri);
 	char* v_file = W10_allocCString(p_file);
 	char* v_mime = W10_allocCString(p_mime);
 
 	if (!v_uri || !v_file || !v_mime) {
-		if (v_uri)  delete[] v_uri;
-        if (v_file) delete[] v_file;
-        if (v_mime) delete[] v_mime;
-		
-		CL_D10_Logger::log(EN_L10_LOG_ERROR,
-						   "[W10] Route alloc failed (uri:%s, file:%s)",
-						   p_uri, p_file);
+		if (v_uri)
+			delete[] v_uri;
+		if (v_file)
+			delete[] v_file;
+		if (v_mime)
+			delete[] v_mime;
+
+		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] Route alloc failed (uri:%s, file:%s)", p_uri, p_file);
 		// 메모리 일부만 할당된 경우 delete[] 호출이 필요할 수 있으나,
 		// 여기서는 실패 시 라우트 자체를 등록하지 않고 누수는 무시 (희소 이벤트)
 		return;
 	}
 
-	s_server->on(v_uri, HTTP_GET,
-				 [v_file, v_mime](AsyncWebServerRequest* r) {
-					 if (LittleFS.exists(v_file)) {
-						 auto* v_resp = r->beginResponse(LittleFS, v_file, v_mime);
-						 CL_W10_WebAPI::_applyHeaders(v_resp, false);
-						 r->send(v_resp);
-						 return;
-					 }
+	s_server->on(v_uri, HTTP_GET, [v_file, v_mime](AsyncWebServerRequest* r) {
+		if (LittleFS.exists(v_file)) {
+			auto* v_resp = r->beginResponse(LittleFS, v_file, v_mime);
+			CL_W10_WebAPI::_applyHeaders(v_resp, false);
+			r->send(v_resp);
+			return;
+		}
 
-					 String v_msg = "/* missing:" + String(v_file) + " */";
-					 auto* v_resp = r->beginResponse(200, v_mime, v_msg);
-					 CL_W10_WebAPI::_applyHeaders(v_resp, true);
-					 r->send(v_resp);
-				 });
+		String v_msg  = "/* missing:" + String(v_file) + " */";
+		auto*  v_resp = r->beginResponse(200, v_mime, v_msg);
+		CL_W10_WebAPI::_applyHeaders(v_resp, true);
+		r->send(v_resp);
+	});
 }
 
 // ------------------------------------------------------
@@ -194,16 +181,16 @@ void CL_W10_WebAPI::W10_registerStaticRoute(const char* p_uri,
 // ------------------------------------------------------
 void CL_W10_WebAPI::W10_getMenuJson(AsyncWebServerRequest* r) {
 	JsonDocument v_doc_out;
-	JsonArray    v_array_out = v_doc_out.to<JsonArray>();
+	JsonArray	 v_array_out = v_doc_out.to<JsonArray>();
 
 	for (const auto& v_entry : s_menu_state.pages_sorted) {
 		JsonObject v_item = v_array_out.add<JsonObject>();
-		v_item["label"]  = v_entry.label;
-		v_item["path"]   = v_entry.path;   // "/html_v2/..." 그대로
-		v_item["uri"]    = v_entry.uri;    // "/P040_dashboard_003.html" 같은 short html path
-		v_item["order"]  = v_entry.order;
-		v_item["isMain"] = v_entry.isMain;
-		v_item["enable"] = v_entry.enable; // enable 필드
+		v_item["label"]	  = v_entry.label;
+		v_item["path"]	  = v_entry.path;  // "/html_v2/..." 그대로
+		v_item["uri"]	  = v_entry.uri;   // "/P040_dashboard_003.html" 같은 short html path
+		v_item["order"]	  = v_entry.order;
+		v_item["isMain"]  = v_entry.isMain;
+		v_item["enable"]  = v_entry.enable;	 // enable 필드
 	}
 
 	sendJson(r, v_doc_out);
@@ -225,16 +212,15 @@ void CL_W10_WebAPI::routeStaticAssets() {
 	s_menu_state.main_path = "";
 
 	JsonDocument v_doc;
-	uint16_t     v_page_count  = 0;
-	uint16_t     v_asset_count = 0;
+	uint16_t	 v_page_count  = 0;
+	uint16_t	 v_asset_count = 0;
 
 	if (!W10_loadPagesJson(v_doc, v_page_count, v_asset_count)) {
-		CL_D10_Logger::log(EN_L10_LOG_ERROR,
-						   "[W10] Failed to load pages JSON. Cannot register static routes.");
+		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] Failed to load pages JSON. Cannot register static routes.");
 		return;
 	}
 
-	JsonArray v_pages_array    = v_doc["pages"].as<JsonArray>();
+	JsonArray v_pages_array	   = v_doc["pages"].as<JsonArray>();
 	JsonArray v_assets_array   = v_doc["assets"].as<JsonArray>();
 	JsonArray v_redirect_array = v_doc["reDirect"].as<JsonArray>();
 
@@ -244,13 +230,13 @@ void CL_W10_WebAPI::routeStaticAssets() {
 			ST_W10_PageEntry_t v_entry{};
 
 			v_entry.order  = v_page["order"].as<int>();
-			v_entry.uri    = v_page["uri"].as<String>();
+			v_entry.uri	   = v_page["uri"].as<String>();
 			v_entry.path   = v_page["path"].as<String>();
 			v_entry.label  = v_page["label"].as<String>();
 			v_entry.isMain = v_page["isMain"] | false;
 
 			// enable 필드 (기본값 true)
-			bool v_enable = true;
+			bool v_enable  = true;
 			if (!v_page["enable"].isNull()) {
 				v_enable = v_page["enable"].as<bool>();
 			}
@@ -267,9 +253,9 @@ void CL_W10_WebAPI::routeStaticAssets() {
 			}
 
 			// 라우팅 등록
-			const char* v_uri_key  = v_entry.uri.c_str();   // "/P010_main_021.html"
-			const char* v_path_key = v_entry.path.c_str();  // "/html_v2/P010_main_021.html"
-			bool        v_is_main  = v_entry.isMain;
+			const char* v_uri_key  = v_entry.uri.c_str();	// "/P010_main_021.html"
+			const char* v_path_key = v_entry.path.c_str();	// "/html_v2/P010_main_021.html"
+			bool		v_is_main  = v_entry.isMain;
 
 			if (!v_uri_key || !v_path_key || strlen(v_path_key) == 0)
 				continue;
@@ -285,11 +271,10 @@ void CL_W10_WebAPI::routeStaticAssets() {
 			JsonArray v_page_assets = v_page["pageAssets"].as<JsonArray>();
 			if (!v_page_assets.isNull()) {
 				for (JsonObject v_asset : v_page_assets) {
-					const char* v_a_uri  = v_asset["uri"].as<const char*>();
+					const char* v_a_uri	 = v_asset["uri"].as<const char*>();
 					const char* v_a_path = v_asset["path"].as<const char*>();
 
-					if (!v_a_uri || !v_a_path ||
-						strlen(v_a_uri) == 0 || strlen(v_a_path) == 0)
+					if (!v_a_uri || !v_a_path || strlen(v_a_uri) == 0 || strlen(v_a_path) == 0)
 						continue;
 
 					const char* v_mime = W10_guessMime(v_a_path);
@@ -304,11 +289,7 @@ void CL_W10_WebAPI::routeStaticAssets() {
 		}
 
 		// 메뉴 표시용 pages_sorted를 order 기준으로 정렬
-		std::sort(s_menu_state.pages_sorted.begin(),
-				  s_menu_state.pages_sorted.end(),
-				  [](const ST_W10_PageEntry_t& a, const ST_W10_PageEntry_t& b) {
-					  return a.order < b.order;
-				  });
+		std::sort(s_menu_state.pages_sorted.begin(), s_menu_state.pages_sorted.end(), [](const ST_W10_PageEntry_t& a, const ST_W10_PageEntry_t& b) { return a.order < b.order; });
 	}
 
 	// 2) assets 기반 공통 자산 라우트 (공통 CSS/JS 등)
@@ -317,8 +298,7 @@ void CL_W10_WebAPI::routeStaticAssets() {
 			const char* v_uri_key  = v_asset["uri"].as<const char*>();
 			const char* v_path_key = v_asset["path"].as<const char*>();
 
-			if (!v_uri_key || !v_path_key ||
-				strlen(v_uri_key) == 0 || strlen(v_path_key) == 0)
+			if (!v_uri_key || !v_path_key || strlen(v_uri_key) == 0 || strlen(v_path_key) == 0)
 				continue;
 
 			const char* v_mime = W10_guessMime(v_path_key);
@@ -337,8 +317,7 @@ void CL_W10_WebAPI::routeStaticAssets() {
 			const char* v_from = v_redir["uriFrom"].as<const char*>();
 			const char* v_to   = v_redir["uriTo"].as<const char*>();
 
-			if (!v_from || !v_to ||
-				strlen(v_from) == 0 || strlen(v_to) == 0)
+			if (!v_from || !v_to || strlen(v_from) == 0 || strlen(v_to) == 0)
 				continue;
 
 			if (strcmp(v_from, "/") == 0) {
@@ -347,20 +326,15 @@ void CL_W10_WebAPI::routeStaticAssets() {
 
 			// 복사본 생성 (서버 생애 동안 유지)
 			char* v_from_copy = W10_allocCString(v_from);
-			char* v_to_copy   = W10_allocCString(v_to);
+			char* v_to_copy	  = W10_allocCString(v_to);
 
 			if (!v_from_copy || !v_to_copy) {
-				CL_D10_Logger::log(EN_L10_LOG_ERROR,
-								   "[W10] Redirect alloc failed (from:%s, to:%s)",
-								   v_from, v_to);
+				CL_D10_Logger::log(EN_L10_LOG_ERROR, "[W10] Redirect alloc failed (from:%s, to:%s)", v_from, v_to);
 				continue;
 			}
 
 			// 예: "/chart_t1" → "/P020_chart_t1_008.html"
-			s_server->on(v_from_copy, HTTP_GET,
-						 [v_to_copy](AsyncWebServerRequest* r) {
-							 r->redirect(v_to_copy);
-						 });
+			s_server->on(v_from_copy, HTTP_GET, [v_to_copy](AsyncWebServerRequest* r) { r->redirect(v_to_copy); });
 		}
 	}
 
@@ -369,21 +343,20 @@ void CL_W10_WebAPI::routeStaticAssets() {
 		// main_path를 캡처해서 사용 (String 복사본)
 		String v_root_path = s_menu_state.main_path;
 
-		s_server->on("/", HTTP_GET,
-					 [v_root_path](AsyncWebServerRequest* r) {
-						 // 기본값
-						 const char* v_default_html = "/html_v2/P010_main_021.html";
+		s_server->on("/", HTTP_GET, [v_root_path](AsyncWebServerRequest* r) {
+			// 기본값
+			const char* v_default_html = "/html_v2/P010_main_021.html";
 
-						 if (!v_root_path.isEmpty()) {
-							 v_default_html = v_root_path.c_str();
-						 }
+			if (!v_root_path.isEmpty()) {
+				v_default_html = v_root_path.c_str();
+			}
 
-						 // 파일 존재 여부 확인 후 리다이렉트
-						 if (LittleFS.exists(v_default_html))
-							 r->redirect(v_default_html);
-						 else
-							 r->redirect("/"); // 최악의 경우 루프지만, JSON/FS 구성이 잘못된 상황
-					 });
+			// 파일 존재 여부 확인 후 리다이렉트
+			if (LittleFS.exists(v_default_html))
+				r->redirect(v_default_html);
+			else
+				r->redirect("/");  // 최악의 경우 루프지만, JSON/FS 구성이 잘못된 상황
+		});
 	}
 
 	// 4) 정적 폴더 매핑
@@ -392,14 +365,11 @@ void CL_W10_WebAPI::routeStaticAssets() {
 	// s_server->serveStatic("/html_v2", LittleFS, "/html_v2");
 
 	// 5) 메뉴 API
-	
+
 	s_server->on(W10_Const::HTTP_API_MENU, HTTP_GET, W10_getMenuJson);
-    // s_server->on("/api/v1/menu", HTTP_GET, W10_getMenuJson);
+	// s_server->on("/api/v1/menu", HTTP_GET, W10_getMenuJson);
 
 	// s_server->on("/api/v1/menu", HTTP_GET, W10_getMenuJson);
 
-	CL_D10_Logger::log(EN_L10_LOG_INFO,
-					   "[W10] Web routing initialized (Pages: %u, Assets: %u)",
-					   v_page_count, v_asset_count);
+	CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] Web routing initialized (Pages: %u, Assets: %u)", v_page_count, v_asset_count);
 }
-

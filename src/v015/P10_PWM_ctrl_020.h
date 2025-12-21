@@ -63,7 +63,7 @@ typedef struct {
 // CL_P10_PWM
 // ------------------------------------------------------
 class CL_P10_PWM {
-   public:
+  public:
 	CL_P10_PWM() {
 		memset(&_state, 0, sizeof(_state));
 		_state.pin			  = -1;
@@ -91,19 +91,14 @@ class CL_P10_PWM {
 		_state.initialized	  = false;
 
 		if (_state.pin < 0) {
-			CL_D10_Logger::log(EN_L10_LOG_ERROR,
-							   "[P10] invalid fan pin=%d", (int)_state.pin);
+			CL_D10_Logger::log(EN_L10_LOG_ERROR, "[P10] invalid fan pin=%d", (int)_state.pin);
 			return;
 		}
 
 		// LEDC 설정
 		bool v_ok1 = ledcSetup(_state.channel, _state.freq, _state.resolutionBits);
 		if (!v_ok1) {
-			CL_D10_Logger::log(EN_L10_LOG_ERROR,
-							   "[P10] ledcSetup failed ch=%u freq=%lu res=%u",
-							   (unsigned)_state.channel,
-							   (unsigned long)_state.freq,
-							   (unsigned)_state.resolutionBits);
+			CL_D10_Logger::log(EN_L10_LOG_ERROR, "[P10] ledcSetup failed ch=%u freq=%lu res=%u", (unsigned)_state.channel, (unsigned long)_state.freq, (unsigned)_state.resolutionBits);
 			return;
 		}
 		ledcAttachPin(_state.pin, _state.channel);
@@ -117,12 +112,7 @@ class CL_P10_PWM {
 		_setRawDuty(0);
 		_state.initialized = true;
 
-		CL_D10_Logger::log(EN_L10_LOG_INFO,
-						   "[P10] begin pin=%d ch=%u freq=%lu res=%u",
-						   (int)_state.pin,
-						   (unsigned)_state.channel,
-						   (unsigned long)_state.freq,
-						   (unsigned)_state.resolutionBits);
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "[P10] begin pin=%d ch=%u freq=%lu res=%u", (int)_state.pin, (unsigned)_state.channel, (unsigned long)_state.freq, (unsigned)_state.resolutionBits);
 	}
 
 	// ==================================================
@@ -147,13 +137,7 @@ class CL_P10_PWM {
 		return _state.initialized;
 	}
 
-
-	float applyFanConfigCurve(
-		const ST_A20_FanConfig_t* p_cfg,
-		float                      p_req01,
-		float                      p_minFan01,
-		float                      p_maxFan01)
-	{
+	float applyFanConfigCurve(const ST_A20_FanConfig_t* p_cfg, float p_req01, float p_minFan01, float p_maxFan01) {
 		// 0~1 범위 방어
 		float v_req = A20_clampf(p_req01, 0.0f, 1.0f);
 
@@ -172,27 +156,36 @@ class CL_P10_PWM {
 		// fanConfig 없으면 그냥 min/max만 적용해서 반환
 		if (!p_cfg) {
 			float v_out = v_req;
-			if (v_out < v_min) v_out = v_min;
-			if (v_out > v_max) v_out = v_max;
+			if (v_out < v_min)
+				v_out = v_min;
+			if (v_out > v_max)
+				v_out = v_max;
 			return v_out;
 		}
 
 		// fanConfig 값을 0~1로 정규화
-		float s  = A20_clampf(p_cfg->startPercentMin   / 100.0f, 0.0f, 1.0f);
+		float s	 = A20_clampf(p_cfg->startPercentMin / 100.0f, 0.0f, 1.0f);
 		float c1 = A20_clampf(p_cfg->comfortPercentMin / 100.0f, 0.0f, 1.0f);
 		float c2 = A20_clampf(p_cfg->comfortPercentMax / 100.0f, 0.0f, 1.0f);
-		float h  = A20_clampf(p_cfg->hardPercentMax    / 100.0f, 0.0f, 1.0f);
+		float h	 = A20_clampf(p_cfg->hardPercentMax / 100.0f, 0.0f, 1.0f);
 
 		// 순서 보정: s ≤ c1 ≤ c2 ≤ h 보장
-		if (c1 < s)  c1 = s;
-		if (c2 < c1) c2 = c1;
-		if (h  < c2) h  = c2;
+		if (c1 < s)
+			c1 = s;
+		if (c2 < c1)
+			c2 = c1;
+		if (h < c2)
+			h = c2;
 
 		// ResolvedWind 의 min_fan / fan_limit 과 merge
-		if (s  < v_min) s  = v_min;
-		if (h  > v_max) h  = v_max;
-		if (c1 < s)    c1 = s;
-		if (c2 > h)    c2 = h;
+		if (s < v_min)
+			s = v_min;
+		if (h > v_max)
+			h = v_max;
+		if (c1 < s)
+			c1 = s;
+		if (c2 > h)
+			c2 = h;
 
 		// ---------------------------
 		// 3구간 커브:
@@ -205,58 +198,60 @@ class CL_P10_PWM {
 		if (v_req <= 0.0001f) {
 			v_out = 0.0f;
 		} else if (v_req < 0.33f) {
-			float v_t = v_req / 0.33f;          // 0~1
-			v_out     = s * v_t;                // 0 -> s
+			float v_t = v_req / 0.33f;			  // 0~1
+			v_out	  = s * v_t;				  // 0 -> s
 		} else if (v_req < 0.66f) {
-			float v_t = (v_req - 0.33f) / 0.33f; // 0~1
-			v_out     = s + (c2 - s) * v_t;      // s -> c2
+			float v_t = (v_req - 0.33f) / 0.33f;  // 0~1
+			v_out	  = s + (c2 - s) * v_t;		  // s -> c2
 		} else {
-			float v_t = (v_req - 0.66f) / 0.34f; // 0~1
-			v_out     = c2 + (h - c2) * v_t;     // c2 -> h
+			float v_t = (v_req - 0.66f) / 0.34f;  // 0~1
+			v_out	  = c2 + (h - c2) * v_t;	  // c2 -> h
 		}
 
 		// 최종 min/max 한 번 더 방어
-		if (v_out < v_min) v_out = v_min;
-		if (v_out > v_max) v_out = v_max;
+		if (v_out < v_min)
+			v_out = v_min;
+		if (v_out > v_max)
+			v_out = v_max;
 
 		return v_out;
 	}
 
-    // // 논리 duty% → 팬 H/W특성 반영된 실제 PWM % 변환
-    // float applyFanConfigCurve(const ST_A20_SystemConfig& p_sys,
-    //                                  float p_reqPercent) {
-    //     float v_req = A20_clampf(p_reqPercent, 0.0f, 100.0f);
-    //     const auto& v_fc = p_sys.hw.fanConfig;
+	// // 논리 duty% → 팬 H/W특성 반영된 실제 PWM % 변환
+	// float applyFanConfigCurve(const ST_A20_SystemConfig& p_sys,
+	//                                  float p_reqPercent) {
+	//     float v_req = A20_clampf(p_reqPercent, 0.0f, 100.0f);
+	//     const auto& v_fc = p_sys.hw.fanConfig;
 
-    //     // 완전 OFF
-    //     if (v_req <= 0.1f) {
-    //         return 0.0f;
-    //     }
+	//     // 완전 OFF
+	//     if (v_req <= 0.1f) {
+	//         return 0.0f;
+	//     }
 
-    //     // 시동 최소 구간 미만이면 0으로 보냄 (모터 떨림 방지)
-    //     if (v_req < (float)v_fc.startPercentMin) {
-    //         return 0.0f;
-    //     }
+	//     // 시동 최소 구간 미만이면 0으로 보냄 (모터 떨림 방지)
+	//     if (v_req < (float)v_fc.startPercentMin) {
+	//         return 0.0f;
+	//     }
 
-    //     // 절대 상한
-    //     if (v_req > (float)v_fc.hardPercentMax) {
-    //         v_req = (float)v_fc.hardPercentMax;
-    //     }
+	//     // 절대 상한
+	//     if (v_req > (float)v_fc.hardPercentMax) {
+	//         v_req = (float)v_fc.hardPercentMax;
+	//     }
 
-    //     // comfort 구간으로 리맵핑 (선택사항)
-    //     float v_span = (float)v_fc.comfortPercentMax - (float)v_fc.comfortPercentMin;
-    //     if (v_span < 1.0f) {
-    //         // 설정 이상 시: 그냥 클램프된 v_req 그대로 사용
-    //         return v_req;
-    //     }
+	//     // comfort 구간으로 리맵핑 (선택사항)
+	//     float v_span = (float)v_fc.comfortPercentMax - (float)v_fc.comfortPercentMin;
+	//     if (v_span < 1.0f) {
+	//         // 설정 이상 시: 그냥 클램프된 v_req 그대로 사용
+	//         return v_req;
+	//     }
 
-    //     float v_norm = v_req / 100.0f; // 0~1
-    //     float v_out  = (float)v_fc.comfortPercentMin + v_norm * v_span;
+	//     float v_norm = v_req / 100.0f; // 0~1
+	//     float v_out  = (float)v_fc.comfortPercentMin + v_norm * v_span;
 
-    //     // hardMax 한 번 더 방어
-    //     v_out = A20_clampf(v_out, 0.0f, (float)v_fc.hardPercentMax);
-    //     return v_out;
-    // }
+	//     // hardMax 한 번 더 방어
+	//     v_out = A20_clampf(v_out, 0.0f, (float)v_fc.hardPercentMax);
+	//     return v_out;
+	// }
 
 	// ==================================================
 	// 듀티 설정 (0.0 ~ 100.0)
@@ -279,7 +274,7 @@ class CL_P10_PWM {
 		_state.dutyPercent = p_percent;
 
 		// 실제 레졸루션 스케일링
-		float v_ratio = p_percent / 100.0f;
+		float v_ratio	   = p_percent / 100.0f;
 		if (v_ratio < 0.0f)
 			v_ratio = 0.0f;
 		if (v_ratio > 1.0f)
@@ -328,7 +323,7 @@ class CL_P10_PWM {
 		return getRawDuty();
 	}
 
-   private:
+  private:
 	ST_P10_PWMState_t _state;
 
 	void _setRawDuty(uint32_t p_raw) {

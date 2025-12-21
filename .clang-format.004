@@ -1,0 +1,67 @@
+{
+    BasedOnStyle: Google,                       # 기본 스타일 가이드 (Google 기반)
+    UseTab: Never,                              # 탭 사용 안 함 (공백으로 대체)
+    IndentWidth: 4,                             # 들여쓰기 너비 (4칸)
+    TabWidth: 4,                                # 탭 너비 (4칸)
+
+
+    # [핵심 수정] 접근 제한자(public:, private:) 들여쓰기 설정
+    # -4 (기본값): 클래스 시작점(0열)에 붙음
+    # 0: 클래스 키워드와 동일한 위치에 배치 (질문하신 형태)
+    AccessModifierOffset: 0,
+    # [중요] public: 아래의 멤버 변수/함수들을 추가로 들여씀
+    # 이 옵션이 true여야 멤버들이 public: 보다 더 안쪽으로 들어갑니다.
+    IndentAccessModifiers: true,
+
+
+    IndentPPDirectives: AfterHash,                # 전처리기(#if 등)를 코드 들여쓰기에 맞춰 정렬 (# 기호 포함)
+
+    ColumnLimit: 10000,                             # 줄 길이 제한 (매우 큰 값을 주어 자동 줄바꿈 억제)
+
+    MaxEmptyLinesToKeep: 2,                         # 허용되는 최대 연속 빈 줄 수
+    KeepEmptyLinesAtTheStartOfBlocks: false,        # 코드 블록 시작 시 빈 줄 유지 여부 (해제)
+
+    AlignConsecutiveAssignments: AcrossEmptyLinesAndComments, # 대입문(=) 세로 정렬 (빈 줄/주석 무시하고 정렬)
+
+    PenaltyBreakAssignment: 10000,                  # 대입문 줄바꿈 방지 페널티 (높을수록 한 줄 유지)
+    PenaltyBreakBeforeFirstCallParameter: 10000,    # 함수 호출 시 첫 파라미터 전 줄바꿈 방지 페널티
+
+    AllowShortFunctionsOnASingleLine: None,         # 짧은 함수를 한 줄로 표시 허용
+    AllowShortBlocksOnASingleLine: Never,           # 짧은 코드 블록을 한 줄로 표시 허용
+    AllowShortIfStatementsOnASingleLine: false,     # 짧은 if 문을 한 줄로 표시 허용
+    AllowShortLoopsOnASingleLine: false,            # 짧은 반복문을 한 줄로 표시 허용
+
+    # [핵심] 브레이스 리스트(배열 등) 정렬 스타일
+    # false로 설정하면 괄호 안의 항목들을 더 공격적으로 줄바꿈하고 정렬합니다.
+    Cpp11BracedListStyle: false,
+
+    # [수정] 배열 항목이 많을 때 한 줄에 다 넣지 않도록 설정
+    BinPackArguments: false,
+    BinPackParameters: false,
+
+
+    ; BinPackArguments: true,                     # 함수 호출 인자들을 한 줄에 최대한 채움
+    ; BinPackParameters: true,                    # 함수 정의 파라미터들을 한 줄에 최대한 채움
+
+    # [핵심] 여는 중괄호 '{' 뒤에서 바로 줄바꿈이 일어나도록 유도
+    AllowAllConstructorInitializersOnNextLine: true,
+    AllowAllParametersOfDeclarationOnNextLine: true,
+
+    # [추가] 콤마 전치 스타일(Comma-first)을 유지하기 위한 설정
+    # Clang-Format은 콤마를 앞에 두는 것을 강제하지는 않지만,
+    # 아래 설정이 있으면 사용자가 콤마를 앞에 뒀을 때 이를 무너뜨리지 않습니다.
+    AlignAfterOpenBracket: AlwaysBreak,
+    # AlignAfterOpenBracket: DontAlign,           # 여는 괄호 '(' 다음의 자동 정렬 비활성화 (한 줄 유지)
+
+    AlignConsecutiveDeclarations: AcrossEmptyLinesAndComments, # 연속된 선언문 세로 정렬
+    AlignConsecutiveMacros: AcrossEmptyLinesAndComments,       # 연속된 매크로(#define) 세로 정렬
+
+    AllowShortEnumsOnASingleLine: false,        # 열거형(Enum)을 한 줄로 표시하지 않음
+
+    # [추가] 라인 주석을 세로로 정렬
+    # Kind: Always (또는 true) - 가능한 한 주석을 같은 열에 맞춤
+    AlignTrailingComments: {
+        Kind: Always,
+        OverEmptyLines: 1  # 중간에 빈 줄이 한 줄 있어도 정렬을 유지함
+    },
+}

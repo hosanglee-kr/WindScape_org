@@ -44,9 +44,9 @@
 #include <ArduinoJson.h>
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
+#include <Stream.h>	 // Stream 헤더 파일 포함 필요
 #include <stdarg.h>
 #include <stdio.h>
-#include <Stream.h> // Stream 헤더 파일 포함 필요
 
 // ------------------------------------------------------
 // 로그 레벨
@@ -82,15 +82,15 @@ typedef struct {
 // Logger 클래스
 // ------------------------------------------------------
 class CL_D10_Logger {
-   public:
+  public:
 	static const uint16_t BUFFER_SIZE = 256;
 
 	// --------------------------------------------------
 	// 초기화
 	// --------------------------------------------------
-	
+
 	static void begin(Stream& p_serial = Serial, uint32_t p_baud = 115200) {
-	//static void begin(HardwareSerial& p_serial = Serial, uint32_t p_baud = 115200) {
+		// static void begin(HardwareSerial& p_serial = Serial, uint32_t p_baud = 115200) {
 		_serial = &p_serial;
 		// _serial->begin(p_baud);
 		delay(100);
@@ -156,13 +156,11 @@ class CL_D10_Logger {
 			_serial->printf("[%lu.%03u] ", v_sec, v_milli);
 		}
 
-		_serial->printf("%s[%s]%s %s\r\n",
-						v_color, v_tag, G_D10_COLOR_RESET, v_buf);
+		_serial->printf("%s[%s]%s %s\r\n", v_color, v_tag, G_D10_COLOR_RESET, v_buf);
 
 		if (_showMemUsage) {
 			uint32_t v_free = ESP.getFreeHeap();
-			_serial->printf("   %s(Mem:%luB)%s\r\n",
-							G_D10_COLOR_CYAN, (unsigned long)v_free, G_D10_COLOR_RESET);
+			_serial->printf("   %s(Mem:%luB)%s\r\n", G_D10_COLOR_CYAN, (unsigned long)v_free, G_D10_COLOR_RESET);
 		}
 
 		// WebSocket 송출
@@ -225,7 +223,7 @@ class CL_D10_Logger {
 		_serial->println(F("------------------------------------------------------"));
 	}
 
-   private:
+  private:
 	// --------------------------------------------------
 	// 내부 유틸 (색상 및 태그)
 	// --------------------------------------------------
@@ -259,33 +257,33 @@ class CL_D10_Logger {
 		}
 	}
 
-   private:
+  private:
 	// --------------------------------------------------
 	// 정적 멤버 변수
 	// --------------------------------------------------
-	static Stream* 				_serial; // Stream*로 변경
-	//static HardwareSerial*	 _serial;
+	static Stream*			 _serial;  // Stream*로 변경
+	// static HardwareSerial*	 _serial;
 
 	static EN_L10_LogLevel_t _logLevel;
 	static bool				 _showTimestamp;
 	static bool				 _showMemUsage;
 
-	static AsyncWebSocket* s_wsLogs;
-	static ST_D10_LogEntry s_buffer[BUFFER_SIZE];
-	static uint16_t		   s_head;
-	static uint16_t		   s_count;
+	static AsyncWebSocket*	 s_wsLogs;
+	static ST_D10_LogEntry	 s_buffer[BUFFER_SIZE];
+	static uint16_t			 s_head;
+	static uint16_t			 s_count;
 };
 
 // ------------------------------------------------------
 // 정적 멤버 정의
 // ------------------------------------------------------
-inline Stream* CL_D10_Logger::_serial = nullptr;
-//inline HardwareSerial*	 CL_D10_Logger::_serial		   = nullptr;
+inline Stream*			 CL_D10_Logger::_serial		   = nullptr;
+// inline HardwareSerial*	 CL_D10_Logger::_serial		   = nullptr;
 inline EN_L10_LogLevel_t CL_D10_Logger::_logLevel	   = EN_L10_LOG_INFO;
 inline bool				 CL_D10_Logger::_showTimestamp = true;
 inline bool				 CL_D10_Logger::_showMemUsage  = false;
 
-inline AsyncWebSocket* CL_D10_Logger::s_wsLogs = nullptr;
-inline ST_D10_LogEntry CL_D10_Logger::s_buffer[BUFFER_SIZE];
-inline uint16_t		   CL_D10_Logger::s_head  = 0;
-inline uint16_t		   CL_D10_Logger::s_count = 0;
+inline AsyncWebSocket*	 CL_D10_Logger::s_wsLogs	   = nullptr;
+inline ST_D10_LogEntry	 CL_D10_Logger::s_buffer[BUFFER_SIZE];
+inline uint16_t			 CL_D10_Logger::s_head	= 0;
+inline uint16_t			 CL_D10_Logger::s_count = 0;

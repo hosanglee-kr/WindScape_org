@@ -1,0 +1,35 @@
+{
+    BasedOnStyle: Google,
+    UseTab: Never,
+    IndentWidth: 4,
+    TabWidth: 4,
+    ColumnLimit: 0,
+
+    # [핵심] 대입문 정렬 유지
+    AlignConsecutiveAssignments: AcrossEmptyLinesAndComments,
+
+    # [수정] 줄바꿈을 억제하는 페널티를 최댓값으로 설정 (0~4,294,967,295)
+    # 0에 가까우면 줄바꿈을 자주 하고, 값이 크면 줄바꿈을 절대 안 함
+    PenaltyBreakAssignment: 1000000,
+    PenaltyBreakBeforeFirstCallParameter: 1000000,
+    PenaltyReturnTypeOnItsOwnLine: 1000000,
+    PenaltyExcessCharacter: 1000000,
+
+    # [중요] 괄호 뒤 정렬 비활성화 (한 줄 유지 확률 증가)
+    AlignAfterOpenBracket: DontAlign,
+
+    # 각종 한 줄 허용 설정
+    AllowShortFunctionsOnASingleLine: All,
+    AllowShortBlocksOnASingleLine: Always,
+    AllowShortIfStatementsOnASingleLine: true,
+    AllowShortLoopsOnASingleLine: true,
+    AllowShortLambdasOnASingleLine: All,
+
+    BinPackArguments: true,
+    BinPackParameters: true,
+
+    AlignConsecutiveDeclarations: AcrossEmptyLinesAndComments,
+    AlignConsecutiveMacros: AcrossEmptyLinesAndComments,
+    IndentPPDirectives: BeforeHash,
+    AllowShortEnumsOnASingleLine: false,
+}

@@ -54,85 +54,83 @@
 // N10 런타임 상태 구조체
 // ------------------------------------------------------
 typedef struct {
-    uint8_t  runMode;              // 0=OFF,1=SCHEDULE,2=USER_PROFILE
-    uint8_t  runSource;            // 0=UNKNOWN,1=BUTTON,2=WEB,3=API
-    int16_t  lastScheduleNo;       // 마지막 선택 스케줄 번호
-    int16_t  lastUserProfileNo;    // 마지막 선택 유저 프로파일 번호
-    bool     autoOffEnabled;
-    uint32_t autoOffMinutes;
-    bool     overrideEnabled;
-    uint8_t  overrideMode;  // 0=NONE,1=FIXED,2=PRESET
-    float    overrideFixedPercent;
-    char     overridePresetCode[24];
-    char     overrideStyleCode[24];
+	uint8_t	 runMode;			 // 0=OFF,1=SCHEDULE,2=USER_PROFILE
+	uint8_t	 runSource;			 // 0=UNKNOWN,1=BUTTON,2=WEB,3=API
+	int16_t	 lastScheduleNo;	 // 마지막 선택 스케줄 번호
+	int16_t	 lastUserProfileNo;	 // 마지막 선택 유저 프로파일 번호
+	bool	 autoOffEnabled;
+	uint32_t autoOffMinutes;
+	bool	 overrideEnabled;
+	uint8_t	 overrideMode;	// 0=NONE,1=FIXED,2=PRESET
+	float	 overrideFixedPercent;
+	char	 overridePresetCode[24];
+	char	 overrideStyleCode[24];
 } ST_N10_RuntimeState_t;
 
 // ------------------------------------------------------
 // Dirty Flag 구조체
 // ------------------------------------------------------
 typedef struct {
-    bool runtime;
+	bool runtime;
 } ST_N10_DirtyFlags_t;
 
 // ------------------------------------------------------
 // N10 NVS Manager 클래스 선언
 // ------------------------------------------------------
 class CL_N10_NvsManager {
-    public:
-    static constexpr const char* G_N10_NS_RUNTIME       = "SNW_RUN";
-    static constexpr uint32_t    G_N10_SAVE_INTERVAL_MS = 10UL * 1000UL;  // 최소 저장 주기 10초
+  public:
+	static constexpr const char* G_N10_NS_RUNTIME		= "SNW_RUN";
+	static constexpr uint32_t	 G_N10_SAVE_INTERVAL_MS = 10UL * 1000UL;  // 최소 저장 주기 10초
 
-    public:
-    // ==================================================
-    // 초기화 / 종료
-    // ==================================================
-    static bool begin();
-    static void end();
-    static void clearAll();
+  public:
+	// ==================================================
+	// 초기화 / 종료
+	// ==================================================
+	static bool begin();
+	static void end();
+	static void clearAll();
 
-    // ==================================================
-    // Dirty 플래그 관리
-    // ==================================================
-    static void markDirty(const char* p_key, bool p_flag);
-    static void flushIfNeeded();
+	// ==================================================
+	// Dirty 플래그 관리
+	// ==================================================
+	static void markDirty(const char* p_key, bool p_flag);
+	static void flushIfNeeded();
 
-    // ==================================================
-    // Getter / JSON Export
-    // ==================================================
-    static ST_N10_RuntimeState_t getState();
-    static void toJson(JsonDocument& p_doc);
+	// ==================================================
+	// Getter / JSON Export
+	// ==================================================
+	static ST_N10_RuntimeState_t getState();
+	static void toJson(JsonDocument& p_doc);
 
-    // ==================================================
-    // 주기 Flush (loop용)
-    // ==================================================
-    static void tick();
+	// ==================================================
+	// 주기 Flush (loop용)
+	// ==================================================
+	static void tick();
 
-    // ==================================================
-    // Setter API (CT10 등에서 호출)
-    // ==================================================
-    static void setRunMode(uint8_t p_mode, uint8_t p_source);
-    static void setLastSchedule(int16_t p_schNo);
-    static void setLastUserProfile(int16_t p_profileNo);
-    static void setAutoOff(bool p_enabled, uint32_t p_minutes);
-    static void setOverrideFixed(bool p_enabled, float p_percent);
-    static void setOverridePreset(bool p_enabled,
-                                      const char* p_presetCode,
-                                      const char* p_styleCode);
-    static void clearOverride();
-    static void resetRuntime();
+	// ==================================================
+	// Setter API (CT10 등에서 호출)
+	// ==================================================
+	static void setRunMode(uint8_t p_mode, uint8_t p_source);
+	static void setLastSchedule(int16_t p_schNo);
+	static void setLastUserProfile(int16_t p_profileNo);
+	static void setAutoOff(bool p_enabled, uint32_t p_minutes);
+	static void setOverrideFixed(bool p_enabled, float p_percent);
+	static void setOverridePreset(bool p_enabled, const char* p_presetCode, const char* p_styleCode);
+	static void clearOverride();
+	static void resetRuntime();
 
-    private:
-    static Preferences       s_prefs;
-    static bool              s_initialized;
-    static ST_N10_RuntimeState_t s_state;
-    static ST_N10_DirtyFlags_t   s_dirty;
-    static uint32_t          s_lastSaveMs;
+  private:
+	static Preferences			 s_prefs;
+	static bool					 s_initialized;
+	static ST_N10_RuntimeState_t s_state;
+	static ST_N10_DirtyFlags_t	 s_dirty;
+	static uint32_t				 s_lastSaveMs;
 
-    // --------------------------------------------------
-    // 내부: NVS 로드/저장
-    // --------------------------------------------------
-    static void loadRuntimeFromNvs();
-    static void flush(bool p_force);
+	// --------------------------------------------------
+	// 내부: NVS 로드/저장
+	// --------------------------------------------------
+	static void loadRuntimeFromNvs();
+	static void flush(bool p_force);
 };
 
 // 정적 멤버 변수는 .cpp 파일에서 정의됩니다.

@@ -18,9 +18,8 @@
 Preferences			  CL_N10_NvsManager::s_prefs;
 bool				  CL_N10_NvsManager::s_initialized = false;
 ST_N10_RuntimeState_t CL_N10_NvsManager::s_state;
-ST_N10_DirtyFlags_t	  CL_N10_NvsManager::s_dirty = {false};
-// ST_N10_DirtyFlags_t	  CL_N10_NvsManager::s_dirty = { false, false, false, false, false, false, false};
-uint32_t CL_N10_NvsManager::s_lastSaveMs = 0;
+ST_N10_DirtyFlags_t	  CL_N10_NvsManager::s_dirty	  = { false };
+uint32_t			  CL_N10_NvsManager::s_lastSaveMs = 0;
 
 // ==================================================
 // 초기화 / 종료
@@ -40,7 +39,7 @@ bool CL_N10_NvsManager::begin() {
 
 	s_state.lastScheduleNo	  = -1;
 	s_state.lastUserProfileNo = -1;
-	
+
 	loadRuntimeFromNvs();
 
 	s_lastSaveMs  = millis();
@@ -72,7 +71,6 @@ void CL_N10_NvsManager::markDirty(const char* p_key, bool p_flag) {
 
 	if (strcasecmp(p_key, "runtime") == 0)
 		s_dirty.runtime = p_flag;
-
 }
 
 void CL_N10_NvsManager::flushIfNeeded() {
@@ -111,16 +109,16 @@ void CL_N10_NvsManager::toJson(JsonDocument& p_doc) {
 	o["lastScheduleNo"]	   = s_state.lastScheduleNo;
 	o["lastUserProfileNo"] = s_state.lastUserProfileNo;
 
-	JsonObject ao = o["autoOff"].to<JsonObject>();
-	ao["enabled"] = s_state.autoOffEnabled;
-	ao["minutes"] = s_state.autoOffMinutes;
+	JsonObject ao		   = o["autoOff"].to<JsonObject>();
+	ao["enabled"]		   = s_state.autoOffEnabled;
+	ao["minutes"]		   = s_state.autoOffMinutes;
 
-	JsonObject ov	   = o["override"].to<JsonObject>();
-	ov["enabled"]	   = s_state.overrideEnabled;
-	ov["mode"]		   = s_state.overrideMode;
-	ov["fixedPercent"] = s_state.overrideFixedPercent;
-	ov["presetCode"]   = s_state.overridePresetCode;
-	ov["styleCode"]	   = s_state.overrideStyleCode;
+	JsonObject ov		   = o["override"].to<JsonObject>();
+	ov["enabled"]		   = s_state.overrideEnabled;
+	ov["mode"]			   = s_state.overrideMode;
+	ov["fixedPercent"]	   = s_state.overrideFixedPercent;
+	ov["presetCode"]	   = s_state.overridePresetCode;
+	ov["styleCode"]		   = s_state.overrideStyleCode;
 }
 
 // ==================================================
@@ -191,9 +189,7 @@ void CL_N10_NvsManager::setOverrideFixed(bool p_enabled, float p_percent) {
 	s_dirty.runtime				  = true;
 }
 
-void CL_N10_NvsManager::setOverridePreset(bool		  p_enabled,
-											  const char* p_presetCode,
-											  const char* p_styleCode) {
+void CL_N10_NvsManager::setOverridePreset(bool p_enabled, const char* p_presetCode, const char* p_styleCode) {
 	if (!s_initialized)
 		begin();
 	s_state.overrideEnabled		 = p_enabled;
@@ -240,13 +236,13 @@ void CL_N10_NvsManager::resetRuntime() {
 // 내부: NVS 로드/저장
 // --------------------------------------------------
 void CL_N10_NvsManager::loadRuntimeFromNvs() {
-	s_state.runMode			  = s_prefs.getUChar("run_mode", 0);
-	s_state.runSource		  = s_prefs.getUChar("run_src", 0);
-	s_state.lastScheduleNo	  = s_prefs.getShort("sched_no", -1);
-	s_state.lastUserProfileNo = s_prefs.getShort("uprofile_no", -1);
+	s_state.runMode				 = s_prefs.getUChar("run_mode", 0);
+	s_state.runSource			 = s_prefs.getUChar("run_src", 0);
+	s_state.lastScheduleNo		 = s_prefs.getShort("sched_no", -1);
+	s_state.lastUserProfileNo	 = s_prefs.getShort("uprofile_no", -1);
 
-	s_state.autoOffEnabled = s_prefs.getUChar("autoOff_en", 0) != 0;
-	s_state.autoOffMinutes = s_prefs.getULong("autoOff_min", 0);
+	s_state.autoOffEnabled		 = s_prefs.getUChar("autoOff_en", 0) != 0;
+	s_state.autoOffMinutes		 = s_prefs.getULong("autoOff_min", 0);
 
 	s_state.overrideEnabled		 = s_prefs.getUChar("ovr_en", 0) != 0;
 	s_state.overrideMode		 = s_prefs.getUChar("ovr_mode", 0);
@@ -261,12 +257,7 @@ void CL_N10_NvsManager::loadRuntimeFromNvs() {
 	strlcpy(s_state.overrideStyleCode, v_buf, sizeof(s_state.overrideStyleCode));
 
 	s_dirty.runtime = false;
-	CL_D10_Logger::log(EN_L10_LOG_INFO,
-					   "[N10] Load runtime: mode=%u src=%u sch=%d up=%d autoOff(%d,%lu) ovr_en=%d",
-					   s_state.runMode, s_state.runSource,
-					   (int)s_state.lastScheduleNo, (int)s_state.lastUserProfileNo,
-					   (int)s_state.autoOffEnabled, (unsigned long)s_state.autoOffMinutes,
-					   (int)s_state.overrideEnabled);
+	CL_D10_Logger::log(EN_L10_LOG_INFO, "[N10] Load runtime: mode=%u src=%u sch=%d up=%d autoOff(%d,%lu) ovr_en=%d", s_state.runMode, s_state.runSource, (int)s_state.lastScheduleNo, (int)s_state.lastUserProfileNo, (int)s_state.autoOffEnabled, (unsigned long)s_state.autoOffMinutes, (int)s_state.overrideEnabled);
 }
 
 void CL_N10_NvsManager::flush(bool p_force) {

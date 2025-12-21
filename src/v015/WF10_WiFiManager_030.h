@@ -37,14 +37,14 @@
 #include <ArduinoJson.h>
 #include <WiFi.h>
 #include <WiFiMulti.h>
-#include <lwip/dns.h>
-#include <time.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
+#include <lwip/dns.h>
+#include <time.h>
 
 #include "A20_Const_020.h"
+#include "C10_Config_030.h"	 // ST_A20_WifiConfig, ST_A20_SystemConfig, ST_A20_ConfigRoot_t
 #include "D10_Logger_020.h"
-#include "C10_Config_030.h" // ST_A20_WifiConfig, ST_A20_SystemConfig, ST_A20_ConfigRoot_t
 
 // Mutex 보호 매크로 정의
 #define WF10_MUTEX_ACQUIRE() xSemaphoreTake(CL_WF10_WiFiManager::s_wifiMutex, portMAX_DELAY)
@@ -60,15 +60,15 @@
 void WF10_applyTimeConfigFromSystem(const ST_A20_SystemConfig& p_cfg);
 
 class CL_WF10_WiFiManager {
-   public:
+  public:
 	static bool				 s_staConnected;
 	static wl_status_t		 s_lastStaStatus;
 	static bool				 s_timeSynced;
 	static uint32_t			 s_lastSyncMs;
 	static uint8_t			 s_reconnectAttempts;
-	static SemaphoreHandle_t s_wifiMutex; // Mutex 포인터 (init()에서 생성)
+	static SemaphoreHandle_t s_wifiMutex;  // Mutex 포인터 (init()에서 생성)
 
-   public:
+  public:
 	// --------------------------------------------------
 	// Wi-Fi 설정 적용 함수 (Web API에서 호출)
 	// --------------------------------------------------
@@ -87,33 +87,22 @@ class CL_WF10_WiFiManager {
 	// --------------------------------------------------
 	// 초기화
 	// --------------------------------------------------
-	static bool init(const ST_A20_WifiConfig&	p_cfg_wifi,
-					 const ST_A20_SystemConfig& p_cfg_system,
-					 WiFiMulti&					p_multi,
-					 uint8_t					p_apChannel	   = 1,
-					 uint8_t					p_staMaxTries  = 15,
-					 bool						p_enableApDhcp = true);
+	static bool init(const ST_A20_WifiConfig& p_cfg_wifi, const ST_A20_SystemConfig& p_cfg_system, WiFiMulti& p_multi, uint8_t p_apChannel = 1, uint8_t p_staMaxTries = 15, bool p_enableApDhcp = true);
 
 	// --------------------------------------------------
 	// AP 시작 (고정 IP + DHCP On/Off)
 	// --------------------------------------------------
-	static bool startAP(const ST_A20_WifiConfig& p_cfg_wifi,
-						uint8_t					 p_channel,
-						bool					 p_enableDhcp);
+	static bool startAP(const ST_A20_WifiConfig& p_cfg_wifi, uint8_t p_channel, bool p_enableDhcp);
 
 	// --------------------------------------------------
 	// STA 시작
 	// --------------------------------------------------
-	static bool startSTA(const ST_A20_WifiConfig& p_cfg_wifi,
-						 WiFiMulti&				  p_multi,
-						 uint8_t				  p_maxTries);
+	static bool startSTA(const ST_A20_WifiConfig& p_cfg_wifi, WiFiMulti& p_multi, uint8_t p_maxTries);
 
 	// --------------------------------------------------
 	// NTP 동기화 (구성값 기반 주기)
 	// --------------------------------------------------
-	static void syncTimeIfNeeded(const ST_A20_WifiConfig&  p_cfg_wifi,
-								 const ST_A20_SystemConfig& p_cfg_system,
-								 uint32_t					p_interval_ms = 21600000);
+	static void syncTimeIfNeeded(const ST_A20_WifiConfig& p_cfg_wifi, const ST_A20_SystemConfig& p_cfg_system, uint32_t p_interval_ms = 21600000);
 
 	// --------------------------------------------------
 	// 상태 JSON
@@ -128,6 +117,6 @@ class CL_WF10_WiFiManager {
 	static bool isStaConnected();
 	static const char* getStaStatusString();
 
-   private:
+  private:
 	static const char* _encTypeToString(wifi_auth_mode_t p_mode);
 };

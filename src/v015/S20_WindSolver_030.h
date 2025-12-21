@@ -30,93 +30,88 @@
 // Wind Profile 해석 함수
 // ------------------------------------------------------
 
-inline bool S20_resolveWindParams(
-    const ST_A20_WindProfileDict_t& p_dict,
-    const char*                     p_presetCode,
-    const char*                     p_styleCode,
-    const ST_A20_AdjustDelta_t*     p_adj,
-    ST_A20_ResolvedWind_t&          p_out)
-{
-    // 0) 출력 안전 초기화 (실패해도 안전)
-    memset(&p_out, 0, sizeof(p_out));
-    p_out.valid = false;
+inline bool S20_resolveWindParams(const ST_A20_WindProfileDict_t& p_dict, const char* p_presetCode, const char* p_styleCode, const ST_A20_AdjustDelta_t* p_adj, ST_A20_ResolvedWind_t& p_out) {
+	// 0) 출력 안전 초기화 (실패해도 안전)
+	memset(&p_out, 0, sizeof(p_out));
+	p_out.valid	 = false;
 
-    // 1) preset 찾기
-    int16_t v_pi = A20_findPresetIndexByCode(p_dict, p_presetCode);
-    if (v_pi < 0) {
-        // presetCode/styleCode는 호출자가 확인 가능하도록 최소 복사
-        strlcpy(p_out.presetCode, p_presetCode ? p_presetCode : "", sizeof(p_out.presetCode));
-        strlcpy(p_out.styleCode,  p_styleCode  ? p_styleCode  : "", sizeof(p_out.styleCode));
-        return false;
-    }
+	// 1) preset 찾기
+	int16_t v_pi = A20_findPresetIndexByCode(p_dict, p_presetCode);
+	if (v_pi < 0) {
+		// presetCode/styleCode는 호출자가 확인 가능하도록 최소 복사
+		strlcpy(p_out.presetCode, p_presetCode ? p_presetCode : "", sizeof(p_out.presetCode));
+		strlcpy(p_out.styleCode, p_styleCode ? p_styleCode : "", sizeof(p_out.styleCode));
+		return false;
+	}
 
-    const ST_A20_PresetEntry_t& v_p = p_dict.presets[v_pi];
+	const ST_A20_PresetEntry_t& v_p	   = p_dict.presets[v_pi];
 
-    // 2) base 로드
-    float v_int  = v_p.base.wind_intensity;
-    float v_var  = v_p.base.wind_variability;
-    float v_gust = v_p.base.gust_frequency;
-    float v_fl   = v_p.base.fan_limit;
-    float v_min  = v_p.base.min_fan;
+	// 2) base 로드
+	float						v_int  = v_p.base.wind_intensity;
+	float						v_var  = v_p.base.wind_variability;
+	float						v_gust = v_p.base.gust_frequency;
+	float						v_fl   = v_p.base.fan_limit;
+	float						v_min  = v_p.base.min_fan;
 
-    float v_tL   = v_p.base.turbulence_length_scale;
-    float v_tS   = v_p.base.turbulence_intensity_sigma;
-    float v_thB  = v_p.base.thermal_bubble_strength;
-    float v_thR  = v_p.base.thermal_bubble_radius;
+	float						v_tL   = v_p.base.turbulence_length_scale;
+	float						v_tS   = v_p.base.turbulence_intensity_sigma;
+	float						v_thB  = v_p.base.thermal_bubble_strength;
+	float						v_thR  = v_p.base.thermal_bubble_radius;
 
-    // 3) style factor 적용(스타일 없으면 스킵)
-    if (p_styleCode && p_styleCode[0]) {
-        int16_t v_si = A20_findStyleIndexByCode(p_dict, p_styleCode);
-        if (v_si >= 0) {
-            const ST_A20_StyleEntry_t& v_s = p_dict.styles[v_si];
-            v_int  *= v_s.factors.intensity_factor;
-            v_var  *= v_s.factors.variability_factor;
-            v_gust *= v_s.factors.gust_factor;
-            v_thB  *= v_s.factors.thermal_factor;
-            // (정책 선택) fan_limit/min_fan/turb도 스타일 영향 줄지 여부는 여기서 결정
-        }
-    }
+	// 3) style factor 적용(스타일 없으면 스킵)
+	if (p_styleCode && p_styleCode[0]) {
+		int16_t v_si = A20_findStyleIndexByCode(p_dict, p_styleCode);
+		if (v_si >= 0) {
+			const ST_A20_StyleEntry_t& v_s = p_dict.styles[v_si];
+			v_int *= v_s.factors.intensity_factor;
+			v_var *= v_s.factors.variability_factor;
+			v_gust *= v_s.factors.gust_factor;
+			v_thB *= v_s.factors.thermal_factor;
+			// (정책 선택) fan_limit/min_fan/turb도 스타일 영향 줄지 여부는 여기서 결정
+		}
+	}
 
-    // 4) adjust 적용(널이면 0으로)
-    const float v_adjInt  = p_adj ? p_adj->wind_intensity  : 0.0f;
-    const float v_adjVar  = p_adj ? p_adj->wind_variability: 0.0f;
-    const float v_adjGust = p_adj ? p_adj->gust_frequency  : 0.0f;
-    const float v_adjFL   = p_adj ? p_adj->fan_limit       : 0.0f;
-    const float v_adjMin  = p_adj ? p_adj->min_fan         : 0.0f;
+	// 4) adjust 적용(널이면 0으로)
+	const float v_adjInt  = p_adj ? p_adj->wind_intensity : 0.0f;
+	const float v_adjVar  = p_adj ? p_adj->wind_variability : 0.0f;
+	const float v_adjGust = p_adj ? p_adj->gust_frequency : 0.0f;
+	const float v_adjFL	  = p_adj ? p_adj->fan_limit : 0.0f;
+	const float v_adjMin  = p_adj ? p_adj->min_fan : 0.0f;
 
-    v_int  += v_adjInt;
-    v_var  += v_adjVar;
-    v_gust += v_adjGust;
-    v_fl   += v_adjFL;
-    v_min  += v_adjMin;
+	v_int += v_adjInt;
+	v_var += v_adjVar;
+	v_gust += v_adjGust;
+	v_fl += v_adjFL;
+	v_min += v_adjMin;
 
-    // 5) clamp + 관계 보정(min <= limit)
-    p_out.wind_intensity   = A20_clampf(v_int,  0.0f, 100.0f);
-    p_out.wind_variability = A20_clampf(v_var,  0.0f, 100.0f);
-    p_out.gust_frequency   = A20_clampf(v_gust, 0.0f, 100.0f);
+	// 5) clamp + 관계 보정(min <= limit)
+	p_out.wind_intensity   = A20_clampf(v_int, 0.0f, 100.0f);
+	p_out.wind_variability = A20_clampf(v_var, 0.0f, 100.0f);
+	p_out.gust_frequency   = A20_clampf(v_gust, 0.0f, 100.0f);
 
-    float v_fl_c  = A20_clampf(v_fl,  0.0f, 100.0f);
-    float v_min_c = A20_clampf(v_min, 0.0f, 100.0f);
-    if (v_min_c > v_fl_c) v_min_c = v_fl_c;
+	float v_fl_c		   = A20_clampf(v_fl, 0.0f, 100.0f);
+	float v_min_c		   = A20_clampf(v_min, 0.0f, 100.0f);
+	if (v_min_c > v_fl_c)
+		v_min_c = v_fl_c;
 
-    p_out.fan_limit = v_fl_c;
-    p_out.min_fan   = v_min_c;
+	p_out.fan_limit					 = v_fl_c;
+	p_out.min_fan					 = v_min_c;
 
-    // 6) 물리 파라미터 최소 보정
-    p_out.turbulence_length_scale      = (v_tL > 1.0f) ? v_tL : 1.0f;
-    p_out.turbulence_intensity_sigma   = (v_tS > 0.0f) ? v_tS : 0.0f;
-    p_out.thermal_bubble_strength      = (v_thB > 0.1f) ? v_thB : 0.1f;
-    p_out.thermal_bubble_radius        = (v_thR > 1.0f) ? v_thR : 1.0f;
+	// 6) 물리 파라미터 최소 보정
+	p_out.turbulence_length_scale	 = (v_tL > 1.0f) ? v_tL : 1.0f;
+	p_out.turbulence_intensity_sigma = (v_tS > 0.0f) ? v_tS : 0.0f;
+	p_out.thermal_bubble_strength	 = (v_thB > 0.1f) ? v_thB : 0.1f;
+	p_out.thermal_bubble_radius		 = (v_thR > 1.0f) ? v_thR : 1.0f;
 
-    // 7) 코드 복사
-    strlcpy(p_out.presetCode, p_presetCode ? p_presetCode : "", sizeof(p_out.presetCode));
-    strlcpy(p_out.styleCode,  p_styleCode  ? p_styleCode  : "", sizeof(p_out.styleCode));
+	// 7) 코드 복사
+	strlcpy(p_out.presetCode, p_presetCode ? p_presetCode : "", sizeof(p_out.presetCode));
+	strlcpy(p_out.styleCode, p_styleCode ? p_styleCode : "", sizeof(p_out.styleCode));
 
-    // 8) 기본 플래그
-    p_out.fixedMode  = false;
-    p_out.fixedSpeed = 0.0f;
-    p_out.valid      = true;
-    return true;
+	// 8) 기본 플래그
+	p_out.fixedMode	 = false;
+	p_out.fixedSpeed = 0.0f;
+	p_out.valid		 = true;
+	return true;
 }
 
 /*

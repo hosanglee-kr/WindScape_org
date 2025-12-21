@@ -44,12 +44,11 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 #include <stdint.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
-#include "A20_Const_020.h"     // ST_A20_ConfigRoot_t, ST_A20_* 구조체, 상수 정의
-#include "D10_Logger_020.h"    // CL_D10_Logger, EN_L10_LOG_*
-
+#include "A20_Const_020.h"	 // ST_A20_ConfigRoot_t, ST_A20_* 구조체, 상수 정의
+#include "D10_Logger_020.h"	 // CL_D10_Logger, EN_L10_LOG_*
 
 // ------------------------------------------------------
 // JSON I/O Helper 함수 선언 (Core cpp에서 구현)
@@ -59,138 +58,129 @@ bool ioSaveJson(const char* p_path, const char* p_bak, const JsonDocument& p_doc
 
 // Mutex Timeout 정의 (A20_Const_015.h에 미정의 시 기본값)
 #ifndef G_C10_MUTEX_TIMEOUT
-    #define G_C10_MUTEX_TIMEOUT pdMS_TO_TICKS(100)
+#	define G_C10_MUTEX_TIMEOUT pdMS_TO_TICKS(100)
 #endif
 
 // ------------------------------------------------------
 // 뮤텍스 매크로 (bool / void 함수용 분리)
 // ------------------------------------------------------
-#define C10_MUTEX_ACQUIRE_BOOL()                                \
-    if (!CL_C10_ConfigManager::_mutex_Acquire(__func__)) {      \
-        return false;                                           \
-    }
+#define C10_MUTEX_ACQUIRE_BOOL()                           \
+	if (!CL_C10_ConfigManager::_mutex_Acquire(__func__)) { \
+		return false;                                      \
+	}
 
-#define C10_MUTEX_ACQUIRE_VOID()                                \
-    if (!CL_C10_ConfigManager::_mutex_Acquire(__func__)) {      \
-        return;                                                 \
-    }
+#define C10_MUTEX_ACQUIRE_VOID()                           \
+	if (!CL_C10_ConfigManager::_mutex_Acquire(__func__)) { \
+		return;                                            \
+	}
 
-#define C10_MUTEX_RELEASE()                                     \
-    CL_C10_ConfigManager::_mutex_Release();
+#define C10_MUTEX_RELEASE() CL_C10_ConfigManager::_mutex_Release();
 
 // 전역 Config Root (Core cpp에서 정의)
 extern ST_A20_ConfigRoot_t g_A20_config_root;
-
 
 // ------------------------------------------------------
 // C10 Config Manager Class
 // ------------------------------------------------------
 class CL_C10_ConfigManager {
-public:
-    // =====================================================
-    // 1. 전체 관리 (Load/Free/Save)
-    // =====================================================
+  public:
+	// =====================================================
+	// 1. 전체 관리 (Load/Free/Save)
+	// =====================================================
 
-    // cfg_jsonFile.json 로드 상태 확인용 (필요 시 사용)
-    static const ST_A20_cfg_jsonFile_t& getCfgJsonFileMap() {
-        return s_cfgJsonFileMap;
-    }
+	// cfg_jsonFile.json 로드 상태 확인용 (필요 시 사용)
+	static const ST_A20_cfg_jsonFile_t& getCfgJsonFileMap() {
+		return s_cfgJsonFileMap;
+	}
 
-    static bool loadAll(ST_A20_ConfigRoot_t& p_root);
-    static void freeLazySection(const char* p_section, ST_A20_ConfigRoot_t& p_root);
-    static void freeAll(ST_A20_ConfigRoot_t& p_root);
+	static bool loadAll(ST_A20_ConfigRoot_t& p_root);
+	static void freeLazySection(const char* p_section, ST_A20_ConfigRoot_t& p_root);
+	static void freeAll(ST_A20_ConfigRoot_t& p_root);
 
-    static bool factoryResetFromDefault();
+	static bool factoryResetFromDefault();
 
-    // =====================================================
-    // 2. 목적물별 Load/Save
-    // =====================================================
-    static bool loadSystemConfig(ST_A20_SystemConfig& p_cfg);
-    static bool loadWindProfileDict(ST_A20_WindProfileDict_t& p_cfg);
-    static bool loadSchedules(ST_A20_SchedulesRoot_t& p_cfg);
-    static bool loadUserProfiles(ST_A20_UserProfilesRoot_t& p_cfg);
-    static bool loadWifiConfig(ST_A20_WifiConfig& p_cfg);
-    static bool loadMotionConfig(ST_A20_MotionConfig& p_cfg);
+	// =====================================================
+	// 2. 목적물별 Load/Save
+	// =====================================================
+	static bool loadSystemConfig(ST_A20_SystemConfig& p_cfg);
+	static bool loadWindProfileDict(ST_A20_WindProfileDict_t& p_cfg);
+	static bool loadSchedules(ST_A20_SchedulesRoot_t& p_cfg);
+	static bool loadUserProfiles(ST_A20_UserProfilesRoot_t& p_cfg);
+	static bool loadWifiConfig(ST_A20_WifiConfig& p_cfg);
+	static bool loadMotionConfig(ST_A20_MotionConfig& p_cfg);
 
-    static bool saveSystemConfig(const ST_A20_SystemConfig& p_cfg);
-    static bool saveWifiConfig(const ST_A20_WifiConfig& p_cfg);
-    static bool saveMotionConfig(const ST_A20_MotionConfig& p_cfg);
-    static bool saveSchedules(const ST_A20_SchedulesRoot_t& p_cfg);
-    static bool saveUserProfiles(const ST_A20_UserProfilesRoot_t& p_cfg);
-    static bool saveWindProfileDict(const ST_A20_WindProfileDict_t& p_cfg);
+	static bool saveSystemConfig(const ST_A20_SystemConfig& p_cfg);
+	static bool saveWifiConfig(const ST_A20_WifiConfig& p_cfg);
+	static bool saveMotionConfig(const ST_A20_MotionConfig& p_cfg);
+	static bool saveSchedules(const ST_A20_SchedulesRoot_t& p_cfg);
+	static bool saveUserProfiles(const ST_A20_UserProfilesRoot_t& p_cfg);
+	static bool saveWindProfileDict(const ST_A20_WindProfileDict_t& p_cfg);
 
-    static void saveDirtyConfigs();
-    static void getDirtyStatus(JsonDocument& p_doc);
-    static void saveAll(const ST_A20_ConfigRoot_t& p_root);
+	static void saveDirtyConfigs();
+	static void getDirtyStatus(JsonDocument& p_doc);
+	static void saveAll(const ST_A20_ConfigRoot_t& p_root);
 
-    // =====================================================
-    // 3. JSON Export
-    // =====================================================
-    static void toJson_All(
-        const ST_A20_ConfigRoot_t& p,
-        JsonDocument&              p_doc,
-        bool                       p_includeSystem       = true,
-        bool                       p_includeWifi         = true,
-        bool                       p_includeMotion       = true,
-        bool                       p_includeSchedules    = true,
-        bool                       p_includeUserProfiles = true);
+	// =====================================================
+	// 3. JSON Export
+	// =====================================================
+	static void toJson_All(const ST_A20_ConfigRoot_t& p, JsonDocument& p_doc, bool p_includeSystem = true, bool p_includeWifi = true, bool p_includeMotion = true, bool p_includeSchedules = true, bool p_includeUserProfiles = true);
 
-    static void toJson_System(const ST_A20_SystemConfig&        p_cfg, JsonDocument& p_doc);
-    static void toJson_Wifi(const ST_A20_WifiConfig&            p_cfg, JsonDocument& p_doc);
-    static void toJson_Motion(const ST_A20_MotionConfig&        p_cfg, JsonDocument& p_doc);
-    static void toJson_Schedules(const ST_A20_SchedulesRoot_t&  p_cfg, JsonDocument& p_doc);
-    static void toJson_UserProfiles(const ST_A20_UserProfilesRoot_t& p_cfg, JsonDocument& p_doc);
-    static void toJson_WindProfileDict(const ST_A20_WindProfileDict_t& p_cfg, JsonDocument& p_doc);
+	static void toJson_System(const ST_A20_SystemConfig& p_cfg, JsonDocument& p_doc);
+	static void toJson_Wifi(const ST_A20_WifiConfig& p_cfg, JsonDocument& p_doc);
+	static void toJson_Motion(const ST_A20_MotionConfig& p_cfg, JsonDocument& p_doc);
+	static void toJson_Schedules(const ST_A20_SchedulesRoot_t& p_cfg, JsonDocument& p_doc);
+	static void toJson_UserProfiles(const ST_A20_UserProfilesRoot_t& p_cfg, JsonDocument& p_doc);
+	static void toJson_WindProfileDict(const ST_A20_WindProfileDict_t& p_cfg, JsonDocument& p_doc);
 
-    // =====================================================
-    // 4. JSON Patch (System/Wifi/Motion/Schedules/UserProfiles/WindProfileDict)
-    // =====================================================
-    static bool patchSystemFromJson(ST_A20_SystemConfig&        p_config, const JsonDocument& p_patch);
-    static bool patchWifiFromJson(ST_A20_WifiConfig&            p_config, const JsonDocument& p_patch);
-    static bool patchMotionFromJson(ST_A20_MotionConfig&        p_config, const JsonDocument& p_patch);
+	// =====================================================
+	// 4. JSON Patch (System/Wifi/Motion/Schedules/UserProfiles/WindProfileDict)
+	// =====================================================
+	static bool patchSystemFromJson(ST_A20_SystemConfig& p_config, const JsonDocument& p_patch);
+	static bool patchWifiFromJson(ST_A20_WifiConfig& p_config, const JsonDocument& p_patch);
+	static bool patchMotionFromJson(ST_A20_MotionConfig& p_config, const JsonDocument& p_patch);
 
-    static bool patchSchedulesFromJson(ST_A20_SchedulesRoot_t&  p_cfg,    const JsonDocument& p_patch);
-    static bool patchUserProfilesFromJson(ST_A20_UserProfilesRoot_t& p_cfg, const JsonDocument& p_patch);
-    static bool patchWindProfileDictFromJson(ST_A20_WindProfileDict_t& p_cfg, const JsonDocument& p_patch);
+	static bool patchSchedulesFromJson(ST_A20_SchedulesRoot_t& p_cfg, const JsonDocument& p_patch);
+	static bool patchUserProfilesFromJson(ST_A20_UserProfilesRoot_t& p_cfg, const JsonDocument& p_patch);
+	static bool patchWindProfileDictFromJson(ST_A20_WindProfileDict_t& p_cfg, const JsonDocument& p_patch);
 
-    // =====================================================
-    // 5. CRUD - Schedules, UserProfiles, WindProfile
-    //    (전역 g_A20_config_root를 대상으로 동작)
-    // =====================================================
-    // Schedules CRUD
-    static int  addScheduleFromJson(const JsonDocument& p_doc);
-    static bool updateScheduleFromJson(uint16_t p_id, const JsonDocument& p_patch);
-    static bool deleteSchedule(uint16_t p_id);
+	// =====================================================
+	// 5. CRUD - Schedules, UserProfiles, WindProfile
+	//    (전역 g_A20_config_root를 대상으로 동작)
+	// =====================================================
+	// Schedules CRUD
+	static int addScheduleFromJson(const JsonDocument& p_doc);
+	static bool updateScheduleFromJson(uint16_t p_id, const JsonDocument& p_patch);
+	static bool deleteSchedule(uint16_t p_id);
 
-    // UserProfiles CRUD
-    static int  addUserProfilesFromJson(const JsonDocument& p_doc);
-    static bool updateUserProfilesFromJson(uint16_t p_id, const JsonDocument& p_patch);
-    static bool deleteUserProfiles(uint16_t p_id);
+	// UserProfiles CRUD
+	static int addUserProfilesFromJson(const JsonDocument& p_doc);
+	static bool updateUserProfilesFromJson(uint16_t p_id, const JsonDocument& p_patch);
+	static bool deleteUserProfiles(uint16_t p_id);
 
-    // WindProfile CRUD (preset 중심)
-    static int  addWindProfileFromJson(const JsonDocument& p_doc);
-    static bool updateWindProfileFromJson(uint16_t p_id, const JsonDocument& p_patch);
-    static bool deleteWindProfile(uint16_t p_id);
+	// WindProfile CRUD (preset 중심)
+	static int addWindProfileFromJson(const JsonDocument& p_doc);
+	static bool updateWindProfileFromJson(uint16_t p_id, const JsonDocument& p_patch);
+	static bool deleteWindProfile(uint16_t p_id);
 
-private:
-    // Dirty Flag
-    static bool _dirty_system;
-    static bool _dirty_wifi;
-    static bool _dirty_motion;
-    static bool _dirty_schedules;
-    static bool _dirty_userProfiles;
-    static bool _dirty_windProfile;
+  private:
+	// Dirty Flag
+	static bool					 _dirty_system;
+	static bool					 _dirty_wifi;
+	static bool					 _dirty_motion;
+	static bool					 _dirty_schedules;
+	static bool					 _dirty_userProfiles;
+	static bool					 _dirty_windProfile;
 
-    // cfg_jsonFile.json 매핑 (옵션 A)
-    static ST_A20_cfg_jsonFile_t s_cfgJsonFileMap;
-    
-    // cfg_jsonFile.json 로더
-    static bool _loadCfgJsonFile();
+	// cfg_jsonFile.json 매핑 (옵션 A)
+	static ST_A20_cfg_jsonFile_t s_cfgJsonFileMap;
 
-    // Mutex
-    static SemaphoreHandle_t s_configMutex;
+	// cfg_jsonFile.json 로더
+	static bool _loadCfgJsonFile();
 
-    // 뮤텍스 관리 헬퍼 (Core cpp에서 구현)
-    static bool _mutex_Acquire(const char* p_funcName);
-    static void _mutex_Release();
+	// Mutex
+	static SemaphoreHandle_t s_configMutex;
+
+	// 뮤텍스 관리 헬퍼 (Core cpp에서 구현)
+	static bool _mutex_Acquire(const char* p_funcName);
+	static void _mutex_Release();
 };

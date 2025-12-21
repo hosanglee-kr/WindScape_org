@@ -73,7 +73,6 @@ typedef struct {
 	uint32_t lastChange_ms;
 } ST_M10_MotionState_t;
 
-
 // 전역 인스턴스 포인터 선언
 extern CL_M10_MotionLogic* g_M10_motionLogic;
 
@@ -85,15 +84,14 @@ typedef void (*T_M10_OnChangeCallback_t)(const ST_M10_MotionState_t& p_state);
 // CL_M10_MotionLogic
 // ------------------------------------------------------
 class CL_M10_MotionLogic {
-   public:
-
-    // [추가됨] 정적 초기화 함수 (A00/Main 진입용)
+  public:
+	// [추가됨] 정적 초기화 함수 (A00/Main 진입용)
 	// --------------------------------------------------
 	static void M10_begin() {
-        static CL_M10_MotionLogic s_instance;
-        g_M10_motionLogic = &s_instance;
-        CL_D10_Logger::log(EN_L10_LOG_INFO, "[M10] MotionLogic initialized");
-    }
+		static CL_M10_MotionLogic s_instance;
+		g_M10_motionLogic = &s_instance;
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "[M10] MotionLogic initialized");
+	}
 
 	CL_M10_MotionLogic() {
 		memset(&_pir, 0, sizeof(_pir));
@@ -102,47 +100,45 @@ class CL_M10_MotionLogic {
 		_onChange = nullptr;
 	}
 
-    // --------------------------------------------------
+	// --------------------------------------------------
 	// [추가됨] PIR 감지 상태 전달 (웹/MQTT 용)
 	// --------------------------------------------------
-    /*
-     * @brief 외부 소스로부터 PIR 감지 상태를 전달받아 처리합니다.
-     * @param p_detected 감지 여부 (true일 경우 notifyPIRDetected() 호출)
-     */
+	/*
+	 * @brief 외부 소스로부터 PIR 감지 상태를 전달받아 처리합니다.
+	 * @param p_detected 감지 여부 (true일 경우 notifyPIRDetected() 호출)
+	 */
 	void feedPIR(bool p_detected) {
 		if (p_detected) {
 			// true일 경우만 기존 감지 로직(타이머 리셋)을 실행합니다.
 			notifyPIRDetected();
 		}
-        // false인 경우, 센서의 감지 타이머는 tick()에 의해 자연스럽게 만료되도록 둡니다.
+		// false인 경우, 센서의 감지 타이머는 tick()에 의해 자연스럽게 만료되도록 둡니다.
 	}
 
-    // --------------------------------------------------
+	// --------------------------------------------------
 	// [추가됨] BLE 감지 상태 전달 (웹/MQTT 용)
 	// --------------------------------------------------
-    /**
-     * @brief 외부 소스로부터 BLE 감지 상태를 전달받아 처리합니다.
-     * @param p_detected 감지 여부 (true일 경우 BLE 로직을 활성화합니다. RSSI 값은 무시)
-     */
+	/**
+	 * @brief 외부 소스로부터 BLE 감지 상태를 전달받아 처리합니다.
+	 * @param p_detected 감지 여부 (true일 경우 BLE 로직을 활성화합니다. RSSI 값은 무시)
+	 */
 	void feedBLE(bool p_detected) {
 		if (p_detected) {
-			// 웹 API에서는 RSSI 값이 아닌, 감지 여부(true)만 전달하므로, 
+			// 웹 API에서는 RSSI 값이 아닌, 감지 여부(true)만 전달하므로,
 			// 임시로 활성 임계값을 만족하는 RSSI를 가정하여 updateBLE_RSSI를 호출합니다.
-            
-            // NOTE: _ble.rssi_threshold가 -70이라고 가정할 때, -60이 threshold보다 크므로 활성화됩니다.
-            // 0이 더 안전하지만, RSSI는 음수이므로, -1을 사용합니다.
-            int16_t v_activeRssi = -1; 
-            
+
+			// NOTE: _ble.rssi_threshold가 -70이라고 가정할 때, -60이 threshold보다 크므로 활성화됩니다.
+			// 0이 더 안전하지만, RSSI는 음수이므로, -1을 사용합니다.
+			int16_t v_activeRssi = -1;
+
 			if (_ble.enabled) {
-                _ble.last_rssi = v_activeRssi; // 마지막 RSSI 기록
-                _ble.lastDetected_ms = millis();
-                _ble.active = true;
-            }
+				_ble.last_rssi		 = v_activeRssi;  // 마지막 RSSI 기록
+				_ble.lastDetected_ms = millis();
+				_ble.active			 = true;
+			}
 		}
-        // false인 경우, 센서의 감지 타이머는 tick()에 의해 자연스럽게 만료되도록 둡니다.
+		// false인 경우, 센서의 감지 타이머는 tick()에 의해 자연스럽게 만료되도록 둡니다.
 	}
-    
- 
 
 	// --------------------------------------------------
 	// JSON 로드 초기화 (cfg_system_xxx.json)
@@ -152,8 +148,8 @@ class CL_M10_MotionLogic {
 			return false;
 		JsonObjectConst v_m = p_doc["motion"].as<JsonObjectConst>();
 
-		_pir.enabled  = v_m["pir"]["enabled"] | false;
-		_pir.hold_sec = v_m["pir"]["hold_sec"] | 20;
+		_pir.enabled		= v_m["pir"]["enabled"] | false;
+		_pir.hold_sec		= v_m["pir"]["hold_sec"] | 20;
 
 		_ble.enabled		= v_m["ble"]["enabled"] | false;
 		_ble.rssi_threshold = v_m["ble"]["rssi_threshold"] | -70;
@@ -168,11 +164,7 @@ class CL_M10_MotionLogic {
 
 		memset(&_state, 0, sizeof(_state));
 
-		CL_D10_Logger::log(EN_L10_LOG_INFO,
-						   "[M10] loadFromJson pir=%d hold=%lu ble=%d rssi=%d hold=%lu",
-						   (int)_pir.enabled, (unsigned long)_pir.hold_sec,
-						   (int)_ble.enabled, (int)_ble.rssi_threshold,
-						   (unsigned long)_ble.hold_sec);
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "[M10] loadFromJson pir=%d hold=%lu ble=%d rssi=%d hold=%lu", (int)_pir.enabled, (unsigned long)_pir.hold_sec, (int)_ble.enabled, (int)_ble.rssi_threshold, (unsigned long)_ble.hold_sec);
 		return true;
 	}
 
@@ -227,19 +219,13 @@ class CL_M10_MotionLogic {
 		bool v_pirActive = _pir.active;
 		bool v_bleActive = _ble.active;
 
-		if (v_activeNew != _state.active ||
-			v_pirActive != _state.pirActive ||
-			v_bleActive != _state.bleActive) {
+		if (v_activeNew != _state.active || v_pirActive != _state.pirActive || v_bleActive != _state.bleActive) {
 			_state.active		 = v_activeNew;
 			_state.pirActive	 = v_pirActive;
 			_state.bleActive	 = v_bleActive;
 			_state.lastChange_ms = v_now;
 
-			CL_D10_Logger::log(EN_L10_LOG_DEBUG,
-							   "[M10] motionActive=%d (PIR=%d BLE=%d)",
-							   (int)_state.active,
-							   (int)_state.pirActive,
-							   (int)_state.bleActive);
+			CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[M10] motionActive=%d (PIR=%d BLE=%d)", (int)_state.active, (int)_state.pirActive, (int)_state.bleActive);
 
 			// 외부 연동용 콜백 (CT10 등에서 diffOnly 푸시 활용)
 			if (_onChange) {
@@ -252,21 +238,21 @@ class CL_M10_MotionLogic {
 	// 상태 직렬화
 	// --------------------------------------------------
 	void toJson(JsonDocument& p_doc) const {
-		JsonObject v_o	 = p_doc["motion"].to<JsonObject>();
-		v_o["active"]	 = isActive();
-		v_o["pirActive"] = _state.pirActive;
-		v_o["bleActive"] = _state.bleActive;
-		v_o["pirHold"]	 = _pir.hold_sec;
-		v_o["bleHold"]	 = _ble.hold_sec;
-		v_o["bleRssi"]	 = _ble.last_rssi;
+		JsonObject v_o			= p_doc["motion"].to<JsonObject>();
+		v_o["active"]			= isActive();
+		v_o["pirActive"]		= _state.pirActive;
+		v_o["bleActive"]		= _state.bleActive;
+		v_o["pirHold"]			= _pir.hold_sec;
+		v_o["bleHold"]			= _ble.hold_sec;
+		v_o["bleRssi"]			= _ble.last_rssi;
 		// v_o["lastChange"] = _state.lastChange_ms;
 		unsigned long v_now		= millis();
 		uint32_t	  v_lastSec = (_state.lastChange_ms == 0) ? 0 : (uint32_t)((v_now - _state.lastChange_ms) / 1000UL);
 		v_o["lastActiveSec"]	= v_lastSec;
 
 		// 남은 hold 시간 (초 단위)
-		uint32_t v_pirRemain = 0;
-		uint32_t v_bleRemain = 0;
+		uint32_t v_pirRemain	= 0;
+		uint32_t v_bleRemain	= 0;
 
 		if (_pir.enabled && _pir.active) {
 			uint32_t v_pirElapsed = v_now - _pir.lastDetected_ms;
@@ -290,9 +276,9 @@ class CL_M10_MotionLogic {
 	// 외부에서 활성여부 확인
 	// --------------------------------------------------
 	bool isActive() const {
-		unsigned long v_now = millis();
+		unsigned long v_now	 = millis();
 		// hold_sec 로직은 외부 config 사용 (예: g_A20_config_root.motion)
-		uint32_t v_hold = 0;
+		uint32_t	  v_hold = 0;
 		if (g_A20_config_root.motion) {
 			v_hold = (uint32_t)g_A20_config_root.motion->pir.hold_sec;
 		}
@@ -312,10 +298,9 @@ class CL_M10_MotionLogic {
 		_onChange = p_cb;
 	}
 
-   private:
+  private:
 	ST_M10_PIR_t			 _pir;
 	ST_M10_BLE_t			 _ble;
 	ST_M10_MotionState_t	 _state;
 	T_M10_OnChangeCallback_t _onChange;
 };
-

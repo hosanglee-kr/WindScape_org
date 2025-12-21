@@ -56,21 +56,17 @@ void CL_W10_WebAPI::_broadcast(AsyncWebSocket* p_ws, JsonDocument& p_doc, bool p
 // --------------------------------------------------
 void CL_W10_WebAPI::routeWebSocket() {
 	// 로그 WS
-	s_wsServerLogs->onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client,
-							   AwsEventType type, void*, uint8_t*, size_t) {
+	s_wsServerLogs->onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client, AwsEventType type, void*, uint8_t*, size_t) {
 		if (type == WS_EVT_CONNECT) {
-			CL_D10_Logger::log(EN_L10_LOG_INFO,
-							   "[W10] WS /logs connected (id=%u)", client->id());
+			CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WS /logs connected (id=%u)", client->id());
 		}
 	});
 	s_server->addHandler(s_wsServerLogs);
 
 	// 상태 WS
-	s_wsServerState->onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client,
-								AwsEventType type, void*, uint8_t*, size_t) {
+	s_wsServerState->onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client, AwsEventType type, void*, uint8_t*, size_t) {
 		if (type == WS_EVT_CONNECT) {
-			CL_D10_Logger::log(EN_L10_LOG_INFO,
-							   "[W10] WS /state connected (id=%u)", client->id());
+			CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WS /state connected (id=%u)", client->id());
 			JsonDocument v_doc;
 			if (s_control) {
 				s_control->toJson(v_doc);
@@ -83,21 +79,17 @@ void CL_W10_WebAPI::routeWebSocket() {
 	s_server->addHandler(s_wsServerState);
 
 	// 차트 WS
-	s_wsServerChart->onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client,
-								AwsEventType type, void*, uint8_t*, size_t) {
+	s_wsServerChart->onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client, AwsEventType type, void*, uint8_t*, size_t) {
 		if (type == WS_EVT_CONNECT) {
-			CL_D10_Logger::log(EN_L10_LOG_INFO,
-							   "[W10] WS /chart connected (id=%u)", client->id());
+			CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WS /chart connected (id=%u)", client->id());
 		}
 	});
 	s_server->addHandler(s_wsServerChart);
 
 	// 메트릭 WS
-	s_wsServerMetrics->onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client,
-								  AwsEventType type, void*, uint8_t*, size_t) {
+	s_wsServerMetrics->onEvent([](AsyncWebSocket*, AsyncWebSocketClient* client, AwsEventType type, void*, uint8_t*, size_t) {
 		if (type == WS_EVT_CONNECT) {
-			CL_D10_Logger::log(EN_L10_LOG_INFO,
-							   "[W10] WS /metrics connected (id=%u)", client->id());
+			CL_D10_Logger::log(EN_L10_LOG_INFO, "[W10] WS /metrics connected (id=%u)", client->id());
 			if (s_control) {
 				JsonDocument v_doc;
 				s_control->toMetricsJson(v_doc);
@@ -134,4 +126,3 @@ void CL_W10_WebAPI::broadcastMetrics(JsonDocument& p_doc, bool p_diffOnly) {
 void CL_W10_WebAPI::broadcastChart(JsonDocument& p_doc, bool p_diffOnly) {
 	_broadcast(s_wsServerChart, p_doc, p_diffOnly);
 }
-
