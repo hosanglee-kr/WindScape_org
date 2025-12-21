@@ -165,15 +165,16 @@ inline constexpr const char* g_A20_PRESET_MODE_NAMES_Arr[] = {
 // 구조체 정의
 // ======================================================
 
-typedef struct {
-	char system[A20_Const::LEN_NAME];         
-	char wifi[A20_Const::LEN_NAME];            
-	char motion[A20_Const::LEN_NAME];
-	char nvsSpec[A20_Const::LEN_NAME];
-	char schedules[A20_Const::LEN_NAME];
-	char uzOpProfile[A20_Const::LEN_NAME];
-	char dft_windProfile[A20_Const::LEN_NAME];
-	char webPages[A20_Const::LEN_NAME];
+// A20_Const_020.h (ST_A20_cfg_jsonFile_t 정의부 교체/수정)
+typedef struct ST_A20_cfg_jsonFile_t {
+    char system[A20_Const::LEN_PATH];
+    char wifi[A20_Const::LEN_PATH];
+    char motion[A20_Const::LEN_PATH];
+    char nvsSpec[A20_Const::LEN_PATH];
+    char schedules[A20_Const::LEN_PATH];
+    char uzOpProfile[A20_Const::LEN_PATH];
+    char dft_windProfile[A20_Const::LEN_PATH];
+    char webPages[A20_Const::LEN_PATH];
 } ST_A20_cfg_jsonFile_t;
 
 typedef struct {
