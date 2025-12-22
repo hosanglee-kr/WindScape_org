@@ -278,7 +278,7 @@ bool CL_C10_ConfigManager::saveMotionConfig(const ST_A20_MotionConfig& p_cfg) {
 
 	for (uint8_t v_i = 0; v_i < p_cfg.ble.trusted_count; v_i++) {
 		const ST_A20_BLETrustedDevice& v_d	= p_cfg.ble.trusted_devices[v_i];
-		JsonObject					   v_td = d["motion"]["ble"]["trusted_devices"][v_i];
+		JsonObject					   v_td = d["motion"]["ble"]["trusted_devices"][v_i].to<JsonObject>();
 
 		v_td["alias"]						= v_d.alias;
 		v_td["name"]						= v_d.name;
@@ -613,7 +613,7 @@ void CL_C10_ConfigManager::toJson_Motion(const ST_A20_MotionConfig& p, JsonDocum
 
 	for (uint8_t i = 0; i < p.ble.trusted_count; i++) {
 		const ST_A20_BLETrustedDevice& v_d	= p.ble.trusted_devices[i];
-		JsonObject					   v_td = d["motion"]["ble"]["trusted_devices"][i];
+		JsonObject					   v_td = d["motion"]["ble"]["trusted_devices"][i].to<JsonObject>();
 
 		v_td["alias"]						= v_d.alias;
 		v_td["name"]						= v_d.name;
