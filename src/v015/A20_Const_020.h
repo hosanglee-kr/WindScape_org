@@ -214,7 +214,7 @@ typedef struct {
 			bool	 enabled;
 			int16_t	 pin;
 			uint16_t debounce_sec;
-
+            uint16_t hold_sec; 
 		} pir;
 		struct {
 			bool	 enabled;
@@ -623,6 +623,13 @@ inline void A20_resetSystemDefault(ST_A20_SystemConfig& p_cfg) {
 	p_cfg.hw.pir.enabled				 = true;
 	p_cfg.hw.pir.pin					 = 13;
 	p_cfg.hw.pir.debounce_sec			 = 5;
+	p_cfg.hw.pir.hold_sec = 120;   // ★ add
+
+   // HW: Temp/Hum
+    p_cfg.hw.tempHum.enabled = true;
+    A20_safe_strlcpy(p_cfg.hw.tempHum.type, "DHT22", sizeof(p_cfg.hw.tempHum.type));
+    p_cfg.hw.tempHum.pin = 23;
+    p_cfg.hw.tempHum.interval_sec = 30;
 
 	// HW: BLE
 	p_cfg.hw.ble.enabled				 = true;
