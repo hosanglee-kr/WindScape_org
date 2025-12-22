@@ -53,7 +53,7 @@ bool CL_C10_ConfigManager::loadSystemConfig(ST_A20_SystemConfig& p_cfg) {
 		return false;
 	}
 
-	if (!ioLoadJson(v_cfgJsonPath, nullptr, v_doc)) {  // bak는 자동 .bak 처리
+	if (!ioLoadJson(v_cfgJsonPath, v_doc)) {  // bak는 자동 .bak 처리
 		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadSystemConfig: ioLoadJson failed (%s)", v_cfgJsonPath);
 		// A20_resetSystemDefault(p_cfg);
 		return false;
@@ -109,7 +109,7 @@ bool CL_C10_ConfigManager::loadWifiConfig(ST_A20_WifiConfig& p_cfg) {
 		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadWifiConfig: s_cfgJsonFileMap.wifi failed");
 		return false;
 	}
-	if (!ioLoadJson(v_cfgJsonPath, nullptr, d)) {  // bak는 자동 .bak 처리
+	if (!ioLoadJson(v_cfgJsonPath, d)) {  // bak는 자동 .bak 처리
 		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadWifiConfig: ioLoadJson failed (%s)", v_cfgJsonPath);
 		return false;
 	}
@@ -147,7 +147,7 @@ bool CL_C10_ConfigManager::loadMotionConfig(ST_A20_MotionConfig& p_cfg) {
 		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadMotionConfig: s_cfgJsonFileMap.motion failed");
 		return false;
 	}
-	if (!ioLoadJson(v_cfgJsonPath, nullptr, d)) {  // bak는 자동 .bak 처리
+	if (!ioLoadJson(v_cfgJsonPath, d)) {  // bak는 자동 .bak 처리
 		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadMotionConfig: ioLoadJson failed (%s)", v_cfgJsonPath);
 		return false;
 	}
@@ -222,10 +222,10 @@ bool CL_C10_ConfigManager::saveSystemConfig(const ST_A20_SystemConfig& p_cfg) {
 	v["time"]["timezone"]					  = p_cfg.time.timezone;
 	v["time"]["sync_interval_min"]			  = p_cfg.time.sync_interval_min;
 
-	char v_bakPath[A20_Const::LEN_NAME + 5];  // ".bak" 4자 + null 1자 여유
-	snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.system);
+	//char v_bakPath[A20_Const::LEN_NAME + 5];  // ".bak" 4자 + null 1자 여유
+	/=snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.system);
 
-	return ioSaveJson(s_cfgJsonFileMap.system, v_bakPath, v);
+	return ioSaveJson(s_cfgJsonFileMap.system, v);
 }
 
 bool CL_C10_ConfigManager::saveWifiConfig(const ST_A20_WifiConfig& p_cfg) {
@@ -241,10 +241,10 @@ bool CL_C10_ConfigManager::saveWifiConfig(const ST_A20_WifiConfig& p_cfg) {
 		d["wifi"]["sta"][v_i]["pass"] = p_cfg.sta[v_i].pass;
 	}
 
-	char v_bakPath[A20_Const::LEN_NAME + 5];  // ".bak" 4자 + null 1자 여유
-	snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.wifi);
+	//char v_bakPath[A20_Const::LEN_NAME + 5];  // ".bak" 4자 + null 1자 여유
+	//snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.wifi);
 
-	return ioSaveJson(s_cfgJsonFileMap.wifi, v_bakPath, d);
+	return ioSaveJson(s_cfgJsonFileMap.wifi, d);
 }
 
 bool CL_C10_ConfigManager::saveMotionConfig(const ST_A20_MotionConfig& p_cfg) {
@@ -273,10 +273,10 @@ bool CL_C10_ConfigManager::saveMotionConfig(const ST_A20_MotionConfig& p_cfg) {
 		v_td["enabled"]						= v_d.enabled;
 	}
 
-	char v_bakPath[A20_Const::LEN_NAME + 5];  // ".bak" 4자 + null 1자 여유
-	snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.motion);
+	//char v_bakPath[A20_Const::LEN_NAME + 5];  // ".bak" 4자 + null 1자 여유
+	//snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.motion);
 
-	return ioSaveJson(s_cfgJsonFileMap.motion, v_bakPath, d);
+	return ioSaveJson(s_cfgJsonFileMap.motion, d);
 }
 
 // =====================================================
