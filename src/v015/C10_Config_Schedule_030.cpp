@@ -213,7 +213,7 @@ bool CL_C10_ConfigManager::loadSchedules(ST_A20_SchedulesRoot_t& p_cfg) {
         CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadSchedules: s_cfgJsonFileMap.schedules failed");
         return false;
     }
-    if (!ioLoadJson(v_cfgJsonPath, nullptr, d)) {  // bak는 자동 .bak 처리
+    if (!ioLoadJson(v_cfgJsonPath, d)) {  // bak는 자동 .bak 처리
         CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadSchedules: ioLoadJson failed (%s)", v_cfgJsonPath);
         return false;
     }
@@ -243,7 +243,7 @@ bool CL_C10_ConfigManager::loadUserProfiles(ST_A20_UserProfilesRoot_t& p_cfg) {
         CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadUserProfiles: s_cfgJsonFileMap.uzOpProfile failed");
         return false;
     }
-    if (!ioLoadJson(v_cfgJsonPath, nullptr, d)) {  // bak는 자동 .bak 처리
+    if (!ioLoadJson(v_cfgJsonPath, d)) {  // bak는 자동 .bak 처리
         CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadUserProfiles: ioLoadJson failed (%s)", v_cfgJsonPath);
         return false;
     }
@@ -273,7 +273,7 @@ bool CL_C10_ConfigManager::loadWindProfileDict(ST_A20_WindProfileDict_t& p_dict)
         CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadWindProfileDict: s_cfgJsonFileMap.dft_windProfile failed");
         return false;
     }
-    if (!ioLoadJson(v_cfgJsonPath, nullptr, d)) {  // bak는 자동 .bak 처리
+    if (!ioLoadJson(v_cfgJsonPath, d)) {  // bak는 자동 .bak 처리
         CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadWindProfileDict: ioLoadJson failed (%s)", v_cfgJsonPath);
         return false;
     }
@@ -377,10 +377,10 @@ bool CL_C10_ConfigManager::saveSchedules(const ST_A20_SchedulesRoot_t& p_cfg) {
         js["motion"]["ble"]["hold_sec"]       = s.motion.ble.hold_sec;
     }
 
-    char v_bakPath[A20_Const::LEN_NAME + 5];  // ".bak" 4자 + null 1자 여유
-    snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.schedules);
+    //char v_bakPath[A20_Const::LEN_NAME + 5];  // ".bak" 4자 + null 1자 여유
+    //snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.schedules);
 
-    return ioSaveJson(s_cfgJsonFileMap.schedules, v_bakPath, d);
+    return ioSaveJson(s_cfgJsonFileMap.schedules, d);
 }
 
 bool CL_C10_ConfigManager::saveUserProfiles(const ST_A20_UserProfilesRoot_t& p_cfg) {
@@ -436,10 +436,10 @@ bool CL_C10_ConfigManager::saveUserProfiles(const ST_A20_UserProfilesRoot_t& p_c
         jp["motion"]["ble"]["hold_sec"]       = up.motion.ble.hold_sec;
     }
 
-    char v_bakPath[A20_Const::LEN_NAME + 5];  // ".bak" 4자 + null 1자 여유
-    snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.uzOpProfile);
+    //char v_bakPath[A20_Const::LEN_NAME + 5];  // ".bak" 4자 + null 1자 여유
+    //snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.uzOpProfile);
 
-    return ioSaveJson(s_cfgJsonFileMap.uzOpProfile, v_bakPath, d);
+    return ioSaveJson(s_cfgJsonFileMap.uzOpProfile, d);
 }
 
 bool CL_C10_ConfigManager::saveWindProfileDict(const ST_A20_WindProfileDict_t& p_cfg) {
@@ -480,10 +480,10 @@ bool CL_C10_ConfigManager::saveWindProfileDict(const ST_A20_WindProfileDict_t& p
         v_f["thermal_factor"]           = v_s.factors.thermal_factor;
     }
 
-    char v_bakPath[A20_Const::LEN_NAME + 5];  // ".bak" 4자 + null 1자 여유
-    snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.dft_windProfile);
+    //char v_bakPath[A20_Const::LEN_NAME + 5];  // ".bak" 4자 + null 1자 여유
+    //snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.dft_windProfile);
 
-    return ioSaveJson(s_cfgJsonFileMap.dft_windProfile, v_bakPath, d);
+    return ioSaveJson(s_cfgJsonFileMap.dft_windProfile, d);
 }
 
 // =====================================================
