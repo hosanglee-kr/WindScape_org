@@ -57,7 +57,7 @@ constexpr char	  CFG_JSON_FILE[]			= "10_cfg_jsonFile.json";
 
 // 문자열 및 배열 길이 정의
 constexpr uint8_t LEN_NAME					= 64;
-constexpr uint8_t LEN_PATH					= 128;
+constexpr uint8_t LEN_PATH					= 160;
 constexpr uint8_t LEN_SSID					= 32;
 constexpr uint8_t LEN_PASS					= 32;
 constexpr uint8_t LEN_PRESET				= 32;
