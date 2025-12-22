@@ -223,7 +223,7 @@ bool CL_C10_ConfigManager::saveSystemConfig(const ST_A20_SystemConfig& p_cfg) {
 	v["time"]["sync_interval_min"]			  = p_cfg.time.sync_interval_min;
 
 	//char v_bakPath[A20_Const::LEN_NAME + 5];  // ".bak" 4자 + null 1자 여유
-	/=snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.system);
+	//snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", s_cfgJsonFileMap.system);
 
 	return ioSaveJson(s_cfgJsonFileMap.system, v);
 }
