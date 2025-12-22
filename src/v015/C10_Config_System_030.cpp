@@ -61,8 +61,10 @@ bool CL_C10_ConfigManager::loadSystemConfig(ST_A20_SystemConfig& p_cfg) {
 
 	JsonObjectConst j = v_doc.as<JsonObjectConst>();
 
-	if (j.isNull()) {
-        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadSystemConfig: missing 'System' object");
+	JsonObjectConst j_sys = j["system"];
+    JsonObjectConst j_hw  = j["hw"];
+    if (j_sys.isNull() || j_hw.isNull()) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadSystemConfig: missing 'system' or 'hw'");
         return false;
     }
 
