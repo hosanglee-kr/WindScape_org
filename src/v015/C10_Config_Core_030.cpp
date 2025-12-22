@@ -67,6 +67,160 @@ SemaphoreHandle_t	  CL_C10_ConfigManager::s_configMutex = nullptr;
 // JSON IO Helper 구현
 // ------------------------------------------------------
 
+bool ioLoadJson(const char* p_path, JsonDocument& p_doc) {
+    if (!p_path || !p_path[0]) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                           "[C10] ioLoadJson: invalid path (null/empty)");
+        return false;
+    }
+
+    char v_bakPath[A20_Const::LEN_PATH + 5];
+    snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", p_path);
+
+    // 1) main 없으면 bak로 복구
+    if (!LittleFS.exists(p_path)) {
+        if (LittleFS.exists(v_bakPath)) {
+            if (!LittleFS.rename(v_bakPath, p_path)) {
+                CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                                   "[C10] Restore rename failed: %s -> %s",
+                                   v_bakPath, p_path);
+                return false;
+            }
+            CL_D10_Logger::log(EN_L10_LOG_WARN,
+                               "[C10] Restored from backup: %s -> %s",
+                               v_bakPath, p_path);
+        } else {
+            CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                               "[C10] Missing config & no backup: %s",
+                               p_path);
+            return false;
+        }
+    }
+
+    // 2) main 파싱 시도
+    {
+        File v_f = LittleFS.open(p_path, "r");
+        if (!v_f) {
+            CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                               "[C10] Open failed: %s", p_path);
+            return false;
+        }
+
+        DeserializationError v_e = deserializeJson(p_doc, v_f);
+        v_f.close();
+
+        if (!v_e) {
+            return true; // 정상
+        }
+
+        CL_D10_Logger::log(EN_L10_LOG_WARN,
+                           "[C10] Parse error(%s): %s. Try backup...",
+                           p_path, v_e.c_str());
+    }
+
+    // 3) bak 재시도
+    if (!LittleFS.exists(v_bakPath)) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                           "[C10] No backup exists: %s", v_bakPath);
+        return false;
+    }
+
+    JsonDocument v_bakDoc;
+    File v_fb = LittleFS.open(v_bakPath, "r");
+    if (!v_fb) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                           "[C10] Backup open failed: %s", v_bakPath);
+        return false;
+    }
+
+    DeserializationError v_eb = deserializeJson(v_bakDoc, v_fb);
+    v_fb.close();
+
+    if (v_eb) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                           "[C10] Backup parse error(%s): %s",
+                           v_bakPath, v_eb.c_str());
+        return false;
+    }
+
+    // 4) bak -> main 복원
+    LittleFS.remove(p_path);
+    if (!LittleFS.rename(v_bakPath, p_path)) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                           "[C10] Backup restore rename failed: %s -> %s",
+                           v_bakPath, p_path);
+        return false;
+    }
+
+    p_doc.clear();
+    p_doc.set(v_bakDoc);
+
+    CL_D10_Logger::log(EN_L10_LOG_WARN,
+                       "[C10] Restored valid backup to main: %s",
+                       p_path);
+    return true;
+}
+
+
+bool ioSaveJson(const char* p_path, const JsonDocument& p_doc) {
+    if (!p_path || !p_path[0]) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                           "[C10] ioSaveJson: invalid path (null/empty)");
+        return false;
+    }
+
+    char v_bakPath[A20_Const::LEN_PATH + 5];
+    snprintf(v_bakPath, sizeof(v_bakPath), "%s.bak", p_path);
+
+    bool v_hadMain = LittleFS.exists(p_path);
+
+    // 1) main -> bak
+    if (v_hadMain) {
+        if (LittleFS.exists(v_bakPath)) {
+            LittleFS.remove(v_bakPath);
+        }
+        if (!LittleFS.rename(p_path, v_bakPath)) {
+            CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                               "[C10] Backup rename failed: %s -> %s",
+                               p_path, v_bakPath);
+            return false;
+        }
+    }
+
+    // 2) write new main
+    File v_f = LittleFS.open(p_path, "w");
+    if (!v_f) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                           "[C10] Save open failed: %s", p_path);
+
+        // rollback
+        if (v_hadMain && LittleFS.exists(v_bakPath)) {
+            LittleFS.rename(v_bakPath, p_path);
+        }
+        return false;
+    }
+
+    size_t v_written = serializeJsonPretty(p_doc, v_f);
+    v_f.close();
+
+    if (v_written == 0) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR,
+                           "[C10] Save write failed: %s", p_path);
+
+        // rollback
+        if (LittleFS.exists(p_path)) {
+            LittleFS.remove(p_path);
+        }
+        if (v_hadMain && LittleFS.exists(v_bakPath)) {
+            LittleFS.rename(v_bakPath, p_path);
+        }
+        return false;
+    }
+
+    return true;
+}
+
+/*
 bool ioLoadJson(const char* p_path, const char* p_bak, JsonDocument& p_doc) {
 	if (!p_path || !p_path[0]) {
 		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] ioLoadJson: invalid path (null/empty)");
@@ -141,6 +295,7 @@ bool ioSaveJson(const char* p_path, const char* p_bak, const JsonDocument& p_doc
 	v_f.close();
 	return true;
 }
+*/
 
 bool CL_C10_ConfigManager::_loadCfgJsonFile() {
 	JsonDocument v_doc;
