@@ -90,6 +90,12 @@ bool CL_C10_ConfigManager::loadSystemConfig(ST_A20_SystemConfig& p_cfg) {
 	p_cfg.hw.pir.enabled				 = j["hw"]["pir"]["enabled"] | true;
 	p_cfg.hw.pir.pin					 = j["hw"]["pir"]["pin"] | 13;
 	p_cfg.hw.pir.debounce_sec			 = j["hw"]["pir"]["debounce_sec"] | 5;
+	p_cfg.hw.pir.hold_sec = j["hw"]["pir"]["hold_sec"] | 120;
+
+    p_cfg.hw.tempHum.enabled      = j["hw"]["tempHum"]["enabled"] | true;
+    strlcpy(p_cfg.hw.tempHum.type, j["hw"]["tempHum"]["type"] | "DHT22", sizeof(p_cfg.hw.tempHum.type));
+    p_cfg.hw.tempHum.pin          = j["hw"]["tempHum"]["pin"] | 23;
+    p_cfg.hw.tempHum.interval_sec = j["hw"]["tempHum"]["interval_sec"] | 30;
 
 	p_cfg.hw.ble.enabled				 = j["hw"]["ble"]["enabled"] | true;
 	p_cfg.hw.ble.scan_interval			 = j["hw"]["ble"]["scan_interval"] | 5;
@@ -227,6 +233,12 @@ bool CL_C10_ConfigManager::saveSystemConfig(const ST_A20_SystemConfig& p_cfg) {
 	v["hw"]["pir"]["enabled"]				  = p_cfg.hw.pir.enabled;
 	v["hw"]["pir"]["pin"]					  = p_cfg.hw.pir.pin;
 	v["hw"]["pir"]["debounce_sec"]			  = p_cfg.hw.pir.debounce_sec;
+	v["hw"]["pir"]["hold_sec"] = p_cfg.hw.pir.hold_sec;
+
+    v["hw"]["tempHum"]["enabled"]      = p_cfg.hw.tempHum.enabled;
+    v["hw"]["tempHum"]["type"]         = p_cfg.hw.tempHum.type;
+    v["hw"]["tempHum"]["pin"]          = p_cfg.hw.tempHum.pin;
+    v["hw"]["tempHum"]["interval_sec"] = p_cfg.hw.tempHum.interval_sec;
 
 	v["hw"]["ble"]["enabled"]				  = p_cfg.hw.ble.enabled;
 	v["hw"]["ble"]["scan_interval"]			  = p_cfg.hw.ble.scan_interval;
@@ -576,6 +588,12 @@ void CL_C10_ConfigManager::toJson_System(const ST_A20_SystemConfig& p, JsonDocum
 	d["hw"]["pir"]["enabled"]				  = p.hw.pir.enabled;
 	d["hw"]["pir"]["pin"]					  = p.hw.pir.pin;
 	d["hw"]["pir"]["debounce_sec"]			  = p.hw.pir.debounce_sec;
+	d["hw"]["pir"]["hold_sec"] = p.hw.pir.hold_sec;
+
+    d["hw"]["tempHum"]["enabled"]      = p.hw.tempHum.enabled;
+    d["hw"]["tempHum"]["type"]         = p.hw.tempHum.type;
+    d["hw"]["tempHum"]["pin"]          = p.hw.tempHum.pin;
+    d["hw"]["tempHum"]["interval_sec"] = p.hw.tempHum.interval_sec;
 
 	d["hw"]["ble"]["enabled"]				  = p.hw.ble.enabled;
 	d["hw"]["ble"]["scan_interval"]			  = p.hw.ble.scan_interval;
