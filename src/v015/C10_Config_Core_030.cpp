@@ -300,7 +300,7 @@ bool ioSaveJson(const char* p_path, const char* p_bak, const JsonDocument& p_doc
 bool CL_C10_ConfigManager::_loadCfgJsonFile() {
 	JsonDocument v_doc;
 
-	if (!ioLoadJson(A20_Const::CFG_JSON_FILE, nullptr, v_doc)) {
+	if (!ioLoadJson(A20_Const::CFG_JSON_FILE, v_doc)) {
 		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] Failed to load cfg json map: %s", A20_Const::CFG_JSON_FILE);
 		return false;  // 옵션 A: 로드 실패시 에러로 종료
 	}
@@ -573,7 +573,7 @@ void CL_C10_ConfigManager::toJson_All(const ST_A20_ConfigRoot_t& p, JsonDocument
 bool CL_C10_ConfigManager::factoryResetFromDefault() {
 #ifdef CFG_DEFAULT_FILE_EXISTS
 	JsonDocument v_def;
-	if (!ioLoadJson(A20_Const::CFG_DEFAULT_FILE, A20_Const::CFG_DEFAULT_FILE_BAK, v_def)) {
+	if (!ioLoadJson(A20_Const::CFG_DEFAULT_FILE, v_def)) {
 		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] Default file missing: %s", A20_Const::CFG_DEFAULT_FILE);
 		return false;
 	}
@@ -581,27 +581,27 @@ bool CL_C10_ConfigManager::factoryResetFromDefault() {
 	if (v_def["system"].is<JsonObjectConst>()) {
 		JsonDocument v_sys;
 		v_sys["system"] = v_def["system"];
-		ioSaveJson(A20_Const::CFG_SYSTEM_FILE, A20_Const::CFG_SYSTEM_FILE_BAK, v_sys);
+		ioSaveJson(A20_Const::CFG_SYSTEM_FILE, v_sys);
 	}
 	if (v_def["wifi"].is<JsonObjectConst>()) {
 		JsonDocument v_wifi;
 		v_wifi["wifi"] = v_def["wifi"];
-		ioSaveJson(A20_Const::CFG_WIFI_FILE, A20_Const::CFG_WIFI_FILE_BAK, v_wifi);
+		ioSaveJson(A20_Const::CFG_WIFI_FILE, v_wifi);
 	}
 	if (v_def["motion"].is<JsonObjectConst>()) {
 		JsonDocument v_motion;
 		v_motion["motion"] = v_def["motion"];
-		ioSaveJson(A20_Const::CFG_MOTION_FILE, A20_Const::CFG_MOTION_FILE_BAK, v_motion);
+		ioSaveJson(A20_Const::CFG_MOTION_FILE, v_motion);
 	}
 	if (v_def["schedules"].is<JsonArrayConst>()) {
 		JsonDocument v_sch;
 		v_sch["schedules"] = v_def["schedules"];
-		ioSaveJson(A20_Const::CFG_SCHEDULES_FILE, A20_Const::CFG_SCHEDULES_FILE_BAK, v_sch);
+		ioSaveJson(A20_Const::CFG_SCHEDULES_FILE, v_sch);
 	}
 	if (v_def["userProfiles"].is<JsonObjectConst>()) {
 		JsonDocument v_up;
 		v_up["userProfiles"] = v_def["userProfiles"];
-		ioSaveJson(A20_Const::CFG_USER_PROFILES_FILE, A20_Const::CFG_USER_PROFILES_FILE_BAK, v_up);
+		ioSaveJson(A20_Const::CFG_USER_PROFILES_FILE, v_up);
 	}
 	// windProfile은 펌웨어 내장 또는 별도 처리 (필요 시 확장 가능)
 
