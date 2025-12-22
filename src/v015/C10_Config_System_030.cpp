@@ -61,6 +61,11 @@ bool CL_C10_ConfigManager::loadSystemConfig(ST_A20_SystemConfig& p_cfg) {
 
 	JsonObjectConst j = v_doc.as<JsonObjectConst>();
 
+	if (j.isNull()) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadSystemConfig: missing 'System' object");
+        return false;
+    }
+
 	strlcpy(p_cfg.meta.version, j["meta"]["version"] | A20_Const::FW_VERSION, sizeof(p_cfg.meta.version));
 	strlcpy(p_cfg.meta.device_name, j["meta"]["device_name"] | "SmartNatureWind", sizeof(p_cfg.meta.device_name));
 	strlcpy(p_cfg.meta.last_update, j["meta"]["last_update"] | "", sizeof(p_cfg.meta.last_update));
@@ -116,6 +121,11 @@ bool CL_C10_ConfigManager::loadWifiConfig(ST_A20_WifiConfig& p_cfg) {
 
 	JsonObjectConst j = d["wifi"];
 
+	if (j.isNull()) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadWifiConfig: missing 'wifi' object");
+        return false;
+    }
+
 	p_cfg.wifiMode	  = (EN_A20_WIFI_MODE_t)(j["wifiMode"] | EN_A20_WIFI_MODE_AP_STA);
 	strlcpy(p_cfg.wifiModeDesc, j["wifiModeDesc"] | "0=AP,1=STA,2=AP+STA", sizeof(p_cfg.wifiModeDesc));
 
@@ -154,6 +164,11 @@ bool CL_C10_ConfigManager::loadMotionConfig(ST_A20_MotionConfig& p_cfg) {
 
 	JsonObjectConst j			  = d["motion"];
 
+	if (j.isNull()) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadMotionConfig: missing 'Motion' object");
+        return false;
+    }
+	
 	p_cfg.enabled				  = j["enabled"] | true;
 	p_cfg.pir.enabled			  = j["pir"]["enabled"] | true;
 	p_cfg.pir.hold_sec			  = j["pir"]["hold_sec"] | 120;
@@ -291,10 +306,10 @@ bool CL_C10_ConfigManager::patchSystemFromJson(ST_A20_SystemConfig& p_config, co
 	JsonObjectConst j_sec_root = p_patch["security"];
 	JsonObjectConst j_hw_root  = p_patch["hw"];	 // H/W root 객체 추가
 
-	if (j_sys.isNull() && j_sec_root.isNull()) {
-		C10_MUTEX_RELEASE();
-		return false;
-	}
+	if (j_sys.isNull() && j_sec_root.isNull() && j_hw_root.isNull()) {
+        C10_MUTEX_RELEASE();
+        return false;
+    }
 
 	// system.logging
 	if (!j_sys.isNull()) {
