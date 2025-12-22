@@ -170,14 +170,14 @@ bool CL_C10_ConfigManager::_loadCfgJsonFile() {
 	};
 
 	// 각 멤버별 로드 (고정 크기 A20_Const::LEN_NAME 전달)
-	loadStr(s_cfgJsonFileMap.system, "system", A20_Const::LEN_NAME);
-	loadStr(s_cfgJsonFileMap.wifi, "wifi", A20_Const::LEN_NAME);
-	loadStr(s_cfgJsonFileMap.motion, "motion", A20_Const::LEN_NAME);
-	loadStr(s_cfgJsonFileMap.nvsSpec, "nvsSpec", A20_Const::LEN_NAME);
-	loadStr(s_cfgJsonFileMap.schedules, "schedules", A20_Const::LEN_NAME);
-	loadStr(s_cfgJsonFileMap.uzOpProfile, "uzOpProfile", A20_Const::LEN_NAME);
-	loadStr(s_cfgJsonFileMap.dft_windProfile, "dft_windProfile", A20_Const::LEN_NAME);
-	loadStr(s_cfgJsonFileMap.webPages, "webPages", A20_Const::LEN_NAME);
+	loadStr(s_cfgJsonFileMap.system, "system", A20_Const::LEN_PATH);
+	loadStr(s_cfgJsonFileMap.wifi, "wifi", A20_Const::LEN_PATH);
+	loadStr(s_cfgJsonFileMap.motion, "motion", A20_Const::LEN_PATH);
+	loadStr(s_cfgJsonFileMap.nvsSpec, "nvsSpec", A20_Const::LEN_PATH);
+	loadStr(s_cfgJsonFileMap.schedules, "schedules", A20_Const::LEN_PATH);
+	loadStr(s_cfgJsonFileMap.uzOpProfile, "uzOpProfile", A20_Const::LEN_PATH);
+	loadStr(s_cfgJsonFileMap.dft_windProfile, "dft_windProfile", A20_Const::LEN_PATH);
+	loadStr(s_cfgJsonFileMap.webPages, "webPages", A20_Const::LEN_PATH);
 
 	// 로그 출력 수정: .c_str() 제거 (char 배열은 바로 %s로 출력 가능)
 	CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] cfg_jsonFile loaded: sys=%s wifi=%s sch=%s up=%s wind=%s", s_cfgJsonFileMap.system, s_cfgJsonFileMap.wifi, s_cfgJsonFileMap.schedules, s_cfgJsonFileMap.uzOpProfile, s_cfgJsonFileMap.dft_windProfile);
