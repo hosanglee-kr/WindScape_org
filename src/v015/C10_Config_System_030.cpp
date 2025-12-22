@@ -309,6 +309,285 @@ bool CL_C10_ConfigManager::saveMotionConfig(const ST_A20_MotionConfig& p_cfg) {
 // =====================================================
 // 4. JSON Patch (System/Wifi/Motion)
 // =====================================================
+// =====================================================
+// 4. JSON Patch (System) - 확장 완성체
+//  - 지원: system.logging, security.api_key, hw.fanConfig, hw.pir, hw.tempHum, time, meta(device_name/last_update)
+//  - 정책: 버전(meta.version)은 보통 FW 고정이므로 PATCH 대상에서 제외(원하면 추가 가능)
+// =====================================================
+bool CL_C10_ConfigManager::patchSystemFromJson(ST_A20_SystemConfig& p_config, const JsonDocument& p_patch) {
+	bool v_changed = false;
+
+	C10_MUTEX_ACQUIRE_BOOL();
+
+	// 루트 섹션들
+	JsonObjectConst j_meta = p_patch["meta"];
+	JsonObjectConst j_sys  = p_patch["system"];
+	JsonObjectConst j_sec  = p_patch["security"];
+	JsonObjectConst j_hw   = p_patch["hw"];
+	JsonObjectConst j_time = p_patch["time"];
+
+	// 아무 것도 없으면 실패
+	if (j_meta.isNull() && j_sys.isNull() && j_sec.isNull() && j_hw.isNull() && j_time.isNull()) {
+		C10_MUTEX_RELEASE();
+		return false;
+	}
+
+	// -------------------------------------------------
+	// meta
+	// -------------------------------------------------
+	if (!j_meta.isNull()) {
+		// device_name
+		const char* v_dn = j_meta["device_name"] | "";
+		if (strlen(v_dn) > 0 && strcmp(v_dn, p_config.meta.device_name) != 0) {
+			strlcpy(p_config.meta.device_name, v_dn, sizeof(p_config.meta.device_name));
+			v_changed = true;
+		}
+
+		// last_update
+		const char* v_lu = j_meta["last_update"] | "";
+		if (strlen(v_lu) > 0 && strcmp(v_lu, p_config.meta.last_update) != 0) {
+			strlcpy(p_config.meta.last_update, v_lu, sizeof(p_config.meta.last_update));
+			v_changed = true;
+		}
+
+		// version은 기본적으로 제외 (필요 시 아래 주석 해제)
+		/*
+		const char* v_ver = j_meta["version"] | "";
+		if (strlen(v_ver) > 0 && strcmp(v_ver, p_config.meta.version) != 0) {
+			strlcpy(p_config.meta.version, v_ver, sizeof(p_config.meta.version));
+			v_changed = true;
+		}
+		*/
+	}
+
+	// -------------------------------------------------
+	// system.logging
+	// -------------------------------------------------
+	if (!j_sys.isNull()) {
+		JsonObjectConst j_log = j_sys["logging"];
+		if (!j_log.isNull()) {
+			// level
+			const char* v_lv = j_log["level"] | "";
+			if (strlen(v_lv) > 0 && strcmp(v_lv, p_config.system.logging.level) != 0) {
+				strlcpy(p_config.system.logging.level, v_lv, sizeof(p_config.system.logging.level));
+				v_changed = true;
+			}
+
+			// max_entries
+			if (j_log["max_entries"].is<uint16_t>()) {
+				uint16_t v_max = j_log["max_entries"];
+				if (v_max != p_config.system.logging.max_entries) {
+					p_config.system.logging.max_entries = v_max;
+					v_changed = true;
+				}
+			}
+		}
+	}
+
+	// -------------------------------------------------
+	// security.api_key
+	// -------------------------------------------------
+	if (!j_sec.isNull()) {
+		const char* v_key = j_sec["api_key"] | "";
+		if (strlen(v_key) > 0 && strcmp(v_key, p_config.security.api_key) != 0) {
+			strlcpy(p_config.security.api_key, v_key, sizeof(p_config.security.api_key));
+			v_changed = true;
+		}
+	}
+
+	// -------------------------------------------------
+	// hw (fanConfig / pir / tempHum / fan_pwm / ble 선택 지원)
+	// -------------------------------------------------
+	if (!j_hw.isNull()) {
+		// hw.fanConfig
+		JsonObjectConst j_fan = j_hw["fanConfig"];
+		if (!j_fan.isNull()) {
+			if (j_fan["startPercentMin"].is<uint8_t>()) {
+				uint8_t v_val = j_fan["startPercentMin"];
+				if (v_val != p_config.hw.fanConfig.startPercentMin) {
+					p_config.hw.fanConfig.startPercentMin = v_val;
+					v_changed = true;
+				}
+			}
+			if (j_fan["comfortPercentMin"].is<uint8_t>()) {
+				uint8_t v_val = j_fan["comfortPercentMin"];
+				if (v_val != p_config.hw.fanConfig.comfortPercentMin) {
+					p_config.hw.fanConfig.comfortPercentMin = v_val;
+					v_changed = true;
+				}
+			}
+			if (j_fan["comfortPercentMax"].is<uint8_t>()) {
+				uint8_t v_val = j_fan["comfortPercentMax"];
+				if (v_val != p_config.hw.fanConfig.comfortPercentMax) {
+					p_config.hw.fanConfig.comfortPercentMax = v_val;
+					v_changed = true;
+				}
+			}
+			if (j_fan["hardPercentMax"].is<uint8_t>()) {
+				uint8_t v_val = j_fan["hardPercentMax"];
+				if (v_val != p_config.hw.fanConfig.hardPercentMax) {
+					p_config.hw.fanConfig.hardPercentMax = v_val;
+					v_changed = true;
+				}
+			}
+		}
+
+		// hw.pir
+		JsonObjectConst j_pir = j_hw["pir"];
+		if (!j_pir.isNull()) {
+			if (j_pir["enabled"].is<bool>()) {
+				bool v_en = j_pir["enabled"];
+				if (v_en != p_config.hw.pir.enabled) {
+					p_config.hw.pir.enabled = v_en;
+					v_changed = true;
+				}
+			}
+			if (j_pir["pin"].is<uint8_t>()) {
+				uint8_t v_pin = j_pir["pin"];
+				if (v_pin != p_config.hw.pir.pin) {
+					p_config.hw.pir.pin = v_pin;
+					v_changed = true;
+				}
+			}
+			if (j_pir["debounce_sec"].is<uint16_t>()) {
+				uint16_t v_db = j_pir["debounce_sec"];
+				if (v_db != p_config.hw.pir.debounce_sec) {
+					p_config.hw.pir.debounce_sec = v_db;
+					v_changed = true;
+				}
+			}
+			// JSON 스키마에 존재하는 hold_sec 반영 (system에도 있고 motion에도 있음)
+			if (j_pir["hold_sec"].is<uint16_t>()) {
+				uint16_t v_hold = j_pir["hold_sec"];
+				if (v_hold != p_config.hw.pir.hold_sec) {
+					p_config.hw.pir.hold_sec = v_hold;
+					v_changed = true;
+				}
+			}
+		}
+
+		// hw.tempHum
+		JsonObjectConst j_th = j_hw["tempHum"];
+		if (!j_th.isNull()) {
+			if (j_th["enabled"].is<bool>()) {
+				bool v_en = j_th["enabled"];
+				if (v_en != p_config.hw.tempHum.enabled) {
+					p_config.hw.tempHum.enabled = v_en;
+					v_changed = true;
+				}
+			}
+
+			const char* v_type = j_th["type"] | "";
+			if (strlen(v_type) > 0 && strcmp(v_type, p_config.hw.tempHum.type) != 0) {
+				strlcpy(p_config.hw.tempHum.type, v_type, sizeof(p_config.hw.tempHum.type));
+				v_changed = true;
+			}
+
+			if (j_th["pin"].is<uint8_t>()) {
+				uint8_t v_pin = j_th["pin"];
+				if (v_pin != p_config.hw.tempHum.pin) {
+					p_config.hw.tempHum.pin = v_pin;
+					v_changed = true;
+				}
+			}
+
+			if (j_th["interval_sec"].is<uint16_t>()) {
+				uint16_t v_itv = j_th["interval_sec"];
+				if (v_itv != p_config.hw.tempHum.interval_sec) {
+					p_config.hw.tempHum.interval_sec = v_itv;
+					v_changed = true;
+				}
+			}
+		}
+
+		// (선택) hw.fan_pwm
+		JsonObjectConst j_pwm = j_hw["fan_pwm"];
+		if (!j_pwm.isNull()) {
+			if (j_pwm["pin"].is<uint8_t>()) {
+				uint8_t v_pin = j_pwm["pin"];
+				if (v_pin != p_config.hw.fan_pwm.pin) {
+					p_config.hw.fan_pwm.pin = v_pin;
+					v_changed = true;
+				}
+			}
+			if (j_pwm["channel"].is<uint8_t>()) {
+				uint8_t v_ch = j_pwm["channel"];
+				if (v_ch != p_config.hw.fan_pwm.channel) {
+					p_config.hw.fan_pwm.channel = v_ch;
+					v_changed = true;
+				}
+			}
+			if (j_pwm["freq"].is<uint32_t>()) {
+				uint32_t v_fr = j_pwm["freq"];
+				if (v_fr != p_config.hw.fan_pwm.freq) {
+					p_config.hw.fan_pwm.freq = v_fr;
+					v_changed = true;
+				}
+			}
+			if (j_pwm["res"].is<uint8_t>()) {
+				uint8_t v_res = j_pwm["res"];
+				if (v_res != p_config.hw.fan_pwm.res) {
+					p_config.hw.fan_pwm.res = v_res;
+					v_changed = true;
+				}
+			}
+		}
+
+		// (선택) hw.ble
+		JsonObjectConst j_ble = j_hw["ble"];
+		if (!j_ble.isNull()) {
+			if (j_ble["enabled"].is<bool>()) {
+				bool v_en = j_ble["enabled"];
+				if (v_en != p_config.hw.ble.enabled) {
+					p_config.hw.ble.enabled = v_en;
+					v_changed = true;
+				}
+			}
+			if (j_ble["scan_interval"].is<uint16_t>()) {
+				uint16_t v_si = j_ble["scan_interval"];
+				if (v_si != p_config.hw.ble.scan_interval) {
+					p_config.hw.ble.scan_interval = v_si;
+					v_changed = true;
+				}
+			}
+		}
+	}
+
+	// -------------------------------------------------
+	// time
+	// -------------------------------------------------
+	if (!j_time.isNull()) {
+		const char* v_ntp = j_time["ntp_server"] | "";
+		if (strlen(v_ntp) > 0 && strcmp(v_ntp, p_config.time.ntp_server) != 0) {
+			strlcpy(p_config.time.ntp_server, v_ntp, sizeof(p_config.time.ntp_server));
+			v_changed = true;
+		}
+
+		const char* v_tz = j_time["timezone"] | "";
+		if (strlen(v_tz) > 0 && strcmp(v_tz, p_config.time.timezone) != 0) {
+			strlcpy(p_config.time.timezone, v_tz, sizeof(p_config.time.timezone));
+			v_changed = true;
+		}
+
+		if (j_time["sync_interval_min"].is<uint16_t>()) {
+			uint16_t v_si = j_time["sync_interval_min"];
+			if (v_si != p_config.time.sync_interval_min) {
+				p_config.time.sync_interval_min = v_si;
+				v_changed = true;
+			}
+		}
+	}
+
+	if (v_changed) {
+		_dirty_system = true;
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] System config patched (Memory Only, extended). Dirty=true");
+	}
+
+	C10_MUTEX_RELEASE();
+	return v_changed;
+}
+
+/*
 bool CL_C10_ConfigManager::patchSystemFromJson(ST_A20_SystemConfig& p_config, const JsonDocument& p_patch) {
 	bool v_changed = false;
 
@@ -399,6 +678,7 @@ bool CL_C10_ConfigManager::patchSystemFromJson(ST_A20_SystemConfig& p_config, co
 	C10_MUTEX_RELEASE();
 	return v_changed;
 }
+*/
 
 bool CL_C10_ConfigManager::patchWifiFromJson(ST_A20_WifiConfig& p_config, const JsonDocument& p_patch) {
 	bool v_changed = false;
