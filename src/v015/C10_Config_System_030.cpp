@@ -40,75 +40,120 @@
 // =====================================================
 // 2-1. 목적물별 Load 구현 (System/Wifi/Motion)
 // =====================================================
+
 bool CL_C10_ConfigManager::loadSystemConfig(ST_A20_SystemConfig& p_cfg) {
-	JsonDocument v_doc;
+    JsonDocument v_doc;
 
-	const char*	 v_cfgJsonPath = nullptr;
+    const char* v_cfgJsonPath = nullptr;
+    if (s_cfgJsonFileMap.system[0] != '\0') {
+        v_cfgJsonPath = s_cfgJsonFileMap.system;
+    } else {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadSystemConfig: s_cfgJsonFileMap.system is empty");
+        return false;
+    }
 
-	// [수정] std::string::empty() -> strlen() 또는 첫 문자 비교로 변경
-	if (s_cfgJsonFileMap.system[0] != '\0') {
-		v_cfgJsonPath = s_cfgJsonFileMap.system;
-	} else {
-		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadSystemConfig: s_cfgJsonFileMap.system is empty");
-		return false;
-	}
+    if (!ioLoadJson(v_cfgJsonPath, v_doc)) {
+        CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadSystemConfig: ioLoadJson failed (%s)", v_cfgJsonPath);
+        return false;
+    }
 
-	if (!ioLoadJson(v_cfgJsonPath, v_doc)) {  // bak는 자동 .bak 처리
-		CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadSystemConfig: ioLoadJson failed (%s)", v_cfgJsonPath);
-		// A20_resetSystemDefault(p_cfg);
-		return false;
-	}
+    JsonObjectConst j_root = v_doc.as<JsonObjectConst>();
 
-	JsonObjectConst j = v_doc.as<JsonObjectConst>();
+    JsonObjectConst j_meta = j_root["meta"].as<JsonObjectConst>();
+    JsonObjectConst j_sys  = j_root["system"].as<JsonObjectConst>();
 
-	JsonObjectConst j_sys = j["system"];
-    JsonObjectConst j_hw  = j["hw"];
+    // hw는 루트가 기본, 추후 system.hw 로 내려가도 대응
+    JsonObjectConst j_hw = j_root["hw"].as<JsonObjectConst>();
+    if (j_hw.isNull() && !j_sys.isNull()) {
+        j_hw = j_sys["hw"].as<JsonObjectConst>();
+    }
+
     if (j_sys.isNull() || j_hw.isNull()) {
         CL_D10_Logger::log(EN_L10_LOG_ERROR, "[C10] loadSystemConfig: missing 'system' or 'hw'");
         return false;
     }
 
-	strlcpy(p_cfg.meta.version, j["meta"]["version"] | A20_Const::FW_VERSION, sizeof(p_cfg.meta.version));
-	strlcpy(p_cfg.meta.device_name, j["meta"]["device_name"] | "SmartNatureWind", sizeof(p_cfg.meta.device_name));
-	strlcpy(p_cfg.meta.last_update, j["meta"]["last_update"] | "", sizeof(p_cfg.meta.last_update));
+    // meta (없어도 기본값)
+    if (j_meta.isNull()) {
+        CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] loadSystemConfig: missing 'meta' (defaults used)");
+    }
+    strlcpy(p_cfg.meta.version,     j_meta["version"] | A20_Const::FW_VERSION, sizeof(p_cfg.meta.version));
+    strlcpy(p_cfg.meta.device_name, j_meta["device_name"] | "SmartNatureWind",  sizeof(p_cfg.meta.device_name));
+    strlcpy(p_cfg.meta.last_update, j_meta["last_update"] | "",                sizeof(p_cfg.meta.last_update));
 
-	strlcpy(p_cfg.system.logging.level, j["system"]["logging"]["level"] | "INFO", sizeof(p_cfg.system.logging.level));
-	p_cfg.system.logging.max_entries	 = j["system"]["logging"]["max_entries"] | 300;
+    // system.logging
+    JsonObjectConst j_log = j_sys["logging"].as<JsonObjectConst>();
+    if (j_log.isNull()) {
+        CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] loadSystemConfig: missing system.logging (defaults used)");
+    }
+    strlcpy(p_cfg.system.logging.level, j_log["level"] | "INFO", sizeof(p_cfg.system.logging.level));
+    p_cfg.system.logging.max_entries = j_log["max_entries"] | 300;
 
-	p_cfg.hw.fan_pwm.pin				 = j["hw"]["fan_pwm"]["pin"] | 6;
-	p_cfg.hw.fan_pwm.channel			 = j["hw"]["fan_pwm"]["channel"] | 0;
-	p_cfg.hw.fan_pwm.freq				 = j["hw"]["fan_pwm"]["freq"] | 25000;
-	p_cfg.hw.fan_pwm.res				 = j["hw"]["fan_pwm"]["res"] | 10;
+    // hw.fan_pwm
+    JsonObjectConst j_pwm = j_hw["fan_pwm"].as<JsonObjectConst>();
+    if (j_pwm.isNull()) {
+        CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] loadSystemConfig: missing hw.fan_pwm (defaults used)");
+    }
+    p_cfg.hw.fan_pwm.pin     = j_pwm["pin"]     | 6;
+    p_cfg.hw.fan_pwm.channel = j_pwm["channel"] | 0;
+    p_cfg.hw.fan_pwm.freq    = j_pwm["freq"]    | 25000;
+    p_cfg.hw.fan_pwm.res     = j_pwm["res"]     | 10;
 
-	// ----------------------------------------------------------------
-	// [추가] hw.fanConfig 로드
-	// ----------------------------------------------------------------
-	// >> [추가] hw.fanConfig 로드
-	p_cfg.hw.fanConfig.startPercentMin	 = j["hw"]["fanConfig"]["startPercentMin"] | 18;
-	p_cfg.hw.fanConfig.comfortPercentMin = j["hw"]["fanConfig"]["comfortPercentMin"] | 22;
-	p_cfg.hw.fanConfig.comfortPercentMax = j["hw"]["fanConfig"]["comfortPercentMax"] | 65;
-	p_cfg.hw.fanConfig.hardPercentMax	 = j["hw"]["fanConfig"]["hardPercentMax"] | 90;
+    // hw.fanConfig
+    JsonObjectConst j_fcfg = j_hw["fanConfig"].as<JsonObjectConst>();
+    if (j_fcfg.isNull()) {
+        CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] loadSystemConfig: missing hw.fanConfig (defaults used)");
+    }
+    p_cfg.hw.fanConfig.startPercentMin   = j_fcfg["startPercentMin"]   | 18;
+    p_cfg.hw.fanConfig.comfortPercentMin = j_fcfg["comfortPercentMin"] | 22;
+    p_cfg.hw.fanConfig.comfortPercentMax = j_fcfg["comfortPercentMax"] | 65;
+    p_cfg.hw.fanConfig.hardPercentMax    = j_fcfg["hardPercentMax"]    | 90;
 
-	p_cfg.hw.pir.enabled				 = j["hw"]["pir"]["enabled"] | true;
-	p_cfg.hw.pir.pin					 = j["hw"]["pir"]["pin"] | 13;
-	p_cfg.hw.pir.debounce_sec			 = j["hw"]["pir"]["debounce_sec"] | 5;
-	p_cfg.hw.pir.hold_sec = j["hw"]["pir"]["hold_sec"] | 120;
+    // hw.pir
+    JsonObjectConst j_pir = j_hw["pir"].as<JsonObjectConst>();
+    if (j_pir.isNull()) {
+        CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] loadSystemConfig: missing hw.pir (defaults used)");
+    }
+    p_cfg.hw.pir.enabled      = j_pir["enabled"]      | true;
+    p_cfg.hw.pir.pin          = j_pir["pin"]          | 13;
+    p_cfg.hw.pir.debounce_sec = j_pir["debounce_sec"] | 5;
+    p_cfg.hw.pir.hold_sec     = j_pir["hold_sec"]     | 120;
 
-    p_cfg.hw.tempHum.enabled      = j["hw"]["tempHum"]["enabled"] | true;
-    strlcpy(p_cfg.hw.tempHum.type, j["hw"]["tempHum"]["type"] | "DHT22", sizeof(p_cfg.hw.tempHum.type));
-    p_cfg.hw.tempHum.pin          = j["hw"]["tempHum"]["pin"] | 23;
-    p_cfg.hw.tempHum.interval_sec = j["hw"]["tempHum"]["interval_sec"] | 30;
+    // hw.tempHum
+    JsonObjectConst j_th = j_hw["tempHum"].as<JsonObjectConst>();
+    if (j_th.isNull()) {
+        CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] loadSystemConfig: missing hw.tempHum (defaults used)");
+    }
+    p_cfg.hw.tempHum.enabled      = j_th["enabled"]      | true;
+    strlcpy(p_cfg.hw.tempHum.type, j_th["type"] | "DHT22", sizeof(p_cfg.hw.tempHum.type));
+    p_cfg.hw.tempHum.pin          = j_th["pin"]          | 23;
+    p_cfg.hw.tempHum.interval_sec = j_th["interval_sec"] | 30;
 
-	p_cfg.hw.ble.enabled				 = j["hw"]["ble"]["enabled"] | true;
-	p_cfg.hw.ble.scan_interval			 = j["hw"]["ble"]["scan_interval"] | 5;
+    // hw.ble
+    JsonObjectConst j_ble = j_hw["ble"].as<JsonObjectConst>();
+    if (j_ble.isNull()) {
+        CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] loadSystemConfig: missing hw.ble (defaults used)");
+    }
+    p_cfg.hw.ble.enabled       = j_ble["enabled"]       | true;
+    p_cfg.hw.ble.scan_interval = j_ble["scan_interval"] | 5;
 
-	strlcpy(p_cfg.security.api_key, j["security"]["api_key"] | "", sizeof(p_cfg.security.api_key));
+    // security
+    JsonObjectConst j_sec = j_root["security"].as<JsonObjectConst>();
+    if (j_sec.isNull()) {
+        CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] loadSystemConfig: missing security (defaults used)");
+    }
+    strlcpy(p_cfg.security.api_key, j_sec["api_key"] | "", sizeof(p_cfg.security.api_key));
 
-	strlcpy(p_cfg.time.ntp_server, j["time"]["ntp_server"] | "pool.ntp.org", sizeof(p_cfg.time.ntp_server));
-	strlcpy(p_cfg.time.timezone, j["time"]["timezone"] | "Asia/Seoul", sizeof(p_cfg.time.timezone));
-	p_cfg.time.sync_interval_min = j["time"]["sync_interval_min"] | 60;
+    // time
+    JsonObjectConst j_time = j_root["time"].as<JsonObjectConst>();
+    if (j_time.isNull()) {
+        CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] loadSystemConfig: missing time (defaults used)");
+    }
+    strlcpy(p_cfg.time.ntp_server, j_time["ntp_server"] | "pool.ntp.org", sizeof(p_cfg.time.ntp_server));
+    strlcpy(p_cfg.time.timezone,   j_time["timezone"]   | "Asia/Seoul",   sizeof(p_cfg.time.timezone));
+    p_cfg.time.sync_interval_min = j_time["sync_interval_min"] | 60;
 
-	return true;
+    return true;
 }
 
 bool CL_C10_ConfigManager::loadWifiConfig(ST_A20_WifiConfig& p_cfg) {
