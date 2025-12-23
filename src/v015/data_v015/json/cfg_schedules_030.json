@@ -1,0 +1,138 @@
+{
+  "version": "025",
+  "jsonFile": "cfg_schedules_025.json",
+  "schedules": [
+    {
+      "schId": 1,
+      "schNo": 10,
+      "name": "Morning Cool Breeze",
+      "enabled": true,
+      "repeatSegments": true,
+      "repeatCount": 1,
+      "period": {
+        "days": [1, 1, 1, 1, 1, 1, 1],
+        "startTime": "08:00",
+        "endTime": "12:00"
+      },
+      "segments": [
+        {
+          "segId": 1,
+          "segNo": 10,
+          "onMinutes": 20,
+          "offMinutes": 10,
+          "mode": "PRESET",
+          "presetCode": "HARBOR_BREEZE",
+          "styleCode": "BALANCE",
+          "adjust": {
+            "windIntensity": 5,
+            "windVariability": 3
+          }
+        },
+        {
+          "segId": 2,
+          "segNo": 20,
+          "onMinutes": 15,
+          "offMinutes": 5,
+          "mode": "FIXED",
+          "fixedSpeed": 55.0
+        }
+      ],
+      "autoOff": {
+        "timer": { "enabled": false, "minutes": 0 },
+        "offTime": { "enabled": false, "time": "00:00" },
+        "offTemp": { "enabled": false, "temp": 0.0 }
+      },
+      "motion": {
+        "pir": { "enabled": true, "holdSec": 120 },
+        "ble": { "enabled": true, "rssiThreshold": -70, "holdSec": 120 }
+      }
+    },
+    {
+      "schId": 2,
+      "schNo": 20,
+      "name": "Evening Comfort",
+      "enabled": true,
+      "repeatSegments": true,
+      "repeatCount": 1,
+      "period": {
+        "days": [1, 1, 1, 1, 1, 1, 1],
+        "startTime": "19:00",
+        "endTime": "23:00"
+      },
+      "segments": [
+        {
+          "segId": 1,
+          "segNo": 10,
+          "onMinutes": 25,
+          "offMinutes": 10,
+          "mode": "PRESET",
+          "presetCode": "COUNTRY_BREEZE",
+          "styleCode": "RELAX",
+          "adjust": {
+            "windIntensity": -5,
+            "windVariability": -10
+          }
+        }
+      ],
+      "autoOff": {
+        "timer": { "enabled": false, "minutes": 0 },
+        "offTime": { "enabled": false, "time": "00:00" },
+        "offTemp": { "enabled": false, "temp": 0.0 }
+      },
+      "motion": {
+        "pir": { "enabled": true, "holdSec": 120 },
+        "ble": { "enabled": true, "rssiThreshold": -70, "holdSec": 120 }
+      }
+    },
+    {
+      "schId": 3,
+      "schNo": 30,
+      "name": "Night Sleep",
+      "enabled": true,
+      "repeatSegments": true,
+      "repeatCount": 1,
+      "period": {
+        "days": [1, 1, 1, 1, 1, 1, 1],
+        "startTime": "23:00",
+        "endTime": "07:00"
+      },
+      "segments": [
+        {
+          "segId": 1,
+          "segNo": 10,
+          "onMinutes": 180,
+          "offMinutes": 0,
+          "mode": "PRESET",
+          "presetCode": "OCEAN",
+          "styleCode": "SLEEP",
+          "adjust": {
+            "windIntensity": -20,
+            "windVariability": -25
+          }
+        },
+        {
+          "segId": 2,
+          "segNo": 20,
+          "onMinutes": 120,
+          "offMinutes": 0,
+          "mode": "PRESET",
+          "presetCode": "FOREST_CANOPY",
+          "styleCode": "SLEEP",
+          "adjust": {
+            "windIntensity": -30,
+            "windVariability": -35
+          }
+        }
+      ],
+      "autoOff": {
+        "timer": { "enabled": true, "minutes": 480 },
+        "offTime": { "enabled": true, "time": "06:30" },
+        "offTemp": { "enabled": true, "temp": 26.0 }
+      },
+      "motion": {
+        "pir": { "enabled": true, "holdSec": 300 },
+        "ble": { "enabled": false, "rssiThreshold": -70, "holdSec": 0 }
+      }
+    }
+  ]
+}
