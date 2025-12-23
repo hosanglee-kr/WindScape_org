@@ -8,7 +8,7 @@
 		"userProfile"    : "/json/cfg_userProfile_026.json",
 		"windDict"       : "/json/cfg_windDict_025.json",
 
-        "webPages"       : "/json/cfg_pages_032.json"
+        "webPage"        : "/json/cfg_pages_032.json"
   }
 }
     
