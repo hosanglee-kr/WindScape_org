@@ -1,0 +1,37 @@
+{
+  "motion": {
+    "jsonFile": "cfg_motion_030.json",
+    "pir": {
+      "enabled": true,
+      "holdSec": 120
+    },
+    "ble": {
+      "enabled": true,
+      "trustedDevices": [
+        {
+          "alias": "MyPhone",
+          "name": "iPhone15",
+          "mac": "AA:BB:CC:11:22:33",
+          "manufPrefix": "4C0002",
+          "prefixLen": 3,
+          "enabled": true
+        },
+        {
+          "alias": "SmartWatch",
+          "name": "AppleWatch",
+          "mac": "",
+          "manufPrefix": "4C0002",
+          "prefixLen": 2,
+          "enabled": true
+        }
+      ],
+      "rssi": {
+        "on": -65,
+        "off": -75,
+        "avgCount": 8,
+        "persistCount": 5,
+        "exitDelaySec": 12
+      }
+    }
+  }
+}
