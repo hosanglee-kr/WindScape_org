@@ -233,7 +233,7 @@
 
     const segCount = profile.segments.length;
     const totalOnMin = profile.segments.reduce(
-      (acc, s) => acc + (Number(s.on_minutes) || 0),
+      (acc, s) => acc + (Number(s.onMinutes) || 0),
       0
     );
     const modes = new Set(
@@ -264,8 +264,8 @@
     const pir = m.pir || {};
     const ble = m.ble || {};
     const parts = [];
-    if (pir.enabled) parts.push(`PIR(${pir.hold_sec || 0}s)`);
-    if (ble.enabled) parts.push(`BLE(${ble.rssi_threshold || -70}dBm, ${ble.hold_sec || 0}s)`);
+    if (pir.enabled) parts.push(`PIR(${pir.holdSec || 0}s)`);
+    if (ble.enabled) parts.push(`BLE(${ble.rssi_threshold || -70}dBm, ${ble.holdSec || 0}s)`);
     if (parts.length === 0) return "사용 안 함";
     return parts.join(" / ");
   }
@@ -390,8 +390,8 @@
     const segNoDefault = segId * 10;
     const segNo = seg?.segNo ?? segNoDefault;
 
-    const onMin = seg?.on_minutes ?? 10;
-    const offMin = seg?.off_minutes ?? 0;
+    const onMin = seg?.onMinutes ?? 10;
+    const offMin = seg?.offMinutes ?? 0;
     const mode = (seg?.mode || "PRESET").toUpperCase();
 
     const presetCode = seg?.presetCode || "";
@@ -400,11 +400,11 @@
     const fixedSpeed = seg?.fixed_speed ?? 0;
 
     const adj = seg?.adjust || {};
-    const adj_wi = adj.wind_intensity ?? 0;
-    const adj_wv = adj.wind_variability ?? 0;
-    const adj_gf = adj.gust_frequency ?? 0;
-    const adj_fl = adj.fan_limit ?? 0;
-    const adj_mf = adj.min_fan ?? 0;
+    const adj_wi = adj.windIntensity ?? 0;
+    const adj_wv = adj.windVariability ?? 0;
+    const adj_gf = adj.gustFrequency ?? 0;
+    const adj_fl = adj.fanLimit ?? 0;
+    const adj_mf = adj.minFan ?? 0;
     const adj_tls = adj.turbulence_length_scale ?? 0;
     const adj_tis = adj.turbulence_intensity_sigma ?? 0;
 
@@ -563,10 +563,10 @@
     const bleHoldEl = $("#motionBleHold");
 
     if (pirEnEl) pirEnEl.checked = !!pir.enabled;
-    if (pirHoldEl) pirHoldEl.value = pir.hold_sec ?? 0;
+    if (pirHoldEl) pirHoldEl.value = pir.holdSec ?? 0;
     if (bleEnEl) bleEnEl.checked = !!ble.enabled;
     if (bleRssiEl) bleRssiEl.value = ble.rssi_threshold ?? -70;
-    if (bleHoldEl) bleHoldEl.value = ble.hold_sec ?? 0;
+    if (bleHoldEl) bleHoldEl.value = ble.holdSec ?? 0;
   }
 
   function readProfileFromModal() {
@@ -619,11 +619,11 @@
         const numVal = (cls) =>
           Number(adjPanel.querySelector(cls)?.value || 0) || 0;
 
-        adj.wind_intensity = numVal(".seg-adj-wi");
-        adj.wind_variability = numVal(".seg-adj-wv");
-        adj.gust_frequency = numVal(".seg-adj-gf");
-        adj.fan_limit = numVal(".seg-adj-fl");
-        adj.min_fan = numVal(".seg-adj-mf");
+        adj.windIntensity = numVal(".seg-adj-wi");
+        adj.windVariability = numVal(".seg-adj-wv");
+        adj.gustFrequency = numVal(".seg-adj-gf");
+        adj.fanLimit = numVal(".seg-adj-fl");
+        adj.minFan = numVal(".seg-adj-mf");
         adj.turbulence_length_scale = numVal(".seg-adj-tls");
         adj.turbulence_intensity_sigma = numVal(".seg-adj-tis");
       }
@@ -631,8 +631,8 @@
       const segObj = {
         segId: sid,
         segNo: sno,
-        on_minutes: onMin,
-        off_minutes: offMin,
+        onMinutes: onMin,
+        offMinutes: offMin,
         mode,
         presetCode: mode === "PRESET" ? presetCode : "",
         styleCode: mode === "PRESET" ? styleCode : "",
@@ -662,12 +662,12 @@
     const motion = {
       pir: {
         enabled: $("#motionPirEnabled")?.checked ?? false,
-        hold_sec: Number($("#motionPirHold")?.value || 0) || 0
+        holdSec: Number($("#motionPirHold")?.value || 0) || 0
       },
       ble: {
         enabled: $("#motionBleEnabled")?.checked ?? false,
         rssi_threshold: Number($("#motionBleRssi")?.value || -70) || -70,
-        hold_sec: Number($("#motionBleHold")?.value || 0) || 0
+        holdSec: Number($("#motionBleHold")?.value || 0) || 0
       }
     };
 

@@ -280,8 +280,8 @@
     // 2) 핵심 파라미터
     chartParam.data.datasets[0].data = toXY("intensity");
     chartParam.data.datasets[1].data = toXY("variability");
-    chartParam.data.datasets[2].data = toXY("fan_limit");
-    chartParam.data.datasets[3].data = toXY("min_fan");
+    chartParam.data.datasets[2].data = toXY("fanLimit");
+    chartParam.data.datasets[3].data = toXY("minFan");
 
     // 3) 난류/열기포
     chartTurbThermSig.data.datasets[0].data = toXY("turb_sig");

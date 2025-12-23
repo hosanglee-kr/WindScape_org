@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------
- * 소스명 : WF10_WiFiManager_030.cpp
+ * 소스명 : WF10_WiFiManager_040.cpp
  * 모듈약어 : WF10
  * 모듈명 : Smart Nature Wind Wi-Fi Manager + NTP Sync (v024)
  * ------------------------------------------------------
@@ -13,7 +13,7 @@
  * ------------------------------------------------------
  */
 
-#include "WF10_WiFiManager_030.h"
+#include "WF10_WiFiManager_040.h"
 
 // Config 루트 (다른 모듈에서 정의)
 extern ST_A20_ConfigRoot_t g_A20_config_root;

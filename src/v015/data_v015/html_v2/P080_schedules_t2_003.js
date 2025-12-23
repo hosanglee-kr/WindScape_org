@@ -263,7 +263,7 @@
       const statusClass = enabled ? "on" : "off";
       const statusText = enabled ? "사용 중" : "비활성";
 
-      const timeText = formatTimeRange(period.start_time, period.end_time);
+      const timeText = formatTimeRange(period.startTime, period.endTime);
       const daysText = formatDaysFromBoolArray(days);
       const segSummary = summarizeSegments(s.segments);
 
@@ -330,19 +330,19 @@
 
     const segId = seg?.segId ?? 0;
     const segNo = seg?.segNo ?? 10;
-    const onMin = seg?.on_minutes ?? 10;
-    const offMin = seg?.off_minutes ?? 0;
+    const onMin = seg?.onMinutes ?? 10;
+    const offMin = seg?.offMinutes ?? 0;
     const mode = seg?.mode || "PRESET";
     const presetCode = seg?.presetCode || "";
     const styleCode = seg?.styleCode || "";
     const fixedSpeed = seg?.fixed_speed ?? 0.0;
 
     const adj = seg?.adjust || {};
-    const adjWind = adj.wind_intensity ?? 0.0;
-    const adjVar = adj.wind_variability ?? 0.0;
-    const adjGust = adj.gust_frequency ?? 0.0;
-    const adjFanLimit = adj.fan_limit ?? 0.0;
-    const adjMinFan = adj.min_fan ?? 0.0;
+    const adjWind = adj.windIntensity ?? 0.0;
+    const adjVar = adj.windVariability ?? 0.0;
+    const adjGust = adj.gustFrequency ?? 0.0;
+    const adjFanLimit = adj.fanLimit ?? 0.0;
+    const adjMinFan = adj.minFan ?? 0.0;
     const adjTurbL = adj.turbulence_length_scale ?? 0.0;
     const adjTurbSigma = adj.turbulence_intensity_sigma ?? 0.0;
 
@@ -447,8 +447,8 @@
 
       const period = schedule.period || {};
       //// $("#periodEnabled").checked = period.enabled ?? true;
-      $("#periodStart").value = period.start_time || "08:00";
-      $("#periodEnd").value = period.end_time || "23:00";
+      $("#periodStart").value = period.startTime || "08:00";
+      $("#periodEnd").value = period.endTime || "23:00";
       applyPeriodDaysUI(Array.isArray(period.days) ? period.days : [1, 1, 1, 1, 1, 1, 1]);
 
       const ao = schedule.autoOff || {};
@@ -468,10 +468,10 @@
       const ble = motion.ble || {};
 
       $("#pirEnabled").checked = pir.enabled ?? false;
-      $("#pirHoldSec").value = pir.hold_sec ?? 0;
+      $("#pirHoldSec").value = pir.holdSec ?? 0;
       $("#bleEnabled").checked = ble.enabled ?? false;
       $("#bleRssiThreshold").value = ble.rssi_threshold ?? -70;
-      $("#bleHoldSec").value = ble.hold_sec ?? 0;
+      $("#bleHoldSec").value = ble.holdSec ?? 0;
 
       renderSegmentsInModal(schedule.segments || []);
     } else {
@@ -505,18 +505,18 @@
         {
           segId: 1,
           segNo: 10,
-          on_minutes: 20,
-          off_minutes: 10,
+          onMinutes: 20,
+          offMinutes: 10,
           mode: "PRESET",
           presetCode: "",
           styleCode: "",
           fixed_speed: 0,
           adjust: {
-            wind_intensity: 0,
-            wind_variability: 0,
-            gust_frequency: 0,
-            fan_limit: 0,
-            min_fan: 0,
+            windIntensity: 0,
+            windVariability: 0,
+            gustFrequency: 0,
+            fanLimit: 0,
+            minFan: 0,
             turbulence_length_scale: 0,
             turbulence_intensity_sigma: 0,
           },
@@ -572,17 +572,17 @@
       segments.push({
         segId,
         segNo,
-        on_minutes: onMin,
-        off_minutes: offMin,
+        onMinutes: onMin,
+        offMinutes: offMin,
         mode,
         presetCode,
         styleCode,
         adjust: {
-          wind_intensity: adjWind,
-          wind_variability: adjVar,
-          gust_frequency: adjGust,
-          fan_limit: adjFanLimit,
-          min_fan: adjMinFan,
+          windIntensity: adjWind,
+          windVariability: adjVar,
+          gustFrequency: adjGust,
+          fanLimit: adjFanLimit,
+          minFan: adjMinFan,
           turbulence_length_scale: adjTurbL,
           turbulence_intensity_sigma: adjTurbSigma,
         },
@@ -633,8 +633,8 @@
       period: {
         //// enabled: periodEnabled,
         days: periodDays,
-        start_time: periodStart,
-        end_time: periodEnd,
+        startTime: periodStart,
+        endTime: periodEnd,
       },
       segments,
       autoOff: {
@@ -654,12 +654,12 @@
       motion: {
         pir: {
           enabled: pirEnabled,
-          hold_sec: pirHoldSec,
+          holdSec: pirHoldSec,
         },
         ble: {
           enabled: bleEnabled,
           rssi_threshold: bleRssi,
-          hold_sec: bleHoldSec,
+          holdSec: bleHoldSec,
         },
       },
     };

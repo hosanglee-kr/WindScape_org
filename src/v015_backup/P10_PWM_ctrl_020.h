@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ------------------------------------------------------
- * 소스명 : P10_PWM_ctrl_020.h
+ * 소스명 : P10_PWM_ctrl_040.h
  * 모듈약어 : P10
  * 모듈명 : Smart Nature Wind PWM 제어 Manager (v014)
  * ------------------------------------------------------
@@ -42,8 +42,8 @@
 #include <Arduino.h>
 #include <string.h>
 
-#include "A20_Const_020.h"
-#include "D10_Logger_020.h"
+#include "A20_Const_040.h"
+#include "D10_Logger_040.h"
 
 // ------------------------------------------------------
 // 내부 상태 구조체

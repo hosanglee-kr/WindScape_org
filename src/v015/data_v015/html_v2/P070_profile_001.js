@@ -14,14 +14,14 @@
     "use strict";
 
     // ======================= 1. 공통 헬퍼 함수 및 변수 =======================
-    
+
     const $ = (s, r = document) => r.querySelector(s);
     const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
     // ************* 공통 기능 대체 (SC10_common_001.js에 있어야 함) *************
     const KEY_API = 'sc10_api_key';
     const getKey = () => localStorage.getItem(KEY_API) || '';
-    const setLoading = (flag) => { 
+    const setLoading = (flag) => {
         const el = $("#loadingOverlay");
         if (el) el.style.display = flag ? "flex" : "none";
     };
@@ -54,7 +54,7 @@
                 throw new Error(txt || resp.status);
             }
             showToast(`${desc} 성공`, "ok");
-            
+
             const txt = await resp.text();
             try { return JSON.parse(txt); } catch { return txt; }
         } catch (e) {
@@ -69,7 +69,7 @@
 
     async function loadProfiles() {
         const data = await fetchApi("/api/windProfile", "GET", null, "프로파일 목록 불러오기");
-        
+
         if (data && data.profiles && Array.isArray(data.profiles)) {
             currentProfiles = data.profiles;
             renderProfileList(currentProfiles);
@@ -88,15 +88,15 @@
         profiles.forEach(profile => {
             const tr = document.createElement('tr');
             tr.dataset.profileId = profile.id;
-            
+
             // 현재 적용된 프로파일을 확인하는 로직은 Summary API가 필요하나, 여기서는 ID만 표시
             const isActive = profile.is_active || false; // 백엔드 응답에 is_active가 있다고 가정
-            
+
             const rowHtml = `
                 <td>${profile.id}</td>
                 <td><strong>${profile.name}</strong></td>
-                <td>${(profile.params?.wind_intensity || 0.0).toFixed(1)}</td>
-                <td>${(profile.params?.wind_variability || 0.0).toFixed(1)}</td>
+                <td>${(profile.params?.windIntensity || 0.0).toFixed(1)}</td>
+                <td>${(profile.params?.windVariability || 0.0).toFixed(1)}</td>
                 <td>${(profile.params?.turbulence_intensity_sigma || 0.0).toFixed(1)}</td>
                 <td><span class="info-label">${isActive ? '✅ 활성' : '비활성'}</span></td>
                 <td>
@@ -116,22 +116,22 @@
         // 액션 버튼 이벤트 바인딩 (델리게이션)
         tbody.addEventListener('click', handleProfileActions);
     }
-    
+
     // ======================= 3. 모달 및 CRUD 핸들러 =======================
-    
+
     function openModal(profile = null) {
         const modal = $("#profileModal");
         const form = $("#profileForm");
-        
+
         form.reset();
-        
+
         if (profile) {
             // 수정 모드
             $("#modalTitle").textContent = `프로파일 수정: ${profile.name}`;
             $("#profileId").value = profile.id;
             $("#profileName").value = profile.name;
-            $("#intensity").value = profile.params.wind_intensity;
-            $("#variability").value = profile.params.wind_variability;
+            $("#intensity").value = profile.params.windIntensity;
+            $("#variability").value = profile.params.windVariability;
             $("#turb_sigma").value = profile.params.turbulence_intensity_sigma;
             $("#turb_length").value = profile.params.turbulence_length_scale;
         } else {
@@ -156,8 +156,8 @@
         const data = {
             name: $("#profileName").value,
             params: {
-                wind_intensity: parseFloat($("#intensity").value),
-                wind_variability: parseFloat($("#variability").value),
+                windIntensity: parseFloat($("#intensity").value),
+                windVariability: parseFloat($("#variability").value),
                 turbulence_intensity_sigma: parseFloat($("#turb_sigma").value),
                 turbulence_length_scale: parseFloat($("#turb_length").value),
             },
@@ -178,12 +178,12 @@
             loadProfiles(); // 목록 새로고침
         }
     }
-    
+
     async function handleProfileActions(event) {
         const target = event.target;
         const id = target.dataset.id;
         if (!id) return;
-        
+
         // 프로파일 데이터 찾기
         const profile = currentProfiles.find(p => String(p.id) === id);
         if (!profile) return;
@@ -191,11 +191,11 @@
         if (target.classList.contains('btn-select')) {
             // 프로파일 즉시 적용 (별도 API)
             await selectProfile(id, profile.name);
-            
+
         } else if (target.classList.contains('btn-edit')) {
             // 수정 모달 열기
             openModal(profile);
-            
+
         } else if (target.classList.contains('btn-delete')) {
             // 삭제 확인
             if (confirm(`정말로 프로파일 [${profile.name} (ID: ${id})] 을(를) 삭제하시겠습니까?`)) {
@@ -203,7 +203,7 @@
             }
         }
     }
-    
+
     async function selectProfile(id, name) {
         // POST /api/control/profile/select
         const result = await fetchApi("/api/control/profile/select", "POST", { id: parseInt(id) }, `프로파일 ${name} 적용`);
@@ -226,11 +226,11 @@
         // 메인 액션 버튼
         $("#btnCreateNew")?.addEventListener('click', () => openModal(null));
         $("#btnRefreshList")?.addEventListener('click', loadProfiles);
-        
+
         // 모달 닫기 버튼
         $("#btnCloseModal")?.addEventListener('click', closeModal);
         $("#btnCancelModal")?.addEventListener('click', closeModal);
-        
+
         // 모달 폼 저장 버튼
         $("#profileForm")?.addEventListener('submit', saveProfile);
     }

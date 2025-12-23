@@ -1,16 +1,16 @@
-/*  
- * ------------------------------------------------------  
- * 소스명 : P020_chart_t1_008.js  
- * 모듈명 : Smart Nature Wind Chart/Simulation UI Controller (v029, Backend 029 정합)  
- * ------------------------------------------------------  
- * 기능 요약:  
- * - /ws/chart WebSocket을 통한 실시간 차트 데이터 모니터링  
- * - /api/config 기반 초기 설정/프리셋 로딩 (Main 페이지와 동일 구조)  
- * - /api/config/motion, /api/config/timing 메모리 패치  
- * - /api/config/save 전체 저장 (Flash Flush) + Dirty 상태 버튼 표시  
- * - /api/config/init Factory Reset  
- * - API Key: Main 페이지와 동일 키("snw_api_key") 사용  
- * ------------------------------------------------------  
+/*
+ * ------------------------------------------------------
+ * 소스명 : P020_chart_t1_008.js
+ * 모듈명 : Smart Nature Wind Chart/Simulation UI Controller (v029, Backend 029 정합)
+ * ------------------------------------------------------
+ * 기능 요약:
+ * - /ws/chart WebSocket을 통한 실시간 차트 데이터 모니터링
+ * - /api/config 기반 초기 설정/프리셋 로딩 (Main 페이지와 동일 구조)
+ * - /api/config/motion, /api/config/timing 메모리 패치
+ * - /api/config/save 전체 저장 (Flash Flush) + Dirty 상태 버튼 표시
+ * - /api/config/init Factory Reset
+ * - API Key: Main 페이지와 동일 키("snw_api_key") 사용
+ * ------------------------------------------------------
  */
 
 (() => {
@@ -254,8 +254,8 @@
 				if ($("#intensity"))   $("#intensity").value   = motion.intensity   ?? "";
 				if ($("#gust_freq"))   $("#gust_freq").value   = motion.gust_freq   ?? "";
 				if ($("#variability")) $("#variability").value = motion.variability ?? "";
-				if ($("#fan_limit"))   $("#fan_limit").value   = motion.fan_limit   ?? "";
-				if ($("#min_fan"))     $("#min_fan").value     = motion.min_fan     ?? "";
+				if ($("#fanLimit"))   $("#fanLimit").value   = motion.fanLimit   ?? "";
+				if ($("#minFan"))     $("#minFan").value     = motion.minFan     ?? "";
 				if ($("#turb_len"))    $("#turb_len").value    = motion.turb_len    ?? "";
 				if ($("#turb_sig"))    $("#turb_sig").value    = motion.turb_sig    ?? "";
 				if ($("#therm_str"))   $("#therm_str").value   = motion.therm_str   ?? "";
@@ -307,8 +307,8 @@
 					intensity:   Number($("#intensity")?.value   || 0),
 					gust_freq:   Number($("#gust_freq")?.value   || 0),
 					variability: Number($("#variability")?.value || 0),
-					fan_limit:   Number($("#fan_limit")?.value   || 0),
-					min_fan:     Number($("#min_fan")?.value     || 0),
+					fanLimit:   Number($("#fanLimit")?.value   || 0),
+					minFan:     Number($("#minFan")?.value     || 0),
 					turb_len:    Number($("#turb_len")?.value    || 0),
 					turb_sig:    Number($("#turb_sig")?.value    || 0),
 					therm_str:   Number($("#therm_str")?.value   || 0),
@@ -573,8 +573,8 @@
 		if (chartParam) {
 			chartParam.data.datasets[0].data = toXY(recs, "intensity");
 			chartParam.data.datasets[1].data = toXY(recs, "variability");
-			chartParam.data.datasets[2].data = toXY(recs, "fan_limit");
-			chartParam.data.datasets[3].data = toXY(recs, "min_fan");
+			chartParam.data.datasets[2].data = toXY(recs, "fanLimit");
+			chartParam.data.datasets[3].data = toXY(recs, "minFan");
 		}
 
 		// Turb / Therm

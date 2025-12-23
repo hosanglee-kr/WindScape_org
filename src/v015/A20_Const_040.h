@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ------------------------------------------------------
- * 소스명 : A20_Const_030.h
+ * 소스명 : A20_Const_040.h
  * 모듈약어 : A20
  * 모듈명 : Smart Nature Wind 공용 상수/타입/구조체 선언 (v030)
  * ------------------------------------------------------
@@ -902,6 +902,9 @@ inline void A20_resetToDefault(ST_A20_ConfigRoot_t& p_root) {
 	if (p_root.windDict)     A20_resetWindProfileDictDefault(*p_root.windDict);
 	if (p_root.schedules)    A20_resetSchedulesDefault(*p_root.schedules);
 	if (p_root.userProfiles) A20_resetUserProfilesDefault(*p_root.userProfiles);
+
+    if (p_root.webPage) A20_resetWebPageDefault(*p_root.webPage);
+    if (p_root.nvsSpec) A20_resetNvsSpecDefault(*p_root.nvsSpec);
 }
 
 // 프리셋 코드 → 인덱스 매핑 (참고용)

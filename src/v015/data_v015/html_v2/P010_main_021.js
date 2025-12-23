@@ -153,8 +153,8 @@ const elPreset       = () => document.getElementById("preset");
 const elIntensity    = () => document.getElementById("intensity");
 const elGustFreq     = () => document.getElementById("gust_freq");
 const elVariability  = () => document.getElementById("variability");
-const elFanLimit     = () => document.getElementById("fan_limit");
-const elMinFan       = () => document.getElementById("min_fan");
+const elFanLimit     = () => document.getElementById("fanLimit");
+const elMinFan       = () => document.getElementById("minFan");
 const elTurbLen      = () => document.getElementById("turb_len");
 const elTurbSig      = () => document.getElementById("turb_sig");
 const elThermStr     = () => document.getElementById("therm_str");
@@ -343,8 +343,8 @@ async function loadConfig() {
 			if (elIntensity())   elIntensity().value   = motion.intensity   ?? "";
 			if (elGustFreq())    elGustFreq().value    = motion.gust_freq   ?? "";
 			if (elVariability()) elVariability().value = motion.variability ?? "";
-			if (elFanLimit())    elFanLimit().value    = motion.fan_limit   ?? "";
-			if (elMinFan())      elMinFan().value      = motion.min_fan     ?? "";
+			if (elFanLimit())    elFanLimit().value    = motion.fanLimit   ?? "";
+			if (elMinFan())      elMinFan().value      = motion.minFan     ?? "";
 			if (elTurbLen())     elTurbLen().value     = motion.turb_len    ?? "";
 			if (elTurbSig())     elTurbSig().value     = motion.turb_sig    ?? "";
 			if (elThermStr())    elThermStr().value    = motion.therm_str   ?? "";
@@ -512,8 +512,8 @@ async function saveMotionPatch() {
 				intensity:   Number(elIntensity().value || 0),
 				gust_freq:   Number(elGustFreq().value || 0),
 				variability: Number(elVariability().value || 0),
-				fan_limit:   Number(elFanLimit().value || 0),
-				min_fan:     Number(elMinFan().value || 0),
+				fanLimit:   Number(elFanLimit().value || 0),
+				minFan:     Number(elMinFan().value || 0),
 				turb_len:    Number(elTurbLen().value || 0),
 				turb_sig:    Number(elTurbSig().value || 0),
 				therm_str:   Number(elThermStr().value || 0),
@@ -1041,8 +1041,8 @@ function bindEvents() {
 		"#intensity",
 		"#gust_freq",
 		"#variability",
-		"#fan_limit",
-		"#min_fan",
+		"#fanLimit",
+		"#minFan",
 		"#turb_len",
 		"#turb_sig",
 		"#therm_str",

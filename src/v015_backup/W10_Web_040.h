@@ -1,7 +1,7 @@
 #pragma once
 /*
  * ------------------------------------------------------
- * 소스명 : W10_Web_040.h
+ * 소스명 : W10_Web_050.h
  * 모듈약어 : W10
  * 모듈명 : Smart Nature Wind Web API Manager (v030)
  * ------------------------------------------------------
@@ -42,13 +42,13 @@
 
 #include <vector>
 
-#include "A20_Const_020.h"
-#include "C10_Config_030.h"
-#include "CT10_Control_030.h"
-#include "D10_Logger_020.h"
-#include "N10_NvsManager_020.h"
+#include "A20_Const_040.h"
+#include "C10_Config_040.h"
+#include "CT10_Control_040.h"
+#include "D10_Logger_040.h"
+#include "N10_NvsManager_040.h"
 #include "W10_Web_Const_040.h"
-#include "WF10_WiFiManager_030.h"
+#include "WF10_WiFiManager_040.h"
 
 // ------------------------------------------------------
 // WebAPI Manager

@@ -64,8 +64,8 @@
 
     // ======================= 2. DOM 요소 및 설정 필드 매핑 =======================
     const SIM_FIELDS = [
-        "wind_intensity", "wind_variability", "fan_limit", "min_fan", 
-        "turbulence_intensity_sigma", "turbulence_length_scale", 
+        "windIntensity", "windVariability", "fanLimit", "minFan",
+        "turbulence_intensity_sigma", "turbulence_length_scale",
         "thermal_bubble_strength", "thermal_bubble_radius"
     ];
     const MOTION_TIMING_FIELDS = ["sim_interval", "gust_interval", "thermal_interval"];
@@ -135,7 +135,7 @@
         patchTimeout = setTimeout(() => {
             const field = event.target.id;
             const value = parseFloat(event.target.value);
-            
+
             if (isNaN(value)) {
                 showToast("유효한 숫자를 입력해 주세요.", "err");
                 return;
@@ -143,7 +143,7 @@
 
             // 요청 바디 생성
             const payload = { [field]: value };
-            
+
             if (SIM_FIELDS.includes(field)) {
                 patchSimConfig(payload);
             } else if (MOTION_TIMING_FIELDS.includes(field)) {
@@ -174,7 +174,7 @@
         const dirtyData = await fetchApi("/api/config/dirty", "GET", null, "저장 상태 확인");
         if (dirtyData) {
             const isDirty = dirtyData.sim || dirtyData.motion;
-            
+
             if (isDirty) {
                 elDirtyStatus.textContent = "⚠️ 저장되지 않은 시뮬레이션 설정이 있습니다. '전체 설정 파일 저장' 버튼을 눌러주세요.";
                 elDirtyStatus.classList.remove('muted');
@@ -186,9 +186,9 @@
             }
         }
     }
-    
+
     // ======================= 5. 초기화 =======================
-    
+
     // 전체 설정 로드 함수
     async function loadAllConfig() {
         await loadSimConfig();
@@ -205,7 +205,7 @@
             input.addEventListener('change', handleInputChange);
             input.addEventListener('input', handleInputChange); // 슬라이더 등 실시간 입력 대응
         });
-        
+
         // 버튼 이벤트 바인딩은 이미 위에서 완료됨
         $("#btnLoadConfig")?.addEventListener('click', loadAllConfig);
 

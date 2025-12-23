@@ -7,7 +7,7 @@
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 	<title>🌬️ Smart Nature Wind 시뮬레이션 상세 설정</title>
-	
+
 	<link rel="stylesheet" href="./P000_common_001.css">
 	<link rel="stylesheet" href="./P060_sim_details_001.css">
 </head>
@@ -22,7 +22,7 @@
 			</nav>
 		</div>
 	</header>
-		
+
 	<!-- <header class="nav-bar">
 		<div class="nav-container">
 			<a href="./SC10_dashboard_001.html" class="nav-logo">Smart Wind</a>
@@ -39,7 +39,7 @@
 			</nav>
 		</div>
 	</header> -->
-	
+
 	<div class="wrap">
 		<h1>시뮬레이션 상세 설정</h1>
 
@@ -54,26 +54,26 @@
 			</div>
 			<div id="dirtyStatus" class="info-label muted">변경 사항 없음</div>
 		</section>
-		
+
 		<div class="grid settings-grid">
-		
+
 			<div class="col-6 card">
 				<strong class="section-title">🌬️ 풍속/팬 제어 매개변수</strong>
 				<div class="form-group">
-					<label for="wind_intensity">풍속 강도 (Wind Intensity, %)</label>
-					<input type="number" id="wind_intensity" name="wind_intensity" min="0" max="100" step="0.1">
+					<label for="windIntensity">풍속 강도 (Wind Intensity, %)</label>
+					<input type="number" id="windIntensity" name="windIntensity" min="0" max="100" step="0.1">
 				</div>
 				<div class="form-group">
-					<label for="wind_variability">풍속 가변성 (Wind Variability, %)</label>
-					<input type="number" id="wind_variability" name="wind_variability" min="0" max="100" step="0.1">
+					<label for="windVariability">풍속 가변성 (Wind Variability, %)</label>
+					<input type="number" id="windVariability" name="windVariability" min="0" max="100" step="0.1">
 				</div>
 				<div class="form-group">
-					<label for="fan_limit">팬 최대 출력 제한 (Fan Limit, %)</label>
-					<input type="number" id="fan_limit" name="fan_limit" min="0" max="100" step="1">
+					<label for="fanLimit">팬 최대 출력 제한 (Fan Limit, %)</label>
+					<input type="number" id="fanLimit" name="fanLimit" min="0" max="100" step="1">
 				</div>
 				<div class="form-group">
-					<label for="min_fan">팬 최소 출력 (Min Fan, %)</label>
-					<input type="number" id="min_fan" name="min_fan" min="0" max="100" step="1">
+					<label for="minFan">팬 최소 출력 (Min Fan, %)</label>
+					<input type="number" id="minFan" name="minFan" min="0" max="100" step="1">
 				</div>
 			</div>
 
@@ -96,7 +96,7 @@
 					<input type="number" id="thermal_bubble_radius" name="thermal_bubble_radius" min="1" max="500" step="1">
 				</div>
 			</div>
-			
+
 			<div class="col-12 card">
 				<strong class="section-title">⏱️ 시뮬레이션 타이밍 설정</strong>
 				<div class="grid timing-grid">
