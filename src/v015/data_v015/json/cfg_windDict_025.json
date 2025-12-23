@@ -1,7 +1,7 @@
 {
   "windProfile": {
     "version": "025",
-    "json_file": "cfg_windDic_025.json",
+    "json_file": "cfg_windDict_025.json",
 
     "presets": [
       {
