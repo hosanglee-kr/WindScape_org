@@ -324,7 +324,7 @@ typedef struct {
 	struct {
 		bool enabled;
 
-		ST_A20_BLETrustedDevice trustedDevices[A20_Const::MAX_BLE_DEVICES];
+		ST_A20_BLETrustedDevice_t trustedDevices[A20_Const::MAX_BLE_DEVICES];
 		uint8_t trustedCount;
 
 		struct {
@@ -631,14 +631,14 @@ typedef struct ST_A20_WebPageConfig_t {
  * Config Root (전역 보관)
  * ====================================================== */
 typedef struct {
-	ST_A20_SystemConfig*        system       = nullptr;
-	ST_A20_WifiConfig*          wifi         = nullptr;
-	ST_A20_MotionConfig*        motion       = nullptr;
-	ST_A20_NvsSpecConfig_t*     nvsSpec      = nullptr;   // ★ add
-	ST_A20_WindProfileDict_t*   windDict     = nullptr;
-	ST_A20_SchedulesRoot_t*     schedules    = nullptr;
-	ST_A20_UserProfilesRoot_t*  userProfiles = nullptr;
-	ST_A20_WebPageConfig_t*     webPage      = nullptr;   // ★ add
+	ST_A20_SystemConfig_t*	   system		= nullptr;
+	ST_A20_WifiConfig_t*	   wifi			= nullptr;
+	ST_A20_MotionConfig_t*	   motion		= nullptr;
+	ST_A20_NvsSpecConfig_t*	   nvsSpec		= nullptr;	// ★ add
+	ST_A20_WindProfileDict_t*  windDict		= nullptr;
+	ST_A20_SchedulesRoot_t*	   schedules	= nullptr;
+	ST_A20_UserProfilesRoot_t* userProfiles = nullptr;
+	ST_A20_WebPageConfig_t*	   webPage		= nullptr;	// ★ add
 } ST_A20_ConfigRoot_t;
 
 extern ST_A20_ConfigRoot_t g_A20_config_root;
@@ -725,7 +725,7 @@ inline void A20_resetSystemDefault(ST_A20_SystemConfig_t& p_cfg) {
 }
 
 // WiFi 기본값
-inline void A20_resetWifiDefault(ST_A20_WifiConfig& p_cfg) {
+inline void A20_resetWifiDefault(ST_A20_WifiConfig_t& p_cfg) {
 	memset(&p_cfg, 0, sizeof(p_cfg));
 
 	p_cfg.wifiMode = EN_A20_WIFI_MODE_AP_STA;
