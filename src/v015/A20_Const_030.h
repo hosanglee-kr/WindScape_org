@@ -795,6 +795,104 @@ inline void A20_resetUserProfilesDefault(ST_A20_UserProfilesRoot_t& p_cfg) {
 }
 
 // ------------------------------------------------------
+// NVS Spec 기본값
+// ------------------------------------------------------
+inline void A20_resetNvsSpecDefault(ST_A20_NvsSpecConfig_t& p_cfg) {
+	memset(&p_cfg, 0, sizeof(p_cfg));
+
+	// namespace
+	A20_safe_strlcpy(p_cfg.namespaceName, "SNW", sizeof(p_cfg.namespaceName));
+
+	// entries (기본 스펙)
+	p_cfg.entryCount = 0;
+
+	auto addEntry = [&](const char* p_key, const char* p_type, const char* p_def) {
+		if (p_cfg.entryCount >= A20_Const::MAX_NVS_ENTRIES) return;
+		ST_A20_NvsEntry_t& v_e = p_cfg.entries[p_cfg.entryCount];
+		memset(&v_e, 0, sizeof(v_e));
+		A20_safe_strlcpy(v_e.key, p_key, sizeof(v_e.key));
+		A20_safe_strlcpy(v_e.type, p_type, sizeof(v_e.type));
+		A20_safe_strlcpy(v_e.defaultValue, p_def, sizeof(v_e.defaultValue));
+		p_cfg.entryCount++;
+	};
+
+	addEntry("runMode",         "uint8",  "0");
+	addEntry("activeProfileNo", "uint8",  "0");
+	addEntry("activeSegmentNo", "uint8",  "0");
+	addEntry("presetCode",      "string", "");
+	addEntry("styleCode",       "string", "");
+	addEntry("wifiConnected",   "bool",   "false");
+}
+
+// ------------------------------------------------------
+// WebPage 기본값
+// ------------------------------------------------------
+inline void A20_resetWebPageDefault(ST_A20_WebPageConfig_t& p_cfg) {
+	memset(&p_cfg, 0, sizeof(p_cfg));
+
+	// pages[] : 최소 1개 메인 페이지 기본값
+	if (A20_Const::MAX_PAGES > 0) {
+		p_cfg.pageCount = 1;
+
+		ST_A20_PageItem_t& v_p = p_cfg.pages[0];
+		memset(&v_p, 0, sizeof(v_p));
+
+		A20_safe_strlcpy(v_p.uri,   "/P010_main_021.html", sizeof(v_p.uri));
+		A20_safe_strlcpy(v_p.path,  "/html_v2/P010_main_021.html", sizeof(v_p.path));
+		A20_safe_strlcpy(v_p.label, "Main", sizeof(v_p.label));
+
+		v_p.enable = true;
+		v_p.isMain = true;
+		v_p.order  = 10;
+
+		// pageAssets[] : css/js (있으면)
+		v_p.pageAssetCount = 0;
+		if (A20_Const::MAX_PAGE_ASSETS >= 1) {
+			ST_A20_PageAsset_t& v_a0 = v_p.pageAssets[v_p.pageAssetCount++];
+			memset(&v_a0, 0, sizeof(v_a0));
+			A20_safe_strlcpy(v_a0.uri,  "/P010_main_021.css", sizeof(v_a0.uri));
+			A20_safe_strlcpy(v_a0.path, "/html_v2/P010_main_021.css", sizeof(v_a0.path));
+		}
+		if (A20_Const::MAX_PAGE_ASSETS >= 2) {
+			ST_A20_PageAsset_t& v_a1 = v_p.pageAssets[v_p.pageAssetCount++];
+			memset(&v_a1, 0, sizeof(v_a1));
+			A20_safe_strlcpy(v_a1.uri,  "/P010_main_021.js", sizeof(v_a1.uri));
+			A20_safe_strlcpy(v_a1.path, "/html_v2/P010_main_021.js", sizeof(v_a1.path));
+		}
+	}
+
+	// reDirect[] : 최소 홈 리다이렉트
+	p_cfg.reDirectCount = 0;
+	auto addRedirect = [&](const char* p_from, const char* p_to) {
+		if (p_cfg.reDirectCount >= A20_Const::MAX_REDIRECTS) return;
+		ST_A20_ReDirectItem_t& v_r = p_cfg.reDirect[p_cfg.reDirectCount];
+		memset(&v_r, 0, sizeof(v_r));
+		A20_safe_strlcpy(v_r.uriFrom, p_from, sizeof(v_r.uriFrom));
+		A20_safe_strlcpy(v_r.uriTo,   p_to,   sizeof(v_r.uriTo));
+		p_cfg.reDirectCount++;
+	};
+
+	addRedirect("/",           "/P010_main_021.html");
+	addRedirect("/index.html", "/P010_main_021.html");
+	addRedirect("/P010_main",  "/P010_main_021.html");
+
+	// assets[] : 공통 자산 기본값
+	p_cfg.assetCount = 0;
+	auto addCommonAsset = [&](const char* p_uri, const char* p_path, bool p_isCommon) {
+		if (p_cfg.assetCount >= A20_Const::MAX_COMMON_ASSETS) return;
+		ST_A20_CommonAsset_t& v_c = p_cfg.assets[p_cfg.assetCount];
+		memset(&v_c, 0, sizeof(v_c));
+		A20_safe_strlcpy(v_c.uri,  p_uri,  sizeof(v_c.uri));
+		A20_safe_strlcpy(v_c.path, p_path, sizeof(v_c.path));
+		v_c.isCommon = p_isCommon;
+		p_cfg.assetCount++;
+	};
+
+	addCommonAsset("/P000_common_001.css", "/html_v2/P000_common_001.css", true);
+	addCommonAsset("/P000_common_006.js",  "/html_v2/P000_common_006.js",  true);
+}
+
+// ------------------------------------------------------
 // A20_resetToDefault
 // ------------------------------------------------------
 inline void A20_resetToDefault(ST_A20_ConfigRoot_t& p_root) {
