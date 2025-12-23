@@ -7,7 +7,7 @@
  * ------------------------------------------------------
  * 기능 요약:
  *  - Smart Nature Wind 전체 설정(JSON 기반) 관리 매니저
- *  - 설정 파일 단위 분리 관리 (system / wifi / motion / schedules / userProfiles / windProfile)
+ *  - 설정 파일 단위 분리 관리 (system / wifi / motion / nvsSpec / schedules / userProfiles / windDict / webPage)
  *  - 구조체 ↔ JSON 직렬화 및 역직렬화 (ArduinoJson v7 전용)
  *  - 파일 백업(.bak) / 복구 / 공장초기화(factoryResetFromDefault) 지원
  *  - PATCH 기반 부분 업데이트(patchConfigFromJson) 지원
@@ -50,8 +50,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "A20_Const_040.h"	 // ST_A20_ConfigRoot_t, ST_A20_* 구조체, 상수 정의
-#include "D10_Logger_040.h"	 // CL_D10_Logger, EN_L10_LOG_*
+#include "A20_Const_040.h"   // ST_A20_ConfigRoot_t, ST_A20_* 구조체, 상수 정의
+#include "D10_Logger_040.h"  // CL_D10_Logger, EN_L10_LOG_*
 
 // ------------------------------------------------------
 // JSON I/O Helper 함수 선언 (Core cpp에서 구현)
@@ -59,7 +59,7 @@
 bool ioLoadJson(const char* p_path, JsonDocument& p_doc);
 bool ioSaveJson(const char* p_path, const JsonDocument& p_doc);
 
-// Mutex Timeout 정의 (A20_Const_015.h에 미정의 시 기본값)
+// Mutex Timeout 정의 (A20_Const_*에 미정의 시 기본값)
 #ifndef G_C10_MUTEX_TIMEOUT
 #	define G_C10_MUTEX_TIMEOUT pdMS_TO_TICKS(100)
 #endif
@@ -90,8 +90,6 @@ class CL_C10_ConfigManager {
 	// =====================================================
 	// 1. 전체 관리 (Load/Free/Save)
 	// =====================================================
-
-	// cfg_jsonFile.json 로드 상태 확인용 (필요 시 사용)
 	static const ST_A20_cfg_jsonFile_t& getCfgJsonFileMap() {
 		return s_cfgJsonFileMap;
 	}
@@ -108,19 +106,21 @@ class CL_C10_ConfigManager {
 	static bool loadSystemConfig(ST_A20_SystemConfig_t& p_cfg);
 	static bool loadWifiConfig(ST_A20_WifiConfig_t& p_cfg);
 	static bool loadMotionConfig(ST_A20_MotionConfig_t& p_cfg);
+
+	static bool loadNvsSpecConfig(ST_A20_NvsSpecConfig_t& p_cfg);
 	static bool loadSchedules(ST_A20_SchedulesRoot_t& p_cfg);
 	static bool loadUserProfiles(ST_A20_UserProfilesRoot_t& p_cfg);
 	static bool loadWindProfileDict(ST_A20_WindProfileDict_t& p_cfg);
-	static bool loadNvsSpecConfig(ST_A20_NvsSpecConfig_t& p_cfg);
 	static bool loadWebPageConfig(ST_A20_WebPageConfig_t& p_cfg);
 
 	static bool saveSystemConfig(const ST_A20_SystemConfig_t& p_cfg);
 	static bool saveWifiConfig(const ST_A20_WifiConfig_t& p_cfg);
 	static bool saveMotionConfig(const ST_A20_MotionConfig_t& p_cfg);
+
+	static bool saveNvsSpecConfig(const ST_A20_NvsSpecConfig_t& p_cfg);
 	static bool saveSchedules(const ST_A20_SchedulesRoot_t& p_cfg);
 	static bool saveUserProfiles(const ST_A20_UserProfilesRoot_t& p_cfg);
 	static bool saveWindProfileDict(const ST_A20_WindProfileDict_t& p_cfg);
-	static bool saveNvsSpecConfig(const ST_A20_NvsSpecConfig_t& p_cfg);
 	static bool saveWebPageConfig(const ST_A20_WebPageConfig_t& p_cfg);
 
 	static void saveDirtyConfigs();
@@ -131,36 +131,37 @@ class CL_C10_ConfigManager {
 	// 3. JSON Export
 	// =====================================================
 	static void toJson_All(const ST_A20_ConfigRoot_t& p,
-	                       JsonDocument& p_doc,
-	                       bool p_includeSystem = true,
-	                       bool p_includeWifi = true,
-	                       bool p_includeMotion = true,
-	                       bool p_includeSchedules = true,
-	                       bool p_includeUserProfiles = true,
-	                       bool p_includeWindDict = true,
-	                       bool p_includeNvsSpec = true,
-	                       bool p_includeWebPage = true);
+	                       JsonDocument&            p_doc,
+	                       bool                    p_includeSystem      = true,
+	                       bool                    p_includeWifi        = true,
+	                       bool                    p_includeMotion      = true,
+	                       bool                    p_includeNvsSpec      = true,
+	                       bool                    p_includeSchedules   = true,
+	                       bool                    p_includeUserProfiles = true,
+	                       bool                    p_includeWindDict     = false,
+	                       bool                    p_includeWebPage      = true);
 
 	static void toJson_System(const ST_A20_SystemConfig_t& p_cfg, JsonDocument& p_doc);
 	static void toJson_Wifi(const ST_A20_WifiConfig_t& p_cfg, JsonDocument& p_doc);
 	static void toJson_Motion(const ST_A20_MotionConfig_t& p_cfg, JsonDocument& p_doc);
+
+	static void toJson_NvsSpec(const ST_A20_NvsSpecConfig_t& p_cfg, JsonDocument& p_doc);
 	static void toJson_Schedules(const ST_A20_SchedulesRoot_t& p_cfg, JsonDocument& p_doc);
 	static void toJson_UserProfiles(const ST_A20_UserProfilesRoot_t& p_cfg, JsonDocument& p_doc);
 	static void toJson_WindProfileDict(const ST_A20_WindProfileDict_t& p_cfg, JsonDocument& p_doc);
-	static void toJson_NvsSpec(const ST_A20_NvsSpecConfig_t& p_cfg, JsonDocument& p_doc);
 	static void toJson_WebPage(const ST_A20_WebPageConfig_t& p_cfg, JsonDocument& p_doc);
 
 	// =====================================================
-	// 4. JSON Patch (System/Wifi/Motion/Schedules/UserProfiles/WindProfileDict/NvsSpec/WebPage)
+	// 4. JSON Patch (PUT 스타일: 전체 덮어쓰기)
 	// =====================================================
 	static bool patchSystemFromJson(ST_A20_SystemConfig_t& p_config, const JsonDocument& p_patch);
 	static bool patchWifiFromJson(ST_A20_WifiConfig_t& p_config, const JsonDocument& p_patch);
 	static bool patchMotionFromJson(ST_A20_MotionConfig_t& p_config, const JsonDocument& p_patch);
 
+	static bool patchNvsSpecFromJson(ST_A20_NvsSpecConfig_t& p_cfg, const JsonDocument& p_patch);
 	static bool patchSchedulesFromJson(ST_A20_SchedulesRoot_t& p_cfg, const JsonDocument& p_patch);
 	static bool patchUserProfilesFromJson(ST_A20_UserProfilesRoot_t& p_cfg, const JsonDocument& p_patch);
 	static bool patchWindProfileDictFromJson(ST_A20_WindProfileDict_t& p_cfg, const JsonDocument& p_patch);
-	static bool patchNvsSpecFromJson(ST_A20_NvsSpecConfig_t& p_cfg, const JsonDocument& p_patch);
 	static bool patchWebPageFromJson(ST_A20_WebPageConfig_t& p_cfg, const JsonDocument& p_patch);
 
 	// =====================================================
@@ -168,17 +169,17 @@ class CL_C10_ConfigManager {
 	//    (전역 g_A20_config_root를 대상으로 동작)
 	// =====================================================
 	// Schedules CRUD
-	static int addScheduleFromJson(const JsonDocument& p_doc);
+	static int  addScheduleFromJson(const JsonDocument& p_doc);
 	static bool updateScheduleFromJson(uint16_t p_id, const JsonDocument& p_patch);
 	static bool deleteSchedule(uint16_t p_id);
 
 	// UserProfiles CRUD
-	static int addUserProfilesFromJson(const JsonDocument& p_doc);
+	static int  addUserProfilesFromJson(const JsonDocument& p_doc);
 	static bool updateUserProfilesFromJson(uint16_t p_id, const JsonDocument& p_patch);
 	static bool deleteUserProfiles(uint16_t p_id);
 
 	// WindProfile CRUD (preset 중심)
-	static int addWindProfileFromJson(const JsonDocument& p_doc);
+	static int  addWindProfileFromJson(const JsonDocument& p_doc);
 	static bool updateWindProfileFromJson(uint16_t p_id, const JsonDocument& p_patch);
 	static bool deleteWindProfile(uint16_t p_id);
 
@@ -187,10 +188,10 @@ class CL_C10_ConfigManager {
 	static bool _dirty_system;
 	static bool _dirty_wifi;
 	static bool _dirty_motion;
+	static bool _dirty_nvsSpec;
 	static bool _dirty_schedules;
 	static bool _dirty_userProfiles;
-	static bool _dirty_windDict;
-	static bool _dirty_nvsSpec;
+	static bool _dirty_windProfile;
 	static bool _dirty_webPage;
 
 	// cfg_jsonFile.json 매핑 (옵션 A)
