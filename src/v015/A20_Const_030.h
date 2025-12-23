@@ -294,7 +294,7 @@ typedef struct {
 
 	struct {
 		char ssid[A20_Const::LEN_SSID];
-		char password[A20_Const::LEN_PASS];
+		char pass[A20_Const::LEN_PASS];
 	} ap;
 
 	ST_A20_STANetwork_t sta[A20_Const::MAX_STA_NETWORKS];
@@ -732,7 +732,7 @@ inline void A20_resetWifiDefault(ST_A20_WifiConfig& p_cfg) {
 	A20_safe_strlcpy(p_cfg.wifiModeDesc, "0=AP,1=STA,2=AP+STA", sizeof(p_cfg.wifiModeDesc));
 
 	A20_safe_strlcpy(p_cfg.ap.ssid, "NatureWind", sizeof(p_cfg.ap.ssid));
-	A20_safe_strlcpy(p_cfg.ap.password, "2540", sizeof(p_cfg.ap.password));
+	A20_safe_strlcpy(p_cfg.ap.pass, "2540", sizeof(p_cfg.ap.pass));
 
 	p_cfg.staCount = 0;
 }
