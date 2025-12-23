@@ -275,7 +275,7 @@ typedef struct {
 		char timezone[32];
 		uint16_t syncIntervalMin;
 	} time;
-} ST_A20_SystemConfig;
+} ST_A20_SystemConfig_t;
 
 // ------------------------------------------------------
 // WIFI 설정 (cfg_wifi_xxx.json) : camelCase 정합
@@ -299,7 +299,7 @@ typedef struct {
 
 	ST_A20_STANetwork_t sta[A20_Const::MAX_STA_NETWORKS];
 	uint8_t staCount;  // 파싱 시 채움
-} ST_A20_WifiConfig;
+} ST_A20_WifiConfig_t;
 
 // ------------------------------------------------------
 // MOTION 설정 (cfg_motion_xxx.json) : camelCase 정합
@@ -313,7 +313,7 @@ typedef struct {
 	char manufPrefix[9];
 	uint8_t prefixLen;
 	bool enabled;
-} ST_A20_BLETrustedDevice;
+} ST_A20_BLETrustedDevice_t;
 
 typedef struct {
 	struct {
@@ -335,7 +335,7 @@ typedef struct {
 			uint16_t exitDelaySec;
 		} rssi;
 	} ble;
-} ST_A20_MotionConfig;
+} ST_A20_MotionConfig_t;
 
 /* ======================================================
  * Enum/Code: Segment Mode
@@ -677,7 +677,7 @@ inline float A20_randRange(float p_min, float p_max) {
 // ======================================================
 
 // System 기본값
-inline void A20_resetSystemDefault(ST_A20_SystemConfig& p_cfg) {
+inline void A20_resetSystemDefault(ST_A20_SystemConfig_t& p_cfg) {
 	memset(&p_cfg, 0, sizeof(p_cfg));
 
 	A20_safe_strlcpy(p_cfg.meta.version, A20_Const::FW_VERSION, sizeof(p_cfg.meta.version));
@@ -738,7 +738,7 @@ inline void A20_resetWifiDefault(ST_A20_WifiConfig& p_cfg) {
 }
 
 // Motion 기본값
-inline void A20_resetMotionDefault(ST_A20_MotionConfig& p_cfg) {
+inline void A20_resetMotionDefault(ST_A20_MotionConfig_t& p_cfg) {
 	memset(&p_cfg, 0, sizeof(p_cfg));
 
 	p_cfg.pir.enabled = true;
