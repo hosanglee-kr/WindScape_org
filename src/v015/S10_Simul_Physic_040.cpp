@@ -40,7 +40,7 @@
 
 // 외부 종속성 헤더 포함
 #include "A20_Const_040.h"
-#include "C10_Config_040.h"
+#include "C10_Config_041.h"
 #include "D10_Logger_040.h"
 
 // ==================================================

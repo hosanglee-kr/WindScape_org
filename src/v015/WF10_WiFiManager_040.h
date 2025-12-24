@@ -43,7 +43,7 @@
 #include <time.h>
 
 #include "A20_Const_040.h"
-#include "C10_Config_040.h"	 // ST_A20_WifiConfig_t, ST_A20_SystemConfig_t, ST_A20_ConfigRoot_t
+#include "C10_Config_041.h"	 // ST_A20_WifiConfig_t, ST_A20_SystemConfig_t, ST_A20_ConfigRoot_t
 #include "D10_Logger_040.h"
 
 // Mutex 보호 매크로 정의

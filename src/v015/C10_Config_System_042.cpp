@@ -113,12 +113,12 @@ bool CL_C10_ConfigManager::loadSystemConfig(ST_A20_SystemConfig_t& p_cfg) {
 	strlcpy(p_cfg.meta.version,
 	        C10_getStr2(j_meta, "version", "version", A20_Const::FW_VERSION),
 	        sizeof(p_cfg.meta.version));
-	strlcpy(p_cfg.meta.device_name,
-	        C10_getStr2(j_meta, "deviceName", "device_name", "SmartNatureWind"),
-	        sizeof(p_cfg.meta.device_name));
-	strlcpy(p_cfg.meta.last_update,
-	        C10_getStr2(j_meta, "lastUpdate", "last_update", ""),
-	        sizeof(p_cfg.meta.last_update));
+	strlcpy(p_cfg.meta.deviceName,
+	        C10_getStr2(j_meta, "deviceName", "deviceName", "SmartNatureWind"),
+	        sizeof(p_cfg.meta.deviceName));
+	strlcpy(p_cfg.meta.lastUpdate,
+	        C10_getStr2(j_meta, "lastUpdate", "lastUpdate", ""),
+	        sizeof(p_cfg.meta.lastUpdate));
 
 	// system.logging
 	JsonObjectConst j_log = j_sys["logging"].as<JsonObjectConst>();
@@ -128,18 +128,18 @@ bool CL_C10_ConfigManager::loadSystemConfig(ST_A20_SystemConfig_t& p_cfg) {
 	strlcpy(p_cfg.system.logging.level,
 	        C10_getStr2(j_log, "level", "level", "INFO"),
 	        sizeof(p_cfg.system.logging.level));
-	p_cfg.system.logging.max_entries = C10_getNum2<uint16_t>(j_log, "maxEntries", "max_entries", 300);
+	p_cfg.system.logging.maxEntries = C10_getNum2<uint16_t>(j_log, "maxEntries", "maxEntries", 300);
 
-	// hw.fanPwm (기존 fan_pwm 호환)
+	// hw.fanPwm (기존 fanPwm 호환)
 	JsonObjectConst j_pwm = j_hw["fanPwm"].as<JsonObjectConst>();
-	if (j_pwm.isNull()) j_pwm = j_hw["fan_pwm"].as<JsonObjectConst>();
+	if (j_pwm.isNull()) j_pwm = j_hw["fanPwm"].as<JsonObjectConst>();
 	if (j_pwm.isNull()) {
 		CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] loadSystemConfig: missing hw.fanPwm (defaults used)");
 	}
-	p_cfg.hw.fan_pwm.pin     = C10_getNum2<uint8_t>(j_pwm, "pin", "pin", 6);
-	p_cfg.hw.fan_pwm.channel = C10_getNum2<uint8_t>(j_pwm, "channel", "channel", 0);
-	p_cfg.hw.fan_pwm.freq    = C10_getNum2<uint32_t>(j_pwm, "freq", "freq", 25000);
-	p_cfg.hw.fan_pwm.res     = C10_getNum2<uint8_t>(j_pwm, "res", "res", 10);
+	p_cfg.hw.fanPwm.pin     = C10_getNum2<uint8_t>(j_pwm, "pin", "pin", 6);
+	p_cfg.hw.fanPwm.channel = C10_getNum2<uint8_t>(j_pwm, "channel", "channel", 0);
+	p_cfg.hw.fanPwm.freq    = C10_getNum2<uint32_t>(j_pwm, "freq", "freq", 25000);
+	p_cfg.hw.fanPwm.res     = C10_getNum2<uint8_t>(j_pwm, "res", "res", 10);
 
 	// hw.fanConfig (이미 camelCase)
 	JsonObjectConst j_fcfg = j_hw["fanConfig"].as<JsonObjectConst>();
@@ -151,17 +151,17 @@ bool CL_C10_ConfigManager::loadSystemConfig(ST_A20_SystemConfig_t& p_cfg) {
 	p_cfg.hw.fanConfig.comfortPercentMax = j_fcfg["comfortPercentMax"] | 65;
 	p_cfg.hw.fanConfig.hardPercentMax    = j_fcfg["hardPercentMax"] | 90;
 
-	// hw.pir (debounceSec camelCase + debounce_sec 호환)
+	// hw.pir (debounceSec camelCase + debounceSec 호환)
 	JsonObjectConst j_pir = j_hw["pir"].as<JsonObjectConst>();
 	if (j_pir.isNull()) {
 		CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] loadSystemConfig: missing hw.pir (defaults used)");
 	}
 	p_cfg.hw.pir.enabled      = C10_getBool2(j_pir, "enabled", "enabled", true);
 	p_cfg.hw.pir.pin          = C10_getNum2<uint8_t>(j_pir, "pin", "pin", 13);
-	p_cfg.hw.pir.debounce_sec = C10_getNum2<uint16_t>(j_pir, "debounceSec", "debounce_sec", 5);
+	p_cfg.hw.pir.debounceSec = C10_getNum2<uint16_t>(j_pir, "debounceSec", "debounceSec", 5);
 	p_cfg.hw.pir.holdSec      = C10_getNum2<uint16_t>(j_pir, "holdSec", "holdSec", 120);
 
-	// hw.tempHum (intervalSec camelCase + interval_sec 호환)
+	// hw.tempHum (intervalSec camelCase + intervalSec 호환)
 	JsonObjectConst j_th = j_hw["tempHum"].as<JsonObjectConst>();
 	if (j_th.isNull()) {
 		CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] loadSystemConfig: missing hw.tempHum (defaults used)");
@@ -171,37 +171,37 @@ bool CL_C10_ConfigManager::loadSystemConfig(ST_A20_SystemConfig_t& p_cfg) {
 	        C10_getStr2(j_th, "type", "type", "DHT22"),
 	        sizeof(p_cfg.hw.tempHum.type));
 	p_cfg.hw.tempHum.pin          = C10_getNum2<uint8_t>(j_th, "pin", "pin", 23);
-	p_cfg.hw.tempHum.interval_sec = C10_getNum2<uint16_t>(j_th, "intervalSec", "interval_sec", 30);
+	p_cfg.hw.tempHum.intervalSec = C10_getNum2<uint16_t>(j_th, "intervalSec", "intervalSec", 30);
 
-	// hw.ble (scanInterval camelCase + scan_interval 호환)
+	// hw.ble (scanInterval camelCase + scanInterval 호환)
 	JsonObjectConst j_ble = j_hw["ble"].as<JsonObjectConst>();
 	if (j_ble.isNull()) {
 		CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] loadSystemConfig: missing hw.ble (defaults used)");
 	}
 	p_cfg.hw.ble.enabled       = C10_getBool2(j_ble, "enabled", "enabled", true);
-	p_cfg.hw.ble.scan_interval = C10_getNum2<uint16_t>(j_ble, "scanInterval", "scan_interval", 5);
+	p_cfg.hw.ble.scanInterval = C10_getNum2<uint16_t>(j_ble, "scanInterval", "scanInterval", 5);
 
-	// security (apiKey camelCase + api_key 호환)
+	// security (apiKey camelCase + apiKey 호환)
 	JsonObjectConst j_sec = j_root["security"].as<JsonObjectConst>();
 	if (j_sec.isNull()) {
 		CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] loadSystemConfig: missing security (defaults used)");
 	}
-	strlcpy(p_cfg.security.api_key,
-	        C10_getStr2(j_sec, "apiKey", "api_key", ""),
-	        sizeof(p_cfg.security.api_key));
+	strlcpy(p_cfg.security.apiKey,
+	        C10_getStr2(j_sec, "apiKey", "apiKey", ""),
+	        sizeof(p_cfg.security.apiKey));
 
-	// time (ntpServer/syncIntervalMin camelCase + ntp_server/sync_interval_min 호환)
+	// time (ntpServer/syncIntervalMin camelCase + ntpServer/syncIntervalMin 호환)
 	JsonObjectConst j_time = j_root["time"].as<JsonObjectConst>();
 	if (j_time.isNull()) {
 		CL_D10_Logger::log(EN_L10_LOG_WARN, "[C10] loadSystemConfig: missing time (defaults used)");
 	}
-	strlcpy(p_cfg.time.ntp_server,
-	        C10_getStr2(j_time, "ntpServer", "ntp_server", "pool.ntp.org"),
-	        sizeof(p_cfg.time.ntp_server));
+	strlcpy(p_cfg.time.ntpServer,
+	        C10_getStr2(j_time, "ntpServer", "ntpServer", "pool.ntp.org"),
+	        sizeof(p_cfg.time.ntpServer));
 	strlcpy(p_cfg.time.timezone,
 	        C10_getStr2(j_time, "timezone", "timezone", "Asia/Seoul"),
 	        sizeof(p_cfg.time.timezone));
-	p_cfg.time.sync_interval_min = C10_getNum2<uint16_t>(j_time, "syncIntervalMin", "sync_interval_min", 60);
+	p_cfg.time.syncIntervalMin = C10_getNum2<uint16_t>(j_time, "syncIntervalMin", "syncIntervalMin", 60);
 
 	return true;
 }
@@ -231,25 +231,25 @@ bool CL_C10_ConfigManager::loadWifiConfig(ST_A20_WifiConfig_t& p_cfg) {
 	p_cfg.wifiMode = (EN_A20_WIFI_MODE_t)(j["wifiMode"] | EN_A20_WIFI_MODE_AP_STA);
 	strlcpy(p_cfg.wifiModeDesc, j["wifiModeDesc"] | "0=AP,1=STA,2=AP+STA", sizeof(p_cfg.wifiModeDesc));
 
-	// ap: JSON은 pass 로 통일하되, password 호환
+	// ap: JSON은 pass 로 통일하되, pass 호환
 	strlcpy(p_cfg.ap.ssid, j["ap"]["ssid"] | "NatureWind", sizeof(p_cfg.ap.ssid));
 
-	const char* v_apPass = C10_getStr2(j["ap"].as<JsonObjectConst>(), "pass", "password", "2540");
-	strlcpy(p_cfg.ap.password, v_apPass, sizeof(p_cfg.ap.password));
+	const char* v_apPass = C10_getStr2(j["ap"].as<JsonObjectConst>(), "pass", "pass", "2540");
+	strlcpy(p_cfg.ap.pass, v_apPass, sizeof(p_cfg.ap.pass));
 
-	// sta: pass 로 통일 (password는 호환)
-	p_cfg.sta_count = 0;
+	// sta: pass 로 통일 (pass는 호환)
+	p_cfg.staCount = 0;
 	if (j["sta"].is<JsonArrayConst>()) {
 		JsonArrayConst v_arr = j["sta"].as<JsonArrayConst>();
 		for (JsonObjectConst v_js : v_arr) {
-			if (p_cfg.sta_count >= A20_Const::MAX_STA_NETWORKS) break;
+			if (p_cfg.staCount >= A20_Const::MAX_STA_NETWORKS) break;
 
-			strlcpy(p_cfg.sta[p_cfg.sta_count].ssid, v_js["ssid"] | "", sizeof(p_cfg.sta[p_cfg.sta_count].ssid));
+			strlcpy(p_cfg.sta[p_cfg.staCount].ssid, v_js["ssid"] | "", sizeof(p_cfg.sta[p_cfg.staCount].ssid));
 
-			const char* v_pass = C10_getStr2(v_js, "pass", "password", "");
-			strlcpy(p_cfg.sta[p_cfg.sta_count].pass, v_pass, sizeof(p_cfg.sta[p_cfg.sta_count].pass));
+			const char* v_pass = C10_getStr2(v_js, "pass", "pass", "");
+			strlcpy(p_cfg.sta[p_cfg.staCount].pass, v_pass, sizeof(p_cfg.sta[p_cfg.staCount].pass));
 
-			p_cfg.sta_count++;
+			p_cfg.staCount++;
 		}
 	}
 
@@ -278,7 +278,7 @@ bool CL_C10_ConfigManager::loadMotionConfig(ST_A20_MotionConfig_t& p_cfg) {
 		return false;
 	}
 
-	p_cfg.enabled     = j["enabled"] | true;
+	// p_cfg.enabled     = j["enabled"] | true;
 	p_cfg.pir.enabled = j["pir"]["enabled"] | true;
 	p_cfg.pir.holdSec = j["pir"]["holdSec"] | 120;
 
@@ -288,30 +288,30 @@ bool CL_C10_ConfigManager::loadMotionConfig(ST_A20_MotionConfig_t& p_cfg) {
 	JsonObjectConst r = j["ble"]["rssi"].as<JsonObjectConst>();
 	p_cfg.ble.rssi.on             = C10_getNum2<int8_t>(r, "on", "on", -65);
 	p_cfg.ble.rssi.off            = C10_getNum2<int8_t>(r, "off", "off", -75);
-	p_cfg.ble.rssi.avg_count      = C10_getNum2<uint8_t>(r, "avgCount", "avg_count", 8);
-	p_cfg.ble.rssi.persist_count  = C10_getNum2<uint8_t>(r, "persistCount", "persist_count", 5);
-	p_cfg.ble.rssi.exit_delay_sec = C10_getNum2<uint16_t>(r, "exitDelaySec", "exit_delay_sec", 12);
+	p_cfg.ble.rssi.avgCount      = C10_getNum2<uint8_t>(r, "avgCount", "avgCount", 8);
+	p_cfg.ble.rssi.persistCount  = C10_getNum2<uint8_t>(r, "persistCount", "persistCount", 5);
+	p_cfg.ble.rssi.exitDelaySec = C10_getNum2<uint16_t>(r, "exitDelaySec", "exitDelaySec", 12);
 
-	// trustedDevices camelCase + trusted_devices 호환
-	p_cfg.ble.trusted_count = 0;
+	// trustedDevices camelCase + trustedDevices 호환
+	p_cfg.ble.trustedCount = 0;
 
 	JsonArrayConst v_arr = j["ble"]["trustedDevices"].as<JsonArrayConst>();
-	if (v_arr.isNull()) v_arr = j["ble"]["trusted_devices"].as<JsonArrayConst>();
+	if (v_arr.isNull()) v_arr = j["ble"]["trustedDevices"].as<JsonArrayConst>();
 
 	if (!v_arr.isNull()) {
 		for (JsonObjectConst v_js : v_arr) {
-			if (p_cfg.ble.trusted_count >= A20_Const::MAX_BLE_DEVICES) break;
+			if (p_cfg.ble.trustedCount >= A20_Const::MAX_BLE_DEVICES) break;
 
-			ST_A20_BLETrustedDevice_t& v_d = p_cfg.ble.trusted_devices[p_cfg.ble.trusted_count++];
+			ST_A20_BLETrustedDevice_t& v_d = p_cfg.ble.trustedDevices[p_cfg.ble.trustedCount++];
 
 			strlcpy(v_d.alias, v_js["alias"] | "", sizeof(v_d.alias));
 			strlcpy(v_d.name, v_js["name"] | "", sizeof(v_d.name));
 			strlcpy(v_d.mac, v_js["mac"] | "", sizeof(v_d.mac));
 
-			const char* v_mp = C10_getStr2(v_js, "manufPrefix", "manuf_prefix", "");
-			strlcpy(v_d.manuf_prefix, v_mp, sizeof(v_d.manuf_prefix));
+			const char* v_mp = C10_getStr2(v_js, "manufPrefix", "manufPrefix", "");
+			strlcpy(v_d.manufPrefix, v_mp, sizeof(v_d.manufPrefix));
 
-			v_d.prefix_len = C10_getNum2<uint8_t>(v_js, "prefixLen", "prefix_len", 0);
+			v_d.prefixLen = C10_getNum2<uint8_t>(v_js, "prefixLen", "prefixLen", 0);
 			v_d.enabled    = C10_getBool2(v_js, "enabled", "enabled", true);
 		}
 	}
@@ -326,17 +326,17 @@ bool CL_C10_ConfigManager::saveSystemConfig(const ST_A20_SystemConfig_t& p_cfg) 
 	JsonDocument v;
 
 	v["meta"]["version"]    = p_cfg.meta.version;
-	v["meta"]["deviceName"] = p_cfg.meta.device_name;
-	v["meta"]["lastUpdate"] = p_cfg.meta.last_update;
+	v["meta"]["deviceName"] = p_cfg.meta.deviceName;
+	v["meta"]["lastUpdate"] = p_cfg.meta.lastUpdate;
 
 	v["system"]["logging"]["level"]      = p_cfg.system.logging.level;
-	v["system"]["logging"]["maxEntries"] = p_cfg.system.logging.max_entries;
+	v["system"]["logging"]["maxEntries"] = p_cfg.system.logging.maxEntries;
 
 	// hw.fanPwm (camelCase)
-	v["hw"]["fanPwm"]["pin"]     = p_cfg.hw.fan_pwm.pin;
-	v["hw"]["fanPwm"]["channel"] = p_cfg.hw.fan_pwm.channel;
-	v["hw"]["fanPwm"]["freq"]    = p_cfg.hw.fan_pwm.freq;
-	v["hw"]["fanPwm"]["res"]     = p_cfg.hw.fan_pwm.res;
+	v["hw"]["fanPwm"]["pin"]     = p_cfg.hw.fanPwm.pin;
+	v["hw"]["fanPwm"]["channel"] = p_cfg.hw.fanPwm.channel;
+	v["hw"]["fanPwm"]["freq"]    = p_cfg.hw.fanPwm.freq;
+	v["hw"]["fanPwm"]["res"]     = p_cfg.hw.fanPwm.res;
 
 	v["hw"]["fanConfig"]["startPercentMin"]   = p_cfg.hw.fanConfig.startPercentMin;
 	v["hw"]["fanConfig"]["comfortPercentMin"] = p_cfg.hw.fanConfig.comfortPercentMin;
@@ -345,22 +345,22 @@ bool CL_C10_ConfigManager::saveSystemConfig(const ST_A20_SystemConfig_t& p_cfg) 
 
 	v["hw"]["pir"]["enabled"]     = p_cfg.hw.pir.enabled;
 	v["hw"]["pir"]["pin"]         = p_cfg.hw.pir.pin;
-	v["hw"]["pir"]["debounceSec"] = p_cfg.hw.pir.debounce_sec;
+	v["hw"]["pir"]["debounceSec"] = p_cfg.hw.pir.debounceSec;
 	v["hw"]["pir"]["holdSec"]     = p_cfg.hw.pir.holdSec;
 
 	v["hw"]["tempHum"]["enabled"]     = p_cfg.hw.tempHum.enabled;
 	v["hw"]["tempHum"]["type"]        = p_cfg.hw.tempHum.type;
 	v["hw"]["tempHum"]["pin"]         = p_cfg.hw.tempHum.pin;
-	v["hw"]["tempHum"]["intervalSec"] = p_cfg.hw.tempHum.interval_sec;
+	v["hw"]["tempHum"]["intervalSec"] = p_cfg.hw.tempHum.intervalSec;
 
 	v["hw"]["ble"]["enabled"]      = p_cfg.hw.ble.enabled;
-	v["hw"]["ble"]["scanInterval"] = p_cfg.hw.ble.scan_interval;
+	v["hw"]["ble"]["scanInterval"] = p_cfg.hw.ble.scanInterval;
 
-	v["security"]["apiKey"] = p_cfg.security.api_key;
+	v["security"]["apiKey"] = p_cfg.security.apiKey;
 
-	v["time"]["ntpServer"]       = p_cfg.time.ntp_server;
+	v["time"]["ntpServer"]       = p_cfg.time.ntpServer;
 	v["time"]["timezone"]        = p_cfg.time.timezone;
-	v["time"]["syncIntervalMin"] = p_cfg.time.sync_interval_min;
+	v["time"]["syncIntervalMin"] = p_cfg.time.syncIntervalMin;
 
 	return ioSaveJson(s_cfgJsonFileMap.system, v);
 }
@@ -372,11 +372,11 @@ bool CL_C10_ConfigManager::saveWifiConfig(const ST_A20_WifiConfig_t& p_cfg) {
 	d["wifi"]["wifiModeDesc"] = p_cfg.wifiModeDesc;
 	d["wifi"]["ap"]["ssid"]   = p_cfg.ap.ssid;
 
-	// JSON 키 pass 로 통일 (password는 호환으로만 유지)
-	d["wifi"]["ap"]["pass"] = p_cfg.ap.password;
+	// JSON 키 pass 로 통일 (pass는 호환으로만 유지)
+	d["wifi"]["ap"]["pass"] = p_cfg.ap.pass;
 
 	JsonArray v_staArr = d["wifi"]["sta"].to<JsonArray>();
-	for (uint8_t v_i = 0; v_i < p_cfg.sta_count; v_i++) {
+	for (uint8_t v_i = 0; v_i < p_cfg.staCount; v_i++) {
 		JsonObject v_net = v_staArr.add<JsonObject>();
 		v_net["ssid"] = p_cfg.sta[v_i].ssid;
 		v_net["pass"] = p_cfg.sta[v_i].pass;
@@ -388,7 +388,7 @@ bool CL_C10_ConfigManager::saveWifiConfig(const ST_A20_WifiConfig_t& p_cfg) {
 bool CL_C10_ConfigManager::saveMotionConfig(const ST_A20_MotionConfig_t& p_cfg) {
 	JsonDocument d;
 
-	d["motion"]["enabled"]        = p_cfg.enabled;
+	// d["motion"]["enabled"]        = p_cfg.enabled;
 	d["motion"]["pir"]["enabled"] = p_cfg.pir.enabled;
 	d["motion"]["pir"]["holdSec"] = p_cfg.pir.holdSec;
 
@@ -397,20 +397,20 @@ bool CL_C10_ConfigManager::saveMotionConfig(const ST_A20_MotionConfig_t& p_cfg) 
 	d["motion"]["ble"]["rssi"]["off"]  = p_cfg.ble.rssi.off;
 
 	// camelCase
-	d["motion"]["ble"]["rssi"]["avgCount"]     = p_cfg.ble.rssi.avg_count;
-	d["motion"]["ble"]["rssi"]["persistCount"] = p_cfg.ble.rssi.persist_count;
-	d["motion"]["ble"]["rssi"]["exitDelaySec"] = p_cfg.ble.rssi.exit_delay_sec;
+	d["motion"]["ble"]["rssi"]["avgCount"]     = p_cfg.ble.rssi.avgCount;
+	d["motion"]["ble"]["rssi"]["persistCount"] = p_cfg.ble.rssi.persistCount;
+	d["motion"]["ble"]["rssi"]["exitDelaySec"] = p_cfg.ble.rssi.exitDelaySec;
 
 	JsonArray v_tdArr = d["motion"]["ble"]["trustedDevices"].to<JsonArray>();
-	for (uint8_t v_i = 0; v_i < p_cfg.ble.trusted_count; v_i++) {
-		const ST_A20_BLETrustedDevice_t& v_d = p_cfg.ble.trusted_devices[v_i];
+	for (uint8_t v_i = 0; v_i < p_cfg.ble.trustedCount; v_i++) {
+		const ST_A20_BLETrustedDevice_t& v_d = p_cfg.ble.trustedDevices[v_i];
 		JsonObject v_td = v_tdArr.add<JsonObject>();
 
 		v_td["alias"]       = v_d.alias;
 		v_td["name"]        = v_d.name;
 		v_td["mac"]         = v_d.mac;
-		v_td["manufPrefix"] = v_d.manuf_prefix;
-		v_td["prefixLen"]   = v_d.prefix_len;
+		v_td["manufPrefix"] = v_d.manufPrefix;
+		v_td["prefixLen"]   = v_d.prefixLen;
 		v_td["enabled"]     = v_d.enabled;
 	}
 
@@ -438,15 +438,15 @@ bool CL_C10_ConfigManager::patchSystemFromJson(ST_A20_SystemConfig_t& p_config, 
 
 	// meta
 	if (!j_meta.isNull()) {
-		const char* v_dn = C10_getStr2(j_meta, "deviceName", "device_name", "");
-		if (strlen(v_dn) > 0 && strcmp(v_dn, p_config.meta.device_name) != 0) {
-			strlcpy(p_config.meta.device_name, v_dn, sizeof(p_config.meta.device_name));
+		const char* v_dn = C10_getStr2(j_meta, "deviceName", "deviceName", "");
+		if (strlen(v_dn) > 0 && strcmp(v_dn, p_config.meta.deviceName) != 0) {
+			strlcpy(p_config.meta.deviceName, v_dn, sizeof(p_config.meta.deviceName));
 			v_changed = true;
 		}
 
-		const char* v_lu = C10_getStr2(j_meta, "lastUpdate", "last_update", "");
-		if (strlen(v_lu) > 0 && strcmp(v_lu, p_config.meta.last_update) != 0) {
-			strlcpy(p_config.meta.last_update, v_lu, sizeof(p_config.meta.last_update));
+		const char* v_lu = C10_getStr2(j_meta, "lastUpdate", "lastUpdate", "");
+		if (strlen(v_lu) > 0 && strcmp(v_lu, p_config.meta.lastUpdate) != 0) {
+			strlcpy(p_config.meta.lastUpdate, v_lu, sizeof(p_config.meta.lastUpdate));
 			v_changed = true;
 		}
 	}
@@ -461,9 +461,9 @@ bool CL_C10_ConfigManager::patchSystemFromJson(ST_A20_SystemConfig_t& p_config, 
 				v_changed = true;
 			}
 
-			uint16_t v_max = C10_getNum2<uint16_t>(j_log, "maxEntries", "max_entries", p_config.system.logging.max_entries);
-			if (v_max != p_config.system.logging.max_entries) {
-				p_config.system.logging.max_entries = v_max;
+			uint16_t v_max = C10_getNum2<uint16_t>(j_log, "maxEntries", "maxEntries", p_config.system.logging.maxEntries);
+			if (v_max != p_config.system.logging.maxEntries) {
+				p_config.system.logging.maxEntries = v_max;
 				v_changed = true;
 			}
 		}
@@ -471,9 +471,9 @@ bool CL_C10_ConfigManager::patchSystemFromJson(ST_A20_SystemConfig_t& p_config, 
 
 	// security.apiKey
 	if (!j_sec.isNull()) {
-		const char* v_key = C10_getStr2(j_sec, "apiKey", "api_key", "");
-		if (strlen(v_key) > 0 && strcmp(v_key, p_config.security.api_key) != 0) {
-			strlcpy(p_config.security.api_key, v_key, sizeof(p_config.security.api_key));
+		const char* v_key = C10_getStr2(j_sec, "apiKey", "apiKey", "");
+		if (strlen(v_key) > 0 && strcmp(v_key, p_config.security.apiKey) != 0) {
+			strlcpy(p_config.security.apiKey, v_key, sizeof(p_config.security.apiKey));
 			v_changed = true;
 		}
 	}
@@ -512,8 +512,8 @@ bool CL_C10_ConfigManager::patchSystemFromJson(ST_A20_SystemConfig_t& p_config, 
 				uint8_t v_pin = j_pir["pin"].as<uint8_t>();
 				if (v_pin != p_config.hw.pir.pin) { p_config.hw.pir.pin = v_pin; v_changed = true; }
 			}
-			uint16_t v_db = C10_getNum2<uint16_t>(j_pir, "debounceSec", "debounce_sec", p_config.hw.pir.debounce_sec);
-			if (v_db != p_config.hw.pir.debounce_sec) { p_config.hw.pir.debounce_sec = v_db; v_changed = true; }
+			uint16_t v_db = C10_getNum2<uint16_t>(j_pir, "debounceSec", "debounceSec", p_config.hw.pir.debounceSec);
+			if (v_db != p_config.hw.pir.debounceSec) { p_config.hw.pir.debounceSec = v_db; v_changed = true; }
 
 			if (j_pir["holdSec"].is<uint16_t>()) {
 				uint16_t v_hold = j_pir["holdSec"].as<uint16_t>();
@@ -537,29 +537,29 @@ bool CL_C10_ConfigManager::patchSystemFromJson(ST_A20_SystemConfig_t& p_config, 
 				uint8_t v_pin = j_th["pin"].as<uint8_t>();
 				if (v_pin != p_config.hw.tempHum.pin) { p_config.hw.tempHum.pin = v_pin; v_changed = true; }
 			}
-			uint16_t v_itv = C10_getNum2<uint16_t>(j_th, "intervalSec", "interval_sec", p_config.hw.tempHum.interval_sec);
-			if (v_itv != p_config.hw.tempHum.interval_sec) { p_config.hw.tempHum.interval_sec = v_itv; v_changed = true; }
+			uint16_t v_itv = C10_getNum2<uint16_t>(j_th, "intervalSec", "intervalSec", p_config.hw.tempHum.intervalSec);
+			if (v_itv != p_config.hw.tempHum.intervalSec) { p_config.hw.tempHum.intervalSec = v_itv; v_changed = true; }
 		}
 
-		// fanPwm (fan_pwm 호환)
+		// fanPwm (fanPwm 호환)
 		JsonObjectConst j_pwm = j_hw["fanPwm"].as<JsonObjectConst>();
-		if (j_pwm.isNull()) j_pwm = j_hw["fan_pwm"].as<JsonObjectConst>();
+		if (j_pwm.isNull()) j_pwm = j_hw["fanPwm"].as<JsonObjectConst>();
 		if (!j_pwm.isNull()) {
 			if (j_pwm["pin"].is<uint8_t>()) {
 				uint8_t v_pin = j_pwm["pin"].as<uint8_t>();
-				if (v_pin != p_config.hw.fan_pwm.pin) { p_config.hw.fan_pwm.pin = v_pin; v_changed = true; }
+				if (v_pin != p_config.hw.fanPwm.pin) { p_config.hw.fanPwm.pin = v_pin; v_changed = true; }
 			}
 			if (j_pwm["channel"].is<uint8_t>()) {
 				uint8_t v_ch = j_pwm["channel"].as<uint8_t>();
-				if (v_ch != p_config.hw.fan_pwm.channel) { p_config.hw.fan_pwm.channel = v_ch; v_changed = true; }
+				if (v_ch != p_config.hw.fanPwm.channel) { p_config.hw.fanPwm.channel = v_ch; v_changed = true; }
 			}
 			if (j_pwm["freq"].is<uint32_t>()) {
 				uint32_t v_fr = j_pwm["freq"].as<uint32_t>();
-				if (v_fr != p_config.hw.fan_pwm.freq) { p_config.hw.fan_pwm.freq = v_fr; v_changed = true; }
+				if (v_fr != p_config.hw.fanPwm.freq) { p_config.hw.fanPwm.freq = v_fr; v_changed = true; }
 			}
 			if (j_pwm["res"].is<uint8_t>()) {
 				uint8_t v_res = j_pwm["res"].as<uint8_t>();
-				if (v_res != p_config.hw.fan_pwm.res) { p_config.hw.fan_pwm.res = v_res; v_changed = true; }
+				if (v_res != p_config.hw.fanPwm.res) { p_config.hw.fanPwm.res = v_res; v_changed = true; }
 			}
 		}
 
@@ -570,16 +570,16 @@ bool CL_C10_ConfigManager::patchSystemFromJson(ST_A20_SystemConfig_t& p_config, 
 				bool v_en = j_ble["enabled"].as<bool>();
 				if (v_en != p_config.hw.ble.enabled) { p_config.hw.ble.enabled = v_en; v_changed = true; }
 			}
-			uint16_t v_si = C10_getNum2<uint16_t>(j_ble, "scanInterval", "scan_interval", p_config.hw.ble.scan_interval);
-			if (v_si != p_config.hw.ble.scan_interval) { p_config.hw.ble.scan_interval = v_si; v_changed = true; }
+			uint16_t v_si = C10_getNum2<uint16_t>(j_ble, "scanInterval", "scanInterval", p_config.hw.ble.scanInterval);
+			if (v_si != p_config.hw.ble.scanInterval) { p_config.hw.ble.scanInterval = v_si; v_changed = true; }
 		}
 	}
 
 	// time
 	if (!j_time.isNull()) {
-		const char* v_ntp = C10_getStr2(j_time, "ntpServer", "ntp_server", "");
-		if (strlen(v_ntp) > 0 && strcmp(v_ntp, p_config.time.ntp_server) != 0) {
-			strlcpy(p_config.time.ntp_server, v_ntp, sizeof(p_config.time.ntp_server));
+		const char* v_ntp = C10_getStr2(j_time, "ntpServer", "ntpServer", "");
+		if (strlen(v_ntp) > 0 && strcmp(v_ntp, p_config.time.ntpServer) != 0) {
+			strlcpy(p_config.time.ntpServer, v_ntp, sizeof(p_config.time.ntpServer));
 			v_changed = true;
 		}
 
@@ -589,9 +589,9 @@ bool CL_C10_ConfigManager::patchSystemFromJson(ST_A20_SystemConfig_t& p_config, 
 			v_changed = true;
 		}
 
-		uint16_t v_si = C10_getNum2<uint16_t>(j_time, "syncIntervalMin", "sync_interval_min", p_config.time.sync_interval_min);
-		if (v_si != p_config.time.sync_interval_min) {
-			p_config.time.sync_interval_min = v_si;
+		uint16_t v_si = C10_getNum2<uint16_t>(j_time, "syncIntervalMin", "syncIntervalMin", p_config.time.syncIntervalMin);
+		if (v_si != p_config.time.syncIntervalMin) {
+			p_config.time.syncIntervalMin = v_si;
 			v_changed = true;
 		}
 	}
@@ -636,28 +636,28 @@ bool CL_C10_ConfigManager::patchWifiFromJson(ST_A20_WifiConfig_t& p_config, cons
 			v_changed = true;
 		}
 
-		// pass 우선, password 호환
-		const char* v_pwd = C10_getStr2(j_ap, "pass", "password", "");
-		if (strlen(v_pwd) > 0 && strcmp(v_pwd, p_config.ap.password) != 0) {
-			strlcpy(p_config.ap.password, v_pwd, sizeof(p_config.ap.password));
+		// pass 우선, pass 호환
+		const char* v_pwd = C10_getStr2(j_ap, "pass", "pass", "");
+		if (strlen(v_pwd) > 0 && strcmp(v_pwd, p_config.ap.pass) != 0) {
+			strlcpy(p_config.ap.pass, v_pwd, sizeof(p_config.ap.pass));
 			v_changed = true;
 		}
 	}
 
 	JsonArrayConst j_sta = j_wifi["sta"].as<JsonArrayConst>();
 	if (!j_sta.isNull()) {
-		p_config.sta_count = 0;
+		p_config.staCount = 0;
 		for (JsonObjectConst v_js : j_sta) {
-			if (p_config.sta_count >= A20_Const::MAX_STA_NETWORKS) break;
+			if (p_config.staCount >= A20_Const::MAX_STA_NETWORKS) break;
 
-			ST_A20_STANetwork_t& v_net = p_config.sta[p_config.sta_count];
+			ST_A20_STANetwork_t& v_net = p_config.sta[p_config.staCount];
 
 			strlcpy(v_net.ssid, v_js["ssid"] | "", sizeof(v_net.ssid));
 
-			const char* v_pass = C10_getStr2(v_js, "pass", "password", "");
+			const char* v_pass = C10_getStr2(v_js, "pass", "pass", "");
 			strlcpy(v_net.pass, v_pass, sizeof(v_net.pass));
 
-			p_config.sta_count++;
+			p_config.staCount++;
 		}
 		v_changed = true;
 		CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[C10] WiFi STA array fully replaced.");
@@ -683,10 +683,10 @@ bool CL_C10_ConfigManager::patchMotionFromJson(ST_A20_MotionConfig_t& p_config, 
 		return false;
 	}
 
-	if (j_motion["enabled"].is<bool>() && j_motion["enabled"].as<bool>() != p_config.enabled) {
-		p_config.enabled = j_motion["enabled"].as<bool>();
-		v_changed = true;
-	}
+	// if (j_motion["enabled"].is<bool>() && j_motion["enabled"].as<bool>() != p_config.enabled) {
+	// 	p_config.enabled = j_motion["enabled"].as<bool>();
+	// 	v_changed = true;
+	// }
 
 	JsonObjectConst j_pir = j_motion["pir"].as<JsonObjectConst>();
 	if (!j_pir.isNull()) {
@@ -718,37 +718,37 @@ bool CL_C10_ConfigManager::patchMotionFromJson(ST_A20_MotionConfig_t& p_config, 
 				v_changed = true;
 			}
 
-			uint8_t v_avg = C10_getNum2<uint8_t>(j_rssi, "avgCount", "avg_count", p_config.ble.rssi.avg_count);
-			if (v_avg != p_config.ble.rssi.avg_count) { p_config.ble.rssi.avg_count = v_avg; v_changed = true; }
+			uint8_t v_avg = C10_getNum2<uint8_t>(j_rssi, "avgCount", "avgCount", p_config.ble.rssi.avgCount);
+			if (v_avg != p_config.ble.rssi.avgCount) { p_config.ble.rssi.avgCount = v_avg; v_changed = true; }
 
-			uint8_t v_pst = C10_getNum2<uint8_t>(j_rssi, "persistCount", "persist_count", p_config.ble.rssi.persist_count);
-			if (v_pst != p_config.ble.rssi.persist_count) { p_config.ble.rssi.persist_count = v_pst; v_changed = true; }
+			uint8_t v_pst = C10_getNum2<uint8_t>(j_rssi, "persistCount", "persistCount", p_config.ble.rssi.persistCount);
+			if (v_pst != p_config.ble.rssi.persistCount) { p_config.ble.rssi.persistCount = v_pst; v_changed = true; }
 
-			uint16_t v_exit = C10_getNum2<uint16_t>(j_rssi, "exitDelaySec", "exit_delay_sec", p_config.ble.rssi.exit_delay_sec);
-			if (v_exit != p_config.ble.rssi.exit_delay_sec) { p_config.ble.rssi.exit_delay_sec = v_exit; v_changed = true; }
+			uint16_t v_exit = C10_getNum2<uint16_t>(j_rssi, "exitDelaySec", "exitDelaySec", p_config.ble.rssi.exitDelaySec);
+			if (v_exit != p_config.ble.rssi.exitDelaySec) { p_config.ble.rssi.exitDelaySec = v_exit; v_changed = true; }
 		}
 
 		JsonArrayConst j_devices = j_ble["trustedDevices"].as<JsonArrayConst>();
-		if (j_devices.isNull()) j_devices = j_ble["trusted_devices"].as<JsonArrayConst>();
+		if (j_devices.isNull()) j_devices = j_ble["trustedDevices"].as<JsonArrayConst>();
 
 		if (!j_devices.isNull()) {
-			p_config.ble.trusted_count = 0;
+			p_config.ble.trustedCount = 0;
 			for (JsonObjectConst j_dev : j_devices) {
-				if (p_config.ble.trusted_count >= A20_Const::MAX_BLE_DEVICES) break;
+				if (p_config.ble.trustedCount >= A20_Const::MAX_BLE_DEVICES) break;
 
-				ST_A20_BLETrustedDevice_t& v_d = p_config.ble.trusted_devices[p_config.ble.trusted_count];
+				ST_A20_BLETrustedDevice_t& v_d = p_config.ble.trustedDevices[p_config.ble.trustedCount];
 
 				strlcpy(v_d.alias, j_dev["alias"] | "", sizeof(v_d.alias));
 				strlcpy(v_d.name, j_dev["name"] | "", sizeof(v_d.name));
 				strlcpy(v_d.mac, j_dev["mac"] | "", sizeof(v_d.mac));
 
-				const char* v_mp = C10_getStr2(j_dev, "manufPrefix", "manuf_prefix", "");
-				strlcpy(v_d.manuf_prefix, v_mp, sizeof(v_d.manuf_prefix));
+				const char* v_mp = C10_getStr2(j_dev, "manufPrefix", "manufPrefix", "");
+				strlcpy(v_d.manufPrefix, v_mp, sizeof(v_d.manufPrefix));
 
-				v_d.prefix_len = C10_getNum2<uint8_t>(j_dev, "prefixLen", "prefix_len", 0);
+				v_d.prefixLen = C10_getNum2<uint8_t>(j_dev, "prefixLen", "prefixLen", 0);
 				v_d.enabled    = C10_getBool2(j_dev, "enabled", "enabled", true);
 
-				p_config.ble.trusted_count++;
+				p_config.ble.trustedCount++;
 			}
 			v_changed = true;
 			CL_D10_Logger::log(EN_L10_LOG_DEBUG, "[C10] Motion Trusted Devices array fully replaced.");
@@ -769,16 +769,16 @@ bool CL_C10_ConfigManager::patchMotionFromJson(ST_A20_MotionConfig_t& p_config, 
 // =====================================================
 void CL_C10_ConfigManager::toJson_System(const ST_A20_SystemConfig_t& p, JsonDocument& d) {
 	d["meta"]["version"]    = p.meta.version;
-	d["meta"]["deviceName"] = p.meta.device_name;
-	d["meta"]["lastUpdate"] = p.meta.last_update;
+	d["meta"]["deviceName"] = p.meta.deviceName;
+	d["meta"]["lastUpdate"] = p.meta.lastUpdate;
 
 	d["system"]["logging"]["level"]      = p.system.logging.level;
-	d["system"]["logging"]["maxEntries"] = p.system.logging.max_entries;
+	d["system"]["logging"]["maxEntries"] = p.system.logging.maxEntries;
 
-	d["hw"]["fanPwm"]["pin"]     = p.hw.fan_pwm.pin;
-	d["hw"]["fanPwm"]["channel"] = p.hw.fan_pwm.channel;
-	d["hw"]["fanPwm"]["freq"]    = p.hw.fan_pwm.freq;
-	d["hw"]["fanPwm"]["res"]     = p.hw.fan_pwm.res;
+	d["hw"]["fanPwm"]["pin"]     = p.hw.fanPwm.pin;
+	d["hw"]["fanPwm"]["channel"] = p.hw.fanPwm.channel;
+	d["hw"]["fanPwm"]["freq"]    = p.hw.fanPwm.freq;
+	d["hw"]["fanPwm"]["res"]     = p.hw.fanPwm.res;
 
 	d["hw"]["fanConfig"]["startPercentMin"]   = p.hw.fanConfig.startPercentMin;
 	d["hw"]["fanConfig"]["comfortPercentMin"] = p.hw.fanConfig.comfortPercentMin;
@@ -787,32 +787,32 @@ void CL_C10_ConfigManager::toJson_System(const ST_A20_SystemConfig_t& p, JsonDoc
 
 	d["hw"]["pir"]["enabled"]     = p.hw.pir.enabled;
 	d["hw"]["pir"]["pin"]         = p.hw.pir.pin;
-	d["hw"]["pir"]["debounceSec"] = p.hw.pir.debounce_sec;
+	d["hw"]["pir"]["debounceSec"] = p.hw.pir.debounceSec;
 	d["hw"]["pir"]["holdSec"]     = p.hw.pir.holdSec;
 
 	d["hw"]["tempHum"]["enabled"]     = p.hw.tempHum.enabled;
 	d["hw"]["tempHum"]["type"]        = p.hw.tempHum.type;
 	d["hw"]["tempHum"]["pin"]         = p.hw.tempHum.pin;
-	d["hw"]["tempHum"]["intervalSec"] = p.hw.tempHum.interval_sec;
+	d["hw"]["tempHum"]["intervalSec"] = p.hw.tempHum.intervalSec;
 
 	d["hw"]["ble"]["enabled"]      = p.hw.ble.enabled;
-	d["hw"]["ble"]["scanInterval"] = p.hw.ble.scan_interval;
+	d["hw"]["ble"]["scanInterval"] = p.hw.ble.scanInterval;
 
-	d["security"]["apiKey"] = p.security.api_key;
+	d["security"]["apiKey"] = p.security.apiKey;
 
-	d["time"]["ntpServer"]       = p.time.ntp_server;
+	d["time"]["ntpServer"]       = p.time.ntpServer;
 	d["time"]["timezone"]        = p.time.timezone;
-	d["time"]["syncIntervalMin"] = p.time.sync_interval_min;
+	d["time"]["syncIntervalMin"] = p.time.syncIntervalMin;
 }
 
 void CL_C10_ConfigManager::toJson_Wifi(const ST_A20_WifiConfig_t& p, JsonDocument& d) {
 	d["wifi"]["wifiMode"]     = p.wifiMode;
 	d["wifi"]["wifiModeDesc"] = p.wifiModeDesc;
 	d["wifi"]["ap"]["ssid"]   = p.ap.ssid;
-	d["wifi"]["ap"]["pass"]   = p.ap.password;
+	d["wifi"]["ap"]["pass"]   = p.ap.pass;
 
 	JsonArray v_staArr = d["wifi"]["sta"].to<JsonArray>();
-	for (uint8_t i = 0; i < p.sta_count; i++) {
+	for (uint8_t i = 0; i < p.staCount; i++) {
 		JsonObject v_net = v_staArr.add<JsonObject>();
 		v_net["ssid"] = p.sta[i].ssid;
 		v_net["pass"] = p.sta[i].pass;
@@ -820,7 +820,7 @@ void CL_C10_ConfigManager::toJson_Wifi(const ST_A20_WifiConfig_t& p, JsonDocumen
 }
 
 void CL_C10_ConfigManager::toJson_Motion(const ST_A20_MotionConfig_t& p, JsonDocument& d) {
-	d["motion"]["enabled"]        = p.enabled;
+	// d["motion"]["enabled"]        = p.enabled;
 	d["motion"]["pir"]["enabled"] = p.pir.enabled;
 	d["motion"]["pir"]["holdSec"] = p.pir.holdSec;
 
@@ -828,20 +828,20 @@ void CL_C10_ConfigManager::toJson_Motion(const ST_A20_MotionConfig_t& p, JsonDoc
 	d["motion"]["ble"]["rssi"]["on"]   = p.ble.rssi.on;
 	d["motion"]["ble"]["rssi"]["off"]  = p.ble.rssi.off;
 
-	d["motion"]["ble"]["rssi"]["avgCount"]     = p.ble.rssi.avg_count;
-	d["motion"]["ble"]["rssi"]["persistCount"] = p.ble.rssi.persist_count;
-	d["motion"]["ble"]["rssi"]["exitDelaySec"] = p.ble.rssi.exit_delay_sec;
+	d["motion"]["ble"]["rssi"]["avgCount"]     = p.ble.rssi.avgCount;
+	d["motion"]["ble"]["rssi"]["persistCount"] = p.ble.rssi.persistCount;
+	d["motion"]["ble"]["rssi"]["exitDelaySec"] = p.ble.rssi.exitDelaySec;
 
 	JsonArray v_tdArr = d["motion"]["ble"]["trustedDevices"].to<JsonArray>();
-	for (uint8_t i = 0; i < p.ble.trusted_count; i++) {
-		const ST_A20_BLETrustedDevice_t& v_d = p.ble.trusted_devices[i];
+	for (uint8_t i = 0; i < p.ble.trustedCount; i++) {
+		const ST_A20_BLETrustedDevice_t& v_d = p.ble.trustedDevices[i];
 		JsonObject v_td = v_tdArr.add<JsonObject>();
 
 		v_td["alias"]       = v_d.alias;
 		v_td["name"]        = v_d.name;
 		v_td["mac"]         = v_d.mac;
-		v_td["manufPrefix"] = v_d.manuf_prefix;
-		v_td["prefixLen"]   = v_d.prefix_len;
+		v_td["manufPrefix"] = v_d.manufPrefix;
+		v_td["prefixLen"]   = v_d.prefixLen;
 		v_td["enabled"]     = v_d.enabled;
 	}
 }

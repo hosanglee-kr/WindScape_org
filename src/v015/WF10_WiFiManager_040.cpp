@@ -13,7 +13,7 @@
  * ------------------------------------------------------
  */
 
-#include "WF10_WiFiManager_050.h"
+#include "WF10_WiFiManager_040.h"
 
 // Config 루트 (다른 모듈에서 정의)
 extern ST_A20_ConfigRoot_t g_A20_config_root;
@@ -98,8 +98,8 @@ bool CL_WF10_WiFiManager::init(const ST_A20_WifiConfig_t& p_cfg_wifi, const ST_A
 	bool	 v_ap_ok	   = false;
 	bool	 v_sta_ok	   = false;
 
-	// system.time.sync_interval_min을 ms로 변환 (0이면 기본 6시간 사용)
-	uint32_t v_interval_ms = (uint32_t)p_cfg_system.time.sync_interval_min * 60000UL;
+	// system.time.syncIntervalMin을 ms로 변환 (0이면 기본 6시간 사용)
+	uint32_t v_interval_ms = (uint32_t)p_cfg_system.time.syncIntervalMin * 60000UL;
 	if (v_interval_ms == 0) {
 		v_interval_ms = 21600000UL;	 // 6시간 기본값
 	}
@@ -139,7 +139,7 @@ bool CL_WF10_WiFiManager::init(const ST_A20_WifiConfig_t& p_cfg_wifi, const ST_A
 bool CL_WF10_WiFiManager::startAP(const ST_A20_WifiConfig_t& p_cfg_wifi, uint8_t p_channel, bool p_enableDhcp) {
 	char v_pass[A20_Const::LEN_PASS + 1];
 	memset(v_pass, 0, sizeof(v_pass));
-	strlcpy(v_pass, p_cfg_wifi.ap.password, sizeof(v_pass));
+	strlcpy(v_pass, p_cfg_wifi.ap.pass, sizeof(v_pass));
 
 	if (strlen(v_pass) < 8)
 		v_pass[0] = '\0';
@@ -170,12 +170,12 @@ bool CL_WF10_WiFiManager::startSTA(const ST_A20_WifiConfig_t& p_cfg_wifi, WiFiMu
 	s_reconnectAttempts = 0;
 	WF10_MUTEX_RELEASE();
 
-	if (p_cfg_wifi.sta_count == 0) {
+	if (p_cfg_wifi.staCount == 0) {
 		CL_D10_Logger::log(EN_L10_LOG_WARN, "[WiFi] No STA entries");
 		return false;
 	}
 
-	for (uint8_t v_i = 0; v_i < p_cfg_wifi.sta_count; v_i++) {
+	for (uint8_t v_i = 0; v_i < p_cfg_wifi.staCount; v_i++) {
 		const char* v_ssid = p_cfg_wifi.sta[v_i].ssid;
 		const char* v_pass = p_cfg_wifi.sta[v_i].pass;
 		if (v_ssid[0] == '\0')
@@ -229,7 +229,7 @@ void CL_WF10_WiFiManager::syncTimeIfNeeded(const ST_A20_WifiConfig_t&, const ST_
 	// TZ/NTP 설정 적용
 	setenv("TZ", p_cfg_system.time.timezone, 1);
 	tzset();
-	configTime(0, 0, p_cfg_system.time.ntp_server);
+	configTime(0, 0, p_cfg_system.time.ntpServer);
 
 	uint32_t v_start = millis();
 	while (millis() - v_start < 10000) {
@@ -363,7 +363,7 @@ bool CL_WF10_WiFiManager::applyConfig(const ST_A20_WifiConfig_t& p_cfg) {
 
 		ST_A20_SystemConfig_t v_sys;
 		memset(&v_sys, 0, sizeof(v_sys));
-		v_sys.time.sync_interval_min = 360;	 // 6시간
+		v_sys.time.syncIntervalMin = 360;	 // 6시간
 
 		bool v_ok					 = init(p_cfg, v_sys, v_multi, 1, 15, true);
 		return v_ok;
@@ -379,16 +379,16 @@ bool CL_WF10_WiFiManager::applyConfig(const ST_A20_WifiConfig_t& p_cfg) {
 // --------------------------------------------------
 // WF10_applyTimeConfigFromSystem 구현
 //  - /api/system/time/set 등에서 호출
-//  - system.time 설정(TZ, NTP 서버, sync_interval_min)을 런타임에 반영
+//  - system.time 설정(TZ, NTP 서버, syncIntervalMin)을 런타임에 반영
 // --------------------------------------------------
 void WF10_applyTimeConfigFromSystem(const ST_A20_SystemConfig_t& p_cfg) {
 	// 1. 로그: 적용할 설정 요약
-	CL_D10_Logger::log(EN_L10_LOG_INFO, "[WF10] Apply time config: ntp=%s, tz=%s, interval=%u min", p_cfg.time.ntp_server, p_cfg.time.timezone, (unsigned int)p_cfg.time.sync_interval_min);
+	CL_D10_Logger::log(EN_L10_LOG_INFO, "[WF10] Apply time config: ntp=%s, tz=%s, interval=%u min", p_cfg.time.ntpServer, p_cfg.time.timezone, (unsigned int)p_cfg.time.syncIntervalMin);
 
 	// 2. TZ 및 NTP 서버 환경 설정
 	setenv("TZ", p_cfg.time.timezone, 1);
 	tzset();
-	configTime(0, 0, p_cfg.time.ntp_server);
+	configTime(0, 0, p_cfg.time.ntpServer);
 
 	// 3. (옵션) 즉시 동기화 시도 (Wi-Fi 연결 여부와 무관하게 "최대한" 맞추기)
 	uint32_t v_start = millis();
@@ -410,7 +410,7 @@ void WF10_applyTimeConfigFromSystem(const ST_A20_SystemConfig_t& p_cfg) {
 
 	// 4. Wi-Fi가 존재하면, 새 sync_interval 기준으로 정규 동기화 루프도 갱신
 	if (g_A20_config_root.wifi) {
-		uint32_t v_interval_ms = (uint32_t)p_cfg.time.sync_interval_min * 60000UL;
+		uint32_t v_interval_ms = (uint32_t)p_cfg.time.syncIntervalMin * 60000UL;
 		if (v_interval_ms == 0) {
 			v_interval_ms = 21600000UL;	 // 6시간 기본값
 		}

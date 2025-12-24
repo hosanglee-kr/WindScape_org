@@ -42,13 +42,13 @@
 
 #include <vector>
 
-#include "A20_Const_040.h.h"
-#include "C10_Config_040.h"
+#include "A20_Const_040.h"
+#include "C10_Config_041.h"
 #include "CT10_Control_040.h"
 #include "D10_Logger_040.h"
 #include "N10_NvsManager_040.h"
-#include "W10_Web_Const_040.h"
-#include "WF10_WiFiManager_050.h"
+#include "W10_Web_Const_050.h"
+#include "WF10_WiFiManager_040.h"
 
 // ------------------------------------------------------
 // WebAPI Manager
@@ -215,8 +215,8 @@ class CL_W10_WebAPI {
 	// API Key 검사
 	static inline bool checkApiKey(AsyncWebServerRequest* p_request) {
 		const char* v_key = nullptr;
-		if (g_A20_config_root.system && g_A20_config_root.system->security.api_key[0] != '\0') {
-			v_key = g_A20_config_root.system->security.api_key;
+		if (g_A20_config_root.system && g_A20_config_root.system->security.apiKey[0] != '\0') {
+			v_key = g_A20_config_root.system->security.apiKey;
 		}
 		if (!v_key || v_key[0] == '\0') {
 			return true;  // API 키 비활성화 상태

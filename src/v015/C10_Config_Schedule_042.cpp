@@ -274,33 +274,33 @@ bool CL_C10_ConfigManager::loadWindProfileDict(ST_A20_WindProfileDict_t& p_dict)
 
 	JsonObjectConst j = d["windProfile"].as<JsonObjectConst>();
 
-	p_dict.preset_count = 0;
+	p_dict.presetCount = 0;
 	if (j["presets"].is<JsonArrayConst>()) {
 		JsonArrayConst v_arr = j["presets"].as<JsonArrayConst>();
 		for (JsonObjectConst v_js : v_arr) {
-			if (p_dict.preset_count >= 16) break;
+			if (p_dict.presetCount >= 16) break;
 
-			ST_A20_PresetEntry_t& v_p = p_dict.presets[p_dict.preset_count++];
+			ST_A20_PresetEntry_t& v_p = p_dict.presets[p_dict.presetCount++];
 			C10_fromJson_WindPreset(v_js, v_p);
 		}
 	}
 
-	p_dict.style_count = 0;
+	p_dict.styleCount = 0;
 	if (j["styles"].is<JsonArrayConst>()) {
 		JsonArrayConst v_arr = j["styles"].as<JsonArrayConst>();
 		for (JsonObjectConst v_js : v_arr) {
-			if (p_dict.style_count >= 16) break;
+			if (p_dict.styleCount >= 16) break;
 
-			ST_A20_StyleEntry_t& v_s = p_dict.styles[p_dict.style_count++];
+			ST_A20_StyleEntry_t& v_s = p_dict.styles[p_dict.styleCount++];
 
 			strlcpy(v_s.name, v_js["name"] | "", sizeof(v_s.name));
 			strlcpy(v_s.code, v_js["code"] | "", sizeof(v_s.code));
 
 			JsonObjectConst v_f            = v_js["factors"].as<JsonObjectConst>();
-			v_s.factors.intensity_factor   = v_f["intensityFactor"] | 1.0f;   // camelCase
-			v_s.factors.variability_factor = v_f["variabilityFactor"] | 1.0f; // camelCase
-			v_s.factors.gust_factor        = v_f["gustFactor"] | 1.0f;        // camelCase
-			v_s.factors.thermal_factor     = v_f["thermalFactor"] | 1.0f;     // camelCase
+			v_s.factors.intensityFactor   = v_f["intensityFactor"] | 1.0f;   // camelCase
+			v_s.factors.variabilityFactor = v_f["variabilityFactor"] | 1.0f; // camelCase
+			v_s.factors.gustFactor        = v_f["gustFactor"] | 1.0f;        // camelCase
+			v_s.factors.thermalFactor     = v_f["thermalFactor"] | 1.0f;     // camelCase
 		}
 	}
 
@@ -434,7 +434,7 @@ bool CL_C10_ConfigManager::saveWindProfileDict(const ST_A20_WindProfileDict_t& p
 	JsonDocument d;
 
 	// presets
-	for (uint8_t v_i = 0; v_i < p_cfg.preset_count; v_i++) {
+	for (uint8_t v_i = 0; v_i < p_cfg.presetCount; v_i++) {
 		const ST_A20_PresetEntry_t& v_p  = p_cfg.presets[v_i];
 		JsonObject                  v_js = d["windProfile"]["presets"][v_i];
 
@@ -454,7 +454,7 @@ bool CL_C10_ConfigManager::saveWindProfileDict(const ST_A20_WindProfileDict_t& p
 	}
 
 	// styles
-	for (uint8_t v_i = 0; v_i < p_cfg.style_count; v_i++) {
+	for (uint8_t v_i = 0; v_i < p_cfg.styleCount; v_i++) {
 		const ST_A20_StyleEntry_t& v_s  = p_cfg.styles[v_i];
 		JsonObject                 v_js = d["windProfile"]["styles"][v_i];
 
@@ -462,10 +462,10 @@ bool CL_C10_ConfigManager::saveWindProfileDict(const ST_A20_WindProfileDict_t& p
 		v_js["code"] = v_s.code;
 
 		JsonObject v_f              = v_js["factors"];
-		v_f["intensityFactor"]      = v_s.factors.intensity_factor;   // camelCase
-		v_f["variabilityFactor"]    = v_s.factors.variability_factor; // camelCase
-		v_f["gustFactor"]           = v_s.factors.gust_factor;        // camelCase
-		v_f["thermalFactor"]        = v_s.factors.thermal_factor;     // camelCase
+		v_f["intensityFactor"]      = v_s.factors.intensityFactor;   // camelCase
+		v_f["variabilityFactor"]    = v_s.factors.variabilityFactor; // camelCase
+		v_f["gustFactor"]           = v_s.factors.gustFactor;        // camelCase
+		v_f["thermalFactor"]        = v_s.factors.thermalFactor;     // camelCase
 	}
 
 	return ioSaveJson(s_cfgJsonFileMap.windDict, d);
@@ -585,7 +585,7 @@ void CL_C10_ConfigManager::toJson_UserProfiles(const ST_A20_UserProfilesRoot_t& 
 }
 
 void CL_C10_ConfigManager::toJson_WindProfileDict(const ST_A20_WindProfileDict_t& p_cfg, JsonDocument& d) {
-	for (uint8_t v_i = 0; v_i < p_cfg.preset_count; v_i++) {
+	for (uint8_t v_i = 0; v_i < p_cfg.presetCount; v_i++) {
 		const ST_A20_PresetEntry_t& v_p  = p_cfg.presets[v_i];
 		JsonObject                  v_js = d["windProfile"]["presets"][v_i];
 
@@ -604,7 +604,7 @@ void CL_C10_ConfigManager::toJson_WindProfileDict(const ST_A20_WindProfileDict_t
 		v_b["thermalBubbleRadius"]     = v_p.base.thermalBubbleRadius;      // camelCase
 	}
 
-	for (uint8_t v_i = 0; v_i < p_cfg.style_count; v_i++) {
+	for (uint8_t v_i = 0; v_i < p_cfg.styleCount; v_i++) {
 		const ST_A20_StyleEntry_t& v_s  = p_cfg.styles[v_i];
 		JsonObject                 v_js = d["windProfile"]["styles"][v_i];
 
@@ -612,10 +612,10 @@ void CL_C10_ConfigManager::toJson_WindProfileDict(const ST_A20_WindProfileDict_t
 		v_js["code"] = v_s.code;
 
 		JsonObject v_f           = v_js["factors"];
-		v_f["intensityFactor"]   = v_s.factors.intensity_factor;   // camelCase
-		v_f["variabilityFactor"] = v_s.factors.variability_factor; // camelCase
-		v_f["gustFactor"]        = v_s.factors.gust_factor;        // camelCase
-		v_f["thermalFactor"]     = v_s.factors.thermal_factor;     // camelCase
+		v_f["intensityFactor"]   = v_s.factors.intensityFactor;   // camelCase
+		v_f["variabilityFactor"] = v_s.factors.variabilityFactor; // camelCase
+		v_f["gustFactor"]        = v_s.factors.gustFactor;        // camelCase
+		v_f["thermalFactor"]     = v_s.factors.thermalFactor;     // camelCase
 	}
 }
 
@@ -679,33 +679,33 @@ bool CL_C10_ConfigManager::patchWindProfileDictFromJson(ST_A20_WindProfileDict_t
 		return false;
 	}
 
-	p_cfg.preset_count = 0;
+	p_cfg.presetCount = 0;
 	if (j["presets"].is<JsonArrayConst>()) {
 		JsonArrayConst v_arr = j["presets"].as<JsonArrayConst>();
 		for (JsonObjectConst v_js : v_arr) {
-			if (p_cfg.preset_count >= 16) break;
+			if (p_cfg.presetCount >= 16) break;
 
-			ST_A20_PresetEntry_t& v_p = p_cfg.presets[p_cfg.preset_count++];
+			ST_A20_PresetEntry_t& v_p = p_cfg.presets[p_cfg.presetCount++];
 			C10_fromJson_WindPreset(v_js, v_p);
 		}
 	}
 
-	p_cfg.style_count = 0;
+	p_cfg.styleCount = 0;
 	if (j["styles"].is<JsonArrayConst>()) {
 		JsonArrayConst v_arr = j["styles"].as<JsonArrayConst>();
 		for (JsonObjectConst v_js : v_arr) {
-			if (p_cfg.style_count >= 16) break;
+			if (p_cfg.styleCount >= 16) break;
 
-			ST_A20_StyleEntry_t& v_s = p_cfg.styles[p_cfg.style_count++];
+			ST_A20_StyleEntry_t& v_s = p_cfg.styles[p_cfg.styleCount++];
 
 			strlcpy(v_s.name, v_js["name"] | "", sizeof(v_s.name));
 			strlcpy(v_s.code, v_js["code"] | "", sizeof(v_s.code));
 
 			JsonObjectConst v_f            = v_js["factors"].as<JsonObjectConst>();
-			v_s.factors.intensity_factor   = v_f["intensityFactor"] | 1.0f;   // camelCase
-			v_s.factors.variability_factor = v_f["variabilityFactor"] | 1.0f; // camelCase
-			v_s.factors.gust_factor        = v_f["gustFactor"] | 1.0f;        // camelCase
-			v_s.factors.thermal_factor     = v_f["thermalFactor"] | 1.0f;     // camelCase
+			v_s.factors.intensityFactor   = v_f["intensityFactor"] | 1.0f;   // camelCase
+			v_s.factors.variabilityFactor = v_f["variabilityFactor"] | 1.0f; // camelCase
+			v_s.factors.gustFactor        = v_f["gustFactor"] | 1.0f;        // camelCase
+			v_s.factors.thermalFactor     = v_f["thermalFactor"] | 1.0f;     // camelCase
 		}
 	}
 
@@ -932,7 +932,7 @@ int CL_C10_ConfigManager::addWindProfileFromJson(const JsonDocument& p_doc) {
 
 	ST_A20_WindProfileDict_t& v_root = *g_A20_config_root.windDict;
 
-	if (v_root.preset_count >= 16) {
+	if (v_root.presetCount >= 16) {
 		C10_MUTEX_RELEASE();
 		return -1;
 	}
@@ -940,11 +940,11 @@ int CL_C10_ConfigManager::addWindProfileFromJson(const JsonDocument& p_doc) {
 	JsonObjectConst v_js =
 	    p_doc["preset"].is<JsonObjectConst>() ? p_doc["preset"].as<JsonObjectConst>() : p_doc.as<JsonObjectConst>();
 
-	ST_A20_PresetEntry_t& v_p = v_root.presets[v_root.preset_count];
+	ST_A20_PresetEntry_t& v_p = v_root.presets[v_root.presetCount];
 	C10_fromJson_WindPreset(v_js, v_p);
 
-	int v_index = v_root.preset_count;
-	v_root.preset_count++;
+	int v_index = v_root.presetCount;
+	v_root.presetCount++;
 
 	_dirty_windProfile = true;
 	CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] WindPreset added (index=%d)", v_index);
@@ -963,7 +963,7 @@ bool CL_C10_ConfigManager::updateWindProfileFromJson(uint16_t p_id, const JsonDo
 
 	ST_A20_WindProfileDict_t& v_root = *g_A20_config_root.windDict;
 
-	if (p_id >= v_root.preset_count) {
+	if (p_id >= v_root.presetCount) {
 		C10_MUTEX_RELEASE();
 		return false;
 	}
@@ -990,15 +990,15 @@ bool CL_C10_ConfigManager::deleteWindProfile(uint16_t p_id) {
 
 	ST_A20_WindProfileDict_t& v_root = *g_A20_config_root.windDict;
 
-	if (p_id >= v_root.preset_count) {
+	if (p_id >= v_root.presetCount) {
 		C10_MUTEX_RELEASE();
 		return false;
 	}
 
-	for (uint8_t v_i = p_id + 1; v_i < v_root.preset_count; v_i++) {
+	for (uint8_t v_i = p_id + 1; v_i < v_root.presetCount; v_i++) {
 		v_root.presets[v_i - 1] = v_root.presets[v_i];
 	}
-	if (v_root.preset_count > 0) v_root.preset_count--;
+	if (v_root.presetCount > 0) v_root.presetCount--;
 
 	_dirty_windProfile = true;
 	CL_D10_Logger::log(EN_L10_LOG_INFO, "[C10] WindPreset deleted (index=%d)", p_id);

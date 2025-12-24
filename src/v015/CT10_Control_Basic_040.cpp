@@ -247,7 +247,7 @@ const char* CL_CT10_ControlManager::findPresetNameByCode(const char* p_code) con
 		return "";
 
 	const ST_A20_WindProfileDict_t& v_dict = *g_A20_config_root.windDict;
-	for (uint8_t v_i = 0; v_i < v_dict.preset_count; v_i++) {
+	for (uint8_t v_i = 0; v_i < v_dict.presetCount; v_i++) {
 		if (strcasecmp(v_dict.presets[v_i].code, p_code) == 0) {
 			return v_dict.presets[v_i].name;
 		}
@@ -260,7 +260,7 @@ const char* CL_CT10_ControlManager::findStyleNameByCode(const char* p_code) cons
 		return "";
 
 	const ST_A20_WindProfileDict_t& v_dict = *g_A20_config_root.windDict;
-	for (uint8_t v_i = 0; v_i < v_dict.style_count; v_i++) {
+	for (uint8_t v_i = 0; v_i < v_dict.styleCount; v_i++) {
 		if (strcasecmp(v_dict.styles[v_i].code, p_code) == 0) {
 			return v_dict.styles[v_i].name;
 		}

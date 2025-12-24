@@ -18,7 +18,7 @@
 
 // 외부 종속성 헤더 포함
 #include "A20_Const_040.h"
-#include "C10_Config_040.h"
+#include "C10_Config_041.h"
 #include "D10_Logger_040.h"
 #include "P10_PWM_ctrl_040.h"
 
@@ -324,10 +324,10 @@ void CL_S10_Simulation::applyResolvedWind(const ST_A20_ResolvedWind_t& p_resolve
 	minFanPct		= v_min;
 
 	// 물리 파라미터 최소값 보정
-	turbLenScale	= max(1.0f, p_resolved.turbulence_length_scale);
-	turbSigma		= max(0.0f, p_resolved.turbulence_intensity_sigma);
-	thermalStrength = max(1.0f, p_resolved.thermal_bubble_strength);
-	thermalRadius	= max(0.0f, p_resolved.thermal_bubble_radius);
+	turbLenScale	= max(1.0f, p_resolved.turbulenceLengthScale);
+	turbSigma		= max(0.0f, p_resolved.turbulenceIntensitySigma);
+	thermalStrength = max(1.0f, p_resolved.thermalBubbleStrength);
+	thermalRadius	= max(0.0f, p_resolved.thermalBubbleRadius);
 
 	// Preset 코어 파라미터 재적용
 	applyPresetCore(presetCode);

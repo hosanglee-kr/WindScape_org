@@ -565,13 +565,13 @@ void CL_CT10_ControlManager::applySegmentOn(const ST_A20_ScheduleSegment_t& p_se
 	if (p_seg.mode == EN_A20_SEG_MODE_FIXED) {
 		sim.stop();
 		if (pwm) {
-			pwm->P10_setDutyPercent(p_seg.fixed_speed);
+			pwm->P10_setDutyPercent(p_seg.fixedSpeed);
 		}
 
 		markDirty("state");
 		markDirty("chart");
 
-		CL_D10_Logger::log(EN_L10_LOG_INFO, "[CT10] SegmentOn(SCH) FIXED duty=%.1f%%", p_seg.fixed_speed);
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "[CT10] SegmentOn(SCH) FIXED duty=%.1f%%", p_seg.fixedSpeed);
 		return;
 	}
 
@@ -603,13 +603,13 @@ void CL_CT10_ControlManager::applySegmentOn(const ST_A20_UserProfileSegment_t& p
 	if (p_seg.mode == EN_A20_SEG_MODE_FIXED) {
 		sim.stop();
 		if (pwm) {
-			pwm->P10_setDutyPercent(p_seg.fixed_speed);
+			pwm->P10_setDutyPercent(p_seg.fixedSpeed);
 		}
 
 		markDirty("state");
 		markDirty("chart");
 
-		CL_D10_Logger::log(EN_L10_LOG_INFO, "[CT10] SegmentOn(PROFILE) FIXED duty=%.1f%%", p_seg.fixed_speed);
+		CL_D10_Logger::log(EN_L10_LOG_INFO, "[CT10] SegmentOn(PROFILE) FIXED duty=%.1f%%", p_seg.fixedSpeed);
 		return;
 	}
 

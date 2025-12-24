@@ -53,20 +53,20 @@ inline bool S20_resolveWindParams(const ST_A20_WindProfileDict_t& p_dict, const 
 	float						v_fl   = v_p.base.fanLimit;
 	float						v_min  = v_p.base.minFan;
 
-	float						v_tL   = v_p.base.turbulence_length_scale;
-	float						v_tS   = v_p.base.turbulence_intensity_sigma;
-	float						v_thB  = v_p.base.thermal_bubble_strength;
-	float						v_thR  = v_p.base.thermal_bubble_radius;
+	float						v_tL   = v_p.base.turbulenceLengthScale;
+	float						v_tS   = v_p.base.turbulenceIntensitySigma;
+	float						v_thB  = v_p.base.thermalBubbleStrength;
+	float						v_thR  = v_p.base.thermalBubbleRadius;
 
 	// 3) style factor 적용(스타일 없으면 스킵)
 	if (p_styleCode && p_styleCode[0]) {
 		int16_t v_si = A20_findStyleIndexByCode(p_dict, p_styleCode);
 		if (v_si >= 0) {
 			const ST_A20_StyleEntry_t& v_s = p_dict.styles[v_si];
-			v_int *= v_s.factors.intensity_factor;
-			v_var *= v_s.factors.variability_factor;
-			v_gust *= v_s.factors.gust_factor;
-			v_thB *= v_s.factors.thermal_factor;
+			v_int *= v_s.factors.intensityFactor;
+			v_var *= v_s.factors.variabilityFactor;
+			v_gust *= v_s.factors.gustFactor;
+			v_thB *= v_s.factors.thermalFactor;
 			// (정책 선택) fanLimit/minFan/turb도 스타일 영향 줄지 여부는 여기서 결정
 		}
 	}
@@ -98,10 +98,10 @@ inline bool S20_resolveWindParams(const ST_A20_WindProfileDict_t& p_dict, const 
 	p_out.minFan					 = v_min_c;
 
 	// 6) 물리 파라미터 최소 보정
-	p_out.turbulence_length_scale	 = (v_tL > 1.0f) ? v_tL : 1.0f;
-	p_out.turbulence_intensity_sigma = (v_tS > 0.0f) ? v_tS : 0.0f;
-	p_out.thermal_bubble_strength	 = (v_thB > 0.1f) ? v_thB : 0.1f;
-	p_out.thermal_bubble_radius		 = (v_thR > 1.0f) ? v_thR : 1.0f;
+	p_out.turbulenceLengthScale	 = (v_tL > 1.0f) ? v_tL : 1.0f;
+	p_out.turbulenceIntensitySigma = (v_tS > 0.0f) ? v_tS : 0.0f;
+	p_out.thermalBubbleStrength	 = (v_thB > 0.1f) ? v_thB : 0.1f;
+	p_out.thermalBubbleRadius		 = (v_thR > 1.0f) ? v_thR : 1.0f;
 
 	// 7) 코드 복사
 	strlcpy(p_out.presetCode, p_presetCode ? p_presetCode : "", sizeof(p_out.presetCode));
@@ -113,85 +113,3 @@ inline bool S20_resolveWindParams(const ST_A20_WindProfileDict_t& p_dict, const 
 	p_out.valid		 = true;
 	return true;
 }
-
-/*
-inline bool S20_resolveWindParams(
-	const ST_A20_WindProfileDict_t& p_dict,
-	const char*						p_presetCode,
-	const char*						p_styleCode,
-	const ST_A20_AdjustDelta_t*		p_adj,
-	ST_A20_ResolvedWind_t&			p_out) {
-	int16_t v_pi = A20_findPresetIndexByCode(p_dict, p_presetCode);
-	if (v_pi < 0)
-		return false;
-
-	const ST_A20_PresetEntry_t& v_p = p_dict.presets[v_pi];
-
-	float v_int	 = v_p.base.windIntensity;
-	float v_var	 = v_p.base.windVariability;
-	float v_gust = v_p.base.gustFrequency;
-	float v_fl	 = v_p.base.fanLimit;
-	float v_min	 = v_p.base.minFan;
-	float v_tL	 = v_p.base.turbulence_length_scale;
-	float v_tS	 = v_p.base.turbulence_intensity_sigma;
-	float v_thB	 = v_p.base.thermal_bubble_strength;
-	float v_thR	 = v_p.base.thermal_bubble_radius;
-
-	// 스타일 적용
-	if (p_styleCode && p_styleCode[0]) {
-		int16_t v_si = A20_findStyleIndexByCode(p_dict, p_styleCode);
-		if (v_si >= 0) {
-			const ST_A20_StyleEntry_t& v_s = p_dict.styles[v_si];
-			v_int *= v_s.factors.intensity_factor;
-			v_var *= v_s.factors.variability_factor;
-			v_gust *= v_s.factors.gust_factor;
-			v_thB *= v_s.factors.thermal_factor;
-		}
-	}
-
-	// 사용자 보정값 적용
-	if (p_adj) {
-		v_int += p_adj->windIntensity;
-		v_var += p_adj->windVariability;
-		v_gust += p_adj->gustFrequency;
-		v_fl += p_adj->fanLimit;
-		v_min += p_adj->minFan;
-	}
-
-	// 결과 클램프
-	p_out.windIntensity			 = A20_clampf(v_int, 0.0f, 100.0f);
-	p_out.windVariability			 = A20_clampf(v_var, 0.0f, 100.0f);
-	p_out.gustFrequency			 = A20_clampf(v_gust, 0.0f, 100.0f);
-
-	// minFan ≤ fanLimit 보정 유지
-	v_fl  += p_adj->fanLimit;
-	v_min += p_adj->minFan;
-
-	float v_fl_clamped  = A20_clampf(v_fl,  0.0f, 100.0f);
-	float v_min_clamped = A20_clampf(v_min, 0.0f, 100.0f);
-
-	if (v_min_clamped > v_fl_clamped) {
-		v_min_clamped = v_fl_clamped;
-	}
-
-	p_out.fanLimit = v_fl_clamped;
-	p_out.minFan   = v_min_clamped;
-
-	// p_out.fanLimit					 = A20_clampf(v_fl, 0.0f, 100.0f);
-	// p_out.minFan					 = A20_clampf(v_min, 0.0f, 100.0f);
-
-	p_out.turbulence_length_scale	 = (v_tL > 1.0f) ? v_tL : 1.0f;
-	p_out.turbulence_intensity_sigma = (v_tS > 0.0f) ? v_tS : 0.0f;
-	p_out.thermal_bubble_strength	 = (v_thB > 0.1f) ? v_thB : 0.1f;
-	p_out.thermal_bubble_radius		 = (v_thR > 1.0f) ? v_thR : 1.0f;
-
-	strlcpy(p_out.presetCode, p_presetCode ? p_presetCode : "", sizeof(p_out.presetCode));
-	strlcpy(p_out.styleCode, p_styleCode ? p_styleCode : "", sizeof(p_out.styleCode));
-
-	p_out.valid		 = true;
-	p_out.fixedMode	 = false;
-	p_out.fixedSpeed = 0.0f;
-
-	return true;
-}
-*/
