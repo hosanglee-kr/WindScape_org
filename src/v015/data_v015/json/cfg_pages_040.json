@@ -1,0 +1,144 @@
+{
+  "pages": [
+    {
+      "uri": "/P010_main_021.html",
+      "path": "/html_v2/P010_main_021.html",
+      "label": "Main",
+      "enable": true,
+      "isMain": true,
+      "order": 10,
+      "pageAssets": [
+        { "uri": "/P010_main_021.css", "path": "/html_v2/P010_main_021.css" },
+        { "uri": "/P010_main_021.js", "path": "/html_v2/P010_main_021.js" }
+      ]
+    },
+    {
+      "uri": "/P020_chart_t1_008.html",
+      "path": "/html_v2/P020_chart_t1_008.html",
+      "label": "Chart T1",
+      "enable": true,
+      "isMain": false,
+      "order": 20,
+      "pageAssets": []
+    },
+    {
+      "uri": "/P030_schedules_t1_006.html",
+      "path": "/html_v2/P030_schedules_t1_006.html",
+      "label": "Schedule T1",
+      "enable": true,
+      "isMain": false,
+      "order": 30,
+      "pageAssets": []
+    },
+    {
+      "uri": "/P040_dashboard_003.html",
+      "path": "/html_v2/P040_dashboard_003.html",
+      "label": "Dashboard",
+      "enable": true,
+      "isMain": false,
+      "order": 40,
+      "pageAssets": []
+    },
+    {
+      "uri": "/P050_chart_t2_008.html",
+      "path": "/html_v2/P050_chart_t2_008.html",
+      "label": "Chart T2",
+      "enable": true,
+      "isMain": false,
+      "order": 50,
+      "pageAssets": []
+    },
+    {
+      "uri": "/P060_sim_details_001.html",
+      "path": "/html_v2/P060_sim_details_001.html",
+      "label": "Simulate",
+      "enable": true,
+      "isMain": false,
+      "order": 60,
+      "pageAssets": []
+    },
+    {
+      "uri": "/P070_profile_001.html",
+      "path": "/html_v2/P070_profile_001.html",
+      "label": "Profiles",
+      "enable": true,
+      "isMain": false,
+      "order": 70,
+      "pageAssets": []
+    },
+    {
+      "uri": "/P080_schedules_t2_003.html",
+      "path": "/html_v2/P080_schedules_t2_003.html",
+      "label": "Schedule T2",
+      "enable": true,
+      "isMain": false,
+      "order": 80,
+      "pageAssets": []
+    },
+    {
+      "uri": "/P085_userProfiles_t2_003.html",
+      "path": "/html_v2/P085_userProfiles_t2_003.html",
+      "label": "UserProfile T2",
+      "enable": true,
+      "isMain": false,
+      "order": 85,
+      "pageAssets": []
+    },
+    {
+      "uri": "/P090_user_001.html",
+      "path": "/html_v2/P090_user_001.html",
+      "label": "Info. & Help",
+      "enable": true,
+      "isMain": false,
+      "order": 200,
+      "pageAssets": []
+    },
+    {
+      "uri": "/P100_settings_001.html",
+      "path": "/html_v2/P100_settings_001.html",
+      "label": "System",
+      "enable": true,
+      "isMain": false,
+      "order": 100,
+      "pageAssets": []
+    },
+    {
+      "uri": "/P110_config_025.html",
+      "path": "/html_v2/P110_config_025.html",
+      "label": "Config(미구현)",
+      "enable": false,
+      "isMain": false,
+      "order": 110,
+      "pageAssets": []
+    },
+    {
+      "uri": "/P120_diag_025.html",
+      "path": "/html_v2/P120_diag_025.html",
+      "label": "System Diag.(미구현)",
+      "enable": false,
+      "isMain": false,
+      "order": 120,
+      "pageAssets": []
+    }
+  ],
+  "reDirect": [
+    { "uriFrom": "/", "uriTo": "/P010_main_021.html" },
+    { "uriFrom": "/index.html", "uriTo": "/P010_main_021.html" },
+    { "uriFrom": "/P010_main", "uriTo": "/P010_main_021.html" },
+    { "uriFrom": "/dashboard", "uriTo": "/P040_dashboard_003.html" },
+    { "uriFrom": "/P040_dashboard", "uriTo": "/P040_dashboard_003.html" },
+    { "uriFrom": "/chart_t1", "uriTo": "/P020_chart_t1_008.html" },
+    { "uriFrom": "/chart_t2", "uriTo": "/P050_chart_t2_008.html" },
+    { "uriFrom": "/profiles", "uriTo": "/P070_profile_001.html" },
+    { "uriFrom": "/schedules_t1", "uriTo": "/P030_schedules_t1_006.html" },
+    { "uriFrom": "/schedules_t2", "uriTo": "/P080_schedules_t2_003.html" },
+    { "uriFrom": "/userProfile_t2", "uriTo": "/P085_userProfiles_t2_003.html" },
+    { "uriFrom": "/settings", "uriTo": "/P100_settings_001.html" },
+    { "uriFrom": "/sim_details", "uriTo": "/P060_sim_details_001.html" },
+    { "uriFrom": "/info", "uriTo": "/P090_user_001.html" }
+  ],
+  "assets": [
+    { "uri": "/P000_common_001.css", "path": "/html_v2/P000_common_001.css", "isCommon": true },
+    { "uri": "/P000_common_006.js", "path": "/html_v2/P000_common_006.js", "isCommon": true }
+  ]
+}

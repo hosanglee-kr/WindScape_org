@@ -1,0 +1,16 @@
+{
+  "nvsSpec": {
+    "version": "025",
+    "jsonFile": "cfg_nvsSpec_025.json",
+    "namespace": "SNW",
+    "entries": [
+      { "key": "runMode", "type": "uint8", "default": 0 },
+      { "key": "activeProfileNo", "type": "uint8", "default": 0 },
+      { "key": "activeSegmentNo", "type": "uint8", "default": 0 },
+      { "key": "presetCode", "type": "string", "default": "" },
+      { "key": "styleCode", "type": "string", "default": "" },
+      { "key": "wifiConnected", "type": "bool", "default": false }
+    ]
+  }
+}    
+

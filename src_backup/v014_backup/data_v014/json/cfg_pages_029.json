@@ -1,0 +1,220 @@
+{
+  "pages": [
+    {
+      "uri": "/",
+      "path": "/html_v2/P010_main_021.html",
+      "label": "Main",
+      "isMain": true,
+      "order": 10,
+      "pageAssets": [
+        {
+          "uri": "./P010_main_021.css",
+          "path": "/html_v2/P010_main_021.css"
+        },
+        {
+          "uri": "./P010_main_021.js",
+          "path": "/html_v2/P010_main_021.js"
+        }
+      ]
+    },
+    {
+      "uri": "/chart_t1",
+      "path": "/html_v2/P020_chart_t1_007.html",
+      "label": "Chart T1",
+      "isMain": false,
+      "order": 20,
+      "pageAssets": [
+        {
+          "uri": "./P020_chart_t1_007.css",
+          "path": "/html_v2/P020_chart_t1_007.css"
+        },
+        {
+          "uri": "./P020_chart_t1_008.js",
+          "path": "/html_v2/P020_chart_t1_008.js"
+        }
+      ]
+    },
+    {
+      "uri": "/schedules_t1",
+      "path": "/html_v2/P030_schedules_t1_006.html",
+      "label": "Schedule T1",
+      "isMain": false,
+      "order": 30,
+      "pageAssets": [
+        {
+          "uri": "./P030_schedules_t1_006.css",
+          "path": "/html_v2/P030_schedules_t1_006.css"
+        },
+        {
+          "uri": "./P030_schedules_t1_006.js",
+          "path": "/html_v2/P030_schedules_t1_006.js"
+        }
+      ]
+    },
+    {
+      "uri": "/dashboard",
+      "path": "/html_v2/P040_dashboard_002.html",
+      "label": "Dashboard",
+      "isMain": false,
+      "order": 40,
+      "pageAssets": [
+        {
+          "uri": "./P040_dashboard_001.css",
+          "path": "/html_v2/P040_dashboard_001.css"
+        },
+        {
+          "uri": "./P040_dashboard_001.js",
+          "path": "/html_v2/P040_dashboard_001.js"
+        }
+      ]
+    },
+    {
+      "uri": "/chart_t2",
+      "path": "/html_v2/P050_chart_t2_007.html",
+      "label": "Chart T2",
+      "isMain": false,
+      "order": 50,
+      "pageAssets": [
+        {
+          "uri": "./P050_chart_t2_007.css",
+          "path": "/html_v2/P050_chart_t2_007.css"
+        },
+        {
+          "uri": "./P050_chart_t2_007.js",
+          "path": "/html_v2/P050_chart_t2_007.js"
+        }
+      ]
+    },
+    {
+      "uri": "/sim_details",
+      "path": "/html_v2/P060_sim_details_001.html",
+      "label": "Simulate",
+      "isMain": false,
+      "order": 60,
+      "pageAssets": [
+        {
+          "uri": "./P060_sim_details_001.css",
+          "path": "/html_v2/P060_sim_details_001.css"
+        },
+        {
+          "uri": "./P060_sim_details_001.js",
+          "path": "/html_v2/P060_sim_details_001.js"
+        }
+      ]
+    },
+    {
+      "uri": "/profiles",
+      "path": "/html_v2/P070_profile_001.html",
+      "label": "Profiles",
+      "isMain": false,
+      "order": 70,
+      "pageAssets": [
+        {
+          "uri": "./P070_profile_001.css",
+          "path": "/html_v2/P070_profile_001.css"
+        },
+        {
+          "uri": "./P070_profile_001.js",
+          "path": "/html_v2/P070_profile_001.js"
+        }
+      ]
+    },
+    {
+      "uri": "/schedules_t2",
+      "path": "/html_v2/P080_schedules_t2_001.html",
+      "label": "Schedule T2",
+      "isMain": false,
+      "order": 80,
+      "pageAssets": [
+        {
+          "uri": "./P080_schedules_t2_001.css",
+          "path": "/html_v2/P080_schedules_t2_001.css"
+        },
+        {
+          "uri": "./P080_schedules_t2_001.js",
+          "path": "/html_v2/P080_schedules_t2_001.js"
+        }
+      ]
+    },
+    {
+      "uri": "/user_profiles",
+      "path": "/html_v2/P090_user_001.html",
+      "label": "User Profile",
+      "isMain": false,
+      "order": 90,
+      "pageAssets": [
+        {
+          "uri": "./P090_user_001.css",
+          "path": "/html_v2/P090_user_001.css"
+        },
+        {
+          "uri": "./P090_user_001.js",
+          "path": "/html_v2/P090_user_001.js"
+        }
+      ]
+    },
+    {
+      "uri": "/settings",
+      "path": "/html_v2/P100_settings_001.html",
+      "label": "System",
+      "isMain": false,
+      "order": 100,
+      "pageAssets": [
+        {
+          "uri": "./P100_settings_001.css",
+          "path": "/html_v2/P100_settings_001.css"
+        },
+        {
+          "uri": "./P100_settings_002.js",
+          "path": "/html_v2/P100_settings_002.js"
+        }
+      ]
+    },
+    {
+      "uri": "/config",
+      "path": "/html_v2/P110_config_025.html",
+      "label": "Config",
+      "isMain": false,
+      "order": 110,
+      "pageAssets": [
+        {
+          "uri": "./P110_config_025.css",
+          "path": "/html_v2/P110_config_025.css"
+        },
+        {
+          "uri": "./P110_config_025.js",
+          "path": "/html_v2/P110_config_025.js"
+        }
+      ]
+    },
+    {
+      "uri": "/diag",
+      "path": "/html_v2/P120_diag_025.html",
+      "label": "System Diag.",
+      "isMain": false,
+      "order": 120,
+      "pageAssets": [
+        {
+          "uri": "./P120_diag_025.css",
+          "path": "/html_v2/P120_diag_025.css"
+        },
+        {
+          "uri": "./P120_diag_025.js",
+          "path": "/html_v2/P120_diag_025.js"
+        }
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "uri": "/P000_common_001.css",
+      "path": "/html_v2/P000_common_001.css",
+      "isCommon": true
+    },
+    {
+      "uri": "/P000_common_004.js",
+      "path": "/html_v2/P000_common_004.js",
+      "isCommon": true
+    }
+  ]
+}

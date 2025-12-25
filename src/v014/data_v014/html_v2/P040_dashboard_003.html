@@ -1,0 +1,93 @@
+<!-- P040_dashboard_003.html -->
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>🌬️ Smart Nature Wind 대시보드</title>
+
+    <!-- 공통 스타일 -->
+    <link rel="stylesheet" href="./P000_common_001.css" />
+    <!-- 대시보드 전용 스타일 -->
+    <link rel="stylesheet" href="./P040_dashboard_003.css" />
+  </head>
+
+  <body>
+    <!-- 상단 내비게이션 -->
+    <header class="nav-bar">
+      <div class="nav-container">
+        <!-- href는 P000_common_004.js에서 isMain 페이지로 덮어써줌 -->
+        <a href="./P040_dashboard_002.html" class="nav-logo">Smart Wind</a>
+        <nav>
+          <ul class="nav-menu" id="navMenu"></ul>
+        </nav>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <h1>장치 상태 및 핵심 제어</h1>
+
+      <!-- 1. 운영 상태 / 제어 -->
+      <section class="card control-panel">
+        <div class="row">
+          <strong class="section-title">운영 상태 및 제어</strong>
+          <div class="right tight">
+            <button class="btn ok" id="btnStartSim">▶ 시뮬레이션 시작</button>
+            <button class="btn warn" id="btnStopSim">■ 시뮬레이션 중지</button>
+          </div>
+        </div>
+
+        <div class="grid status-grid">
+          <div class="col-3 status-card wind-speed-card">
+            <label>현재 풍속 (m/s)</label>
+            <p id="currentWindSpeed" class="large-value">0.00</p>
+          </div>
+
+          <div class="col-3 status-card pwm-output-card">
+            <label>PWM Duty (%)</label>
+            <p id="currentPWMDuty" class="large-value">0</p>
+          </div>
+
+          <div class="col-3 status-card sim-state-card">
+            <label>시뮬레이션 상태</label>
+            <p id="simState" class="large-value status-text offline">OFFLINE</p>
+          </div>
+
+          <div class="col-3 status-card network-card">
+            <label>네트워크</label>
+            <p id="networkInfo" class="large-value status-text">- | -</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. 로그 / 진단 -->
+      <section class="card logs-panel">
+        <div class="row">
+          <strong class="section-title">시스템 로그 및 진단 정보</strong>
+          <div class="right tight">
+            <button class="btn" id="btnDiag">시스템 진단 (Heap/FS)</button>
+            <button class="btn" id="btnClearLog">로그 지우기</button>
+          </div>
+        </div>
+
+        <div id="logConsole" class="log-area"></div>
+      </section>
+
+      <div class="muted">© 2540.kr SmartNatureWind (v001 Dashboard UI)</div>
+    </div>
+
+    <!-- 로딩 오버레이 -->
+    <div id="loadingOverlay" style="display: none">
+      <div class="spinner"></div>
+    </div>
+    <!-- 토스트 컨테이너 -->
+    <div id="toastContainer"></div>
+
+    <!-- 공통 스크립트: 메뉴 / 모드 / 토스트 -->
+    <script src="./P000_common_006.js" defer></script>
+    <!-- 대시보드 전용 스크립트 -->
+    <script src="./P040_dashboard_003.js" defer></script>
+  </body>
+</html>
+

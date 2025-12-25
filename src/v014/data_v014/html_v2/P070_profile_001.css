@@ -1,0 +1,133 @@
+/*
+ * ------------------------------------------------------
+ * 소스명 : P070_profile_001.css
+ * 모듈명 : Smart Nature Wind WindProfile Manager UI Style (v001)
+ * ------------------------------------------------------
+ * 주요 내용:
+ * - SC10_common_001.css에 의존
+ * - 프로파일 목록 테이블 스타일
+ * - 모달 오버레이 스타일
+ * ------------------------------------------------------
+ */
+
+/* ======================= 1. 프로파일 테이블 스타일 ======================= */
+.profile-list-container {
+    margin-top: 15px;
+    overflow-x: auto; /* 작은 화면에서 스크롤 가능하도록 */
+}
+
+.profile-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.profile-table th, .profile-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e0e6ed;
+}
+
+.profile-table th {
+    background-color: #f7f9fb;
+    color: #34495e;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.profile-table tr:hover {
+    background-color: #fcfdfe;
+}
+
+.profile-table td:last-child {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.profile-table .action-buttons {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+.profile-table .btn-small {
+    padding: 5px 10px;
+    font-size: 0.85em;
+}
+
+/* ======================= 2. 모달 오버레이 스타일 ======================= */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 25px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0e6ed;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 1.2em;
+    cursor: pointer;
+    color: #95a5a6;
+    transition: color 0.2s;
+}
+
+.btn-close:hover {
+    color: #e74c3c;
+}
+
+.profile-params-grid {
+    margin-top: 20px;
+    gap: 15px;
+}
+
+.modal-actions {
+    margin-top: 25px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* 폼 그룹 재사용 (SC10_sim_details_001.css에서 가져옴) */
+.form-group {
+    margin-bottom: 15px;
+    padding: 10px 0;
+    border-bottom: 1px dotted #e9ecef;
+}
+.form-group:last-child { border-bottom: none; }
+.form-group label {
+    display: block; font-weight: 600; margin-bottom: 5px; color: #34495e; font-size: 0.95em;
+}
+.form-group input[type="number"], .form-group input[type="text"] {
+    width: 100%; padding: 10px; border: 1px solid #c8d4e0; border-radius: 5px; box-sizing: border-box; font-size: 1em;
+}
+

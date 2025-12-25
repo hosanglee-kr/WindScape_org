@@ -1,0 +1,189 @@
+{
+  "userProfiles": {
+    "version": "025",
+    "jsonFile": "cfg_uzOpProfile_025_final.json",
+
+    "profiles": [
+      {
+        "profileId": 1,
+        "profileNo": 1,
+        "name": "수면모드",
+        "enabled": true,
+        "repeatSegments": true,
+        "segments": [
+          {
+            "seqId": 1,
+            "segNo": 10,
+            "on_minutes": 40,
+            "off_minutes": 0,
+            "mode": "PRESET",
+            "presetCode": "OCEAN",
+            "styleCode": "SLEEP",
+            "adjust": { "wind_intensity": -10, "wind_variability": -20 }
+          },
+          {
+            "seqId": 2,
+            "segNo": 20,
+            "on_minutes": 120,
+            "off_minutes": 0,
+            "mode": "PRESET",
+            "presetCode": "FOREST_CANOPY",
+            "styleCode": "SLEEP",
+            "adjust": { "wind_intensity": -20, "wind_variability": -30 }
+          },
+          {
+            "seqId": 3,
+            "segNo": 30,
+            "on_minutes": 90,
+            "off_minutes": 0,
+            "mode": "FIXED",
+            "fixed_speed": 45.0
+          }
+        ],
+        "autoOff": {
+          "timer": { "enabled": true, "minutes": 240 },
+          "offTime": { "enabled": true, "time": "05:00" },
+          "offTemp": { "enabled": true, "temp": 26.0 }
+        },
+        "motion": {
+          "pir": { "enabled": false },
+          "ble": { "enabled": false }
+        }
+      },
+
+      {
+        "profileId": 2,
+        "profileNo": 2,
+        "name": "집중모드",
+        "enabled": true,
+        "repeatSegments": true,
+        "segments": [
+          {
+            "seqId": 1,
+            "segNo": 10,
+            "on_minutes": 60,
+            "off_minutes": 0,
+            "mode": "PRESET",
+            "presetCode": "URBAN_SUNSET",
+            "styleCode": "FOCUS",
+            "adjust": { "wind_intensity": 5, "wind_variability": -10 }
+          }
+        ],
+        "autoOff": {
+          "timer": { "enabled": true, "minutes": 180 },
+          "offTime": { "enabled": false },
+          "offTemp": { "enabled": false }
+        },
+        "motion": {
+          "pir": { "enabled": true, "hold_sec": 300 },
+          "ble": { "enabled": true, "rssi_threshold": -72, "hold_sec": 300 }
+        }
+      },
+
+      {
+        "profileId": 3,
+        "profileNo": 3,
+        "name": "휴식모드",
+        "enabled": true,
+        "repeatSegments": true,
+        "segments": [
+          {
+            "seqId": 1,
+            "segNo": 10,
+            "on_minutes": 45,
+            "off_minutes": 15,
+            "mode": "PRESET",
+            "presetCode": "HARBOR_BREEZE",
+            "styleCode": "RELAX",
+            "adjust": { "wind_intensity": -5, "wind_variability": -5 }
+          }
+        ],
+        "autoOff": {
+          "timer": { "enabled": false, "minutes": 0 },
+          "offTime": { "enabled": false },
+          "offTemp": { "enabled": false }
+        },
+        "motion": {
+          "pir": { "enabled": true, "hold_sec": 180 },
+          "ble": { "enabled": true, "rssi_threshold": -70, "hold_sec": 180 }
+        }
+      },
+
+      {
+        "profileId": 4,
+        "profileNo": 4,
+        "name": "환기모드",
+        "enabled": true,
+        "repeatSegments": true,
+        "segments": [
+          {
+            "seqId": 1,
+            "segNo": 10,
+            "on_minutes": 20,
+            "off_minutes": 5,
+            "mode": "PRESET",
+            "presetCode": "PLAINS",
+            "styleCode": "BALANCE",
+            "adjust": { "wind_intensity": 0, "wind_variability": 0 }
+          }
+        ],
+        "autoOff": {
+          "timer": { "enabled": false, "minutes": 0 },
+          "offTime": { "enabled": false },
+          "offTemp": { "enabled": false }
+        },
+        "motion": {
+          "pir": { "enabled": false },
+          "ble": { "enabled": false }
+        }
+      },
+
+      {
+        "profileId": 5,
+        "profileNo": 5,
+        "name": "활동모드",
+        "enabled": true,
+        "repeatSegments": true,
+        "segments": [
+          {
+            "seqId": 1,
+            "segNo": 10,
+            "on_minutes": 30,
+            "off_minutes": 10,
+            "mode": "PRESET",
+            "presetCode": "MOUNTAIN",
+            "styleCode": "ACTIVE",
+            "adjust": { "wind_intensity": 10, "gust_frequency": 10 }
+          }
+        ],
+        "autoOff": {
+          "timer": { "enabled": false, "minutes": 0 },
+          "offTime": { "enabled": false },
+          "offTemp": { "enabled": false }
+        },
+        "motion": {
+          "pir": { "enabled": true, "hold_sec": 150 },
+          "ble": { "enabled": true, "rssi_threshold": -68, "hold_sec": 150 }
+        }
+      },
+
+      {
+        "profileId": 6,
+        "profileNo": 6,
+        "name": "사용자 정의",
+        "enabled": false,
+        "repeatSegments": false,
+        "segments": [],
+        "autoOff": {
+          "timer": { "enabled": false, "minutes": 0 },
+          "offTime": { "enabled": false },
+          "offTemp": { "enabled": false }
+        },
+        "motion": {
+          "pir": { "enabled": false },
+          "ble": { "enabled": false }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,70 @@
+/*
+ * ------------------------------------------------------
+ * 소스명 : P085_userProfiles_t2_002.css
+ * 모듈명 : Smart Nature Wind User Profile Manager UI Style (v002)
+ * ------------------------------------------------------
+ * 주요 내용:
+ * - P000_common_001.css에 의존 (그리드/카드/버튼/모달 기본 스타일)
+ * - 유저 프로파일 목록 테이블 스타일
+ * ------------------------------------------------------
+ */
+
+/* ======================= 1. 프로파일 테이블 ======================= */
+
+.profile-list-container {
+    margin-top: 15px;
+    overflow-x: auto;
+}
+
+.profile-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.profile-table th,
+.profile-table td {
+    padding: 12px 10px;
+    text-align: left;
+    border-bottom: 1px solid #e0e6ed;
+    font-size: 0.95em;
+}
+
+.profile-table th {
+    background-color: #f7f9fb;
+    color: #34495e;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.profile-table td:last-child {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.profile-table .action-buttons {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+.profile-table .btn-small {
+    padding: 5px 10px;
+    font-size: 0.85em;
+}
+
+/* ======================= 2. 폼/설정 필드 ======================= */
+
+.profile-settings-grid {
+    gap: 15px;
+}
+
+.profile-settings-grid .form-group label {
+    font-weight: 600;
+}
+
+/* 숫자 입력 필드 최소한의 너비 */
+.profile-settings-grid input[type="number"] {
+    max-width: 120px;
+}

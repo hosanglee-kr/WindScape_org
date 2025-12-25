@@ -1,0 +1,149 @@
+<!-- SC10_chart_003.html -->
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Smart Nature Wind 실시간 차트 + 상세 설정</title>
+
+<link rel="stylesheet" href="./SC10_chart_003.css">
+<!-- <link rel="stylesheet" href="/SC10_chart_003.css" /> -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+
+<script defer src="./SC10_chart_003.js"></script>
+<!-- <script defer src="/SC10_chart_003.js"></script>  -->
+</head>
+
+<body>
+  <div class="wrap">
+    <h2>🌬️ Smart Nature Wind 모니터링 및 설정</h2>
+
+    <section class="card">
+      <div class="row">
+          <strong class="section-title">풍속 설정</strong>
+          <div class="right tight">
+            <button class="btn" id="btnPreviewPreset">미리보기</button>
+            <button class="btn ok" id="btnSaveSim">풍속 설정 저장</button>
+            <button class="btn ok" id="btnSaveSimInit">풍속 설정 초기화</button>
+          </div>
+      </div>
+
+      <div class="grid">
+        <div class="col-6">
+          <label>프리셋</label>
+          <select id="preset">
+            </select>
+        </div>
+        <div class="col-6">
+          <div id="presetPreview" class="mt12 muted">프리셋 미리보기: -</div>
+        </div>
+      </div>
+
+      <div class="grid mt16">
+        <div class="col-4"><label>강도 (intensity %)</label><input type="number" id="intensity" min="0" max="200" step="1"></div>
+        <div class="col-4"><label>돌풍 빈도 (gust_freq %)</label><input type="number" id="gust_freq" min="0" max="200" step="1"></div>
+        <div class="col-4"><label>가변성 (variability %)</label><input type="number" id="variability" min="0" max="100" step="1"></div>
+        <div class="col-4"><label>팬 최대 (fan_limit %)</label><input type="number" id="fan_limit" min="0" max="100" step="1"></div>
+        <div class="col-4"><label>팬 최소 (min_fan %)</label><input type="number" id="min_fan" min="0" max="100" step="1"></div>
+        <div class="col-4"><label>난류 길이 스케일 (turb_len)</label><input type="number" id="turb_len" min="1" max="200" step="1"></div>
+        <div class="col-4"><label>난류 시그마 (turb_sig)</label><input type="number" id="turb_sig" min="0" max="5" step="0.01"></div>
+        <div class="col-4"><label>열기포 세기 (therm_str)</label><input type="number" id="therm_str" min="0" max="5" step="0.01"></div>
+        <div class="col-4"><label>열기포 반경 (therm_rad)</label><input type="number" id="therm_rad" min="0" max="100" step="1"></div>
+      </div>
+    </section>
+    
+    <section class="card">
+        <div class="row">
+          <strong class="section-title">타이밍 (TIMING) 설정</strong>
+          <div class="right tight"><button class="btn ok" id="btnSaveTiming">타이밍 저장</button></div>
+        </div>
+        <div class="grid">
+          <div class="col-4"><label>시뮬 간격(ms)</label><input type="number" id="sim_int" min="10" step="1"></div>
+          <div class="col-4"><label>돌풍 체크(ms)</label><input type="number" id="gust_int" min="10" step="1"></div>
+          <div class="col-4"><label>열기포 체크(ms)</label><input type="number" id="thermal_int" min="10" step="1"></div>
+        </div>
+    </section>
+
+
+    <section>
+      <h3 class="section-title">실시간 시각화</h3>
+
+      <p id="refreshInfo">⏳ 데이터 로딩 중...</p>
+
+      <div class="btn-group">
+        <button id="btnResetZoomAll" class="btn">🔄 줌 초기화</button>
+        <button id="btnPause" class="btn warn">⏸ 일시정지</button>
+        <button id="btnResume" class="btn ok">▶ 재시작</button>
+      </div>
+      
+      <div class="chart-container card" data-chart="wind">
+        <div class="chart-header">
+          <strong class="section-title">풍속 및 PWM 출력</strong>
+          <button class="btn-toggle">▲</button>
+        </div>
+        <div class="chart-content">
+          <canvas id="chartWind" height="400"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-container card" data-chart="params">
+        <div class="chart-header">
+          <strong class="section-title">내부 풍속설정 매개변수</strong>
+          <button class="btn-toggle">▲</button>
+        </div>
+        <div class="chart-content">
+          <canvas id="chartParams" height="300"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-container card" data-chart="turb_therm_sig">
+        <div class="chart-header">
+          <strong class="section-title">난류/열기포 시그마 및 길이</strong>
+          <button class="btn-toggle">▲</button>
+        </div>
+        <div class="chart-content">
+          <canvas id="chartTurbThermSig" height="300"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-container card" data-chart="events">
+        <div class="chart-header">
+          <strong class="section-title">돌풍 및 열기포 이벤트</strong>
+          <button class="btn-toggle">▲</button>
+        </div>
+        <div class="chart-content">
+          <canvas id="chartEvents" height="300"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-container card" data-chart="preset">
+        <div class="chart-header">
+          <strong class="section-title">프리셋 인덱스 변화</strong>
+          <button class="btn-toggle">▲</button>
+        </div>
+        <div class="chart-content">
+          <canvas id="chartPreset" height="300"></canvas>
+        </div>
+      </div>
+      
+      <div class="chart-container card" data-chart="timing">
+        <div class="chart-header">
+          <strong class="section-title">풍속 설정 / 체크 타이밍</strong>
+          <button class="btn-toggle">▲</button>
+        </div>
+        <div class="chart-content">
+          <canvas id="chartTiming" height="300"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <footer>© 2025 Smart Nature Wind Monitor</footer>
+  </div>
+</body>
+</html>
+

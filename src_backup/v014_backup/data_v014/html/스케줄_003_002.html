@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Wind 스케줄 관리</title>
+    <!-- Tailwind CSS 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', 'Pretendard', sans-serif; background-color: #f4f7f9; }
+        .card { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06); }
+        .input-text, .input-select {
+            @apply w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500;
+        }
+        .segment-card {
+            @apply border-l-4 border-l-blue-400 p-4 bg-white rounded-lg shadow-md mb-4;
+        }
+        
+        /* 요일 토글 스타일 */
+        .day-toggle label { 
+            position: relative;
+            cursor: pointer;
+            display: block;
+        }
+        .day-toggle input[type="checkbox"] { 
+            position: absolute;
+            opacity: 0;
+            width: 1px;
+            height: 1px;
+        }
+        .day-toggle span { 
+            border: 1px solid #d1d5db; 
+            background-color: #f9fafb; 
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            line-height: 1.25;
+            text-align: center;
+            display: block;
+        }
+        .day-toggle input:checked + span { 
+            background-color: #3b82f6; 
+            border-color: #3b82f6;
+            color: #fff !important; 
+            font-weight: 600;
+        }
+
+        /* 비활성화된 입력 필드 스타일 */
+        .input-disabled {
+            @apply bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200;
+        }
+        
+        .schedule-item {
+            @apply flex justify-between items-center p-4 bg-white border-b hover:bg-gray-50 cursor-pointer transition;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col items-end space-y-2"></div>
+    <div id="loadingOverlay" class="fixed inset-0 bg-white/70 flex items-center justify-center z-40 hidden">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+    </div>
+    
+    <div class="max-w-5xl mx-auto space-y-6">
+        <header class="flex justify-between items-center pb-4 border-b">
+            <h1 class="text-2xl font-extrabold text-gray-800">
+                <span class="text-blue-600">📅</span> 스케줄 관리
+            </h1>
+            <div class="flex space-x-2">
+                <button id="btnRefresh" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition">
+                    목록 새로고침
+                </button>
+                <button id="btnAddNewSchedule" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                    + 스케줄 추가
+                </button>
+            </div>
+        </header>
+
+        <!-- 1. 스케줄 목록 (목록 모드) -->
+        <section id="scheduleListSection" class="card bg-white p-6 rounded-xl border border-gray-200">
+            <h2 class="text-xl font-bold text-gray-700 mb-4">등록된 스케줄 목록 (<span id="scheduleCount">0</span>개)</h2>
+            <div id="scheduleListContainer" class="border rounded-lg overflow-hidden">
+                <div id="listPlaceholder" class="p-8 text-center text-gray-500">스케줄을 로드 중입니다.</div>
+            </div>
+        </section>
+
+        <!-- 2. 스케줄 세부 편집 (편집 모드) -->
+        <section id="scheduleDetailSection" class="card bg-white p-6 rounded-xl border border-gray-200 hidden">
+            <header class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold text-red-600">스케줄 편집 (<span id="detailTitle">새 항목</span>)</h2>
+                <div class="space-x-2">
+                    <button id="btnCancelEdit" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg transition">
+                        취소
+                    </button>
+                    <button id="btnDeleteSchedule" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition hidden">
+                        삭제
+                    </button>
+                    <button id="btnSaveDetail" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                        세부 저장
+                    </button>
+                </div>
+            </header>
+
+            <!-- A. 기본 설정 및 기간 -->
+            <div class="mt-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-3 border-l-2 border-green-500 pl-2">기본 정보 및 기간</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="md:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">스케줄 번호</label>
+                        <input type="number" id="schNoDetail" class="input-text bg-gray-100 cursor-not-allowed" readonly>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">스케줄 이름</label>
+                        <input type="text" id="scheduleNameDetail" class="input-text">
+                    </div>
+                    <div class="md:col-span-1 flex items-end">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" id="scheduleEnabledDetail" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                            <span class="ml-2 text-sm font-medium text-gray-700">스케줄 사용 여부</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mt-6 border-t pt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="md:col-span-1 flex items-start pt-2">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" id="periodEnabledDetail" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                            <span class="ml-2 text-sm font-medium text-gray-700">동작 시간대 Rule</span>
+                        </label>
+                    </div>
+                    <div id="startTimeContainer">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">시작 시간 (HH:MM)</label>
+                        <input type="time" id="startTimeDetail" class="input-text">
+                    </div>
+                    <div id="endTimeContainer">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">종료 시간 (HH:MM)</label>
+                        <input type="time" id="endTimeDetail" class="input-text">
+                    </div>
+                    <div class="md:col-span-4 mt-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">동작 요일</label>
+                        <div id="daySelectorsDetail" class="flex flex-wrap gap-2">
+                            <!-- Day buttons generated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- B. 세그먼트 시퀀스 설정 -->
+            <div class="mt-6 border-t pt-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-lg font-semibold text-gray-700 border-l-2 border-green-500 pl-2">동작 단계</h3>
+                    <button id="btnAddSegmentDetail" class="bg-green-500 hover:bg-green-600 text-white py-1 px-3 text-sm rounded transition">
+                        + 동작 단계(Step) 추가
+                    </button>
+                </div>
+                <div id="segmentListDetail" class="space-y-3">
+                    <!-- Segments will be rendered here -->
+                </div>
+            </div>
+
+            <!-- C. AutoOff 및 Motion 설정 -->
+            <div class="mt-6 border-t pt-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-3 border-l-2 border-green-500 pl-2">자동 종료 및 움직임 감지</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                
+                    <!-- AutoOff 타이머 -->
+                    <div>
+                        <h4 class="font-semibold text-gray-600 mb-2">자동 종료 (AutoOff)</h4>
+                        <div class="space-y-3">
+                            <label class="inline-flex items-center ml-2">
+                                <input type="checkbox" id="autoOffTimerEnabledDetail" class="form-checkbox h-4 w-4 text-blue-600 rounded autooff-toggle">
+                                <span class="ml-1 text-sm font-medium text-gray-700">작동 타이머 적용</span>
+                            </label>
+                            <label class="block text-sm font-medium text-gray-700">작동 시간 (분)</label>
+                            <input type="number" id="autoOffTimerMinutesDetail" min="0" class="input-text inline-block w-full autooff-input-timer">
+                            
+                            <label class="inline-flex items-center ml-2">
+                                <input type="checkbox" id="autoOffOffTimeEnabledDetail" class="form-checkbox h-4 w-4 text-blue-600 rounded autooff-toggle">
+                                <span class="ml-1 text-sm font-medium text-gray-700">종료 시각 적용</span>
+                            </label>
+                            <label class="block text-sm font-medium text-gray-700">시간 (HH:MM)</label>
+                            <input type="time" id="autoOffOffTimeDetail" class="input-text inline-block w-full autooff-input-offtime">
+
+                            <label class="inline-flex items-center ml-2">
+                                <input type="checkbox" id="autoOffOffTempEnabledDetail" class="form-checkbox h-4 w-4 text-blue-600 rounded autooff-toggle">
+                                <span class="ml-1 text-sm font-medium text-gray-700">종료 온도 적용</span>
+                            </label>
+                            <label class="block text-sm font-medium text-gray-700">온도 미만 (°C)</label>
+                            <input type="number" id="autoOffOffTempDetail" min="0" step="0.1" class="input-text inline-block w-full autooff-input-offtemp">
+                        </div>
+                    </div>
+
+                    <!-- Motion 설정 -->
+                    <div class="md:col-span-2">
+                        <h4 class="font-semibold text-gray-600 mb-2">움직임 감지 (Motion) 작동 Rule</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            
+                            <!-- PIR 설정 -->
+                            <div class="space-y-3 p-3 bg-gray-50 rounded-lg">
+                                <h5 class="font-medium text-sm text-gray-800">적외선</h5>
+                                <label class="inline-flex items-center text-sm">
+                                    <input type="checkbox" id="motionPirEnabledDetail" class="form-checkbox h-4 w-4 text-blue-600 rounded motion-toggle-pir">
+                                    <span class="ml-2">적외선 감지 적용</span>
+                                </label>
+                                <label class="block text-xs text-gray-600">감지 시 작동 시간 (초)</label>
+                                <input type="number" id="motionPirHoldSecDetail" min="0" class="input-text text-sm motion-input-pir">
+                            </div>
+
+                            <!-- BLE 설정 -->
+                            <div class="space-y-3 p-3 bg-gray-50 rounded-lg">
+                                <h5 class="font-medium text-sm text-gray-800">블루투스 디바이스</h5>
+                                <label class="inline-flex items-center text-sm">
+                                    <input type="checkbox" id="motionBleEnabledDetail" class="form-checkbox h-4 w-4 text-blue-600 rounded motion-toggle-ble">
+                                    <span class="ml-2">블루투스 감지 적용</span>
+                                </label>
+                                <label class="block text-xs text-gray-600">신호(RSSI) 임계값 (dBm)</label>
+                                <input type="number" id="motionBleRssiThresholdDetail" min="-100" max="-30" class="input-text text-sm motion-input-ble">
+                                <label class="block text-xs text-gray-600">감지 시 작동 시간 (초)</label>
+                                <input type="number" id="motionBleHoldSecDetail" min="0" class="input-text text-sm motion-input-ble">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+    
+<script>
+    // schedule_manager.js (JavaScript Implementation)
+
+    (() => {
+        "use strict";
+
+        // Constants and State
+        let g_scheduleData = []; 
+        let g_editingItemIndex = -1; 
+        let g_presets = []; 
+        const DAY_NAMES = ['월', '화', '수', '목', '금', '토', '일'];
+        const DEFAULT_SCHEDULE_ID = 900; 
+
+        const KEY_API = 'sc10_api_key';
+        const API_URL = ""; 
+        const $ = (s, r = document) => r.querySelector(s);
+        const text = (el, v) => el && (el.textContent = v);
+        const getKey = () => localStorage.getItem(KEY_API) || '';
+        
+        // UI Helpers
+        const setLoading = (flag) => {
+            const ov = $("#loadingOverlay");
+            if (ov) ov.style.display = flag ? "flex" : "none";
+        };
+        const showToast = (msg, type = "ok") => {
+            const cont = $("#toastContainer");
+            if (!cont) return;
+            const div = document.createElement("div");
+            div.className = `p-3 mt-2 rounded-lg text-white text-sm ${type === 'ok' ? 'bg-green-500' : type === 'warn' ? 'bg-amber-500' : 'bg-red-500'}`;
+            div.textContent = msg;
+            cont.appendChild(div);
+            setTimeout(() => div.remove(), 3000);
+        };
+        
+        // --- API Helper (Placeholder) ---
+        async function fetchApi(url, method = "GET", body = null, desc = "작업") {
+             setLoading(true);
+             try {
+                 const opt = { method, headers: {} };
+                 if (body) {
+                     opt.body = JSON.stringify(body);
+                     opt.headers["Content-Type"] = "application/json";
+                 }
+                 const k = getKey();
+                 if (k) opt.headers["X-API-Key"] = k;
+
+                 // Mock API response for demonstration (if actual fetch is not possible)
+                 if (url.includes('/api/schedules') && method === 'GET') {
+                    return { schedules: [{ schNo: 10, name: "평일 주간", enabled: true, period: { enabled: true, days: [1, 1, 1, 1, 1, 0, 0], start_time: "09:00", end_time: "17:00" }, seg_count: 1, segments: [{ segNo: 1, on_minutes: 30, off_minutes: 5, mode: "PRESET", presetCode: "OCEAN", styleCode: "BALANCE", adjust: { wind_intensity: 0.0, wind_variability: 0.0, gust_frequency: 0.0, fan_limit: 0.0, min_fan: 0.0 }, fixed_speed: 0.0 }], autoOff: { timer: { enabled: true, minutes: 60 }, offTime: { enabled: false, time: "23:59" }, offTemp: { enabled: true, temp: 28.0 } }, motion: { pir: { enabled: true, hold_sec: 300 }, ble: { enabled: false, rssi_threshold: -70, hold_sec: 0 } } }] };
+                 }
+                 if (url.includes('/api/windProfile')) {
+                    return { windProfile: { presets: [{ code: "OCEAN", name: "바다" }, { code: "MOUNTAIN", name: "산바람" }] } };
+                 }
+                 if (method === 'POST') return { updated: true }; 
+                 
+                 const resp = await fetch(url, opt);
+                 const j = await resp.json();
+
+                 if (!resp.ok) {
+                     showToast(`${desc} 실패: ${j.error || resp.status}`, "err");
+                     return null;
+                 }
+                 showToast(`${desc} 성공`, "ok");
+                 return j;
+
+             } catch (e) {
+                 showToast(`${desc} 실패: ${e.message}`, "err");
+                 return null;
+             } finally {
+                 setLoading(false);
+             }
+        }
+
+        // --- View Toggling ---
+        const showListView = () => {
+            $("#scheduleListSection").classList.remove('hidden');
+            $("#scheduleDetailSection").classList.add('hidden');
+        };
+
+        const showDetailView = () => {
+            $("#scheduleListSection").classList.add('hidden');
+            $("#scheduleDetailSection").classList.remove('hidden');
+            // 상세 보기 전환 시 입력 상태 초기화
+            togglePeriodInputs();
+            toggleAutoOffInputs();
+            toggleMotionInputs();
+            // 세그먼트도 재토글
+            document.querySelectorAll('.seg-mode-select').forEach(select => toggleSegmentInputs(select));
+        };
+
+        // ======================= UI Logic: Input Toggling (Core Fixes) =======================
+
+        function togglePeriodInputs() {
+            const enabled = $("#periodEnabledDetail").checked;
+            const periodInputs = [
+                $("#startTimeDetail"),
+                $("#endTimeDetail")
+            ];
+            const dayButtons = document.getElementById('daySelectorsDetail').querySelectorAll('input');
+
+            [...periodInputs, ...dayButtons].forEach(input => {
+                input.disabled = !enabled;
+                // 요일 버튼 비활성화 시 opacity 적용
+                input.closest('.day-toggle')?.classList.toggle('opacity-50', !enabled);
+                input.classList.toggle('input-disabled', !enabled);
+            });
+            
+            $("#startTimeContainer")?.classList.toggle('opacity-50', !enabled);
+            $("#endTimeContainer")?.classList.toggle('opacity-50', !enabled);
+        }
+
+        function toggleAutoOffInputs() {
+            // 타이머
+            const timerEnabled = $("#autoOffTimerEnabledDetail").checked;
+            const timerInput = $("#autoOffTimerMinutesDetail");
+            timerInput.disabled = !timerEnabled;
+            timerInput.classList.toggle('input-disabled', !timerEnabled);
+
+            // 종료 시간
+            const offTimeEnabled = $("#autoOffOffTimeEnabledDetail").checked;
+            const offTimeInput = $("#autoOffOffTimeDetail");
+            offTimeInput.disabled = !offTimeEnabled;
+            offTimeInput.classList.toggle('input-disabled', !offTimeEnabled);
+
+            // 종료 온도
+            const offTempEnabled = $("#autoOffOffTempEnabledDetail").checked;
+            const offTempInput = $("#autoOffOffTempDetail");
+            offTempInput.disabled = !offTempEnabled;
+            offTempInput.classList.toggle('input-disabled', !offTempEnabled);
+        }
+
+        function toggleMotionInputs() {
+            // PIR
+            const pirEnabled = $("#motionPirEnabledDetail").checked;
+            $("#motionPirHoldSecDetail").disabled = !pirEnabled;
+            $("#motionPirHoldSecDetail").classList.toggle('input-disabled', !pirEnabled);
+
+            // BLE
+            const bleEnabled = $("#motionBleEnabledDetail").checked;
+            document.querySelectorAll('.motion-input-ble').forEach(input => {
+                input.disabled = !bleEnabled;
+                input.classList.toggle('input-disabled', !bleEnabled);
+            });
+        }
+
+        function toggleSegmentInputs(selectElement) {
+            const card = selectElement.closest('.segment-card');
+            const mode = selectElement.value;
+
+            const isPreset = mode === 'PRESET';
+
+            // 고정 속도 입력
+            const fixedInput = card.querySelector('.seg-fixed-input');
+            fixedInput.disabled = isPreset; // PRESET일 때 비활성
+            fixedInput.classList.toggle('input-disabled', isPreset);
+
+            // 프리셋/조정 입력 그룹
+            const presetGroup = card.querySelector('.seg-preset-group');
+            
+            presetGroup.querySelectorAll('input, select').forEach(input => {
+                input.disabled = !isPreset; // PRESET일 때 활성
+                input.classList.toggle('input-disabled', !isPreset);
+            });
+            
+            // Group visibility for better UX
+            presetGroup.classList.toggle('opacity-50', !isPreset);
+            presetGroup.classList.toggle('pointer-events-none', !isPreset);
+        }
+
+        // ======================= Initialization and Event Binding =======================
+
+        document.addEventListener("DOMContentLoaded", () => {
+            bindEvents();
+            renderDaySelectors(); 
+            loadAllConfig();
+        });
+
+        function bindEvents() {
+            $("#btnRefresh")?.addEventListener("click", loadAllConfig);
+            $("#btnAddNewSchedule")?.addEventListener("click", startNewSchedule);
+            $("#btnCancelEdit")?.addEventListener("click", showListView);
+            $("#btnSaveDetail")?.addEventListener("click", saveScheduleDetail);
+            $("#btnDeleteSchedule")?.addEventListener("click", deleteSchedule);
+            
+            $("#segmentListDetail")?.addEventListener('click', (e) => {
+                if (e.target.classList.contains('btnDeleteSegment')) {
+                    const segIndex = Number(e.target.dataset.index);
+                    deleteSegment(segIndex);
+                }
+            });
+            
+            // Segment Add
+            $("#btnAddSegmentDetail")?.addEventListener("click", addSegment);
+            
+            // --- Input Toggling Events (Change events) ---
+            
+            // Period / Days
+            $("#periodEnabledDetail")?.addEventListener('change', togglePeriodInputs);
+            document.getElementById('daySelectorsDetail')?.addEventListener('change', togglePeriodInputs); // 요일 버튼은 PeriodEnable 여부에 따라 스타일링만 바뀌지만, PeriodEnable 체크박스와 분리된 이벤트로 두지 않고 PeriodEnabled 체크박스에 의존하도록 설계
+
+            // AutoOff
+            document.querySelectorAll('.autooff-toggle').forEach(el => el.addEventListener('change', toggleAutoOffInputs));
+
+            // Motion
+            document.querySelectorAll('.motion-toggle-pir').forEach(el => el.addEventListener('change', toggleMotionInputs));
+            document.querySelectorAll('.motion-toggle-ble').forEach(el => el.addEventListener('change', toggleMotionInputs));
+            
+            // 세그먼트 목록에 위임된 모드 토글 이벤트
+            $("#segmentListDetail")?.addEventListener('change', (e) => {
+                if (e.target.classList.contains('seg-mode-select')) {
+                    toggleSegmentInputs(e.target);
+                }
+            });
+
+        }
+        
+        function renderDaySelectors() {
+            const container = $("#daySelectorsDetail");
+            const DAY_NAMES = ['월', '화', '수', '목', '금', '토', '일'];
+
+            DAY_NAMES.forEach((name, index) => {
+                const dayValue = index === 6 ? 0 : index + 1; 
+                const label = document.createElement('label');
+                label.className = 'inline-flex items-center rounded-lg cursor-pointer transition day-toggle'; 
+                label.innerHTML = `
+                    <input type="checkbox" id="day-${dayValue}" data-day-index="${index}">
+                    <span class="text-sm font-medium ${index >= 5 ? 'text-red-500' : 'text-gray-700'}">${name}</span>
+                `;
+                container.appendChild(label);
+            });
+        }
+        
+        // ======================= List View (목록) =======================
+        
+        // ... (renderScheduleList, createScheduleItem, toggleScheduleStatus 로직은 유지) ...
+
+        // ======================= Detail View (세부 편집) =======================
+        
+        function startNewSchedule() {
+            const maxSchNo = g_scheduleData.reduce((max, item) => Math.max(max, item.schNo), 0);
+            const newSchNo = maxSchNo > 0 ? maxSchNo + 10 : 10;
+
+            const newItem = {
+                schNo: newSchNo,
+                name: "새 스케줄",
+                enabled: true,
+                period: { enabled: false, days: [1, 1, 1, 1, 1, 0, 0], start_time: "08:00", end_time: "18:00" },
+                seg_count: 0,
+                segments: [],
+                autoOff: { timer: { enabled: false, minutes: 0 }, offTime: { enabled: false, time: "23:59" }, offTemp: { enabled: false, temp: 0.0 } },
+                motion: { pir: { enabled: false, hold_sec: 0 }, ble: { enabled: false, rssi_threshold: -70, hold_sec: 0 } }
+            };
+
+            // Add the new item to the data array (unsaved)
+            g_scheduleData.push(newItem);
+            g_editingItemIndex = g_scheduleData.length - 1;
+            renderScheduleDetail(newItem);
+            
+            $("#btnDeleteSchedule").classList.add('hidden');
+            showDetailView();
+        }
+
+        function startEdit(index) {
+            g_editingItemIndex = index;
+            const item = g_scheduleData[index];
+            renderScheduleDetail(item);
+            $("#btnDeleteSchedule").classList.remove('hidden');
+            showDetailView();
+        }
+
+        function renderScheduleDetail(item) {
+            text($("#detailTitle"), `편집: ${item.name}`);
+            $("#schNoDetail").value = item.schNo;
+            $("#scheduleNameDetail").value = item.name;
+            $("#scheduleEnabledDetail").checked = item.enabled;
+
+            // Period
+            $("#periodEnabledDetail").checked = item.period.enabled;
+            $("#startTimeDetail").value = item.period.start_time;
+            $("#endTimeDetail").value = item.period.end_time;
+            
+            // Days
+            document.querySelectorAll('#daySelectorsDetail input[type="checkbox"]').forEach((input, index) => {
+                 input.checked = item.period.days[index] === 1;
+            });
+            
+            togglePeriodInputs(); 
+
+            // AutoOff
+            $("#autoOffTimerEnabledDetail").checked = item.autoOff.timer.enabled;
+            $("#autoOffTimerMinutesDetail").value = item.autoOff.timer.minutes;
+            $("#autoOffOffTimeEnabledDetail").checked = item.autoOff.offTime.enabled;
+            $("#autoOffOffTimeDetail").value = item.autoOff.offTime.time;
+            $("#autoOffOffTempEnabledDetail").checked = item.autoOff.offTemp.enabled;
+            $("#autoOffOffTempDetail").value = item.autoOff.offTemp.temp;
+            
+            toggleAutoOffInputs();
+
+            // Motion
+            $("#motionPirEnabledDetail").checked = item.motion.pir.enabled;
+            $("#motionPirHoldSecDetail").value = item.motion.pir.hold_sec;
+            $("#motionBleEnabledDetail").checked = item.motion.ble.enabled;
+            $("#motionBleRssiThresholdDetail").value = item.motion.ble.rssi_threshold;
+            $("#motionBleHoldSecDetail").value = item.motion.ble.hold_sec;
+
+            toggleMotionInputs();
+
+            renderSegmentList(item.segments);
+        }
+        
+        function renderSegmentList(segments) {
+            const container = $("#segmentListDetail");
+            container.innerHTML = '';
+            
+            if (segments.length === 0) {
+                 container.innerHTML = `<div class="p-4 text-center text-gray-500">직동 단계를 추가해주세요.</div>`;
+                return;
+            }
+
+            segments.forEach((seg, index) => {
+                const segElement = createSegmentElement(seg, index);
+                container.appendChild(segElement);
+            });
+            
+            document.querySelectorAll('.seg-mode-select').forEach(select => {
+                toggleSegmentInputs(select);
+            });
+        }
+        
+        function createSegmentElement(seg, index) {
+            const div = document.createElement('div');
+            div.className = 'segment-card';
+            
+            const presetOptions = g_presets.map(p => 
+                `<option value="${p.code}">${p.name} (${p.code})</option>`
+            ).join('');
+
+            div.innerHTML = `
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="font-bold text-base text-gray-800">Segment ${index + 1} (No: ${seg.segNo})</h4>
+                    <button data-index="${index}" class="btnDeleteSegment bg-red-500 hover:bg-red-600 text-white py-1 px-3 text-xs rounded transition">삭제</button>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div>
+                        <label class="text-xs text-gray-600">시작 시간 (분)</label>
+                        <input type="number" data-key="on_minutes" value="${seg.on_minutes}" min="0" class="input-text text-sm">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-600">종료 시간 (분)</label>
+                        <input type="number" data-key="off_minutes" value="${seg.off_minutes}" min="0" class="input-text text-sm">
+                    </div>
+                     <div class="col-span-2 md:col-span-1">
+                        <label class="text-xs text-gray-600">작동 모드</label>
+                        <select data-key="mode" class="input-select text-sm seg-mode-select">
+                            <option value="PRESET">Preset</option>
+                            <option value="FIXED">고정속도</option>
+                        </select>
+                    </div>
+                     <div class="col-span-2 md:col-span-1">
+                        <label class="text-xs text-gray-600">고정속도 (%)</label>
+                        <input type="number" data-key="fixed_speed" value="${seg.fixed_speed}" min="0" max="100" step="0.1" class="input-text text-sm seg-fixed-input">
+                    </div>
+                </div>
+
+                <div class="preset-details space-y-3 mt-3 p-3 bg-gray-50 rounded-lg seg-preset-group">
+                    <h5 class="text-sm font-semibold mb-2">Preset 상세 조정 (Adjust)</h5>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs text-gray-600">풍향 Preset</label>
+                            <select data-key="presetCode" class="input-select text-sm seg-preset-input">
+                                ${presetOptions}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-600">풍향 스타일</label>
+                            <select data-key="styleCode" class="input-select text-sm seg-style-input">
+                                <option value="BALANCE">BALANCE</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="text-xs text-gray-600">강도 조정(±)</label>
+                        <input type="number" data-key="adjust.wind_intensity" value="${seg.adjust.wind_intensity}" step="0.1" class="input-text text-sm seg-adjust-input">
+                        <label class="text-xs text-gray-600">변동성 조정(±)</label>
+                        <input type="number" data-key="adjust.wind_variability" value="${seg.adjust.wind_variability}" step="0.1" class="input-text text-sm seg-adjust-input">
+                    </div>
+                </div>
+            `;
+            
+            div.querySelector('.seg-mode-select').value = seg.mode;
+            div.querySelector('.seg-preset-input').value = seg.presetCode;
+            
+            div.querySelector('.seg-mode-select').addEventListener('change', (e) => {
+                toggleSegmentInputs(e.currentTarget);
+            });
+            
+            return div;
+        }
+
+        // --- Segment Management ---
+
+        function addSegment() {
+            const item = g_scheduleData[g_editingItemIndex];
+            if (!item) return showToast("스케줄 편집 모드가 아닙니다.", "err");
+
+            const newSegNo = item.segments.length > 0 ? 
+                             Math.max(...item.segments.map(s => s.segNo)) + 1 : 1;
+            
+            const newSegment = {
+                segNo: newSegNo,
+                on_minutes: 15,
+                off_minutes: 5,
+                mode: "PRESET",
+                presetCode: g_presets[0]?.code || "OCEAN",
+                styleCode: "BALANCE",
+                adjust: { wind_intensity: 0.0, wind_variability: 0.0, gust_frequency: 0.0, fan_limit: 0.0, min_fan: 0.0 },
+                fixed_speed: 0.0
+            };
+            
+            item.segments.push(newSegment);
+            renderSegmentList(item.segments);
+            showToast("작동 단계 추가 완료", "ok"); 
+        }
+        
+        function deleteSegment(index) {
+            const item = g_scheduleData[g_editingItemIndex];
+            if (!item) return;
+
+            const segName = item.segments[index]?.presetCode || 'Segment';
+
+            if (confirm(`Segment ${Number(index) + 1} (${segName})을(를) 삭제하시겠습니까?`)) {
+                item.segments.splice(index, 1);
+                // Re-render the list immediately
+                renderSegmentList(item.segments); 
+                showToast("작동단계 삭제됨", "warn");
+            }
+        }
+
+        // --- Detail Data Collection and Save ---
+
+        function collectScheduleDetailData(item) {
+            // 1. Basic/Period Data
+            item.name = $("#scheduleNameDetail").value;
+            item.enabled = $("#scheduleEnabledDetail").checked;
+            item.period.enabled = $("#periodEnabledDetail").checked;
+            item.period.start_time = $("#startTimeDetail").value;
+            item.period.end_time = $("#endTimeDetail").value;
+
+            // 2. Days Data
+            document.querySelectorAll('#daySelectorsDetail input[type="checkbox"]').forEach((input, index) => {
+                 item.period.days[index] = input.checked ? 1 : 0;
+            });
+
+            // 3. AutoOff Data
+            item.autoOff.timer.enabled = $("#autoOffTimerEnabledDetail").checked;
+            item.autoOff.timer.minutes = Number($("#autoOffTimerMinutesDetail").value) || 0;
+            item.autoOff.offTime.enabled = $("#autoOffOffTimeEnabledDetail").checked;
+            item.autoOff.offTime.time = $("#autoOffOffTimeDetail").value;
+            item.autoOff.offTemp.enabled = $("#autoOffOffTempEnabledDetail").checked;
+            item.autoOff.offTemp.temp = Number($("#autoOffOffTempDetail").value) || 0.0;
+
+            // 4. Motion Data
+            item.motion.pir.enabled = $("#motionPirEnabledDetail").checked;
+            item.motion.pir.hold_sec = Number($("#motionPirHoldSecDetail").value) || 0;
+            item.motion.ble.enabled = $("#motionBleEnabledDetail").checked;
+            item.motion.ble.rssi_threshold = Number($("#motionBleRssiThresholdDetail").value) || -70;
+            item.motion.ble.hold_sec = Number($("#motionBleHoldSecDetail").value) || 0;
+
+            // 5. Segment Data Collection (Rebuild Segments Array)
+            const newSegments = [];
+            document.querySelectorAll('#segmentListDetail .segment-card').forEach((card, index) => {
+                const segNo = Number(card.querySelector('.btnDeleteSegment').dataset.index) + 1; // Temporary segNo based on position
+                
+                const segmentData = {
+                    segNo: segNo, // Use position index as temporary segNo if original is complex
+                    on_minutes: Number(card.querySelector('[data-key="on_minutes"]').value) || 0,
+                    off_minutes: Number(card.querySelector('[data-key="off_minutes"]').value) || 0,
+                    mode: card.querySelector('.seg-mode-select').value,
+                    fixed_speed: Number(card.querySelector('[data-key="fixed_speed"]').value) || 0.0,
+                    
+                    // Preset/Style/Adjust
+                    presetCode: card.querySelector('[data-key="presetCode"]').value || 'OCEAN',
+                    styleCode: card.querySelector('[data-key="styleCode"]').value || 'BALANCE',
+                    adjust: {
+                        wind_intensity: Number(card.querySelector('[data-key="adjust.wind_intensity"]').value) || 0.0,
+                        wind_variability: Number(card.querySelector('[data-key="adjust.wind_variability"]').value) || 0.0,
+                        gust_frequency: 0.0, // Assuming static 0.0
+                        fan_limit: 0.0, // Assuming static 0.0
+                        min_fan: 0.0, // Assuming static 0.0
+                    }
+                };
+                newSegments.push(segmentData);
+            });
+
+            // Update item segments
+            item.seg_count = newSegments.length;
+            item.segments = newSegments;
+
+            return item;
+        }
+
+        async function saveScheduleDetail() {
+            if (g_editingItemIndex < 0) {
+                 return showToast("편집 중인 스케줄이 없습니다.", "err");
+            }
+            
+            const item = g_scheduleData[g_editingItemIndex];
+            if (!item.name || item.name.trim() === '') {
+                return showToast("스케줄 이름을 입력해주세요.", "err");
+            }
+
+            // 1. 데이터 수집 및 로컬 객체 업데이트
+            const updatedItem = collectScheduleDetailData(item);
+
+            // 2. 서버로 전체 스케줄 목록 전송 (PATCH/PUT)
+            const body = {
+                schedules: g_scheduleData // Send the whole array for full replacement (PUT style)
+            };
+
+            const result = await fetchApi("/api/schedules", "POST", body, `스케줄 #${item.schNo} 저장`);
+
+            if (result && result.updated) {
+                // 저장 성공 후 목록 뷰로 돌아가기
+                await loadAllConfig(); // 서버에서 최신 데이터를 다시 로드
+            }
+        }
+        
+        async function deleteSchedule() {
+            if (g_editingItemIndex < 0) return;
+            const item = g_scheduleData[g_editingItemIndex];
+
+            if (confirm(`경고: 스케줄 "${item.name}" (#${item.schNo})을(를) 영구적으로 삭제하시겠습니까?`)) {
+                // 로컬 배열에서 제거
+                g_scheduleData.splice(g_editingItemIndex, 1);
+                
+                // 서버로 전체 스케줄 목록 전송 (PUT)
+                const body = {
+                    schedules: g_scheduleData 
+                };
+
+                const result = await fetchApi("/api/schedules", "POST", body, `스케줄 #${item.schNo} 삭제`);
+
+                if (result && result.updated) {
+                    await loadAllConfig(); // 목록 뷰로 돌아가며 갱신
+                } else {
+                    // 삭제 실패 시 롤백 (선택 사항)
+                    showToast("삭제 실패, 목록을 새로고침해주세요.", "err");
+                }
+            }
+        }
+
+        async function toggleScheduleStatus(index) { /* ... */ }
+        
+        async function loadAllConfig() { /* ... */ }
+        
+        // --- RENDER DAY SELECTORS (implementation provided above) ---
+        // ... (renderDaySelectors, fetchApi, renderScheduleList 등 나머지 함수는 유지)
+    })();
+</script>
+</body>
+</html>
+
+

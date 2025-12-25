@@ -1,0 +1,112 @@
+<!-- P090_user_001.html -->
+
+<!doctype html>
+<html lang="ko">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>ℹ️ Smart Nature Wind 도움말 및 정보</title>
+	
+	<link rel="stylesheet" href="./P000_common_001.css">
+	<link rel="stylesheet" href="./P090_user_001.css">
+</head>
+
+<body>
+
+	<header class="nav-bar">
+		<div class="nav-container">
+			<a href="./P040_dashboard_002.html" class="nav-logo">Smart Wind</a>
+			<nav>
+				<ul class="nav-menu" id="navMenu">
+					</ul>
+			</nav>
+		</div>
+	</header>
+
+	<!-- <header class="nav-bar">
+		<div class="nav-container">
+			<a href="./SC10_dashboard_001.html" class="nav-logo">Smart Wind</a>
+			<nav>
+				<ul class="nav-menu">
+					<li><a href="./SC10_dashboard_001.html">대시보드</a></li>
+					<li><a href="./SC10_chart_t2_007.html">차트 모니터링</a></li>
+					<li><a href="./SC10_sim_details_001.html">시뮬 설정</a></li>
+					<li><a href="./SC10_profile_001.html">프로파일 관리</a></li>
+					<li><a href="./SC10_schedules_t2_001.html">스케줄 관리</a></li>
+					<li><a href="./P090_user_001.html" class="active">도움말 및 정보</a></li>
+					<li><a href="./SC10_settings_001.html">시스템 설정</a></li>
+				</ul>
+			</nav>
+		</div>
+	</header> -->
+	
+	<div class="wrap">
+		<h1>도움말 및 시스템 정보</h1>
+		
+		<div class="grid info-grid">
+			
+			<div class="col-6 card">
+				<strong class="section-title">💡 프로젝트 개요</strong>
+				<p>Smart Nature Wind 시뮬레이터는 **자연풍의 복잡한 움직임(난류, 돌풍, 열기포)**을 정밀하게 재현하여 사용자에게 실제와 같은 환경 테스트를 제공하기 위해 개발되었습니다.</p>
+				
+				<strong class="section-title">💻 기술 스택</strong>
+				<ul class="tech-stack-list">
+					<li>**하드웨어:** ESP32 (Wi-Fi, Web Server)</li>
+					<li>**백엔드/펌웨어:** PlatformIO, Arduino Core (C++/INO)</li>
+					<li>**프론트엔드/UI:** HTML5, CSS3 (공통 스타일), JavaScript (Vanilla JS)</li>
+					<li>**차트:** Chart.js, chartjs-plugin-zoom</li>
+					<li>**통신:** RESTful API (설정), WebSocket (실시간 데이터)</li>
+				</ul>
+			</div>
+
+			<div class="col-6 card">
+				<strong class="section-title">📚 사용 가이드 요약</strong>
+				
+				<div class="guide-item">
+					<span class="step-label">1. 초기 설정</span>
+					<p>▶️ **시스템 설정** 페이지에서 **API Key**를 설정하고, **네트워크 연결**을 확인하세요.</p>
+				</div>
+				
+				<div class="guide-item">
+					<span class="step-label">2. 풍속 모니터링</span>
+					<p>📈 **차트 모니터링** 페이지에서 실시간 **풍속** 및 **PWM 듀티**의 변화를 확인할 수 있습니다.</p>
+				</div>
+
+				<div class="guide-item">
+					<span class="step-label">3. 프로파일 설정</span>
+					<p>🗂️ **프로파일 관리**에서 원하는 풍속의 강도, 가변성, 난류 특성을 저장하고 즉시 **적용**할 수 있습니다.</p>
+				</div>
+
+				<div class="guide-item">
+					<span class="step-label">4. 스케줄 자동화</span>
+					<p>⏰ **스케줄 관리**에서 특정 요일/시간에 프로파일이 자동으로 적용되도록 예약할 수 있습니다.</p>
+				</div>
+
+				<div class="guide-item">
+					<span class="step-label">5. 상세 조정</span>
+					<p>⚙️ **시뮬 설정**에서 시뮬레이션 간격, 돌풍/열기포 간격 등 디테일한 수치를 조정할 수 있습니다.</p>
+				</div>
+			</div>
+			
+			<div class="col-12 card muted contact-info">
+				<strong class="section-title">© 저작권 및 연락처</strong>
+				<p>본 UI는 (주)스마트네이처윈드 시뮬레이터 관리용으로 제작되었습니다.</p>
+				<p>문의: support@2540.kr | 웹페이지 버전: UI v1.0 | 펌웨어 버전: <span id="fwVersionInfo">N/A</span></p>
+			</div>
+		</div>
+
+		<div class="muted">© 2540.kr SmartNatureWind (v001 Help & Info UI)</div>
+	</div>
+
+	<div id="loadingOverlay" style="display:none;">
+		<div class="spinner"></div>
+	</div>
+	<div id="toastContainer"></div>
+
+	<script src="./P000_common_006.js" defer></script>	
+	<script src="./P090_user_001.js" defer></script>
+</body>
+
+</html>
+

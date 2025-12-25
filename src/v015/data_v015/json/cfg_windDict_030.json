@@ -1,0 +1,210 @@
+{
+  "windDict": {
+    "version": "025",
+    "jsonFile": "cfg_windDict_025.json",
+    "presets": [
+      {
+        "name": "Country Breeze",
+        "code": "COUNTRY_BREEZE",
+        "base": {
+          "windIntensity": 55,
+          "gustFrequency": 30,
+          "windVariability": 40,
+          "fanLimit": 90,
+          "minFan": 10,
+          "turbulenceLengthScale": 38,
+          "turbulenceIntensitySigma": 0.4,
+          "thermalBubbleStrength": 1.8,
+          "thermalBubbleRadius": 16
+        }
+      },
+      {
+        "name": "Mediterranean",
+        "code": "MEDITERRANEAN",
+        "base": {
+          "windIntensity": 65,
+          "gustFrequency": 38,
+          "windVariability": 50,
+          "fanLimit": 92,
+          "minFan": 10,
+          "turbulenceLengthScale": 35,
+          "turbulenceIntensitySigma": 0.48,
+          "thermalBubbleStrength": 1.9,
+          "thermalBubbleRadius": 18
+        }
+      },
+      {
+        "name": "Ocean",
+        "code": "OCEAN",
+        "base": {
+          "windIntensity": 70,
+          "gustFrequency": 50,
+          "windVariability": 55,
+          "fanLimit": 95,
+          "minFan": 12,
+          "turbulenceLengthScale": 42,
+          "turbulenceIntensitySigma": 0.55,
+          "thermalBubbleStrength": 2.2,
+          "thermalBubbleRadius": 20
+        }
+      },
+      {
+        "name": "Mountain",
+        "code": "MOUNTAIN",
+        "base": {
+          "windIntensity": 80,
+          "gustFrequency": 55,
+          "windVariability": 65,
+          "fanLimit": 96,
+          "minFan": 14,
+          "turbulenceLengthScale": 45,
+          "turbulenceIntensitySigma": 0.65,
+          "thermalBubbleStrength": 2.5,
+          "thermalBubbleRadius": 20
+        }
+      },
+      {
+        "name": "Plains",
+        "code": "PLAINS",
+        "base": {
+          "windIntensity": 85,
+          "gustFrequency": 70,
+          "windVariability": 75,
+          "fanLimit": 100,
+          "minFan": 20,
+          "turbulenceLengthScale": 50,
+          "turbulenceIntensitySigma": 0.7,
+          "thermalBubbleStrength": 2.1,
+          "thermalBubbleRadius": 25
+        }
+      },
+      {
+        "name": "Harbor Breeze",
+        "code": "HARBOR_BREEZE",
+        "base": {
+          "windIntensity": 68,
+          "gustFrequency": 45,
+          "windVariability": 50,
+          "fanLimit": 92,
+          "minFan": 12,
+          "turbulenceLengthScale": 40,
+          "turbulenceIntensitySigma": 0.5,
+          "thermalBubbleStrength": 2.3,
+          "thermalBubbleRadius": 17
+        }
+      },
+      {
+        "name": "Forest Canopy",
+        "code": "FOREST_CANOPY",
+        "base": {
+          "windIntensity": 40,
+          "gustFrequency": 25,
+          "windVariability": 30,
+          "fanLimit": 85,
+          "minFan": 8,
+          "turbulenceLengthScale": 34,
+          "turbulenceIntensitySigma": 0.35,
+          "thermalBubbleStrength": 1.5,
+          "thermalBubbleRadius": 14
+        }
+      },
+      {
+        "name": "Urban Sunset",
+        "code": "URBAN_SUNSET",
+        "base": {
+          "windIntensity": 60,
+          "gustFrequency": 50,
+          "windVariability": 45,
+          "fanLimit": 92,
+          "minFan": 10,
+          "turbulenceLengthScale": 36,
+          "turbulenceIntensitySigma": 0.55,
+          "thermalBubbleStrength": 2.0,
+          "thermalBubbleRadius": 16
+        }
+      },
+      {
+        "name": "Tropical Rain",
+        "code": "TROPICAL_RAIN",
+        "base": {
+          "windIntensity": 80,
+          "gustFrequency": 60,
+          "windVariability": 65,
+          "fanLimit": 98,
+          "minFan": 15,
+          "turbulenceLengthScale": 45,
+          "turbulenceIntensitySigma": 0.6,
+          "thermalBubbleStrength": 2.4,
+          "thermalBubbleRadius": 22
+        }
+      },
+      {
+        "name": "Desert Night",
+        "code": "DESERT_NIGHT",
+        "base": {
+          "windIntensity": 45,
+          "gustFrequency": 20,
+          "windVariability": 30,
+          "fanLimit": 85,
+          "minFan": 8,
+          "turbulenceLengthScale": 30,
+          "turbulenceIntensitySigma": 0.3,
+          "thermalBubbleStrength": 1.2,
+          "thermalBubbleRadius": 10
+        }
+      }
+    ],
+    "styles": [
+      {
+        "name": "Active",
+        "code": "ACTIVE",
+        "factors": {
+          "intensityFactor": 1.25,
+          "variabilityFactor": 1.2,
+          "gustFactor": 1.3,
+          "thermalFactor": 1.1
+        }
+      },
+      {
+        "name": "Focus",
+        "code": "FOCUS",
+        "factors": {
+          "intensityFactor": 1.05,
+          "variabilityFactor": 0.8,
+          "gustFactor": 0.85,
+          "thermalFactor": 0.9
+        }
+      },
+      {
+        "name": "Balance",
+        "code": "BALANCE",
+        "factors": {
+          "intensityFactor": 1.0,
+          "variabilityFactor": 1.0,
+          "gustFactor": 1.0,
+          "thermalFactor": 1.0
+        }
+      },
+      {
+        "name": "Relax",
+        "code": "RELAX",
+        "factors": {
+          "intensityFactor": 0.8,
+          "variabilityFactor": 0.85,
+          "gustFactor": 0.7,
+          "thermalFactor": 1.1
+        }
+      },
+      {
+        "name": "Sleep",
+        "code": "SLEEP",
+        "factors": {
+          "intensityFactor": 0.65,
+          "variabilityFactor": 0.6,
+          "gustFactor": 0.4,
+          "thermalFactor": 0.9
+        }
+      }
+    ]
+  }
+}

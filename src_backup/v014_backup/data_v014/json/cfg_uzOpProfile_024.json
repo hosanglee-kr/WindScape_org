@@ -1,0 +1,55 @@
+{
+  "userProfiles": {
+    "version": "024",
+    "jsonFile": "cfg_uzOpProfile_024.json",
+    "profiles": [
+      {
+        "profileId": 1,
+        "name": "수면모드",
+        "enabled": true,
+        "repeatSegments": true,
+        "segments": [
+          {
+            "segNo": 10,
+            "on_minutes": 30,
+            "off_minutes": 0,
+            "mode": "PRESET",
+            "presetCode": "OCEAN",
+            "styleCode": "SLEEP",
+            "adjust": {
+              "wind_intensity": -10,
+              "wind_variability": -20
+            }
+          },
+          {
+            "segNo": 20,
+            "on_minutes": 120,
+            "off_minutes": 0,
+            "mode": "PRESET",
+            "presetCode": "FOREST_CANOPY",
+            "styleCode": "SLEEP",
+            "adjust": {
+              "wind_intensity": -20,
+              "wind_variability": -30
+            }
+          },
+          {
+            "segNo": 30,
+            "on_minutes": 120,
+            "off_minutes": 0,
+            "mode": "FIXED",
+            "fixed_speed": 55.0
+          }  
+        ],
+        "autoOffTimer": {
+           "enabled": true,
+           "minutes": 120
+        },
+        "motion": {
+            "pir": { "enabled": true, "hold_sec": 120 },
+            "ble": { "enabled": true, "rssi_threshold": -70, "hold_sec": 120 }
+        }
+      }
+    ]
+  }
+}

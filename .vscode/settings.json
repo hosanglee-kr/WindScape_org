@@ -15,5 +15,18 @@
     "editor.tabSize": 4,
 
     //"editor.fontWeight": "400",
-    "editor.fontSize": 14 // Regular
+    "editor.fontSize": 14,
+    "files.associations": {
+        "*.old": "cpp",
+        "typeinfo": "cpp",
+        "deque": "cpp",
+        "array": "cpp",
+        "bitset": "cpp",
+        "string_view": "cpp",
+        "initializer_list": "cpp",
+        "regex": "cpp",
+        "utility": "cpp",
+        "*.001": "cpp",
+        "cmath": "cpp"
+    } // Regular
 }

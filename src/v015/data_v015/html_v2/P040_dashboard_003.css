@@ -1,0 +1,152 @@
+/*
+ * ------------------------------------------------------
+ * 소스명 : P040_dashboard_003.css
+ * 모듈명 : Smart Nature Wind Dashboard UI Style (v001)
+ * ------------------------------------------------------
+ * 주요 내용:
+ * - 상태 카드 위젯 (large-value) 스타일
+ * - 로그 콘솔 스타일
+ * - 로딩 오버레이 / 토스트 (Main / Chart와 톤 통일)
+ * ------------------------------------------------------
+ */
+
+/* ======================= 상태 카드 스타일 ======================= */
+.status-grid {
+  margin-top: 15px;
+}
+
+.status-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 15px;
+  background-color: #f7f9fb;
+  border-radius: 8px;
+  border-left: 5px solid #3498db; /* 강조 */
+  border: 1px solid #e0e6ed;
+}
+
+.status-card label {
+  font-size: 0.9em;
+  color: #7f8c8d;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.large-value {
+  font-size: 2.5em;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.1;
+  color: #2c3e50;
+  word-break: break-all;
+}
+
+/* 상태별 텍스트 색상 */
+.status-text.running {
+  color: #2ecc71;
+}
+.status-text.stopped {
+  color: #e74c3c;
+}
+.status-text.override {
+  color: #f39c12;
+}
+.status-text.offline {
+  color: #95a5a6;
+}
+
+/* ======================= 로그 콘솔 스타일 ======================= */
+.log-area {
+  background-color: #2c3e50; /* 다크 배경 */
+  color: #ecf0f1; /* 밝은 텍스트 */
+  font-family: "Consolas", "Monospace", monospace;
+  font-size: 0.9em;
+  height: 250px;
+  overflow-y: scroll;
+  padding: 10px;
+  border-radius: 6px;
+  margin-top: 15px;
+  border: 1px solid #34495e;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.log-message {
+  padding: 2px 0;
+  border-bottom: 1px dotted rgba(236, 240, 241, 0.1);
+}
+
+.log-info {
+  color: #3498db;
+}
+.log-warn {
+  color: #f1c40f;
+}
+.log-error {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+/* ======================= 로딩 오버레이 / 토스트 ======================= */
+/* Main / Chart 페이지와 톤 맞춤 */
+
+#loadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(44, 62, 80, 0.8);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.spinner {
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+#toastContainer {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1001;
+}
+
+.toast {
+  background-color: #333;
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-top: 10px;
+  opacity: 0.9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  font-size: 0.9em;
+}
+
+.toast.ok {
+  background-color: #2ecc71;
+}
+.toast.warn {
+  background-color: #f39c12;
+}
+.toast.err {
+  background-color: #e74c3c;
+}

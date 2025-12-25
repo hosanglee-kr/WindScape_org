@@ -1,0 +1,417 @@
+/*
+ * ------------------------------------------------------
+ * 소스명 : P010_main_021.css
+ * 모듈 약어 : SC10
+ * 모듈명 : Smart Nature Wind Main UI Style (v021)
+ * ------------------------------------------------------
+ * 기능 요약:
+ * - 메인 관리 페이지 전용 레이아웃 / 스타일
+ * - 공통 스타일(P000_common_006.js) 위에 덧입히는 오버레이
+ * - 상태 카드, 풍속 설정, Wi-Fi, PWM, 로그 콘솔, 업로드 섹션 스타일
+ * ------------------------------------------------------
+ * 주의:
+ * - Reset / Nav / Modal / Toast 등 공통 요소는 SC10_common_001.css에서 처리
+ * - 여기서는 "메인 페이지 전용" 느낌을 위한 디테일만 정의/오버라이드
+ * ------------------------------------------------------
+ */
+
+/* ======================= 1. 페이지 전체 분위기 / 래퍼 ======================= */
+
+/* 공통 wrap(max-width:1200) → 메인 페이지에서는 조금 더 좁게 */
+.wrap {
+  max-width: 960px;
+  margin: 20px auto;
+}
+
+/* 배경 톤을 메인에서 약간 더 파랗게 */
+body {
+  background-color: #f0f4f8;
+}
+
+/* 메인 타이틀 */
+h1 {
+  color: #1a5276;
+  text-align: center;
+  margin-bottom: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* 버전 Pill 바로 옆에 붙는 스타일은 .pill에서 처리 */
+
+/* ======================= 2. 카드 / 섹션 / 그리드 ======================= */
+
+/* 공통 card 위에 살짝 더 강한 그림자 + 라운드 */
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px 25px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+  border: 1px solid #e0e6ed;
+}
+
+/* 섹션 제목 (메인 페이지용) */
+.section-title {
+  margin-top: 0;
+  border-left: 4px solid #3498db;
+  padding-left: 10px;
+  font-size: 1.3em;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+/* 그리드: 공통 grid를 사용하되 메인 페이지에 맞게 간격 조정 */
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.col-12 {
+  flex: 1 1 100%;
+  display: flex;
+  flex-direction: column;
+}
+.col-6 {
+  flex: 1 1 calc(50% - 8px);
+  display: flex;
+  flex-direction: column;
+}
+.col-4 {
+  flex: 1 1 calc(33.333% - 10.666px);
+  display: flex;
+  flex-direction: column;
+}
+.col-3 {
+  flex: 1 1 calc(25% - 12px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ======================= 3. 유틸리티 레이아웃 ======================= */
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+.row.tight {
+  margin-bottom: 5px;
+  gap: 8px;
+}
+.row .flex {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.right {
+  margin-left: auto;
+}
+.fill {
+  flex-grow: 1;
+}
+
+.mt8 {
+  margin-top: 8px;
+}
+.mt16 {
+  margin-top: 16px;
+}
+
+.hr {
+  border-top: 1px solid #e0e6ed;
+  margin: 20px 0;
+}
+
+.muted {
+  color: #7f8c8d;
+  font-size: 0.9em;
+}
+
+/* ======================= 4. 폼 요소 / 레이블 ======================= */
+
+label {
+  font-weight: 600;
+  margin-bottom: 5px;
+  font-size: 0.9em;
+  color: #4a637a;
+  display: block;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #c8d4e0;
+  border-radius: 8px;
+  font-size: 15px;
+  box-sizing: border-box;
+  background-color: #fcfdfe;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus,
+select:focus {
+  border-color: #3498db;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+/* ======================= 5. 버튼 ======================= */
+
+/* 공통 .btn 위에 메인 페이지용 톤 */
+.btn {
+  background-color: #f1f6f9;
+  color: #4a637a;
+  border: 1px solid #c8d4e0;
+  border-radius: 8px;
+  padding: 8px 15px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  font-weight: 600;
+  white-space: nowrap;
+  font-size: 0.9em;
+}
+
+.btn:hover {
+  background-color: #e5edf3;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* OK (Primary) */
+.btn.ok {
+  background-color: #2ecc71;
+  color: #fff;
+  border-color: #27ae60;
+}
+.btn.ok:hover {
+  background-color: #27ae60;
+}
+
+/* Warn */
+.btn.warn {
+  background-color: #f39c12;
+  color: #fff;
+  border-color: #e67e22;
+}
+.btn.warn:hover {
+  background-color: #e67e22;
+}
+
+/* Error */
+.btn.err {
+  background-color: #e74c3c;
+  color: #fff;
+  border-color: #c0392b;
+}
+.btn.err:hover {
+  background-color: #c0392b;
+}
+
+/* 전체 저장 버튼은 Dirty 상태에 따라 JS에서 색 변경 */
+#btnSaveAllConfig {
+  transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+  font-weight: 700;
+}
+
+/* ======================= 6. 상태 Pill / 상단 상태 카드 ======================= */
+
+.pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.9em;
+  font-weight: 700;
+  background-color: #ecf0f1;
+  color: #2c3e50;
+  margin-left: 8px;
+  white-space: nowrap;
+  min-width: 40px;
+  text-align: center;
+}
+
+/* 시뮬 상태 색상 */
+#simActive.pill {
+  background-color: #2ecc71;
+  color: #fff;
+}
+#simActive.pill[data-status="idle"] {
+  background-color: #e74c3c;
+  color: #fff;
+}
+
+/* ======================= 7. STA 목록 / 테이블 스타일 ======================= */
+
+.list {
+  border: 1px solid #c8d4e0;
+  border-radius: 8px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.list table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.list th,
+.list td {
+  padding: 10px 15px;
+  text-align: left;
+  border-bottom: 1px solid #ecf0f1;
+  font-size: 0.95em;
+}
+
+.list th {
+  background-color: #f1f6f9;
+  font-weight: 700;
+  color: #4a637a;
+}
+
+.list td:last-child {
+  text-align: right;
+  width: 120px;
+}
+
+.list tr:last-child td {
+  border-bottom: none;
+}
+
+.list .muted {
+  display: block;
+  padding: 15px;
+  text-align: center;
+}
+
+/* ======================= 8. 로그 콘솔 ======================= */
+
+pre#logConsole {
+  background-color: #2c3e50;
+  color: #ecf0f1;
+  padding: 15px;
+  border-radius: 8px;
+  overflow-y: auto;
+  max-height: 400px;
+  font-size: 0.85em;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  font-family: monospace;
+}
+
+/* ======================= 9. 로딩 / 토스트 (공통에서 정의된 것 보완) ======================= */
+
+/* 메인 페이지는 진한 다크 오버레이 */
+#loadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(44, 62, 80, 0.8);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.spinner {
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 토스트 위치 / 색 톤 */
+#toastContainer {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1001;
+}
+
+.toast {
+  background-color: #333;
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-top: 10px;
+  opacity: 0.92;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: opacity 0.3s;
+  font-size: 0.9em;
+}
+
+.toast.ok {
+  background-color: #2ecc71;
+}
+.toast.warn {
+  background-color: #f39c12;
+}
+.toast.err {
+  background-color: #e74c3c;
+}
+
+/* ======================= 10. 반응형 ======================= */
+
+@media (max-width: 768px) {
+  .wrap {
+    padding: 10px;
+  }
+
+  .col-4,
+  .col-3 {
+    flex: 1 1 calc(50% - 8px);
+  }
+}
+
+@media (max-width: 480px) {
+  .col-4,
+  .col-6,
+  .col-3 {
+    flex: 1 1 100%;
+  }
+
+  .row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .row .right {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .row.tight {
+    width: 100%;
+  }
+
+  .row.tight .btn {
+    flex-grow: 1;
+  }
+
+  .pill {
+    margin-left: 0;
+    margin-top: 5px;
+  }
+
+  h1 {
+    font-size: 1.8em;
+  }
+}
+

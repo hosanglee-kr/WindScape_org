@@ -1,0 +1,19 @@
+{
+    "motion": {
+        "pir": {},
+        "ble": {
+            "devices": [
+                    {
+                        "mac": "AA:BB:CC:11:22:33",
+                        "alias": "MyPhone",
+                        "enabled": true
+                    },
+                    {
+                        "mac": "DD:EE:FF:44:55:66",
+                        "alias": "SmartBand",
+                        "enabled": false
+                    }
+            ]
+        }
+    }
+}

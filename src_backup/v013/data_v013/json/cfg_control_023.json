@@ -1,0 +1,96 @@
+{
+  "control": {
+    "runMode": 0,
+    "runModeDesc": "0=Continuous Mode, 1=Schedule Mode",
+
+    "Continuous": {
+      "wind": {
+        "enabled": true,
+        "preset": "COUNTRY_BREEZE",
+        "style": "BALANCE",
+        "adjust": {
+          "wind_intensity": 70.0,
+          "gust_frequency": 45.0,
+          "wind_variability": 50.0,
+          "fan_limit": 90.0,
+          "min_fan": 10.0,
+          "turbulence_length_scale": 40.0,
+          "turbulence_intensity_sigma": 0.5,
+          "thermal_bubble_strength": 2.0,
+          "thermal_bubble_radius": 18.0
+        }
+      },
+      "motion": {
+        "pir": { "enabled": true, "hold_sec": 120 },
+        "ble": { "enabled": true, "rssi_threshold": -70, "hold_sec": 120 }
+      }
+    },
+
+    "schedules": [
+      {
+        "schNo": 10,
+        "schName": "Morning Air",
+        "enabled": true,
+        "days": [1,1,1,1,1,1,1],
+        "start_time": "08:00",
+        "end_time": "12:00",
+
+        "segments": [
+          {
+            "segNo": 10,
+            "on_minutes": 20,
+            "off_minutes": 10,
+            "mode": "preset",
+            "style": "BALANCE",
+            "preset_name": "HARBOUR_BREEZE",
+            "adjust": {
+              "intensity": 10,
+              "variability": 5
+            }
+          },
+          {
+            "segNo": 20,
+            "on_minutes": 15,
+            "off_minutes": 5,
+            "mode": "fixed",
+            "fixed_speed": 55.0
+          }
+        ],
+
+        "motion": {
+          "pir": { "enabled": true, "hold_sec": 120 },
+          "ble": { "enabled": true, "rssi_threshold": -70, "hold_sec": 120 }
+        }
+      },
+
+      {
+        "schNo": 20,
+        "schName": "Evening Calm",
+        "enabled": true,
+        "days": [1,1,1,1,1,1,1],
+        "start_time": "19:00",
+        "end_time": "23:00",
+
+        "segments": [
+          {
+            "segNo": 10,
+            "on_minutes": 25,
+            "off_minutes": 15,
+            "mode": "preset",
+            "style": "BALANCE",
+            "preset_name": "COUNTRY_BREEZE",
+            "adjust": {
+              "intensity": 10,
+              "variability": 5
+            }
+          }
+        ],
+
+        "motion": {
+          "pir": { "enabled": true, "hold_sec": 120 },
+          "ble": { "enabled": true, "rssi_threshold": -70, "hold_sec": 120 }
+        }
+      }
+    ]
+  }
+}

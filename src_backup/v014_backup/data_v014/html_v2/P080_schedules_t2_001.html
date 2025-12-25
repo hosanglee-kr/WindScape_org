@@ -1,0 +1,142 @@
+<!-- P080_schedules_t2_001.html -->
+
+<!doctype html>
+<html lang="ko">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>🌬️ Smart Nature Wind 스케줄 관리</title>
+	
+	<link rel="stylesheet" href="./P000_common_001.css">
+	<link rel="stylesheet" href="./P080_schedules_t2_001.css">
+</head>
+
+<body>
+	<header class="nav-bar">
+		<div class="nav-container">
+			<a href="./P040_dashboard_002.html" class="nav-logo">Smart Wind</a>
+			<nav>
+				<ul class="nav-menu" id="navMenu">
+					</ul>
+			</nav>
+		</div>
+	</header>
+		
+	<!-- <header class="nav-bar">
+		<div class="nav-container">
+			<a href="./SC10_dashboard_001.html" class="nav-logo">Smart Wind</a>
+			<nav>
+				<ul class="nav-menu">
+					<li><a href="./SC10_dashboard_001.html">대시보드</a></li>
+					<li><a href="./SC10_chart_t2_007.html">차트 모니터링</a></li>
+					<li><a href="./SC10_sim_details_001.html">시뮬 설정</a></li>
+					<li><a href="./SC10_profile_001.html">프로파일 관리</a></li>
+					<li><a href="./P080_schedules_t2_001.html" class="active">스케줄 관리</a></li>
+					<li><a href="./SC10_user_001.html">사용자 프로필</a></li>
+					<li><a href="./SC10_settings_001.html">시스템 설정</a></li>
+				</ul>
+			</nav>
+		</div>
+	</header> -->
+	
+	<div class="wrap">
+		<h1>자동 적용 스케줄 관리</h1>
+
+		<section class="card control-panel">
+			<div class="row">
+				<strong class="section-title">등록된 스케줄 목록</strong>
+				<div class="right tight">
+					<button class="btn ok" id="btnCreateNew">➕ 새 스케줄 생성</button>
+					<button class="btn" id="btnRefreshList">🔄 목록 새로고침</button>
+				</div>
+			</div>
+			
+			<div class="schedule-list-container">
+				<table class="schedule-table">
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>스케줄 이름</th>
+							<th>시간</th>
+							<th>반복 요일</th>
+							<th>적용 프로파일</th>
+							<th>상태</th>
+							<th>액션</th>
+						</tr>
+					</thead>
+					<tbody id="scheduleListBody">
+						</tbody>
+				</table>
+				<p id="noScheduleMessage" class="muted" style="display:none;">등록된 스케줄이 없습니다.</p>
+			</div>
+		</section>
+		
+		<div class="muted">© 2540.kr SmartNatureWind (v001 Schedule Manager UI)</div>
+	</div>
+
+	<div id="scheduleModal" class="modal-overlay" style="display:none;">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2 id="modalTitle">스케줄 생성</h2>
+				<button class="btn-close" id="btnCloseModal">❌</button>
+			</div>
+			<form id="scheduleForm">
+				<input type="hidden" id="scheduleId" name="id" value="">
+
+				<div class="form-group">
+					<label for="scheduleName">스케줄 이름</label>
+					<input type="text" id="scheduleName" name="name" required>
+				</div>
+				
+				<div class="grid schedule-settings-grid">
+					<div class="col-6 form-group">
+						<label for="scheduleTime">적용 시간</label>
+						<input type="time" id="scheduleTime" name="time" value="09:00" required>
+					</div>
+					<div class="col-6 form-group">
+						<label for="profileSelect">적용할 프로파일 선택</label>
+						<select id="profileSelect" name="profile_id" required>
+							<option value="">-- 프로파일 선택 --</option>
+						</select>
+					</div>
+				</div>
+				
+				<div class="form-group repeat-days-group">
+					<label>반복 요일 선택</label>
+					<div id="repeatDays" class="day-checkboxes">
+						<label><input type="checkbox" name="days" value="1">월</label>
+						<label><input type="checkbox" name="days" value="2">화</label>
+						<label><input type="checkbox" name="days" value="3">수</label>
+						<label><input type="checkbox" name="days" value="4">목</label>
+						<label><input type="checkbox" name="days" value="5">금</label>
+						<label><input type="checkbox" name="days" value="6">토</label>
+						<label><input type="checkbox" name="days" value="0">일</label>
+					</div>
+				</div>
+				
+				<div class="form-group">
+					<label for="isEnabled">스케줄 사용</label>
+					<input type="checkbox" id="isEnabled" name="is_enabled" checked>
+					<span class="info-label">활성화 시 설정된 시간에 자동으로 프로파일을 적용합니다.</span>
+				</div>
+				
+				<div class="modal-actions">
+					<button type="submit" class="btn ok" id="btnSaveSchedule">💾 저장</button>
+					<button type="button" class="btn" id="btnCancelModal">취소</button>
+				</div>
+			</form>
+		</div>
+	</div>
+	
+	<div id="loadingOverlay" style="display:none;">
+		<div class="spinner"></div>
+	</div>
+	<div id="toastContainer"></div>
+
+	<script src="./P000_common_004.js" defer></script>	
+	<script src="./P080_schedules_t2_001.js" defer></script>
+</body>
+
+</html>
+

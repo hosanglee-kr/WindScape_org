@@ -1,0 +1,119 @@
+<!-- P085_userProfiles_t2_002.html -->
+
+<!doctype html>
+<html lang="ko">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🌬️ Smart Nature Wind 유저 프로파일 관리</title>
+
+  <link rel="stylesheet" href="./P000_common_001.css">
+  <link rel="stylesheet" href="./P085_userProfiles_t2_002.css">
+</head>
+
+<body>
+  <header class="nav-bar">
+    <div class="nav-container">
+      <a href="./P040_dashboard_002.html" class="nav-logo">Smart Wind</a>
+      <nav>
+        <ul class="nav-menu" id="navMenu">
+          <!-- P000_common_006.js 에서 /api/v1/menu 기반으로 채워질 예정 -->
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <h1>유저 프로파일 관리</h1>
+
+    <section class="card control-panel">
+      <div class="row">
+        <strong class="section-title">등록된 유저 프로파일 목록</strong>
+        <div class="right tight">
+          <button class="btn ok" id="btnCreateNewProfile">➕ 새 프로파일 생성</button>
+          <button class="btn" id="btnRefreshList">🔄 목록 새로고침</button>
+          <!-- v029 config save 연동 -->
+          <button class="btn" id="btnSaveAllConfig">전체 설정 저장</button>
+        </div>
+      </div>
+
+      <div class="profile-list-container">
+        <table class="profile-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>프로파일 이름</th>
+              <th>기본 프리셋</th>
+              <th>팬 최소 (%)</th>
+              <th>팬 최대 (%)</th>
+              <th>액션</th>
+            </tr>
+          </thead>
+          <tbody id="profileListBody">
+          </tbody>
+        </table>
+        <p id="noProfileMessage" class="muted" style="display:none;">등록된 유저 프로파일이 없습니다.</p>
+      </div>
+    </section>
+
+    <div class="muted">© 2540.kr SmartNatureWind (v002 User Profile Manager UI)</div>
+  </div>
+
+  <!-- ======================= 유저 프로파일 생성/수정 모달 ======================= -->
+
+  <div id="profileModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">유저 프로파일 생성</h2>
+        <button class="btn-close" id="btnCloseModal">❌</button>
+      </div>
+
+      <form id="profileForm">
+        <input type="hidden" id="profileId" name="id" value="">
+
+        <div class="form-group">
+          <label for="profileName">프로파일 이름</label>
+          <input type="text" id="profileName" name="name" required>
+        </div>
+
+        <div class="grid profile-settings-grid">
+          <div class="col-6 form-group">
+            <label for="basePreset">기본 Wind Preset</label>
+            <select id="basePreset" name="basePreset" required>
+              <option value="">-- 기본 프리셋 선택 --</option>
+            </select>
+          </div>
+
+          <div class="col-3 form-group">
+            <label for="minFan">팬 최소 (%)</label>
+            <input type="number" id="minFan" name="minFan" min="0" max="100" step="1" value="0" required>
+          </div>
+
+          <div class="col-3 form-group">
+            <label for="maxFan">팬 최대 (%)</label>
+            <input type="number" id="maxFan" name="maxFan" min="0" max="100" step="1" value="100" required>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="submit" class="btn ok" id="btnSaveProfile">💾 저장</button>
+          <button type="button" class="btn" id="btnCancelModal">취소</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 공통 로딩/토스트 컨테이너 -->
+  <div id="loadingOverlay" style="display:none;">
+    <div class="spinner"></div>
+  </div>
+  <div id="toastContainer"></div>
+
+  <!-- 공통 JS (메뉴/토스트 등) -->
+  <script src="./P000_common_006.js" defer></script>
+  <!-- 유저 프로파일 전용 컨트롤러 -->
+  <script src="./P085_userProfiles_t2_002.js" defer></script>
+</body>
+
+</html>

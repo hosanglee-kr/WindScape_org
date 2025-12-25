@@ -1,0 +1,138 @@
+{
+  "control": {
+    "jsonFile":"cfg_control_024.json",
+    "runMode": 0,
+    "runModeDesc": "0=Continuous Mode, 1=Schedule Mode",
+
+    "Continuous": {
+      "wind": {
+        "enabled": true,
+        "presetCode": "COUNTRY_BREEZE",
+        "styleCode": "BALANCE",
+        "adjust": {
+          "wind_intensity": 70.0,
+          "gust_frequency": 45.0,
+          "wind_variability": 50.0,
+          "fan_limit": 90.0,
+          "min_fan": 10.0,
+          "turbulence_length_scale": 40.0,
+          "turbulence_intensity_sigma": 0.5,
+          "thermal_bubble_strength": 2.0,
+          "thermal_bubble_radius": 18.0
+        }
+      }, 
+      "timer": {
+        "enabled": true,              
+        "duration_minutes": 120       
+      },
+
+      "motion": {
+        "pir": { "enabled": true, "hold_sec": 120 },
+        "ble": { "enabled": true, "rssi_threshold": -70, "hold_sec": 120 }
+      }
+    },
+
+    "schedules": [
+      {
+        "schNo": 10,
+        "name": "Morning Air",
+        "enabled": true,
+        "period": {
+            "periodEnabled": true,
+            "days": [1,1,1,1,1,1,1],
+            "start_time": "08:00",
+            "end_time": "12:00"
+        },
+        "repeatSegments": true,
+        "segments": [
+          {
+            "segNo": 10,
+            "on_minutes": 20,
+            "off_minutes": 10,
+            "mode": "PRESET",
+
+            "presetCode": "HARBOR_BREEZE",
+            "styleCode": "BALANCE",
+
+            "adjust": {
+              "wind_intensity": 10,
+              "wind_variability": 5
+            }
+          },
+          {
+            "segNo": 20,
+            "on_minutes": 15,
+            "off_minutes": 5,
+            "mode": "FIXED",
+
+            "fixed_speed": 55.0
+          }
+        ],
+
+        "motion": {
+          "pir": { "enabled": true, "hold_sec": 120 },
+          "ble": { "enabled": true, "rssi_threshold": -70, "hold_sec": 120 }
+        }
+      },
+      {
+        "schNo": 20,
+        "name": "Evening Calm",
+        "enabled": true,
+        "period": {
+            "periodEnabled": true,
+            "days": [1,1,1,1,1,1,1],
+            "start_time": "19:00",
+            "end_time": "23:00"
+        },
+        "repeatSegments": true,
+        "segments": [
+          {
+            "segNo": 10,
+            "on_minutes": 25,
+            "off_minutes": 15,
+            "mode": "PRESET",
+            "presetCode": "COUNTRY_BREEZE",
+            "styleCode": "RELAX",
+            "adjust": {
+              "wind_intensity": 10,
+              "wind_variability": 5
+            }
+          }
+        ],
+        "motion": {
+          "pir": { "enabled": true, "hold_sec": 120 },
+          "ble": { "enabled": true, "rssi_threshold": -70, "hold_sec": 120 }
+        }
+      },
+      {
+        "schNo": 30,
+        "name": "temp period disabled",
+        "enabled": true,
+        "period": {
+            "periodEnabled": false
+        },
+        "repeatSegments": true,
+        "segments": [
+          {
+            "segNo": 10,
+            "on_minutes": 25,
+            "off_minutes": 15,
+            "mode": "PRESET",
+            "presetCode": "COUNTRY_BREEZE",
+            "styleCode": "RELAX",
+            "adjust": {
+              "wind_intensity": 10,
+              "wind_variability": 5
+            }
+          }
+        ],
+        "motion": {
+          "pir": { "enabled": true, "hold_sec": 120 },
+          "ble": { "enabled": true, "rssi_threshold": -70, "hold_sec": 120 }
+        }
+      }
+
+      
+    ]
+  }
+}

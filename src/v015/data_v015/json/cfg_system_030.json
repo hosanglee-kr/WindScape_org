@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "version": "FW_1.0.0",
+    "deviceName": "WindScape_2540_v001",
+    "lastUpdate": "2025-10-24T13:00:00+09:00"
+  },
+  "system": {
+    "logging": {
+      "level": "INFO",
+      "maxEntries": 300
+    }
+  },
+  "hw": {
+    "fanPwm": {
+      "pin": 6,
+      "channel": 0,
+      "freq": 25000,
+      "res": 10
+    },
+    "fanConfig": {
+      "startPercentMin": 18,
+      "comfortPercentMin": 22,
+      "comfortPercentMax": 65,
+      "hardPercentMax": 90
+    },
+    "pir": {
+      "enabled": true,
+      "pin": 13,
+      "debounceSec": 5,
+      "holdSec": 120
+    },
+    "tempHum": {
+      "enabled": true,
+      "type": "DHT22",
+      "pin": 23,
+      "intervalSec": 30
+    },
+    "ble": {
+      "enabled": true,
+      "scanInterval": 5
+    }
+  },
+  "security": {
+    "apiKey": "my_api_key_12345"
+  },
+  "time": {
+    "ntpServer": "pool.ntp.org",
+    "timezone": "Asia/Seoul",
+    "syncIntervalMin": 60
+  }
+}

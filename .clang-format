@@ -1,20 +1,49 @@
-{ 
-	BasedOnStyle: Google, 
-	UseTab: Always, 
-	TabWidth: 4, 
-	IndentWidth: 4, 
-	ColumnLimit: 0,
-	AlignAfterOpenBracket: Align,
-	IndentPPDirectives: BeforeHash,
-	
-	AlignConsecutiveAssignments: true,  
-	AlignConsecutiveDeclarations : true ,
+{
+    BasedOnStyle: Google,
+    UseTab: Always,             # 탭 사용 (탭 1번 = 4칸)
+    IndentWidth: 4,
+    TabWidth: 4,
+
+    # [핵심 수정] 줄이 이어질 때 들여쓰기를 4칸(탭 1번)으로 강제
+    ContinuationIndentWidth: 4,
+
+    # [구조체/배열 정렬 최적화]
+    # AlwaysBreak는 중괄호가 열리자마자 다음 줄로 내리므로 구조체 계층 유지에 유리합니다.
+    AlignAfterOpenBracket: DontAlign, #AlwaysBreak,
+
+    # [중요] 0으로 설정하여 사용자가 나눈 구조체 계층을 포맷터가 강제로 합치지 않게 함
+    ColumnLimit: 0,
+
+    # [추가] 함수 정의/선언 시 반환 타입 뒤에서 정렬되도록 함
+    # (일부 Clang-Format 버전에서는 이 옵션이 선언문의 이름 위치를 맞춤)
+    #### AlwaysBreakAfterReturnType: None,
 
 
-	AlignConsecutiveMacros: AcrossEmptyLinesAndComments,
-	AllowShortBlocksOnASingleLine : Never,
-	AllowShortFunctionsOnASingleLine: None,
-	AllowShortEnumsOnASingleLine: false,
-    AllowShortIfStatementsOnASingleLine: false,
+    # 나머지 설정은 유지...
+    AccessModifierOffset: -2,
+    IndentAccessModifiers: false,
+    IndentPPDirectives: AfterHash,
+    IndentCaseLabels: true,
+    AlignConsecutiveAssignments: AcrossEmptyLinesAndComments,
 
+    AlignConsecutiveDeclarations:{
+        Enabled: true,
+        AcrossEmptyLines: true,             # 빈 줄이 있어도 정렬 유지
+        AlignFunctionDeclarations: false,   # 함수 선언은 정렬에서 제외 (지원 여부 확인 필요)
+        AcrossComments: true,               # 주석이 있어도 정렬 유지
+        AlignCompound: true,                # 구조체 멤버 등 복합 선언도 정렬
+        PadOperators: true,                 # 포인터(*) 기호 등의 간격 조절
+    }
+    #AlignConsecutiveDeclarations: AcrossEmptyLinesAndComments,
+
+    AlignConsecutiveMacros: AcrossEmptyLinesAndComments,
+    AllowShortFunctionsOnASingleLine: None,
+    AllowShortBlocksOnASingleLine: Never,
+    Cpp11BracedListStyle: false,
+    BinPackArguments: false,
+    BinPackParameters: false,
+    PenaltyBreakBeforeFirstCallParameter: 0,
+    PointerAlignment: Left,
+    SpaceAfterCStyleCast: false,
+    AlignTrailingComments: { Kind: Always, OverEmptyLines: 1 }
 }

@@ -1,0 +1,64 @@
+/*
+ * ------------------------------------------------------
+ * 소스명 :P060_sim_details_001.css
+ * 모듈명 : Smart Nature Wind Simulation Details UI Style (v001)
+ * ------------------------------------------------------
+ * 주요 내용:
+ * - SC10_common_001.css에 의존
+ * - 폼 요소 스타일 및 레이아웃 정의
+ * ------------------------------------------------------
+ */
+
+.settings-grid {
+    margin-top: 15px;
+}
+
+/* 폼 그룹 스타일 */
+.form-group {
+    margin-bottom: 15px;
+    padding: 10px 0;
+    border-bottom: 1px dotted #e9ecef;
+}
+
+.form-group:last-child {
+    border-bottom: none;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #34495e;
+    font-size: 0.95em;
+}
+
+.form-group input[type="number"],
+.form-group input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #c8d4e0;
+    border-radius: 5px;
+    box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
+    font-size: 1em;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    outline: none;
+}
+
+/* 타이밍 설정 그리드 */
+.timing-grid {
+    gap: 20px;
+    margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+    .col-6, .col-4 {
+        flex: 1 1 100%;
+    }
+}
+
+

@@ -1,0 +1,136 @@
+<!-- P050_chart_t2_008.html -->
+
+<!doctype html>
+<html lang="ko">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🌬️ Smart Nature Wind 차트 모니터링 T2</title>
+
+  <!-- Chart.js + Luxon Time Adapter + Zoom Plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+
+  <!-- 공통 스타일 + T2 전용 스타일 -->
+  <link rel="stylesheet" href="./P000_common_001.css">
+  <link rel="stylesheet" href="./P050_chart_t2_008.css">
+</head>
+
+<body>
+
+  <!-- 공통 네비게이션 (P000_common_004.js에서 메뉴/로고 동적 세팅) -->
+  <header class="nav-bar">
+    <div class="nav-container">
+      <!-- 로고 href는 cfg_pages_029.json의 isMain:true 항목으로 자동 설정됨 -->
+      <a class="nav-logo">Smart Nature Wind</a>
+      <nav>
+        <ul class="nav-menu" id="navMenu"></ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <h1>차트 모니터링 T2 (실시간 데이터)</h1>
+
+    <!-- 1. 실시간 제어 패널 -->
+    <section class="card control-panel">
+      <div class="row">
+        <strong class="section-title">실시간 모니터링 제어</strong>
+        <div class="right tight">
+          <span class="info-label" id="refreshInfo">🕒 WebSocket 연결 중...</span>
+          <button class="btn ok" id="btnResume">▶ 재개</button>
+          <button class="btn warn" id="btnPause">⏸ 일시정지</button>
+          <button class="btn" id="btnResetZoomAll">🔍 줌 초기화</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 차트 6종 -->
+    <section class="chart-section">
+      <div class="grid chart-grid">
+
+        <div class="chart-container col-6">
+          <div class="chart-header">
+            <h3>풍속 (Wind Speed) / PWM 듀티</h3>
+            <button class="btn-toggle">▲</button>
+          </div>
+          <div class="chart-content">
+            <canvas id="chartWind"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-container col-6">
+          <div class="chart-header">
+            <h3>핵심 매개변수 (Intensity / Variability / Fan)</h3>
+            <button class="btn-toggle">▲</button>
+          </div>
+          <div class="chart-content">
+            <canvas id="chartParams"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-container col-6">
+          <div class="chart-header">
+            <h3>난류 / 열기포 설정값 (Turb / Therm)</h3>
+            <button class="btn-toggle">▲</button>
+          </div>
+          <div class="chart-content">
+            <canvas id="chartTurbThermSig"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-container col-6">
+          <div class="chart-header">
+            <h3>이벤트 발생 (Gust / Thermal)</h3>
+            <button class="btn-toggle">▲</button>
+          </div>
+          <div class="chart-content">
+            <canvas id="chartEvents"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-container col-6">
+          <div class="chart-header">
+            <h3>현재 적용 프리셋 인덱스</h3>
+            <button class="btn-toggle">▲</button>
+          </div>
+          <div class="chart-content">
+            <canvas id="chartPreset"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-container col-6">
+          <div class="chart-header">
+            <h3>시뮬레이션 타이밍 설정값</h3>
+            <button class="btn-toggle">▲</button>
+          </div>
+          <div class="chart-content">
+            <canvas id="chartTiming"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="hr"></div>
+    <div class="muted">© 2540.kr SmartNatureWind (v008 Chart Monitor UI)</div>
+  </div>
+
+  <!-- 로딩 오버레이 / 토스트 (공통 스타일 사용) -->
+  <div id="loadingOverlay" style="display:none;">
+    <div class="spinner"></div>
+  </div>
+  <div id="toastContainer"></div>
+
+  <!-- 공통 스크립트: 메뉴/모드 관리 -->
+  <script src="./P000_common_006.js" defer></script>
+
+  <!-- T2 차트 전용 스크립트 -->
+  <script src="./P050_chart_t2_008.js" defer></script>
+</body>
+
+</html>
+

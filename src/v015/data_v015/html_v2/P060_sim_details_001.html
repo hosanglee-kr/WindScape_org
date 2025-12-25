@@ -1,0 +1,131 @@
+<!-- P060_sim_details_001.html -->
+
+<!doctype html>
+<html lang="ko">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>🌬️ Smart Nature Wind 시뮬레이션 상세 설정</title>
+
+	<link rel="stylesheet" href="./P000_common_001.css">
+	<link rel="stylesheet" href="./P060_sim_details_001.css">
+</head>
+
+<body>
+	<header class="nav-bar">
+		<div class="nav-container">
+			<a href="./P040_dashboard_002.html" class="nav-logo">Smart Wind</a>
+			<nav>
+				<ul class="nav-menu" id="navMenu">
+					</ul>
+			</nav>
+		</div>
+	</header>
+
+	<!-- <header class="nav-bar">
+		<div class="nav-container">
+			<a href="./SC10_dashboard_001.html" class="nav-logo">Smart Wind</a>
+			<nav>
+				<ul class="nav-menu">
+					<li><a href="./SC10_dashboard_001.html">대시보드</a></li>
+					<li><a href="./SC10_chart_t2_007.html">차트 모니터링</a></li>
+					<li><a href="./P060_sim_details_001.html" class="active">시뮬 설정</a></li>
+					<li><a href="./SC10_profile_001.html">프로파일 관리</a></li>
+					<li><a href="./SC10_schedules_t2_001.html">스케줄 관리</a></li>
+					<li><a href="./SC10_user_001.html">사용자 프로필</a></li>
+					<li><a href="./SC10_settings_001.html">시스템 설정</a></li>
+				</ul>
+			</nav>
+		</div>
+	</header> -->
+
+	<div class="wrap">
+		<h1>시뮬레이션 상세 설정</h1>
+
+		<section class="card control-panel">
+			<div class="row">
+				<strong class="section-title">설정 제어 및 저장</strong>
+				<div class="right tight">
+					<button class="btn" id="btnLoadConfig">🔄 현재 설정 불러오기</button>
+					<button class="btn warn" id="btnInitConfig">⚙️ 시뮬레이션 설정 초기화</button>
+					<button class="btn ok" id="btnSaveConfig">💾 전체 설정 파일 저장</button>
+				</div>
+			</div>
+			<div id="dirtyStatus" class="info-label muted">변경 사항 없음</div>
+		</section>
+
+		<div class="grid settings-grid">
+
+			<div class="col-6 card">
+				<strong class="section-title">🌬️ 풍속/팬 제어 매개변수</strong>
+				<div class="form-group">
+					<label for="windIntensity">풍속 강도 (Wind Intensity, %)</label>
+					<input type="number" id="windIntensity" name="windIntensity" min="0" max="100" step="0.1">
+				</div>
+				<div class="form-group">
+					<label for="windVariability">풍속 가변성 (Wind Variability, %)</label>
+					<input type="number" id="windVariability" name="windVariability" min="0" max="100" step="0.1">
+				</div>
+				<div class="form-group">
+					<label for="fanLimit">팬 최대 출력 제한 (Fan Limit, %)</label>
+					<input type="number" id="fanLimit" name="fanLimit" min="0" max="100" step="1">
+				</div>
+				<div class="form-group">
+					<label for="minFan">팬 최소 출력 (Min Fan, %)</label>
+					<input type="number" id="minFan" name="minFan" min="0" max="100" step="1">
+				</div>
+			</div>
+
+			<div class="col-6 card">
+				<strong class="section-title">🌪️ 난류 및 열기포 매개변수</strong>
+				<div class="form-group">
+					<label for="turbulence_intensity_sigma">난류 세기 시그마 (Intensity Sigma)</label>
+					<input type="number" id="turbulence_intensity_sigma" name="turbulence_intensity_sigma" min="0" max="100" step="0.1">
+				</div>
+				<div class="form-group">
+					<label for="turbulence_length_scale">난류 길이 스케일 (Length Scale, cm)</label>
+					<input type="number" id="turbulence_length_scale" name="turbulence_length_scale" min="1" max="500" step="1">
+				</div>
+				<div class="form-group">
+					<label for="thermal_bubble_strength">열기포 세기 (Thermal Bubble Strength)</label>
+					<input type="number" id="thermal_bubble_strength" name="thermal_bubble_strength" min="0" max="100" step="0.1">
+				</div>
+				<div class="form-group">
+					<label for="thermal_bubble_radius">열기포 반경 (Thermal Bubble Radius, cm)</label>
+					<input type="number" id="thermal_bubble_radius" name="thermal_bubble_radius" min="1" max="500" step="1">
+				</div>
+			</div>
+
+			<div class="col-12 card">
+				<strong class="section-title">⏱️ 시뮬레이션 타이밍 설정</strong>
+				<div class="grid timing-grid">
+					<div class="col-4 form-group">
+						<label for="sim_interval">기본 Sim Interval (ms)</label>
+						<input type="number" id="sim_interval" name="sim_interval" min="10" max="1000" step="10">
+					</div>
+					<div class="col-4 form-group">
+						<label for="gust_interval">돌풍 체크 Interval (ms)</label>
+						<input type="number" id="gust_interval" name="gust_interval" min="100" max="5000" step="100">
+					</div>
+					<div class="col-4 form-group">
+						<label for="thermal_interval">열기포 체크 Interval (ms)</label>
+						<input type="number" id="thermal_interval" name="thermal_interval" min="100" max="5000" step="100">
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="muted">© 2540.kr SmartNatureWind (v001 Sim Details UI)</div>
+	</div>
+
+	<div id="loadingOverlay" style="display:none;">
+		<div class="spinner"></div>
+	</div>
+	<div id="toastContainer"></div>
+
+	<script src="./P000_common_006.js" defer></script>
+	<script src="./P060_sim_details_001.js" defer></script>
+</body>
+
+</html>
